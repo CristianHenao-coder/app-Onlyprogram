@@ -1,80 +1,146 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { useTranslation } from '@/contexts/I18nContext';
+import LanguageSelector from './LanguageSelector';
 
 export default function Navbar() {
+  const [isOpen, setIsOpen] = useState(false);
+  const { user } = useAuth();
+  const { t } = useTranslation();
+
   return (
-    <header className="fixed top-0 w-full z-50 border-b border-border glass-effect">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-background-dark/80 backdrop-blur-md border-b border-border glass-effect">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
-            <div className="h-10 w-10 overflow-hidden rounded-lg">
+          <Link to="/" className="flex items-center gap-3 group">
+            <div className="h-10 w-10 overflow-hidden rounded-lg transition-transform group-hover:scale-110">
               <img 
-                src="/src/assets/logo.png" 
-                alt="Only Program Logo" 
+                src="/src/assets/img/logo.png" 
+                alt="Only Program" 
                 className="h-full w-full object-contain"
               />
             </div>
-            <span className="text-xl font-bold tracking-tight text-white uppercase">
+            <span className="text-xl font-bold tracking-tight text-white uppercase hidden sm:inline">
               Only <span className="text-primary text-sm">Program</span>
             </span>
           </Link>
 
-          {/* Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            <a className="text-sm font-medium hover:text-primary transition-colors text-silver/80" href="#home">
-              Inicio
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-8">
+            <a
+              href="/#home"
+              className="text-silver hover:text-white transition-colors font-medium"
+            >
+              {t('nav.home')}
             </a>
-            <a className="text-sm font-medium hover:text-primary transition-colors text-silver/80" href="#features">
-              Funciones
+            <a
+              href="/#features"
+              className="text-silver hover:text-white transition-colors font-medium"
+            >
+              {t('nav.features')}
             </a>
-            <a className="text-sm font-medium hover:text-primary transition-colors text-silver/80" href="#testimonials">
-              Testimonios
+            <Link
+              to="/pricing"
+              className="text-silver hover:text-white transition-colors font-medium"
+            >
+              {t('nav.pricing')}
+            </Link>
+            <a
+              href="/#testimonials"
+              className="text-silver hover:text-white transition-colors font-medium"
+            >
+              {t('nav.testimonials')}
             </a>
-          </nav>
+          </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-4">
+          {/* Right Side Actions */}
+          <div className="hidden md:flex items-center gap-4">
             {/* Language Selector */}
-            <div className="relative group">
-              <button className="flex items-center gap-1 text-xs font-semibold text-silver/70 border border-border px-3 py-2 rounded-lg hover:border-primary/50 transition-all">
-                <span className="material-symbols-outlined text-sm">language</span>
-                Español
-                <span className="material-symbols-outlined text-xs">expand_more</span>
-              </button>
-              <div className="absolute right-0 mt-2 w-32 bg-surface border border-border rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                <div className="p-1">
-                  <button className="w-full text-left px-3 py-2 text-xs hover:bg-primary/10 rounded-lg transition-colors">
-                    Español
-                  </button>
-                  <button className="w-full text-left px-3 py-2 text-xs hover:bg-primary/10 rounded-lg transition-colors text-silver/60">
-                    English
-                  </button>
-                  <button className="w-full text-left px-3 py-2 text-xs hover:bg-primary/10 rounded-lg transition-colors text-silver/60">
-                    Français
-                  </button>
-                </div>
+            <LanguageSelector />
+
+            {user ? (
+              <Link
+                to="/dashboard"
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white font-semibold transition-all shadow-lg shadow-primary/20"
+              >
+                {t('nav.dashboard')}
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="text-silver hover:text-white transition-colors font-semibold"
+                >
+                  {t('nav.login')}
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white font-semibold transition-all shadow-lg shadow-primary/20"
+                >
+                  {t('nav.signup')}
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="md:hidden p-2 rounded-lg hover:bg-surface transition-colors"
+          >
+            <span className="material-symbols-outlined text-white text-2xl">
+              {isOpen ? 'close' : 'menu'}
+            </span>
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        {isOpen && (
+          <div className="md:hidden py-6 border-t border-border animate-fade-in">
+            <div className="flex flex-col space-y-4">
+              <a href="/#home" className="text-silver hover:text-white transition-colors font-medium">
+                {t('nav.home')}
+              </a>
+              <a href="/#features" className="text-silver hover:text-white transition-colors font-medium">
+                {t('nav.features')}
+              </a>
+              <Link to="/pricing" className="text-silver hover:text-white transition-colors font-medium">
+                {t('nav.pricing')}
+              </Link>
+              <a href="/#testimonials" className="text-silver hover:text-white transition-colors font-medium">
+                {t('nav.testimonials')}
+              </a>
+
+              <div className="pt-4 border-t border-border flex flex-col gap-3">
+                <LanguageSelector />
+                
+                {user ? (
+                  <Link
+                    to="/dashboard"
+                    className="text-center px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white font-semibold"
+                  >
+                    {t('nav.dashboard')}
+                  </Link>
+                ) : (
+                  <>
+                    <Link to="/login" className="text-center text-silver font-semibold">
+                      {t('nav.login')}
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="text-center px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-primary-dark text-white font-semibold"
+                    >
+                      {t('nav.signup')}
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
-
-            {/* Login Button */}
-            <Link
-              to="/login"
-              className="text-sm font-semibold text-silver/70 hover:text-primary transition-colors"
-            >
-              Iniciar Sesión
-            </Link>
-
-            {/* Sign Up Button */}
-            <Link
-              to="/login"
-              className="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-full font-semibold transition-all shadow-lg shadow-primary/25 text-sm flex items-center gap-2"
-            >
-              <span className="material-symbols-outlined text-sm">person_add</span>
-              Crear Cuenta
-            </Link>
           </div>
-        </div>
+        )}
       </div>
-    </header>
+    </nav>
   );
 }
