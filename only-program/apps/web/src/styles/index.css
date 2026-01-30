@@ -1,0 +1,67 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background-dark text-silver font-display antialiased;
+  }
+}
+
+@layer utilities {
+  .glass-effect {
+    background: rgba(11, 11, 11, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .hero-gradient {
+    background: radial-gradient(
+      circle at 50% 50%,
+      rgba(29, 161, 242, 0.12) 0%,
+      transparent 70%
+    );
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #2a2a2a;
+    border-radius: 10px;
+  }
+
+  .bg-glow {
+    background: radial-gradient(
+      circle at 50% 50%,
+      rgba(29, 161, 242, 0.15) 0%,
+      transparent 70%
+    );
+  }
+
+  .input-glow:focus {
+    box-shadow: 0 0 10px rgba(29, 161, 242, 0.3);
+    border-color: #1da1f2;
+  }
+}
+
+/* Material Symbols Configuration */
+.material-symbols-outlined {
+  font-variation-settings:
+    "FILL" 0,
+    "wght" 400,
+    "GRAD" 0,
+    "opsz" 24;
+}
