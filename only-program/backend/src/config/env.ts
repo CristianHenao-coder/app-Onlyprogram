@@ -41,6 +41,18 @@ export const config = {
     senderName: process.env.BREVO_SENDER_NAME || "Only Program",
   },
 
+  paypal: {
+    clientId: process.env.PAYPAL_CLIENT_ID || "",
+    clientSecret: process.env.PAYPAL_CLIENT_SECRET || "",
+    apiUrl: process.env.PAYPAL_API_URL || "https://api-m.sandbox.paypal.com",
+  },
+
+  redotpay: {
+    apiKey: process.env.REDOTPAY_API_KEY || "",
+    appId: process.env.REDOTPAY_APP_ID || "",
+    apiUrl: process.env.REDOTPAY_API_URL || "https://api.redotpay.com",
+  },
+
   urls: {
     frontend: process.env.FRONTEND_URL || "http://localhost:3000",
     backend: process.env.BACKEND_URL || "http://localhost:4005",
