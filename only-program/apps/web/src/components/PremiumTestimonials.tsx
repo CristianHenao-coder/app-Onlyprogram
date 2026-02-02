@@ -4,8 +4,8 @@ import zara from "../assets/testimonials/zara.jpeg";
 import sun2 from "../assets/testimonials/sun2.jpeg";
 import mia from "../assets/testimonials/mia.jpeg";
 import helen1 from "../assets/testimonials/helen1.jpeg";
-import sarasuuun from "../assets/testimonials/1769380237223-sarasuuun.jpeg";
-import rocioo from "../assets/testimonials/1769374807263-rocioo.jpeg";
+import sarasuuun from "../assets/testimonials/sarasuuun.jpeg";
+import rocioo from "../assets/testimonials/rocioo.jpeg";
 
 type Testimonial = {
   id: string;
