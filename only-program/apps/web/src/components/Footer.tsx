@@ -1,8 +1,11 @@
 import { Link } from 'react-router-dom';
+import logo from '@/assets/img/logoinc.png';
+
 
 export default function Footer() {
   return (
-    <footer className="bg-background-dark pt-20 pb-10 border-t border-border">
+    <footer data-reveal data-delay="2" className="bg-background-dark pt-20 pb-10 border-t border-border">
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
           {/* Brand */}
@@ -10,10 +13,11 @@ export default function Footer() {
             <div className="flex items-center gap-2 mb-6">
               <div className="h-8 w-8 overflow-hidden rounded">
                 <img 
-                  src="/src/assets/logo.png" 
+                  src={logo} 
                   alt="Only Program Logo" 
                   className="h-full w-full object-contain"
                 />
+
               </div>
               <span className="text-lg font-bold text-white uppercase">
                 Only <span className="text-primary text-sm">Program</span>

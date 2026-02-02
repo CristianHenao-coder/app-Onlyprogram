@@ -35,9 +35,9 @@ router.post("/register", async (req: Request, res: Response) => {
       email_confirm: true, // Auto-confirmar email en desarrollo
     });
 
-    if (error) {
+    if (error || !data.user) {
       return res.status(400).json({
-        error: error.message,
+        error: error?.message || "No se pudo crear el usuario",
         code: "REGISTRATION_FAILED",
       });
     }

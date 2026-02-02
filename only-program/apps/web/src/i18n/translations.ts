@@ -36,9 +36,9 @@ export const translations = {
       denied: "DENEGADO",
     },
     testimonials: {
-      title: "Confiado por Creadores Top",
       subtitle:
         "Casos de éxito de nuestra comunidad global que prioriza la privacidad.",
+      realStories: "Historias Reales. Resultados Reales.",
       testimonial1:
         "Desde que uso Only Program, las filtraciones de mi contenido han desaparecido por completo. La protección contra bots es simplemente la mejor del mercado.",
       testimonial2:
@@ -53,8 +53,15 @@ export const translations = {
       role3: "Artista Independiente",
     },
     payments: {
-      title: "Opciones de Pago Seguras Aceptadas",
+      title: "Métodos de Pago Seguros",
+      card: "Tarjeta",
+      cardDesc: "Visa · Mastercard · Amex",
+      crypto: "Criptomonedas",
+      cryptoDesc: "BTC · ETH · USDT · SOL",
+      paypal: "PayPal",
+      paypalDesc: "Pago rápido y seguro",
     },
+
     footer: {
       description:
         "Protección profesional de enlaces para creadores de contenido. Tecnología de punta contra bots y filtraciones.",
@@ -83,6 +90,19 @@ export const translations = {
       newPassword: "Nueva Contraseña",
       confirmPassword: "Confirmar Contraseña",
       updatePassword: "Actualizar Contraseña",
+      fullName: "Nombre Completo",
+      phone: "Teléfono",
+      country: "País",
+      selectCountry: "Selecciona tu país",
+      acceptTerms:
+        "Acepto los términos y condiciones y la política de privacidad",
+      alreadyHaveAccount: "¿Ya tienes cuenta?",
+      termsLink: "términos y condiciones",
+      privacyLink: "política de privacidad",
+      noPaymentInfo: "No solicitamos información de pago en el registro",
+      joinCreators: "Únete a miles de creadores protegiendo su contenido",
+      registering: "Creando cuenta...",
+      continueWithGoogle: "Continuar con Google",
     },
     pricing: {
       title: "Los Planes de Precios",
@@ -173,6 +193,7 @@ export const translations = {
     testimonials: {
       title: "Trusted by Top Creators",
       subtitle: "Success stories from our global privacy-first community.",
+      realStories: "Real Stories. Real Results.",
       testimonial1:
         "Since using Only Program, leaks of my content have completely disappeared. Bot protection is simply the best on the market.",
       testimonial2:
@@ -187,8 +208,15 @@ export const translations = {
       role3: "Independent Artist",
     },
     payments: {
-      title: "Accepted Secure Payment Options",
+      title: "Secure Payment Methods",
+      card: "Card",
+      cardDesc: "Visa · Mastercard · Amex",
+      crypto: "Cryptocurrencies",
+      cryptoDesc: "BTC · ETH · USDT · SOL",
+      paypal: "PayPal",
+      paypalDesc: "Fast and secure payment",
     },
+
     footer: {
       description:
         "Professional link protection for content creators. Cutting-edge technology against bots and leaks.",
@@ -217,6 +245,19 @@ export const translations = {
       newPassword: "New Password",
       confirmPassword: "Confirm Password",
       updatePassword: "Update Password",
+      fullName: "Full Name",
+      phone: "Phone",
+      country: "Country",
+      selectCountry: "Select your country",
+      acceptTerms: "I accept the terms and conditions and privacy policy",
+      alreadyHaveAccount: "Already have an account?",
+      termsLink: "terms and conditions",
+      privacyLink: "privacy policy",
+      noPaymentInfo:
+        "We do not request payment information during registration",
+      joinCreators: "Join thousands of creators protecting their content",
+      registering: "Creating account...",
+      continueWithGoogle: "Continue with Google",
     },
     pricing: {
       title: "The Pricing Plans",
@@ -307,6 +348,7 @@ export const translations = {
       title: "Approuvé par les Meilleurs Créateurs",
       subtitle:
         "Témoignages de réussite de notre communauté mondiale axée sur la confidentialité.",
+      realStories: "Histoires Réelles. Résultats Réels.",
       testimonial1:
         "Depuis que j'utilise Only Program, les fuites de mon contenu ont complètement disparu. La protection contre les bots est tout simplement la meilleure du marché.",
       testimonial2:
@@ -321,8 +363,15 @@ export const translations = {
       role3: "Artiste Indépendante",
     },
     payments: {
-      title: "Options de Paiement Sécurisées Acceptées",
+      title: "Méthodes de Paiement Sécurisées",
+      card: "Carte",
+      cardDesc: "Visa · Mastercard · Amex",
+      crypto: "Cryptomonnaies",
+      cryptoDesc: "BTC · ETH · USDT · SOL",
+      paypal: "PayPal",
+      paypalDesc: "Paiement rapide et sécurisé",
     },
+
     footer: {
       description:
         "Protection professionnelle de liens pour les créateurs de contenu. Technologie de pointe contre les bots et les fuites.",
@@ -351,6 +400,21 @@ export const translations = {
       newPassword: "Nouveau Mot de passe",
       confirmPassword: "Confirmer le Mot de passe",
       updatePassword: "Mettre à jour",
+      fullName: "Nom Complet",
+      phone: "Téléphone",
+      country: "Pays",
+      selectCountry: "Sélectionnez votre pays",
+      acceptTerms:
+        "J'accepte les termes et conditions et la politique de confidentialité",
+      alreadyHaveAccount: "Vous avez déjà un compte?",
+      termsLink: "termes et conditions",
+      privacyLink: "politique de confidentialité",
+      noPaymentInfo:
+        "Nous ne demandons pas d'informations de paiement lors de l'inscription",
+      joinCreators:
+        "Rejoignez des milliers de créateurs protégeant leur contenu",
+      registering: "Création du compte...",
+      continueWithGoogle: "Continuer avec Google",
     },
     pricing: {
       title: "Les Plans Tarifaires",
