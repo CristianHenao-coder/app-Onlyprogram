@@ -1,68 +1,94 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { translations, Language } from '../i18n/translations';
+import React, { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
+import { translations, Language } from "../i18n/translations";
+
+type InterpolateValues = Record<string, string | number | boolean | null | undefined>;
 
 interface I18nContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, values?: InterpolateValues) => string;
+  availableLanguages: Language[];
 }
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
+const STORAGE_KEY = "language";
+
+function getByPath(obj: any, path: string): any {
+  if (!obj || !path) return undefined;
+  const parts = path.split(".");
+  let cur = obj;
+  for (const p of parts) {
+    if (cur == null) return undefined;
+    cur = cur[p];
+  }
+  return cur;
+}
+
+function interpolate(template: string, values?: InterpolateValues): string {
+  if (!values) return template;
+  return template
+    .replace(/\{\{\s*(\w+)\s*\}\}/g, (_, k) => String(values[k] ?? ""))
+    .replace(/\{\s*(\w+)\s*\}/g, (_, k) => String(values[k] ?? ""));
+}
+
+function detectDefaultLanguage(): Language {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY) as Language | null;
+    if (saved && (saved === "es" || saved === "en" || saved === "fr")) return saved;
+  } catch {}
+
+  const nav = (navigator.language || "es").toLowerCase();
+  if (nav.startsWith("fr")) return "fr";
+  if (nav.startsWith("en")) return "en";
+  return "es";
+}
+
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(() => {
-    // Obtener idioma guardado o detectar del navegador
-    const saved = localStorage.getItem('language') as Language;
-    if (saved && ['es', 'en', 'fr'].includes(saved)) {
-      return saved;
-    }
-    
-    // Detectar idioma del navegador
-    const browserLang = navigator.language.split('-')[0];
-    if (browserLang === 'es' || browserLang === 'en' || browserLang === 'fr') {
-      return browserLang as Language;
-    }
-    
-    return 'es'; // Default
-  });
+  const [language, setLanguageState] = useState<Language>(() => detectDefaultLanguage());
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem('language', lang);
+    try {
+      localStorage.setItem(STORAGE_KEY, lang);
+    } catch {}
     document.documentElement.lang = lang;
-  };
-
-  // Función para obtener traducción por clave
-  const t = (key: string): string => {
-    const keys = key.split('.');
-    let value: any = translations[language];
-    
-    for (const k of keys) {
-      if (value && typeof value === 'object') {
-        value = value[k];
-      } else {
-        return key; // Retornar key si no se encuentra traducción
-      }
-    }
-    
-    return typeof value === 'string' ? value : key;
   };
 
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
 
-  return (
-    <I18nContext.Provider value={{ language, setLanguage, t }}>
-      {children}
-    </I18nContext.Provider>
+  const t = (key: string, values?: InterpolateValues): string => {
+    const dict = translations[language] ?? translations.es;
+
+    const raw = getByPath(dict, key);
+    if (typeof raw === "string") return interpolate(raw, values);
+
+    // fallback a español si falta la clave en el idioma actual
+    const rawEs = getByPath(translations.es, key);
+    if (typeof rawEs === "string") return interpolate(rawEs, values);
+
+    return key;
+  };
+
+  const value = useMemo<I18nContextType>(
+    () => ({
+      language,
+      setLanguage,
+      t,
+      availableLanguages: ["es", "en", "fr"],
+    }),
+    [language]
   );
+
+  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }
 
 export function useTranslation() {
   const context = useContext(I18nContext);
   if (!context) {
-    throw new Error('useTranslation must be used within I18nProvider');
+    throw new Error("useTranslation must be used within I18nProvider");
   }
   return context;
 }
