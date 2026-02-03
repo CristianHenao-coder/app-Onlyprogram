@@ -79,11 +79,11 @@ export default function Footer() {
 
         {/* Bottom */}
         <div className="pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-silver/30">© 2024 Only Program. Todos los derechos reservados.</p>
+          <p className="text-xs text-silver/30">© 2026 Only Program. Todos los derechos reservados.</p>
           <div className="flex items-center gap-2 text-xs text-silver/30">
             Desarrollado por{' '}
             <span className="font-bold flex items-center gap-1 text-silver/60 uppercase">
-              <span className="material-symbols-outlined text-sm">code</span> Cybercore Systems
+              <span className="material-symbols-outlined text-sm">code</span> Core Devs SAS
             </span>
           </div>
         </div>

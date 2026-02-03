@@ -1,5 +1,28 @@
 export const translations = {
   es: {
+    common: {
+      prev: "Anterior",
+      next: "Siguiente",
+      alerts: "Alertas",
+      live: "En vivo",
+      copy: "Copiar",
+      uiPreview: "Vista UI",
+      techSupport: "Soporte Técnico",
+      tip: "Tip",
+      menu: "Menú",
+      save: "Guardar",
+      viewAllCountries: "Ver todos los países",
+    },
+
+    panelPreview: {
+      title: "Vista del Panel",
+      subtitle: "Pasa el mouse en desktop o toca en móvil para cambiar la vista.",
+      badge: "UI Preview",
+      hintMobile: "Tip: toca los botones de la izquierda para cambiar la vista.",
+      footerLeft: "Only Program • Vista UI",
+      footerRight: "Soporte Técnico",
+    },
+
     nav: {
       home: "Inicio",
       features: "Funciones",
@@ -9,6 +32,7 @@ export const translations = {
       signup: "Crear Cuenta",
       dashboard: "Dashboard",
     },
+
     hero: {
       badge: "Seguridad de Próxima Generación para Creadores",
       title: "Detén las filtraciones.",
@@ -18,16 +42,17 @@ export const translations = {
       cta: "Asegura tu cuenta",
       watchDemo: "Ver Demo",
     },
+
     features: {
-      title: "Monitoreo de Seguridad en Tiempo Real",
+      title: "Un panel simple, pero poderoso",
       subtitle:
-        "Nuestro panel de control te otorga el dominio absoluto sobre quién accede a tu contenido. Monitorea el tráfico entrante, bloquea IPs sospechosas al instante y recibe notificaciones de brechas potenciales.",
+        "Crea tu link, conecta tu dominio y controla todo desde un panel claro: seguridad, rutas, Telegram rotativo y analíticas. Sin configuraciones raras.",
+
       encryption: "Encriptación de Grado Militar",
-      encryptionDesc:
-        "Protección de extremo a extremo para cada enlace generado.",
+      encryptionDesc: "Protección de extremo a extremo para cada enlace generado.",
       botShield: "Escudo Inteligente contra Bots",
-      botShieldDesc:
-        "Identifica y bloquea el 99.9% de los bots de scraping automáticamente.",
+      botShieldDesc: "Identifica y bloquea el 99.9% de los bots de scraping automáticamente.",
+
       liveLinks: "Enlaces Seguros Activos",
       liveStatus: "ESTADO EN VIVO",
       created: "Creado",
@@ -35,9 +60,58 @@ export const translations = {
       ago: "hace",
       denied: "DENEGADO",
     },
+
     testimonials: {
+      title: "Creadoras que protegen su contenido con",
       subtitle:
-        "Casos de éxito de nuestra comunidad global que prioriza la privacidad.",
+        "Desliza o usa las flechas. La primera queda a la izquierda y en pantallas grandes ves 3 completas.",
+      goTo: "Ir a testimonio {{n}}",
+      items: {
+        t1: {
+          label: "TESTIMONIO 01",
+          name: "Creadora 01",
+          role: "Creadora Premium",
+          quote: "Desde que uso Only Program, mis links están blindados. Se siente profesional.",
+          badge: "Anti-bot",
+        },
+        t2: {
+          label: "TESTIMONIO 02",
+          name: "Creadora 02",
+          role: "Creadora",
+          quote: "Me encanta poder usar mi dominio y que todo se vea de marca y seguro.",
+          badge: "Dominios",
+        },
+        t3: {
+          label: "TESTIMONIO 03",
+          name: "Creadora 03",
+          role: "Creadora",
+          quote: "Las analíticas me muestran exactamente qué funciona y desde dónde llega mi tráfico.",
+          badge: "Analytics",
+        },
+        t4: {
+          label: "TESTIMONIO 04",
+          name: "Creadora 04",
+          role: "Creadora",
+          quote: "Me siento tranquila porque el acceso está verificado y el bot-shield trabaja solo.",
+          badge: "Seguridad",
+        },
+        t5: {
+          label: "TESTIMONIO 05",
+          name: "Creadora 05",
+          role: "Creadora",
+          quote: "Puedo pausar o ajustar todo. Es un sistema serio, no un link cualquiera.",
+          badge: "Control",
+        },
+        t6: {
+          label: "TESTIMONIO 06",
+          name: "Creadora 06",
+          role: "Creadora",
+          quote: "La experiencia del usuario es limpia y mis fans llegan sin fricción. Se nota premium.",
+          badge: "Conversión",
+        },
+      },
+
+      // (Dejo tus keys anteriores por compatibilidad si aún las usas en otra parte)
       realStories: "Historias Reales. Resultados Reales.",
       testimonial1:
         "Desde que uso Only Program, las filtraciones de mi contenido han desaparecido por completo. La protección contra bots es simplemente la mejor del mercado.",
@@ -52,6 +126,7 @@ export const translations = {
       name3: "Valeria Ruiz",
       role3: "Artista Independiente",
     },
+
     payments: {
       title: "Métodos de Pago Seguros",
       card: "Tarjeta",
@@ -73,6 +148,7 @@ export const translations = {
       rights: "Todos los derechos reservados",
       developedBy: "Desarrollado por",
     },
+
     auth: {
       welcomeBack: "Bienvenido de nuevo",
       loginSubtitle: "Ingresa a tu panel de control",
@@ -94,8 +170,7 @@ export const translations = {
       phone: "Teléfono",
       country: "País",
       selectCountry: "Selecciona tu país",
-      acceptTerms:
-        "Acepto los términos y condiciones y la política de privacidad",
+      acceptTerms: "Acepto los términos y condiciones y la política de privacidad",
       alreadyHaveAccount: "¿Ya tienes cuenta?",
       termsLink: "términos y condiciones",
       privacyLink: "política de privacidad",
@@ -104,10 +179,10 @@ export const translations = {
       registering: "Creando cuenta...",
       continueWithGoogle: "Continuar con Google",
     },
+
     pricing: {
       title: "Los Planes de Precios",
-      subtitle:
-        "Elige un plan que se adapte a tus objetivos y escala a medida que creces.",
+      subtitle: "Elige un plan que se adapte a tus objetivos y escala a medida que creces.",
       monthly: "Mensual",
       yearly: "Anual",
       save: "Ahorra",
@@ -147,15 +222,41 @@ export const translations = {
       paymentMethods: "Métodos de Pago Aceptados",
       recommended: "RECOMENDADO",
     },
+
     dashboard: {
       welcome: "Bienvenido a Only Program",
     },
+
     login: {
       title: "Iniciar Sesión",
       subtitle: "Ingresa a tu cuenta",
     },
   },
+
   en: {
+    common: {
+      prev: "Previous",
+      next: "Next",
+      alerts: "Alerts",
+      live: "Live",
+      copy: "Copy",
+      uiPreview: "UI Preview",
+      techSupport: "Tech Support",
+      tip: "Tip",
+      menu: "Menu",
+      save: "Save",
+      viewAllCountries: "View all countries",
+    },
+
+    panelPreview: {
+      title: "Dashboard Preview",
+      subtitle: "Hover on desktop or tap on mobile to switch views.",
+      badge: "UI Preview",
+      hintMobile: "Tip: tap the left buttons to switch views.",
+      footerLeft: "Only Program • UI Preview",
+      footerRight: "Tech Support",
+    },
+
     nav: {
       home: "Home",
       features: "Features",
@@ -165,6 +266,7 @@ export const translations = {
       signup: "Sign Up",
       dashboard: "Dashboard",
     },
+
     hero: {
       badge: "Next-Generation Security for Creators",
       title: "Stop the leaks.",
@@ -174,15 +276,16 @@ export const translations = {
       cta: "Secure your account",
       watchDemo: "Watch Demo",
     },
+
     features: {
-      title: "Real-Time Security Monitoring",
+      title: "A simple, powerful dashboard",
       subtitle:
-        "Our control panel gives you absolute domain over who accesses your content. Monitor incoming traffic, block suspicious IPs instantly and receive potential breach notifications.",
+        "Create your link, connect your domain, and control everything from a clear panel: security, routing, rotating Telegram and analytics. No confusing setup.",
+
       encryption: "Military-Grade Encryption",
       encryptionDesc: "End-to-end protection for every generated link.",
       botShield: "Intelligent Bot Shield",
-      botShieldDesc:
-        "Identifies and blocks 99.9% of scraping bots automatically.",
+      botShieldDesc: "Identifies and blocks 99.9% of scraping bots automatically.",
       liveLinks: "Active Secure Links",
       liveStatus: "LIVE STATUS",
       created: "Created",
@@ -190,9 +293,58 @@ export const translations = {
       ago: "ago",
       denied: "DENIED",
     },
+
     testimonials: {
-      title: "Trusted by Top Creators",
-      subtitle: "Success stories from our global privacy-first community.",
+      title: "Creators protecting their content with",
+      subtitle:
+        "Swipe or use the arrows. The first stays on the left and on large screens you see 3 fully.",
+      goTo: "Go to testimonial {{n}}",
+      items: {
+        t1: {
+          label: "TESTIMONIAL 01",
+          name: "Creator 01",
+          role: "Premium Creator",
+          quote: "Since using Only Program, my links feel protected. It looks professional.",
+          badge: "Anti-bot",
+        },
+        t2: {
+          label: "TESTIMONIAL 02",
+          name: "Creator 02",
+          role: "Creator",
+          quote: "I love using my own domain—everything looks branded and secure.",
+          badge: "Domains",
+        },
+        t3: {
+          label: "TESTIMONIAL 03",
+          name: "Creator 03",
+          role: "Creator",
+          quote: "Analytics show me exactly what works and where my traffic comes from.",
+          badge: "Analytics",
+        },
+        t4: {
+          label: "TESTIMONIAL 04",
+          name: "Creator 04",
+          role: "Creator",
+          quote: "I feel calm because access is verified and the bot-shield works automatically.",
+          badge: "Security",
+        },
+        t5: {
+          label: "TESTIMONIAL 05",
+          name: "Creator 05",
+          role: "Creator",
+          quote: "I can pause or adjust everything. It’s a real system, not just a link.",
+          badge: "Control",
+        },
+        t6: {
+          label: "TESTIMONIAL 06",
+          name: "Creator 06",
+          role: "Creator",
+          quote: "Fans arrive without friction. The experience feels premium.",
+          badge: "Conversion",
+        },
+      },
+
+      titleOld: "Trusted by Top Creators",
       realStories: "Real Stories. Real Results.",
       testimonial1:
         "Since using Only Program, leaks of my content have completely disappeared. Bot protection is simply the best on the market.",
@@ -207,6 +359,7 @@ export const translations = {
       name3: "Valeria Ruiz",
       role3: "Independent Artist",
     },
+
     payments: {
       title: "Secure Payment Methods",
       card: "Card",
@@ -228,6 +381,7 @@ export const translations = {
       rights: "All rights reserved",
       developedBy: "Developed by",
     },
+
     auth: {
       welcomeBack: "Welcome back",
       loginSubtitle: "Access your control panel",
@@ -253,12 +407,12 @@ export const translations = {
       alreadyHaveAccount: "Already have an account?",
       termsLink: "terms and conditions",
       privacyLink: "privacy policy",
-      noPaymentInfo:
-        "We do not request payment information during registration",
+      noPaymentInfo: "We do not request payment information during registration",
       joinCreators: "Join thousands of creators protecting their content",
       registering: "Creating account...",
       continueWithGoogle: "Continue with Google",
     },
+
     pricing: {
       title: "The Pricing Plans",
       subtitle: "Choose a plan that fits your goals and scale as you grow.",
@@ -301,15 +455,41 @@ export const translations = {
       paymentMethods: "Accepted Payment Methods",
       recommended: "RECOMMENDED",
     },
+
     dashboard: {
       welcome: "Welcome to Only Program",
     },
+
     login: {
       title: "Log In",
       subtitle: "Sign in to your account",
     },
   },
+
   fr: {
+    common: {
+      prev: "Précédent",
+      next: "Suivant",
+      alerts: "Alertes",
+      live: "En direct",
+      copy: "Copier",
+      uiPreview: "Aperçu UI",
+      techSupport: "Support Technique",
+      tip: "Astuce",
+      menu: "Menu",
+      save: "Enregistrer",
+      viewAllCountries: "Voir tous les pays",
+    },
+
+    panelPreview: {
+      title: "Aperçu du tableau de bord",
+      subtitle: "Survolez sur desktop ou touchez sur mobile pour changer la vue.",
+      badge: "Aperçu UI",
+      hintMobile: "Astuce : touchez les boutons à gauche pour changer la vue.",
+      footerLeft: "Only Program • Aperçu UI",
+      footerRight: "Support Technique",
+    },
+
     nav: {
       home: "Accueil",
       features: "Fonctionnalités",
@@ -319,6 +499,7 @@ export const translations = {
       signup: "S'inscrire",
       dashboard: "Tableau de bord",
     },
+
     hero: {
       badge: "Sécurité de Nouvelle Génération pour les Créateurs",
       title: "Arrêtez les fuites.",
@@ -328,15 +509,16 @@ export const translations = {
       cta: "Sécurisez votre compte",
       watchDemo: "Voir la Démo",
     },
+
     features: {
-      title: "Surveillance de Sécurité en Temps Réel",
+      title: "Un tableau de bord simple et puissant",
       subtitle:
-        "Notre panneau de contrôle vous donne un contrôle absolu sur qui accède à votre contenu. Surveillez le trafic entrant, bloquez les IP suspectes instantanément et recevez des notifications de violations potentielles.",
+        "Créez votre lien, connectez votre domaine et contrôlez tout depuis un panneau clair : sécurité, routage, Telegram rotatif et analytiques. Sans configuration compliquée.",
+
       encryption: "Cryptage de Niveau Militaire",
       encryptionDesc: "Protection de bout en bout pour chaque lien généré.",
       botShield: "Bouclier Intelligent Anti-Bots",
-      botShieldDesc:
-        "Identifie et bloque 99,9% des bots de scraping automatiquement.",
+      botShieldDesc: "Identifie et bloque 99,9% des bots de scraping automatiquement.",
       liveLinks: "Liens Sécurisés Actifs",
       liveStatus: "STATUT EN DIRECT",
       created: "Créé",
@@ -344,10 +526,58 @@ export const translations = {
       ago: "il y a",
       denied: "REFUSÉ",
     },
+
     testimonials: {
-      title: "Approuvé par les Meilleurs Créateurs",
+      title: "Créatrices qui protègent leur contenu avec",
       subtitle:
-        "Témoignages de réussite de notre communauté mondiale axée sur la confidentialité.",
+        "Faites défiler ou utilisez les flèches. La première reste à gauche et sur grand écran vous en voyez 3 complètes.",
+      goTo: "Aller au témoignage {{n}}",
+      items: {
+        t1: {
+          label: "TÉMOIGNAGE 01",
+          name: "Créatrice 01",
+          role: "Créatrice Premium",
+          quote: "Depuis Only Program, mes liens sont blindés. C’est très pro.",
+          badge: "Anti-bot",
+        },
+        t2: {
+          label: "TÉMOIGNAGE 02",
+          name: "Créatrice 02",
+          role: "Créatrice",
+          quote: "J’adore utiliser mon domaine : tout est cohérent, de marque et sécurisé.",
+          badge: "Domaines",
+        },
+        t3: {
+          label: "TÉMOIGNAGE 03",
+          name: "Créatrice 03",
+          role: "Créatrice",
+          quote: "Les analytiques montrent exactement ce qui marche et d’où vient le trafic.",
+          badge: "Analytiques",
+        },
+        t4: {
+          label: "TÉMOIGNAGE 04",
+          name: "Créatrice 04",
+          role: "Créatrice",
+          quote: "Je suis rassurée : accès vérifié et bot-shield automatique.",
+          badge: "Sécurité",
+        },
+        t5: {
+          label: "TÉMOIGNAGE 05",
+          name: "Créatrice 05",
+          role: "Créatrice",
+          quote: "Je peux tout ajuster. C’est un vrai système, pas un simple lien.",
+          badge: "Contrôle",
+        },
+        t6: {
+          label: "TÉMOIGNAGE 06",
+          name: "Créatrice 06",
+          role: "Créatrice",
+          quote: "Les fans arrivent sans friction. L’expérience est premium.",
+          badge: "Conversion",
+        },
+      },
+
+      titleOld: "Approuvé par les Meilleurs Créateurs",
       realStories: "Histoires Réelles. Résultats Réels.",
       testimonial1:
         "Depuis que j'utilise Only Program, les fuites de mon contenu ont complètement disparu. La protection contre les bots est tout simplement la meilleure du marché.",
@@ -362,6 +592,7 @@ export const translations = {
       name3: "Valeria Ruiz",
       role3: "Artiste Indépendante",
     },
+
     payments: {
       title: "Méthodes de Paiement Sécurisées",
       card: "Carte",
@@ -383,6 +614,7 @@ export const translations = {
       rights: "Tous droits réservés",
       developedBy: "Développé par",
     },
+
     auth: {
       welcomeBack: "Bon retour",
       loginSubtitle: "Accédez à votre panneau de contrôle",
@@ -404,22 +636,19 @@ export const translations = {
       phone: "Téléphone",
       country: "Pays",
       selectCountry: "Sélectionnez votre pays",
-      acceptTerms:
-        "J'accepte les termes et conditions et la politique de confidentialité",
+      acceptTerms: "J'accepte les termes et conditions et la politique de confidentialité",
       alreadyHaveAccount: "Vous avez déjà un compte?",
       termsLink: "termes et conditions",
       privacyLink: "politique de confidentialité",
-      noPaymentInfo:
-        "Nous ne demandons pas d'informations de paiement lors de l'inscription",
-      joinCreators:
-        "Rejoignez des milliers de créateurs protégeant leur contenu",
+      noPaymentInfo: "Nous ne demandons pas d'informations de paiement lors de l'inscription",
+      joinCreators: "Rejoignez des milliers de créateurs protégeant leur contenu",
       registering: "Création du compte...",
       continueWithGoogle: "Continuer avec Google",
     },
+
     pricing: {
       title: "Les Plans Tarifaires",
-      subtitle:
-        "Choisissez un plan qui correspond à vos objectifs et évoluez à mesure que vous grandissez.",
+      subtitle: "Choisissez un plan qui correspond à vos objectifs et évoluez à mesure que vous grandissez.",
       monthly: "Mensuel",
       yearly: "Annuel",
       save: "Économisez",
@@ -459,9 +688,11 @@ export const translations = {
       paymentMethods: "Méthodes de Paiement Acceptées",
       recommended: "RECOMMANDÉ",
     },
+
     dashboard: {
       welcome: "Bienvenue sur Only Program",
     },
+
     login: {
       title: "Se Connecter",
       subtitle: "Connectez-vous à votre compte",
