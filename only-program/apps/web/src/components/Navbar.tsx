@@ -84,7 +84,7 @@ export default function Navbar() {
                 <span className="text-primary font-extrabold tracking-tight text-lg sm:text-xl">PROGRAM</span>
               </div>
               <div className="text-[10px] sm:text-[11px] text-silver/50 font-medium tracking-wide">
-                Protección & Analíticas • Anti-bot
+                {t ? t("nav.tagline") : "Protección & Analíticas • Anti-bot"}
               </div>
             </div>
           </a>

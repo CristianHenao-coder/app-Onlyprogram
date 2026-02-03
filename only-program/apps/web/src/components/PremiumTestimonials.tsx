@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "@/contexts/I18nContext";
 
 import zara from "../assets/testimonials/zara.jpeg";
 import sun2 from "../assets/testimonials/sun2.jpeg";
@@ -22,6 +23,7 @@ type Testimonial = {
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
 export default function PremiumTestimonials() {
+  const { t } = useTranslation();
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
   const rafRef = useRef<number | null>(null);
@@ -37,72 +39,72 @@ export default function PremiumTestimonials() {
     () => [
       {
         id: "t1",
-        label: "-Zara blonde",
-        name: "Zara",
-        role: "Creadora Premium",
-        quote: "Desde que uso Only Program, mis links están blindados. Se siente profesional.",
-        badge: "Anti-bot",
+        label: t('testimonials.items.t1.label'),
+        name: t('testimonials.items.t1.name'),
+        role: t('testimonials.items.t1.role'),
+        quote: t('testimonials.items.t1.quote'),
+        badge: t('testimonials.items.t1.badge'),
         image: zara,
         tint: "rgba(168,85,247,.22)",
         videoSrc: "https://cdn.coverr.co/videos/coverr-young-woman-working-on-laptop-1570/1080p.mp4",
       },
       {
         id: "t2",
-        label: "Sunnsine",
-        name: "Sun2",
-        role: "Creadora",
-        quote: "Me encanta poder usar mi dominio y que todo se vea de marca y seguro.",
-        badge: "Dominios",
+        label: t('testimonials.items.t2.label'),
+        name: t('testimonials.items.t2.name'),
+        role: t('testimonials.items.t2.role'),
+        quote: t('testimonials.items.t2.quote'),
+        badge: t('testimonials.items.t2.badge'),
         image: sun2,
         tint: "rgba(34,211,238,.18)",
         videoSrc: "https://cdn.coverr.co/videos/coverr-businesswoman-typing-on-a-laptop-9714/1080p.mp4",
       },
       {
         id: "t3",
-        label: "Mia",
-        name: "Mia",
-        role: "Creadora",
-        quote: "Las analíticas me muestran exactamente qué funciona y desde dónde llega mi tráfico.",
-        badge: "Analytics",
+        label: t('testimonials.items.t3.label'),
+        name: t('testimonials.items.t3.name'),
+        role: t('testimonials.items.t3.role'),
+        quote: t('testimonials.items.t3.quote'),
+        badge: t('testimonials.items.t3.badge'),
         image: mia,
         tint: "rgba(249,115,22,.16)",
         videoSrc: "https://cdn.coverr.co/videos/coverr-freelancer-working-at-home-5697/1080p.mp4",
       },
       {
         id: "t4",
-        label: "Helen",
-        name: "Helen",
-        role: "Creadora",
-        quote: "Me siento tranquila porque el acceso está verificado y el bot-shield trabaja solo.",
-        badge: "Seguridad",
+        label: t('testimonials.items.t4.label'),
+        name: t('testimonials.items.t4.name'),
+        role: t('testimonials.items.t4.role'),
+        quote: t('testimonials.items.t4.quote'),
+        badge: t('testimonials.items.t4.badge'),
         image: helen1,
         tint: "rgba(29,161,242,.18)",
         videoSrc: "https://cdn.coverr.co/videos/coverr-working-on-a-laptop-while-sitting-5248/1080p.mp4",
       },
       {
         id: "t5",
-        label: "Sarasuuun",
-        name: "Sarasuuun",
-        role: "Creadora",
-        quote: "Puedo pausar o ajustar todo. Es un sistema serio, no un link cualquiera.",
-        badge: "Control",
+        label: t('testimonials.items.t5.label'),
+        name: t('testimonials.items.t5.name'),
+        role: t('testimonials.items.t5.role'),
+        quote: t('testimonials.items.t5.quote'),
+        badge: t('testimonials.items.t5.badge'),
         image: sarasuuun,
         tint: "rgba(34,197,94,.14)",
         videoSrc: "https://cdn.coverr.co/videos/coverr-taking-notes-and-working-on-laptop-7483/1080p.mp4",
       },
       {
         id: "t6",
-        label: "Rocioo",
-        name: "Rocioo",
-        role: "Creadora",
-        quote: "La experiencia del usuario es limpia y mis fans llegan sin fricción. Se nota premium.",
-        badge: "Conversión",
+        label: t('testimonials.items.t6.label'),
+        name: t('testimonials.items.t6.name'),
+        role: t('testimonials.items.t6.role'),
+        quote: t('testimonials.items.t6.quote'),
+        badge: t('testimonials.items.t6.badge'),
         image: rocioo,
         tint: "rgba(244,63,94,.14)",
         videoSrc: "https://cdn.coverr.co/videos/coverr-woman-working-on-a-laptop-while-sitting-at-a-table-6026/1080p.mp4",
       },
     ],
-    []
+    [t]
   );
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -315,10 +317,10 @@ export default function PremiumTestimonials() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-14 md:mb-16" data-reveal>
           <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight">
-            Creadoras que protegen su contenido con <span className="text-primary">Only Program</span>
+            {t("testimonials.title")} <span className="text-primary">Only Program</span>
           </h2>
           <p className="mt-4 text-silver/60 max-w-2xl mx-auto">
-            Desliza o usa las flechas. La primera queda a la izquierda y en pantallas grandes ves 3 completas.
+            {t("testimonials.subtitle")}
           </p>
         </div>
 

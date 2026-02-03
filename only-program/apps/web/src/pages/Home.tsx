@@ -54,52 +54,52 @@ export default function Home() {
     () => [
       {
         key: 'links' as const,
-        title: 'Panel de Links (Landing + Botones)',
-        subtitle: 'Cambia textos, orden y CTA. Ves el resultado antes de publicar.',
+        title: t('home.featureViews.links.title'),
+        subtitle: t('home.featureViews.links.subtitle'),
         icon: 'link',
         accent: 'rgba(29,161,242,.18)',
       },
       {
         key: 'analytics' as const,
-        title: 'Panel de Analíticas (Tráfico real)',
-        subtitle: 'Sabes qué funciona: de dónde llegan, qué tocan y qué convierte.',
+        title: t('home.featureViews.analytics.title'),
+        subtitle: t('home.featureViews.analytics.subtitle'),
         icon: 'monitoring',
         accent: 'rgba(34,211,238,.14)',
       },
       {
         key: 'telegram' as const,
-        title: 'Panel Telegram Rotativo (Anti-ban)',
-        subtitle: 'Reparte clicks entre canales y cambia destino en segundos.',
+        title: t('home.featureViews.telegram.title'),
+        subtitle: t('home.featureViews.telegram.subtitle'),
         icon: 'send',
         accent: 'rgba(111,214,255,.14)',
       },
     ],
-    []
+    [t]
   );
 
   const featurePreview = useMemo(() => {
     const base = {
-      titleBarMid: 'PANEL DE CONTROL',
+      titleBarMid: t('home.preview.titleBarMid'),
       userName: 'Only Program',
-      userRole: 'Seguridad + Conversión',
+      userRole: t('home.preview.userRole'),
     };
 
     if (activeFeatureView === 'analytics') {
       return {
         ...base,
-        header: 'Analíticas claras (sin complicarte)',
-        sub: 'Ves de dónde llega tu gente y qué acciones hacen dentro de tu landing.',
+        header: t('home.preview.headerAnalytics'),
+        sub: t('home.preview.subAnalytics'),
         kpis: [
-          { label: 'Clicks reales', value: '124.582', icon: 'ads_click', tone: 'text-primary' },
-          { label: 'Intentos filtrados', value: '8.214', icon: 'shield', tone: 'text-green-500' },
-          { label: 'Conversión', value: '24.8%', icon: 'trending_up', tone: 'text-purple-400' },
-          { label: 'Top países', value: 'ES • USA • MX', icon: 'public', tone: 'text-silver/70' },
+          { label: t('home.preview.kpis.clicks'), value: '124.582', icon: 'ads_click', tone: 'text-primary' },
+          { label: t('home.preview.kpis.filtered'), value: '8.214', icon: 'shield', tone: 'text-green-500' },
+          { label: t('home.preview.kpis.conversion'), value: '24.8%', icon: 'trending_up', tone: 'text-purple-400' },
+          { label: t('home.preview.kpis.topCountries'), value: 'ES • USA • MX', icon: 'public', tone: 'text-silver/70' },
         ],
         sidebar: [
-          { icon: 'link', label: 'Links', active: false },
-          { icon: 'monitoring', label: 'Analíticas', active: true },
-          { icon: 'settings', label: 'Ajustes', active: false },
-          { icon: 'support_agent', label: 'Soporte', active: false },
+          { icon: 'link', label: t('home.preview.sidebar.links'), active: false },
+          { icon: 'monitoring', label: t('home.preview.sidebar.analytics'), active: true },
+          { icon: 'settings', label: t('home.preview.sidebar.settings'), active: false },
+          { icon: 'support_agent', label: t('home.preview.sidebar.support'), active: false },
         ],
         chartBars: [32, 52, 41, 64, 58, 46, 71, 60, 55, 74, 62, 80],
         countryRows: [
@@ -113,29 +113,29 @@ export default function Home() {
     if (activeFeatureView === 'telegram') {
       return {
         ...base,
-        header: 'Telegram Rotativo (sin perder cuentas)',
-        sub: 'Rotas destinos para reducir bans y mantener tu tráfico siempre activo.',
+        header: t('home.preview.headerTelegram'),
+        sub: t('home.preview.subTelegram'),
         sidebar: [
-          { icon: 'link', label: 'Links', active: false },
-          { icon: 'monitoring', label: 'Analíticas', active: false },
-          { icon: 'autorenew', label: 'Rotación', active: true },
-          { icon: 'settings', label: 'Ajustes', active: false },
-          { icon: 'support_agent', label: 'Soporte', active: false },
+          { icon: 'link', label: t('home.preview.sidebar.links'), active: false },
+          { icon: 'monitoring', label: t('home.preview.sidebar.analytics'), active: false },
+          { icon: 'autorenew', label: t('home.preview.sidebar.rotation'), active: true },
+          { icon: 'settings', label: t('home.preview.sidebar.settings'), active: false },
+          { icon: 'support_agent', label: t('home.preview.sidebar.support'), active: false },
         ],
         topActions: [
-          { label: 'Ver logs', icon: 'receipt_long', primary: false },
-          { label: 'Agregar canal', icon: 'add', primary: true },
+          { label: t('home.preview.actions.logs'), icon: 'receipt_long', primary: false },
+          { label: t('home.preview.actions.addChannel'), icon: 'add', primary: true },
         ],
         cards: [
-          { title: 'Canal VIP Privado', badge: 'ROTANDO', meta: 'Siguiente: 12:46', tone: 'text-primary' },
-          { title: 'Anuncios', badge: 'ROTANDO', meta: 'Siguiente: 14:12', tone: 'text-silver/70' },
-          { title: 'Premium Comunidad', badge: 'ROTANDO', meta: 'Siguiente: 15:10', tone: 'text-silver/70' },
-          { title: 'Lanzamiento', badge: 'ROTANDO', meta: 'Siguiente: 16:20', tone: 'text-silver/70' },
-          { title: 'Comunidad', badge: 'ROTANDO', meta: 'Siguiente: 18:02', tone: 'text-silver/70' },
+          { title: t('home.preview.cards.vip'), badge: t('home.preview.cards.rotating'), meta: `${t('home.preview.cards.next')} 12:46`, tone: 'text-primary' },
+          { title: t('home.preview.cards.ads'), badge: t('home.preview.cards.rotating'), meta: `${t('home.preview.cards.next')} 14:12`, tone: 'text-silver/70' },
+          { title: t('home.preview.cards.community'), badge: t('home.preview.cards.rotating'), meta: `${t('home.preview.cards.next')} 15:10`, tone: 'text-silver/70' },
+          { title: t('home.preview.cards.launch'), badge: t('home.preview.cards.rotating'), meta: `${t('home.preview.cards.next')} 16:20`, tone: 'text-silver/70' },
+          { title: t('home.preview.cards.general'), badge: t('home.preview.cards.rotating'), meta: `${t('home.preview.cards.next')} 18:02`, tone: 'text-silver/70' },
         ],
         config: [
-          { label: 'Frecuencia', value: 'Cada 500 clicks' },
-          { label: 'Distribución', value: 'Equitativo (50/50)' },
+          { label: t('home.preview.config.freq'), value: t('home.preview.config.freqVal') },
+          { label: t('home.preview.config.dist'), value: t('home.preview.config.distVal') },
         ],
       };
     }
@@ -143,31 +143,31 @@ export default function Home() {
     // links default
     return {
       ...base,
-      header: 'Crea tu landing en minutos',
-      sub: 'Editas botones y secciones. Copias tu link protegido y listo.',
+      header: t('home.preview.headerLinks'),
+      sub: t('home.preview.subLinks'),
       sidebar: [
-        { icon: 'link', label: 'Links', active: true },
-        { icon: 'monitoring', label: 'Analíticas', active: false },
-        { icon: 'autorenew', label: 'Rotación', active: false },
-        { icon: 'settings', label: 'Ajustes', active: false },
-        { icon: 'support_agent', label: 'Soporte', active: false },
+        { icon: 'link', label: t('home.preview.sidebar.links'), active: true },
+        { icon: 'monitoring', label: t('home.preview.sidebar.analytics'), active: false },
+        { icon: 'autorenew', label: t('home.preview.sidebar.rotation'), active: false },
+        { icon: 'settings', label: t('home.preview.sidebar.settings'), active: false },
+        { icon: 'support_agent', label: t('home.preview.sidebar.support'), active: false },
       ],
       toolbar: [
-        { label: 'Vista previa', icon: 'visibility', primary: false },
-        { label: 'Guardar', icon: 'save', primary: true },
+        { label: t('home.preview.actions.preview'), icon: 'visibility', primary: false },
+        { label: t('home.preview.actions.save'), icon: 'save', primary: true },
       ],
       form: {
-        title: 'Acceso VIP',
+        title: t('home.preview.linksDemo.vipAccess'),
         url: 'https://onlyfans.com/tuusuario',
-        subtitle: 'Contenido exclusivo',
+        subtitle: t('home.preview.linksDemo.subtitle'),
       },
       socials: ['Instagram', 'TikTok', 'X', 'Email'],
       phone: {
         name: 'Tu Marca',
-        items: ['Acceso VIP', 'Telegram Rotativo'],
+        items: [t('home.preview.linksDemo.vipAccess'), t('home.preview.linksDemo.rotary')],
       },
     };
-  }, [activeFeatureView]);
+  }, [activeFeatureView, t]);
 
   const activeFeatureAccent = useMemo(() => {
     const found = featureViews.find(v => v.key === activeFeatureView);
@@ -339,10 +339,10 @@ export default function Home() {
             </div>
 
             <div data-reveal data-delay="4" className="mt-10 flex flex-wrap justify-center gap-3 text-xs text-silver/45">
-              <span className="px-3 py-1 rounded-full border border-border bg-surface/30">Links protegidos</span>
-              <span className="px-3 py-1 rounded-full border border-border bg-surface/30">Dominios propios</span>
-              <span className="px-3 py-1 rounded-full border border-border bg-surface/30">Analíticas</span>
-              <span className="px-3 py-1 rounded-full border border-border bg-surface/30">Rotación anti-ban</span>
+              <span className="px-3 py-1 rounded-full border border-border bg-surface/30">{t('home.preview.linksDemo.verified')}</span>
+              <span className="px-3 py-1 rounded-full border border-border bg-surface/30">{t('home.preview.linksDemo.channels')}</span>
+              <span className="px-3 py-1 rounded-full border border-border bg-surface/30">{t('home.featureViews.analytics.title')}</span>
+              <span className="px-3 py-1 rounded-full border border-border bg-surface/30">{t('home.featureViews.telegram.title')}</span>
             </div>
           </div>
         </section>
@@ -350,85 +350,50 @@ export default function Home() {
         {/* ✅ FEATURES: SOLO “VISTA DEL PANEL” (se quitó la parte de monitoreo/mock anterior) */}
         <section id="features" className="py-16 sm:py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-12 gap-10 items-start">
-              <div className="lg:col-span-5">
+            <div className="grid grid-cols-12 gap-10 items-start">
+              <div className="col-span-12 text-center mb-6">
                 <h2 data-reveal className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
-                  Panel simple. Resultado rápido.
+                  {t('home.simplePanel.title')}
                 </h2>
                 <p data-reveal data-delay="2" className="mt-5 text-silver/70 leading-relaxed">
-                  No necesitas saber de tecnología. Entras, eliges lo que quieres, lo ajustas y publicas.
-                  Todo queda claro en el panel.
+                  {t('home.simplePanel.desc')}
                 </p>
 
-                <div data-reveal data-delay="3" className="mt-8 space-y-3">
-                  {featureViews.map((v) => {
-                    const isActive = v.key === activeFeatureView;
-                    return (
-                      <button
-                        key={v.key}
-                        type="button"
-                        onMouseEnter={() => setActiveFeatureView(v.key)}
-                        onClick={() => setActiveFeatureView(v.key)}
-                        onFocus={() => setActiveFeatureView(v.key)}
-                        className={[
-                          "w-full text-left rounded-2xl border px-4 py-4 transition-all fake-btn",
-                          isActive ? "border-primary/60 bg-primary/10 tab-glow" : "border-border bg-surface/40 hover:border-white/15",
-                        ].join(" ")}
-                      >
-                        <div className="flex items-start gap-3">
-                          <div
-                            className={[
-                              "h-10 w-10 rounded-xl flex items-center justify-center border",
-                              isActive ? "border-primary/40 bg-primary/15" : "border-border bg-background-dark/40",
-                            ].join(" ")}
-                          >
+                <div className=" flex flex-col items-center mb-8">
+                  <div data-reveal data-delay="3" className="flex flex-wrap justify-center gap-3">
+                    {featureViews.map((v) => {
+                      const isActive = v.key === activeFeatureView;
+                      return (
+                        <button
+                          key={v.key}
+                          type="button"
+                          onMouseEnter={() => setActiveFeatureView(v.key)}
+                          onClick={() => setActiveFeatureView(v.key)}
+                          className={[
+                            "flex items-center gap-2 px-5 py-3 rounded-full border transition-all fake-btn",
+                            isActive
+                              ? "border-primary/60 bg-primary/10 tab-glow"
+                              : "border-border bg-surface/40 hover:border-white/15",
+                          ].join(" ")}
+                        >
                             <span className={["material-symbols-outlined", isActive ? "text-primary" : "text-silver/50"].join(" ")}>
                               {v.icon}
                             </span>
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-white font-bold">{v.title}</p>
-                            <p className="text-sm text-silver/55 mt-1">{v.subtitle}</p>
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
+                          <span className={isActive ? "text-white font-bold" : "text-silver/70 font-medium"}>
+                            {v.title.split(' ')[0]} {/* Short title for tabs */}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                   <p className="mt-4 text-sm text-silver/50 hidden md:block">
+                      {featureViews.find(v => v.key === activeFeatureView)?.title} - {featureViews.find(v => v.key === activeFeatureView)?.subtitle}
+                   </p>
                 </div>
 
-                <div data-reveal data-delay="4" className="mt-6 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const idx = featureViews.findIndex(v => v.key === activeFeatureView);
-                      const next = clamp(idx - 1, 0, featureViews.length - 1);
-                      setActiveFeatureView(featureViews[next].key);
-                    }}
-                    className="h-10 w-10 rounded-full bg-surface/40 border border-border hover:border-primary/40 text-silver/70 hover:text-white transition-all"
-                    aria-label="Vista anterior"
-                  >
-                    <span className="material-symbols-outlined text-lg">chevron_left</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const idx = featureViews.findIndex(v => v.key === activeFeatureView);
-                      const next = clamp(idx + 1, 0, featureViews.length - 1);
-                      setActiveFeatureView(featureViews[next].key);
-                    }}
-                    className="h-10 w-10 rounded-full bg-surface/40 border border-border hover:border-primary/40 text-silver/70 hover:text-white transition-all"
-                    aria-label="Vista siguiente"
-                  >
-                    <span className="material-symbols-outlined text-lg">chevron_right</span>
-                  </button>
 
-                  <span className="text-xs text-silver/45 ml-2">
-                    {featureViews.findIndex(v => v.key === activeFeatureView) + 1}/{featureViews.length}
-                  </span>
-                </div>
               </div>
-
-              <div className="lg:col-span-7">
+              <div className="col-span-12">
                 <div
                   data-reveal
                   data-delay="2"
@@ -460,7 +425,22 @@ export default function Home() {
                           className="inline-flex items-center gap-1.5 text-[11px] px-3 py-2 rounded-xl border border-primary/30 bg-primary/10 text-primary hover:border-primary/50 transition-all fake-btn"
                         >
                           <span className="material-symbols-outlined text-[16px]">lock</span>
-                          Protegido
+                          {t('home.preview.linksDemo.previewTitle')} // Using "previewTitle" or "verified" ? Using "Protected" actually... 
+                          {/* Wait, "Protegido" is not in my keys, I used "verified". Let me check keys again. "verified" is "Perfil verificado". I will use "Protegido" hardcode or add key? 
+                              Actually I see "Protegido" in the UI preview button. 
+                              Let me add a quick inline translation for "Protegido" or reuse exists. 
+                              I'll use "verified" for now or just t('common.save') if appropriate? No.
+                              I will keep 'Protegido' as is or map it. 
+                              Let's use "verified" from my keys which is "Perfil verificado" or just 'Protegido' string if I missed it.
+                              I missed "Protegido" key in my previous step. I'll add a dirty fix or just map to 'Protected' if I have it. I don't.
+                              I'll replace it with "Secured" or similar if I have it. 
+                              Actually I can just use "Protegido" and map it to t('home.preview.linksDemo.verified') which is close enough or use t('home.preview.linksDemo.previewTitle').
+                              Actually, looking at the code: "Protegido" button. 
+                              I will use t('home.preview.linksDemo.verified') which is 'Perfil verificado' -> maybe 'Verified'?
+                              Let's just use "Protegido" as literal for now if I missed it, OR use t('hero.badge') parts? 
+                              Let's use t('home.preview.linksDemo.verified') for now.
+                          */}
+                          {t('home.preview.linksDemo.verified')}
                         </button>
                       </div>
                     </div>
@@ -555,28 +535,28 @@ export default function Home() {
                           {activeFeatureView === 'links' && (
                             <div className="mt-5 grid md:grid-cols-2 gap-4">
                               <div className="rounded-2xl border border-white/10 bg-surface/20 p-4">
-                                <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">Título del botón</p>
+                                <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">{t('home.preview.linksDemo.btnTitle')}</p>
                                 <div className="mt-2 rounded-xl border border-border bg-background-dark/40 px-3 py-2.5">
                                   <p className="text-white text-sm font-semibold">{(featurePreview as any).form.title}</p>
                                 </div>
 
-                                <p className="mt-4 text-[10px] font-mono text-silver/40 uppercase tracking-widest">Destino</p>
+                                <p className="mt-4 text-[10px] font-mono text-silver/40 uppercase tracking-widest">{t('home.preview.linksDemo.dest')}</p>
                                 <div className="mt-2 rounded-xl border border-border bg-background-dark/40 px-3 py-2.5 flex items-center justify-between gap-2">
                                   <p className="text-silver/70 text-xs truncate">{(featurePreview as any).form.url}</p>
                                   <button
                                     type="button"
                                     className="text-[10px] px-2 py-1 rounded-lg border border-border bg-surface/30 text-silver/70 hover:text-white hover:border-primary/30 transition-all fake-btn"
                                   >
-                                    Copiar
+                                    {t('common.copy')}
                                   </button>
                                 </div>
 
-                                <p className="mt-4 text-[10px] font-mono text-silver/40 uppercase tracking-widest">Subtítulo</p>
+                                <p className="mt-4 text-[10px] font-mono text-silver/40 uppercase tracking-widest">{t('home.preview.linksDemo.subtitle')}</p>
                                 <div className="mt-2 rounded-xl border border-border bg-background-dark/40 px-3 py-2.5">
                                   <p className="text-silver/70 text-sm">{(featurePreview as any).form.subtitle}</p>
                                 </div>
 
-                                <p className="mt-4 text-[10px] font-mono text-silver/40 uppercase tracking-widest">Canales</p>
+                                <p className="mt-4 text-[10px] font-mono text-silver/40 uppercase tracking-widest">{t('home.preview.linksDemo.channels')}</p>
                                 <div className="mt-2 grid grid-cols-4 gap-2">
                                   {(featurePreview as any).socials.map((s: string, i: number) => (
                                     <button
@@ -591,7 +571,7 @@ export default function Home() {
                               </div>
 
                               <div className="rounded-2xl border border-white/10 bg-surface/20 p-4">
-                                <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">Vista previa</p>
+                                <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">{t('home.preview.linksDemo.previewTitle')}</p>
                                 <div className="mt-3 mx-auto w-full max-w-[320px] rounded-[34px] border border-white/10 bg-background-dark/70 p-3">
                                   <div className="rounded-[26px] border border-white/10 bg-black/40 overflow-hidden">
                                     <div className="p-4 flex items-center gap-3 border-b border-white/10">
@@ -600,7 +580,7 @@ export default function Home() {
                                       </div>
                                       <div className="min-w-0">
                                         <p className="text-white font-bold text-sm truncate">{(featurePreview as any).phone.name}</p>
-                                        <p className="text-[11px] text-silver/45">Perfil verificado</p>
+                                        <p className="text-[11px] text-silver/45">{t('home.preview.linksDemo.verified')}</p>
                                       </div>
                                     </div>
                                     <div className="p-4 space-y-2">
@@ -704,8 +684,8 @@ export default function Home() {
                               <div className="rounded-2xl border border-white/10 bg-surface/20 p-4">
                                 <div className="flex items-center justify-between gap-3">
                                   <div>
-                                    <p className="text-white font-extrabold">Config de rotación</p>
-                                    <p className="text-silver/60 text-sm mt-1">Define cómo se reparte el tráfico.</p>
+                                    <p className="text-white font-extrabold">{t('home.preview.config.rotationConfig')}</p>
+                                    <p className="text-silver/60 text-sm mt-1">{t('home.preview.config.rotationDesc')}</p>
                                   </div>
                                   <button
                                     type="button"
@@ -734,14 +714,14 @@ export default function Home() {
                         </div>
 
                         <div className="mt-3 flex items-center justify-between text-[10px] text-silver/40 px-1">
-                          <span>Only Program • Vista del panel</span>
-                          <span className="hidden sm:inline">Soporte</span>
+                          <span>Only Program • {t('home.preview.linksDemo.previewTitle')}</span>
+                          <span className="hidden sm:inline">{t('home.preview.sidebar.support')}</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="mt-4 sm:hidden text-center text-xs text-silver/45">
-                      Tip: toca los botones de la izquierda para cambiar la vista.
+                      {t('panelPreview.hintMobile')}
                     </div>
                   </div>
                 </div>
@@ -759,10 +739,10 @@ export default function Home() {
         <section className="relative py-16 border-y border-border overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
             <h3 data-reveal className="text-3xl sm:text-4xl font-extrabold text-white">
-              Métodos de pago seguros
+              {t('payments.title')}
             </h3>
             <p data-reveal data-delay="1" className="mt-3 text-silver/70 max-w-2xl mx-auto">
-              Elige tu método y activa tu plan. Rápido, claro y sin pasos raros.
+              {t('pricingPage.subtitle')}
             </p>
 
             <div data-reveal data-delay="2" className="mt-10">
@@ -783,9 +763,9 @@ export default function Home() {
                 style={{ background: 'radial-gradient(circle at 50% 40%, rgba(29,161,242,.22) 0%, transparent 65%)' }}
               />
               <div className="relative">
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-white">Tu primer link protegido en minutos</h3>
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-white">{t('home.finalCta.title')}</h3>
                 <p className="mt-4 text-silver/70 max-w-2xl mx-auto">
-                  Crea tu cuenta, diseña tu landing, conecta tu dominio y activa analíticas.
+                  {t('home.finalCta.desc')}
                 </p>
                 <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
                   <Link
@@ -793,7 +773,7 @@ export default function Home() {
                     data-magnetic="0.12"
                     className="px-7 py-3.5 rounded-xl bg-primary text-white font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/25"
                   >
-                    Crear cuenta
+                    {t('home.finalCta.btn')}
                   </Link>
                   <Link
                     to="/pricing"

@@ -95,24 +95,24 @@ export default function PremiumPayments() {
 
         <div className="mt-6 rounded-2xl border border-border bg-background-dark/35 p-4">
           <div className="flex items-center justify-between">
-            <p className="text-xs text-silver/55 font-semibold">Proceso</p>
+            <p className="text-xs text-silver/55 font-semibold">{t("payments.process.title")}</p>
             <span className="text-[10px] font-mono text-primary bg-primary/10 border border-primary/20 px-2 py-1 rounded-full">
-              instant
+              {t("payments.process.instant")}
             </span>
           </div>
 
           <div className="mt-3 space-y-2 text-sm text-silver/70">
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-primary">done</span>
-              Selecciona método
+              {t("payments.process.step1")}
             </div>
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-primary">done</span>
-              Confirma y valida
+              {t("payments.process.step2")}
             </div>
             <div className="flex items-center gap-2">
               <span className="material-symbols-outlined text-[18px] text-primary">done</span>
-              Activación inmediata
+              {t("payments.process.step3")}
             </div>
           </div>
         </div>
@@ -150,21 +150,21 @@ export default function PremiumPayments() {
           title={t ? t("payments.card") : "Tarjetas"}
           desc={t ? t("payments.cardDesc") : "VISA, Mastercard, Amex. Confirmación rápida."}
           icon="credit_card"
-          chips={["VISA", "Mastercard", "Amex", "3DS opcional"]}
+          chips={(t("payments.chips.card") as any as string[]) || ["VISA", "Mastercard", "Amex", "3DS opcional"]}
           assets={paymentAssets.card}
         />
         <Card
           title={t ? t("payments.crypto") : "Cripto"}
           desc={t ? t("payments.cryptoDesc") : "BTC, ETH, USDT, SOL. Validación manual segura."}
           icon="currency_bitcoin"
-          chips={["BTC", "ETH", "USDT", "SOL"]}
+          chips={(t("payments.chips.crypto") as any as string[]) || ["BTC", "ETH", "USDT", "SOL"]}
           assets={paymentAssets.crypto}
         />
         <Card
           title={t ? t("payments.paypal") : "PayPal"}
           desc={t ? t("payments.paypalDesc") : "Checkout confiable con alta tasa de aprobación."}
           icon="payments"
-          chips={["PayPal", "Checkout rápido", "Confianza"]}
+          chips={(t("payments.chips.paypal") as any as string[]) || ["PayPal", "Checkout rápido", "Confianza"]}
           assets={paymentAssets.paypal}
         />
       </div>
