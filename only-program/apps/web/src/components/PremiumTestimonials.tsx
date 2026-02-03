@@ -15,7 +15,7 @@ type Testimonial = {
   quote: string;
   badge: string;
   image: string;
-  tint: string; // rgba(...)
+  tint: string;
   videoSrc?: string;
 };
 
