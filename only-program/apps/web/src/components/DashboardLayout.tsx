@@ -14,8 +14,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   const navItems = [
-    { path: '/dashboard/home', label: 'Home', icon: 'home' },
+    { path: '/', label: 'Inicio', icon: 'home', external: true },
+    { path: '/dashboard/home', label: 'Dashboard', icon: 'dashboard' },
     { path: '/dashboard/links', label: 'Links', icon: 'link' },
+    { path: '/dashboard/analytics', label: 'Analytics', icon: 'analytics' },
     { path: '/dashboard/payments', label: 'Pagos', icon: 'payments' },
     { path: '/dashboard/settings', label: 'Configuración', icon: 'settings' },
   ];

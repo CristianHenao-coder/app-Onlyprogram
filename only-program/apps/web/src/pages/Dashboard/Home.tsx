@@ -72,7 +72,7 @@ export default function Home() {
                     <p className="text-silver/60 text-sm mt-1">Gestiona tus links y revisa tu actividad</p>
                 </div>
                 <Link
-                    to="/dashboard/links/new"
+                    to="/dashboard/links"
                     className="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
                 >
                     <span className="material-symbols-outlined">add</span>

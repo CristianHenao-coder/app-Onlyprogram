@@ -15,6 +15,7 @@ export default function Settings() {
   const [profile, setProfile] = useState({
     full_name: '',
     email: '',
+    phone: '',
     country: '',
     bio: '',
     telegram: ''
@@ -34,6 +35,7 @@ export default function Settings() {
           setProfile({
             full_name: data.full_name || '',
             email: user.email || '',
+            phone: user.phone || user.user_metadata?.phone || '',
             country: data.country || '',
             bio: data.bio || '',
             telegram: data.telegram_handle || ''
@@ -109,8 +111,8 @@ export default function Settings() {
             key={tab.id}
             onClick={() => setActiveTab(tab.id as any)}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all ${activeTab === tab.id
-                ? 'bg-primary text-white shadow-lg shadow-primary/25'
-                : 'text-silver/40 hover:text-white hover:bg-white/5'
+              ? 'bg-primary text-white shadow-lg shadow-primary/25'
+              : 'text-silver/40 hover:text-white hover:bg-white/5'
               }`}
           >
             <span className="material-symbols-outlined text-lg">{tab.icon}</span>
@@ -158,6 +160,16 @@ export default function Settings() {
                     value={profile.email}
                     readOnly
                     className="w-full bg-background-dark/10 border-2 border-border/20 rounded-xl px-5 py-3.5 text-silver/30 cursor-not-allowed font-bold"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-silver/40 uppercase tracking-widest px-1">Teléfono</label>
+                  <input
+                    type="tel"
+                    value={profile.phone}
+                    readOnly
+                    className="w-full bg-background-dark/10 border-2 border-border/20 rounded-xl px-5 py-3.5 text-silver/30 cursor-not-allowed font-bold"
+                    title="Para cambiar tu teléfono, contacta a soporte"
                   />
                 </div>
                 <div className="space-y-2">

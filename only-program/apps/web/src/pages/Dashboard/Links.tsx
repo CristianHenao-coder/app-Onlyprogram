@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
+import { useTranslation } from '@/contexts/I18nContext';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 // Types
 type TemplateType = 'minimal' | 'split' | 'full';
@@ -145,6 +147,7 @@ const getBackgroundStyle = (page: LinkPage) => {
 const hasRotatorActive = (page: LinkPage) => page.buttons.some(b => b.type === 'telegram' && b.rotatorActive);
 
 export default function Links() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sensors = useSensors(
@@ -378,12 +381,13 @@ export default function Links() {
           <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
             <span className="material-symbols-outlined text-lg">layers</span>
           </div>
-          <h1 className="text-sm font-bold uppercase tracking-wider">Gestor Multi-Link</h1>
+          <h1 className="text-sm font-bold uppercase tracking-wider">{t('dashboard.links.managerTitle')}</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4">
+          <LanguageSwitcher />
           <span className="text-[10px] uppercase font-bold text-silver/30 flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-            Autoguardado
+            {t('dashboard.links.autosave')}
           </span>
         </div>
       </header>
@@ -397,7 +401,7 @@ export default function Links() {
           {/* Active Links Group */}
           {activePages.length > 0 && (
             <div className="flex lg:flex-col gap-2 w-full items-center">
-              <div className="text-[10px] font-black text-silver/20 uppercase hidden lg:block mb-1 w-full text-center">Mis Links</div>
+              <div className="text-[10px] font-black text-silver/20 uppercase hidden lg:block mb-1 w-full text-center">{t('dashboard.links.myLinks')}</div>
               {activePages.map(page => (
                 <button
                   key={page.id}
@@ -418,7 +422,7 @@ export default function Links() {
 
           {/* Drafts Group (Crear Links) */}
           <div className="flex lg:flex-col gap-2 w-full items-center">
-            <div className="text-[10px] font-black text-silver/20 uppercase hidden lg:block mb-1 w-full text-center text-nowrap scaling-75">Crear Link</div>
+            <div className="text-[10px] font-black text-silver/20 uppercase hidden lg:block mb-1 w-full text-center text-nowrap scaling-75">{t('dashboard.links.createLink')}</div>
             {draftPages.map(page => (
               <button
                 key={page.id}
@@ -444,7 +448,7 @@ export default function Links() {
             ))}
           </div>
 
-          <button onClick={handleAddPage} className="w-12 h-12 rounded-xl border border-dashed border-white/20 flex items-center justify-center text-silver/40 hover:text-white hover:border-primary shrink-0 lg:mt-2" title="Crear Nuevo Link">
+          <button onClick={handleAddPage} className="w-12 h-12 rounded-xl border border-dashed border-white/20 flex items-center justify-center text-silver/40 hover:text-white hover:border-primary shrink-0 lg:mt-2" title={t('dashboard.links.newLinkTitle')}>
             <span className="material-symbols-outlined">add</span>
           </button>
         </aside>
@@ -456,7 +460,7 @@ export default function Links() {
             <div className="flex justify-between items-center">
               <div>
                 <h3 className="text-[10px] font-black uppercase tracking-widest text-silver/40 mb-1 flex items-center gap-2">
-                  {currentPage.status === 'draft' ? <span className="text-yellow-500">Creando...</span> : <span className="text-green-500">Activo</span>}
+                  {currentPage.status === 'draft' ? <span className="text-yellow-500">{t('dashboard.links.creatingDraft')}</span> : <span className="text-green-500">{t('dashboard.links.active')}</span>}
                 </h3>
                 <h2 className="text-sm font-bold truncate max-w-[150px]">{currentPage.name}</h2>
               </div>
@@ -465,13 +469,13 @@ export default function Links() {
             {/* Actions Grid */}
             <div className="grid grid-cols-2 gap-2">
               <button onClick={handleDeletePage} className="py-2 px-2 rounded-lg flex items-center justify-center gap-1 text-[10px] font-bold text-red-500/50 hover:text-red-500 hover:bg-red-500/10 bg-white/5 transition-all">
-                <span className="material-symbols-outlined text-sm">delete</span> Eliminar
+                <span className="material-symbols-outlined text-sm">delete</span> {t('dashboard.links.delete')}
               </button>
               <button onClick={() => setSelectedButtonId(null)} className="py-2 px-2 rounded-lg flex items-center justify-center gap-1 text-[10px] font-bold text-silver/40 hover:text-white hover:bg-white/5 bg-white/5 transition-all">
-                <span className="material-symbols-outlined text-sm">settings</span> Config
+                <span className="material-symbols-outlined text-sm">settings</span> {t('dashboard.links.config')}
               </button>
               <button onClick={() => setShowButtonCreator(true)} className="col-span-2 py-2.5 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 hover:border-primary/50 text-primary transition-all flex items-center justify-center gap-2">
-                <span className="material-symbols-outlined text-sm">add_circle</span> <span className="text-xs font-bold">Añadir Botón</span>
+                <span className="material-symbols-outlined text-sm">add_circle</span> <span className="text-xs font-bold">{t('dashboard.links.addButton')}</span>
               </button>
             </div>
           </div>
@@ -497,7 +501,7 @@ export default function Links() {
                   ))}
                   {currentPage.buttons.length === 0 && (
                     <div className="text-center py-8 text-silver/30 text-xs italic">
-                      Sin botones aún.
+                      {t('dashboard.links.noButtons')}
                     </div>
                   )}
                 </div>
@@ -513,7 +517,7 @@ export default function Links() {
 
               {showButtonCreator && (
                 <div className="animate-fade-in space-y-6">
-                  <div className="text-center mb-8"><h2 className="text-xl font-bold text-white mb-2">Añadir Botón</h2></div>
+                  <div className="text-center mb-8"><h2 className="text-xl font-bold text-white mb-2">{t('dashboard.links.addButton')}</h2></div>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     {(Object.keys(SOCIAL_PRESETS) as SocialType[]).map(key => (
                       <button key={key} onClick={() => handleCreateButton(key)} className="aspect-square rounded-2xl bg-[#0A0A0A] border border-white/10 flex flex-col items-center justify-center gap-4 hover:border-primary hover:bg-white/5 hover:-translate-y-1 transition-all group">
@@ -528,16 +532,16 @@ export default function Links() {
               {selectedButton && !showButtonCreator && (
                 <div className="animate-slide-up space-y-8">
                   <div className="flex justify-between items-center border-b border-white/5 pb-6">
-                    <h2 className="text-xl font-bold">Editar Botón</h2>
-                    <button onClick={() => setSelectedButtonId(null)} className="text-xs text-silver/50 hover:text-white">Cerrar</button>
+                    <h2 className="text-xl font-bold">{t('dashboard.links.editButton')}</h2>
+                    <button onClick={() => setSelectedButtonId(null)} className="text-xs text-silver/50 hover:text-white">{t('dashboard.links.close')}</button>
                   </div>
                   <div className="space-y-6">
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">Título</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">{t('dashboard.links.title')}</label>
                       <input type="text" value={selectedButton.title} onChange={(e) => handleUpdateButton('title', e.target.value)} className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-primary/50" />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">URL Principal</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">{t('dashboard.links.mainUrl')}</label>
                       <input type="text" value={selectedButton.url} onChange={(e) => handleUpdateButton('url', e.target.value)} className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-sm font-mono text-silver focus:outline-none focus:border-primary/50" />
                     </div>
 
@@ -548,9 +552,9 @@ export default function Links() {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 text-blue-400 mb-1">
                               <span className="material-symbols-outlined">sync</span>
-                              <span className="text-sm font-bold">Activar Rotativo</span>
+                              <span className="text-sm font-bold">{t('dashboard.links.activateRotator')}</span>
                             </div>
-                            <p className="text-[10px] text-silver/50 leading-tight">Activa esta función para rotar entre múltiples enlaces. <span className="text-yellow-500">+${ROTATOR_SURCHARGE} USD</span> al valor de este link.</p>
+                            <p className="text-[10px] text-silver/50 leading-tight">{t('dashboard.links.rotatorDesc')}</p>
                           </div>
                           <label className="relative inline-flex items-center cursor-pointer shrink-0">
                             <input type="checkbox" checked={selectedButton.rotatorActive || false} onChange={(e) => handleUpdateButton('rotatorActive', e.target.checked)} className="sr-only peer" />
@@ -560,7 +564,7 @@ export default function Links() {
 
                         {selectedButton.rotatorActive && (
                           <div className="space-y-3 animate-fade-in pt-2">
-                            <p className="text-[10px] text-silver/50 uppercase font-bold">Añade hasta 5 links adicionales:</p>
+                            <p className="text-[10px] text-silver/50 uppercase font-bold">{t('dashboard.links.addExtraLinks')}</p>
                             {[0, 1, 2, 3, 4].map((idx) => (
                               <div key={idx} className="flex items-center gap-3">
                                 <span className="text-xs font-mono text-silver/40 w-4 text-center">{idx + 1}</span>
@@ -579,12 +583,12 @@ export default function Links() {
                     )}
 
                     <div className="p-4 bg-white/5 rounded-xl space-y-4">
-                      <h3 className="text-xs font-bold text-silver/60 border-b border-white/5 pb-2">Estilos</h3>
+                      <h3 className="text-xs font-bold text-silver/60 border-b border-white/5 pb-2">{t('dashboard.links.styles')}</h3>
 
                       <div className="grid grid-cols-2 gap-6">
                         {/* BG COLOR */}
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">Fondo</label>
+                          <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">{t('dashboard.links.background')}</label>
                           <div className="flex items-center gap-3">
                             <input type="color" value={selectedButton.color} onChange={(e) => handleUpdateButton('color', e.target.value)} className="h-10 w-10 rounded-lg bg-transparent cursor-pointer border-none" />
                             <span className="text-xs font-mono text-silver/50">{selectedButton.color}</span>
@@ -592,7 +596,7 @@ export default function Links() {
                         </div>
                         {/* TEXT COLOR */}
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">Texto</label>
+                          <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">{t('dashboard.links.text')}</label>
                           <div className="flex items-center gap-3">
                             <input type="color" value={selectedButton.textColor} onChange={(e) => handleUpdateButton('textColor', e.target.value)} className="h-10 w-10 rounded-lg bg-transparent cursor-pointer border-none" />
                             <span className="text-xs font-mono text-silver/50">{selectedButton.textColor}</span>
@@ -604,14 +608,14 @@ export default function Links() {
                         {/* RADIUS */}
                         <div className="space-y-2 relative">
                           <div className="flex justify-between mb-1">
-                            <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">Redondez</label>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">{t('dashboard.links.radius')}</label>
                             <span className="text-xs font-mono text-primary">{selectedButton.borderRadius}px</span>
                           </div>
                           <input type="range" min="0" max="50" value={selectedButton.borderRadius} onChange={(e) => handleUpdateButton('borderRadius', Number(e.target.value))} className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary" />
                         </div>
                         {/* FONT */}
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">Tipografía</label>
+                          <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">{t('dashboard.links.typography')}</label>
                           <select
                             value={selectedButton.font || 'sans'}
                             onChange={(e) => handleUpdateButton('font', e.target.value)}
@@ -632,7 +636,7 @@ export default function Links() {
               {!selectedButton && !showButtonCreator && (
                 <div className="animate-fade-in space-y-8">
                   <div className="p-6 rounded-2xl border border-white/5 bg-[#0A0A0A]">
-                    <h3 className="text-[10px] font-black uppercase tracking-widest text-silver/40 mb-4">Plantilla de Diseño</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-silver/40 mb-4">{t('dashboard.links.designTemplate')}</h3>
                     <div className="grid grid-cols-3 gap-3">
                       {[{ id: 'minimal', label: 'Minimal', icon: 'crop_portrait' }, { id: 'split', label: 'Split', icon: 'vertical_split' }, { id: 'full', label: 'Full', icon: 'wallpaper' }].map((t) => (
                         <button key={t.id} onClick={() => handleUpdatePage('template', t.id as TemplateType)} className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-all ${currentPage.template === t.id ? 'bg-primary/10 border-primary text-primary' : 'bg-white/5 border-transparent text-silver/40 hover:bg-white/10'}`}>
@@ -642,42 +646,42 @@ export default function Links() {
                     </div>
                   </div>
                   <div className="space-y-6 pt-4">
-                    <h2 className="text-xl font-bold text-white border-b border-white/5 pb-4">Detalles del Perfil</h2>
+                    <h2 className="text-xl font-bold text-white border-b border-white/5 pb-4">{t('dashboard.links.profileDetails')}</h2>
                     <div className="grid grid-cols-1 gap-6">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">Nombre de la Página</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">{t('dashboard.links.pageName')}</label>
                         <div className="flex gap-2">
                           <input type="text" value={currentPage.name} onChange={(e) => handleUpdatePage('name', e.target.value)} className="flex-1 bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-primary/50" />
                           {currentPage.status === 'active' && <div className="px-3 py-2 bg-green-500/10 border border-green-500/30 rounded-xl flex items-center text-green-500"><span className="material-symbols-outlined text-base">check_circle</span></div>}
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">Nombre Visible</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">{t('dashboard.links.visibleName')}</label>
                         <input type="text" value={currentPage.profileName} onChange={(e) => handleUpdatePage('profileName', e.target.value)} className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-primary/50" />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">Foto de Perfil</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">{t('dashboard.links.profilePhoto')}</label>
                         <div className="flex gap-4 items-center">
                           <div className="h-16 w-16 rounded-xl overflow-hidden border border-white/10 bg-white/5 relative shrink-0"><img src={currentPage.profileImage} className="w-full h-full object-cover" /></div>
                           <div className="flex-1 min-w-0">
                             <input type="file" ref={fileInputRef} accept="image/*" onChange={handleImageUpload} className="hidden" />
-                            <button onClick={() => fileInputRef.current?.click()} className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold transition-all whitespace-nowrap">Subir Imagen</button>
+                            <button onClick={() => fileInputRef.current?.click()} className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold transition-all whitespace-nowrap">{t('dashboard.links.uploadImage')}</button>
                           </div>
                         </div>
                       </div>
 
                       <div className="space-y-3">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">Fondo de Página</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">{t('dashboard.links.pageBackground')}</label>
 
                         {/* Type Toggle */}
                         <div className="flex gap-4 mb-2">
                           <button onClick={() => handleUpdatePage('theme.backgroundType', 'solid')} className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${currentPage.theme.backgroundType === 'solid' ? 'bg-primary/20 border-primary text-primary' : 'bg-white/5 border-transparent text-silver/40'}`}>
                             <div className="w-4 h-4 rounded-full bg-current"></div>
-                            <span className="text-xs font-bold">Sólido</span>
+                            <span className="text-xs font-bold">{t('dashboard.links.solid')}</span>
                           </button>
                           <button onClick={() => handleUpdatePage('theme.backgroundType', 'gradient')} className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all ${currentPage.theme.backgroundType === 'gradient' ? 'bg-primary/20 border-primary text-primary' : 'bg-white/5 border-transparent text-silver/40'}`}>
                             <div className="flex -space-x-1"><div className="w-3 h-3 rounded-full bg-current"></div><div className="w-3 h-3 rounded-full bg-current opacity-50"></div></div>
-                            <span className="text-xs font-bold">Degradado</span>
+                            <span className="text-xs font-bold">{t('dashboard.links.gradient')}</span>
                           </button>
                         </div>
 
@@ -691,13 +695,13 @@ export default function Links() {
                           ) : (
                             <div className="flex gap-4">
                               <div className="flex-1 flex flex-col gap-1">
-                                <span className="text-[10px] uppercase text-silver/30 font-bold">Color Inicial</span>
+                                <span className="text-[10px] uppercase text-silver/30 font-bold">{t('dashboard.links.startColor')}</span>
                                 <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
                                   <input type="color" value={currentPage.theme.backgroundStart} onChange={(e) => handleUpdatePage('theme.backgroundStart', e.target.value)} className="h-10 w-10 shrink-0 rounded-lg bg-transparent cursor-pointer border-none" />
                                 </div>
                               </div>
                               <div className="flex-1 flex flex-col gap-1">
-                                <span className="text-[10px] uppercase text-silver/30 font-bold">Color Final</span>
+                                <span className="text-[10px] uppercase text-silver/30 font-bold">{t('dashboard.links.endColor')}</span>
                                 <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
                                   <input type="color" value={currentPage.theme.backgroundEnd} onChange={(e) => handleUpdatePage('theme.backgroundEnd', e.target.value)} className="h-10 w-10 shrink-0 rounded-lg bg-transparent cursor-pointer border-none" />
                                 </div>
@@ -709,19 +713,19 @@ export default function Links() {
                     </div>
                   </div>
                   <div className="space-y-6 pt-4">
-                    <h2 className="text-xl font-bold text-white border-b border-white/5 pb-4">Apariencia</h2>
+                    <h2 className="text-xl font-bold text-white border-b border-white/5 pb-4">{t('dashboard.links.appearance')}</h2>
                     <div className="grid grid-cols-1 gap-6">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">Color de Borde (Avatar)</label>
+                        <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">{t('dashboard.links.borderColor')}</label>
                         <div className="flex items-center gap-3">
                           <input type="color" value={currentPage.theme.pageBorderColor} onChange={(e) => handleUpdatePage('theme.pageBorderColor', e.target.value)} className="h-10 w-10 shrink-0 rounded-lg bg-transparent cursor-pointer border-none" />
                           <span className="text-xs font-mono text-silver/50 uppercase">{currentPage.theme.pageBorderColor}</span>
                         </div>
-                        <p className="text-[10px] text-silver/30">Aplica al borde del perfil en Plantilla Minimal</p>
+                        <p className="text-[10px] text-silver/30">{t('dashboard.links.borderDesc')}</p>
                       </div>
                       {currentPage.template === 'full' && (
                         <div className="space-y-2 animate-fade-in">
-                          <div className="flex justify-between mb-2"><label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">Opacidad</label><span className="text-xs font-mono text-primary">{currentPage.theme.overlayOpacity}%</span></div>
+                          <div className="flex justify-between mb-2"><label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">{t('dashboard.links.opacity')}</label><span className="text-xs font-mono text-primary">{currentPage.theme.overlayOpacity}%</span></div>
                           <input type="range" min="0" max="90" value={currentPage.theme.overlayOpacity} onChange={(e) => handleUpdatePage('theme.overlayOpacity', Number(e.target.value))} className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary" />
                         </div>
                       )}
@@ -736,7 +740,7 @@ export default function Links() {
           <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all ${draftPages.length > 0 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
             <button onClick={() => { setDiscountCode(''); setAppliedDiscount(null); setDiscountError(''); setShowPaymentModal(true); }} className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-amber-600 rounded-full text-white font-black uppercase tracking-widest shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:scale-105 transition-all flex items-center gap-2 whitespace-nowrap">
               <span className="material-symbols-outlined">shopping_cart</span>
-              <span className="font-bold">Comprar Links</span>
+              <span className="font-bold">{t('dashboard.links.buyLinks')}</span>
               <span className="bg-black/20 px-2 py-0.5 rounded text-xs ml-2">${paymentDetails.total}</span>
             </button>
           </div>
@@ -789,13 +793,13 @@ export default function Links() {
             <div className="p-8">
               <div className="text-center">
                 <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4 text-primary"><span className="material-symbols-outlined text-3xl">shopping_cart</span></div>
-                <h2 className="text-2xl font-bold text-white">Activar Nuevos Links</h2>
-                <p className="text-silver/60 text-sm mt-2">Tienes {draftPages.length} links pendientes de activación</p>
+                <h2 className="text-2xl font-bold text-white">{t('dashboard.links.activateNewLinks')}</h2>
+                <p className="text-silver/60 text-sm mt-2">{t('dashboard.links.pendingLinks', { count: draftPages.length })}</p>
               </div>
               <div className="bg-white/5 p-4 rounded-xl space-y-3 my-6">
                 {paymentDetails.countStandard > 0 && (
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-silver/60">Links Estándar ({paymentDetails.countStandard})</span>
+                    <span className="text-silver/60">{t('dashboard.links.standardLinks')} ({paymentDetails.countStandard})</span>
                     <span>${(paymentDetails.countStandard * LINK_PRICE_STANDARD).toFixed(2)}</span>
                   </div>
                 )}
