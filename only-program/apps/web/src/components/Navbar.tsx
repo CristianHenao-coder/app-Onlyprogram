@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "@/contexts/I18nContext";
+import { useAuth } from "@/hooks/useAuth";
 
 import Logo from "./Logo";
 
@@ -11,6 +12,7 @@ type NavItem = { label: string; href: string };
 export default function Navbar({ previewData }: { previewData?: any }) {
   const { pathname } = useLocation();
   const { t, language, setLanguage } = useTranslation() as any;
+  const { user } = useAuth();
 
   const items: NavItem[] = useMemo(
     () => [
@@ -89,19 +91,19 @@ export default function Navbar({ previewData }: { previewData?: any }) {
               const isHash = it.href.startsWith("/#") || it.href.startsWith("#");
               // If we are on home ("/" or "") and it's a hash link, treat it as local anchor
               const isLocal = isHash && (pathname === "/" || pathname === "");
-              
+
               const targetHref = isHash ? (it.href.includes("#") ? `#${it.href.split("#")[1]}` : it.href) : it.href;
 
               if (isLocal) {
-                 return (
-                   <a
-                     key={it.href}
-                     href={targetHref}
-                     className="text-sm font-semibold text-silver/70 hover:text-white transition-colors"
-                   >
-                     {it.label}
-                   </a>
-                 );
+                return (
+                  <a
+                    key={it.href}
+                    href={targetHref}
+                    className="text-sm font-semibold text-silver/70 hover:text-white transition-colors"
+                  >
+                    {it.label}
+                  </a>
+                );
               }
 
               return (
@@ -178,25 +180,44 @@ export default function Navbar({ previewData }: { previewData?: any }) {
               </div>
             </div>
 
-            <Link
-              to="/login"
-              className="hidden sm:inline-flex text-sm font-semibold text-silver/70 hover:text-white transition-colors"
-            >
-              {t ? t("nav.login") : "Iniciar Sesión"}
-            </Link>
+            {/* Check if user is logged in */}
+            {user ? (
+              <Link
+                to="/dashboard/links"
+                className={[
+                  "inline-flex items-center justify-center gap-2",
+                  "h-10 px-4 rounded-xl",
+                  "bg-primary text-white font-bold text-sm",
+                  "hover:bg-primary-dark transition-all",
+                  "shadow-lg shadow-primary/20",
+                ].join(" ")}
+              >
+                <span className="material-symbols-outlined text-[18px]">dashboard</span>
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="hidden sm:inline-flex text-sm font-semibold text-silver/70 hover:text-white transition-colors"
+                >
+                  {t ? t("nav.login") : "Iniciar Sesión"}
+                </Link>
 
-            <Link
-              to="/register"
-              className={[
-                "inline-flex items-center justify-center",
-                "h-10 px-4 rounded-xl",
-                "bg-primary text-white font-bold text-sm",
-                "hover:bg-primary-dark transition-all",
-                "shadow-lg shadow-primary/20",
-              ].join(" ")}
-            >
-              {t ? t("nav.signup") : "Crear Cuenta"}
-            </Link>
+                <Link
+                  to="/register"
+                  className={[
+                    "inline-flex items-center justify-center",
+                    "h-10 px-4 rounded-xl",
+                    "bg-primary text-white font-bold text-sm",
+                    "hover:bg-primary-dark transition-all",
+                    "shadow-lg shadow-primary/20",
+                  ].join(" ")}
+                >
+                  {t ? t("nav.signup") : "Crear Cuenta"}
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

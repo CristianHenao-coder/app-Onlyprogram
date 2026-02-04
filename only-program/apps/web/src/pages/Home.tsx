@@ -8,12 +8,15 @@ import PremiumPayments from "../components/PremiumPayments";
 import { cmsService } from '@/services/cmsService';
 
 
-export default function Home({ 
+import { useAuth } from '@/hooks/useAuth';
+
+export default function Home({
   previewData
-}: { 
+}: {
   previewData?: any;
 }) {
   const { t } = useTranslation();
+  const { user } = useAuth();
 
   // ✅ Velada-like reveal: aparece en foco y se atenúa si sale (sin borrar nada, solo agrega)
   useEffect(() => {
@@ -181,7 +184,7 @@ export default function Home({
   // ✅ Load CMS Configs
   const [heroConfig, setHeroConfig] = useState<any>(null);
   const [showVideo, setShowVideo] = useState(false);
-  
+
   useEffect(() => {
     if (previewData?.hero) {
       setHeroConfig(previewData.hero);
@@ -200,20 +203,20 @@ export default function Home({
       {/* Video Modal */}
       {showVideo && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-300">
-           <button 
-             onClick={() => setShowVideo(false)}
-             className="absolute top-6 right-6 text-white hover:text-primary transition-colors"
-           >
-              <span className="material-symbols-outlined text-4xl">close</span>
-           </button>
-           <div className="w-full max-w-5xl aspect-video rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-surface animate-in zoom-in-95 duration-500">
-              <video 
-                src="https://cdn.coverr.co/videos/coverr-woman-typing-on-a-laptop-9262/1080p.mp4" 
-                controls 
-                autoPlay 
-                className="w-full h-full object-cover"
-              />
-           </div>
+          <button
+            onClick={() => setShowVideo(false)}
+            className="absolute top-6 right-6 text-white hover:text-primary transition-colors"
+          >
+            <span className="material-symbols-outlined text-4xl">close</span>
+          </button>
+          <div className="w-full max-w-5xl aspect-video rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-surface animate-in zoom-in-95 duration-500">
+            <video
+              src="https://cdn.coverr.co/videos/coverr-woman-typing-on-a-laptop-9262/1080p.mp4"
+              controls
+              autoPlay
+              className="w-full h-full object-cover"
+            />
+          </div>
         </div>
       )}
 
@@ -362,14 +365,25 @@ export default function Home({
             </p>
 
             <div data-reveal data-delay="4" className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-              <Link
-                to="/register"
-                data-magnetic="0.12"
-                className="bg-primary hover:bg-primary-dark text-white px-7 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all shadow-xl shadow-primary/25 flex items-center justify-center gap-2 hover:translate-y-[-1px]"
-              >
-                {heroConfig?.ctaText || t('hero.cta')}
-                <span className="material-symbols-outlined">chevron_right</span>
-              </Link>
+              {user ? (
+                <Link
+                  to="/dashboard/links"
+                  data-magnetic="0.12"
+                  className="bg-primary hover:bg-primary-dark text-white px-7 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all shadow-xl shadow-primary/25 flex items-center justify-center gap-2 hover:translate-y-[-1px]"
+                >
+                  <span className="material-symbols-outlined">dashboard</span>
+                  Dashboard
+                </Link>
+              ) : (
+                <Link
+                  to="/register"
+                  data-magnetic="0.12"
+                  className="bg-primary hover:bg-primary-dark text-white px-7 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all shadow-xl shadow-primary/25 flex items-center justify-center gap-2 hover:translate-y-[-1px]"
+                >
+                  {heroConfig?.ctaText || t('hero.cta')}
+                  <span className="material-symbols-outlined">chevron_right</span>
+                </Link>
+              )}
 
               <a
                 href="#features"
@@ -426,9 +440,9 @@ export default function Home({
                               : "border-border bg-surface/40 hover:border-white/15",
                           ].join(" ")}
                         >
-                            <span className={["material-symbols-outlined", isActive ? "text-primary" : "text-silver/50"].join(" ")}>
-                              {v.icon}
-                            </span>
+                          <span className={["material-symbols-outlined", isActive ? "text-primary" : "text-silver/50"].join(" ")}>
+                            {v.icon}
+                          </span>
                           <span className={isActive ? "text-white font-bold" : "text-silver/70 font-medium"}>
                             {v.title.split(' ')[0]} {/* Short title for tabs */}
                           </span>
@@ -436,9 +450,9 @@ export default function Home({
                       );
                     })}
                   </div>
-                   <p className="mt-4 text-sm text-silver/50 hidden md:block">
-                      {featureViews.find(v => v.key === activeFeatureView)?.title} - {featureViews.find(v => v.key === activeFeatureView)?.subtitle}
-                   </p>
+                  <p className="mt-4 text-sm text-silver/50 hidden md:block">
+                    {featureViews.find(v => v.key === activeFeatureView)?.title} - {featureViews.find(v => v.key === activeFeatureView)?.subtitle}
+                  </p>
                 </div>
 
 
@@ -475,7 +489,7 @@ export default function Home({
                           className="inline-flex items-center gap-1.5 text-[11px] px-3 py-2 rounded-xl border border-primary/30 bg-primary/10 text-primary hover:border-primary/50 transition-all fake-btn"
                         >
                           <span className="material-symbols-outlined text-[16px]">lock</span>
-                          {t('home.preview.linksDemo.previewTitle')} // Using "previewTitle" or "verified" ? Using "Protected" actually... 
+                          {t('home.preview.linksDemo.previewTitle')} // Using "previewTitle" or "verified" ? Using "Protected" actually...
                           {/* Wait, "Protegido" is not in my keys, I used "verified". Let me check keys again. "verified" is "Perfil verificado". I will use "Protegido" hardcode or add key? 
                               Actually I see "Protegido" in the UI preview button. 
                               Let me add a quick inline translation for "Protegido" or reuse exists. 
@@ -811,12 +825,21 @@ export default function Home({
               <h3 className="text-3xl font-black text-white mb-4 relative z-10">{t('home.finalCta.title')}</h3>
               <p className="text-silver/60 mb-8 max-w-xl mx-auto relative z-10">{t('home.finalCta.desc')}</p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center relative z-10">
-                <Link
-                  to="/register"
-                  className="px-8 py-4 rounded-xl bg-primary text-white font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/25"
-                >
-                  {t('home.finalCta.btn')}
-                </Link>
+                {user ? (
+                  <Link
+                    to="/dashboard/links"
+                    className="px-8 py-4 rounded-xl bg-primary text-white font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/25"
+                  >
+                    Ir al Dashboard
+                  </Link>
+                ) : (
+                  <Link
+                    to="/register"
+                    className="px-8 py-4 rounded-xl bg-primary text-white font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/25"
+                  >
+                    {t('home.finalCta.btn')}
+                  </Link>
+                )}
                 <Link
                   to="/pricing"
                   className="px-8 py-4 rounded-xl border border-border bg-background-dark/40 text-white font-bold hover:border-primary/50 transition-all"

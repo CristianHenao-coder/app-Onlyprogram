@@ -2,32 +2,22 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
 interface DashboardLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { pathname } = useLocation();
   const { signOut, user } = useAuth();
-  const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  const menuItems = [
-    { label: 'Mis Links', icon: 'link', href: '/dashboard' },
-    { label: 'Analíticas', icon: 'analytics', href: '/dashboard/analytics' },
-    { label: 'Telegram Rotating', icon: 'sync', href: '/dashboard/telegram' },
-    { label: 'Soporte', icon: 'support_agent', href: '/dashboard/support' },
-  ];
-export default function DashboardLayout() {
-  const { signOut, user } = useAuth();
-  const location = useLocation();
 
   const handleSignOut = async () => {
     await signOut();
   };
 
   const navItems = [
-    { path: '/dashboard', label: 'Overview', icon: 'dashboard' },
+    { path: '/', label: 'Inicio', icon: 'home', external: true },
+    { path: '/dashboard/home', label: 'Dashboard', icon: 'dashboard' },
     { path: '/dashboard/links', label: 'Links', icon: 'link' },
+    { path: '/dashboard/analytics', label: 'Analytics', icon: 'analytics' },
     { path: '/dashboard/payments', label: 'Pagos', icon: 'payments' },
     { path: '/dashboard/settings', label: 'Configuración', icon: 'settings' },
   ];
@@ -45,16 +35,15 @@ export default function DashboardLayout() {
 
         <nav className="flex-1 px-4 py-4 space-y-1">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = pathname === item.path;
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                  isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-silver hover:bg-white/5 hover:text-white'
-                }`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${isActive
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-silver hover:bg-white/5 hover:text-white'
+                  }`}
               >
                 <span className="material-symbols-outlined">{item.icon}</span>
                 <span className="font-medium text-sm">{item.label}</span>
@@ -85,7 +74,7 @@ export default function DashboardLayout() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
-        <Outlet />
+        {children || <Outlet />}
       </main>
     </div>
   );

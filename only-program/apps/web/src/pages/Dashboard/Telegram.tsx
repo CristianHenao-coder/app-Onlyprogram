@@ -1,4 +1,4 @@
-import DashboardLayout from '@/components/DashboardLayout';
+
 
 export default function Telegram() {
   return (
@@ -13,10 +13,10 @@ export default function Telegram() {
           Nuevo Canal
         </button>
       </div>
-      
+
       <div className="bg-surface/30 border border-border rounded-2xl p-12 text-center">
-         <span className="material-symbols-outlined text-6xl text-silver/20 mb-4">analytics</span>
-         <p className="text-silver/40">Próximamente: Configura tus canales rotativos aquí.</p>
+        <span className="material-symbols-outlined text-6xl text-silver/20 mb-4">analytics</span>
+        <p className="text-silver/40">Próximamente: Configura tus canales rotativos aquí.</p>
       </div>
     </div>
   );
