@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { I18nProvider } from '@/contexts/I18nContext';
 import Home from '@/pages/Home';
 import Login from '@/pages/Login';
@@ -16,8 +16,18 @@ import Pricing from './pages/Pricing';
 import Register from './pages/Register';
 import Welcome from './pages/Welcome';
 import CompleteProfile from './pages/CompleteProfile';
+
+// Admin Pages
+import AdminDashboard from '@/pages/Admin/Dashboard';
+import CmsEditor from '@/pages/Admin/CmsEditor';
+import UserManager from '@/pages/Admin/UserManager';
+import GlobalLinks from '@/pages/Admin/GlobalLinks';
+import CouponManager from '@/pages/Admin/CouponManager';
+
 import ProtectedRoute from '@/components/ProtectedRoute';
+import AdminRoute from '@/components/AdminRoute';
 import DashboardLayout from '@/components/DashboardLayout';
+import AdminLayout from '@/components/AdminLayout';
 import MotionManager from '@/components/MotionManager';
 import { Outlet } from 'react-router-dom';
 import '@/styles/index.css';
@@ -48,7 +58,7 @@ function App() {
           <Route path="/welcome" element={<Welcome />} />
           <Route path="/complete-profile" element={<CompleteProfile />} />
           
-          {/* Protected Routes */}
+          {/* Dashboard Protected Routes */}
           <Route
             path="/dashboard"
             element={
@@ -66,6 +76,25 @@ function App() {
             <Route path="links/new" element={<CreateLink />} />
             <Route path="links/:id/edit" element={<LinkConfigurator />} />
             <Route path="support" element={<Support />} />
+          </Route>
+
+          {/* Admin Protected Routes */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute>
+                <AdminRoute />
+              </ProtectedRoute>
+            }
+          >
+            <Route element={<AdminLayout />}>
+              <Route index element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="cms" element={<CmsEditor />} />
+              <Route path="users" element={<UserManager />} />
+              <Route path="links" element={<GlobalLinks />} />
+              <Route path="coupons" element={<CouponManager />} />
+            </Route>
           </Route>
         </Routes>
       </Router>

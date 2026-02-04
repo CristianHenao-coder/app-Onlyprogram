@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import PremiumTestimonials from '@/components/PremiumTestimonials';
 import { useTranslation } from '@/contexts/I18nContext';
 import PremiumPayments from "../components/PremiumPayments";
+import { cmsService } from '@/services/cmsService';
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
@@ -174,13 +175,19 @@ export default function Home() {
     return found?.accent ?? 'rgba(29,161,242,.18)';
   }, [activeFeatureView, featureViews]);
 
+  // ✅ Load CMS Configs
+  const [heroConfig, setHeroConfig] = useState<any>(null);
+  
+  useEffect(() => {
+    const fetchHomeConfigs = async () => {
+      const hero = await cmsService.getConfig('hero');
+      if (hero) setHeroConfig(hero);
+    };
+    fetchHomeConfigs();
+  }, []);
+
   return (
     <div className="scroll-smooth dark">
-      {/* ✅ CSS global para:
-          1) Evitar el “corrimiento” y la barra rara en testimonios (overflow-x)
-          2) Evitar que overlays tapen clicks (pointer-events)
-          3) Mantener layout estable (no saltos)
-      */}
       <style>
         {`
           /* ===== Velada-like Scroll Reveal ===== */
@@ -296,7 +303,7 @@ export default function Home() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
               </span>
-              {t('hero.badge')}
+              {heroConfig?.badge || t('hero.badge')}
             </div>
 
             <h1
@@ -304,10 +311,10 @@ export default function Home() {
               data-delay="2"
               className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white mb-5 tracking-tight leading-[1.05]"
             >
-              {t('hero.title')}
+              {heroConfig?.title || t('hero.title')}
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
-                {t('hero.titleHighlight')}
+                {heroConfig?.titleHighlight || t('hero.titleHighlight')}
               </span>
             </h1>
 
@@ -316,7 +323,7 @@ export default function Home() {
               data-delay="3"
               className="max-w-3xl mx-auto text-base sm:text-lg md:text-xl text-silver/75 mb-10 leading-relaxed"
             >
-              {t('hero.subtitle')}
+              {heroConfig?.subtitle || t('hero.subtitle')}
             </p>
 
             <div data-reveal data-delay="4" className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
@@ -325,7 +332,7 @@ export default function Home() {
                 data-magnetic="0.12"
                 className="bg-primary hover:bg-primary-dark text-white px-7 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all shadow-xl shadow-primary/25 flex items-center justify-center gap-2 hover:translate-y-[-1px]"
               >
-                {t('hero.cta')}
+                {heroConfig?.ctaText || t('hero.cta')}
                 <span className="material-symbols-outlined">chevron_right</span>
               </Link>
 

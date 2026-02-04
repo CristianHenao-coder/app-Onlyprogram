@@ -1,10 +1,20 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/contexts/I18nContext";
+import { cmsService } from "@/services/cmsService";
 
 type PaymentAssetType = "crypto" | "card" | "paypal";
 
 export default function PremiumPayments() {
   const { t } = useTranslation() as any;
+  const [cmsPricing, setCmsPricing] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const data = await cmsService.getConfig('pricing');
+      if (data) setCmsPricing(data);
+    };
+    fetch();
+  }, []);
 
   const paymentAssets: Record<PaymentAssetType, string[]> = useMemo(() => {
     const modules = import.meta.glob("../assets/payments/*.{png,jpg,jpeg,webp,svg}", {
@@ -144,6 +154,34 @@ export default function PremiumPayments() {
           ? t("payments.subheadline")
           : "Métodos flexibles, validación segura y activación sin fricción. En desktop tienes micro-interacciones con hover."}
       </p>
+
+      {/* Pricing Tiers from CMS */}
+      {cmsPricing.length > 0 && (
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+          {cmsPricing.map((plan, i) => (
+            <div key={i} className="bg-surface/30 border border-border/50 p-8 rounded-[2.5rem] relative group hover:border-primary/40 transition-all">
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">{plan.name}</p>
+              <div className="flex items-baseline justify-center gap-1 mb-6">
+                 <span className="text-4xl font-black text-white">${plan.price}</span>
+                 <span className="text-silver/40 text-xs font-bold uppercase tracking-widest">/ Mes</span>
+              </div>
+              <ul className="space-y-3 mb-8 text-sm text-silver/60">
+                 <li className="flex items-center justify-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
+                    Full Access
+                 </li>
+                 <li className="flex items-center justify-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
+                    Priority Support
+                 </li>
+              </ul>
+              <button className="w-full py-4 bg-white/5 border border-border/40 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white hover:text-black transition-all">
+                Choose Plan
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="mt-10 grid md:grid-cols-3 gap-6">
         <Card

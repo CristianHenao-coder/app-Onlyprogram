@@ -9,7 +9,7 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { pathname } = useLocation();
-  const { signOut, user } = useAuth();
+  const { signOut, user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -18,6 +18,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { label: 'Analíticas', icon: 'analytics', href: '/dashboard/analytics' },
     { label: 'Telegram Rotating', icon: 'sync', href: '/dashboard/telegram' },
     { label: 'Soporte', icon: 'support_agent', href: '/dashboard/support' },
+    ...(isAdmin ? [{ label: 'Panel Admin', icon: 'shield_person', href: '/admin' }] : []),
   ];
 
   const handleSignOut = async () => {
