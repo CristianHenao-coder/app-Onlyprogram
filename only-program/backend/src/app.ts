@@ -8,6 +8,7 @@ import linksRoutes from "./routes/links.routes";
 import paymentsRoutes from "./routes/payments.routes";
 import analyticsRoutes from "./routes/analytics.routes";
 import adminRoutes from "./routes/admin.routes";
+import configRoutes from "./routes/config.routes";
 
 const app = express();
 
@@ -43,6 +44,7 @@ app.use("/api/links", linksRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/config", configRoutes);
 
 // Ruta 404
 app.use((req: Request, res: Response) => {

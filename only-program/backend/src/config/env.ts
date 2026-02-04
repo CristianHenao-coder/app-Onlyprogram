@@ -57,6 +57,11 @@ export const config = {
     frontend: process.env.FRONTEND_URL || "http://localhost:3000",
     backend: process.env.BACKEND_URL || "http://localhost:4005",
   },
+
+  turnstile: {
+    siteKey: process.env.TURNSTILE_SITE_KEY || "",
+    secretKey: process.env.TURNSTILE_SECRET_KEY || "",
+  },
 };
 
 console.log("✅ Variables de entorno cargadas correctamente");
