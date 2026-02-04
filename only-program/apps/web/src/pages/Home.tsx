@@ -247,10 +247,10 @@ export default function Home({
           /* iOS/Android dynamic viewport helpers */
           .min-dvh{ min-height: 100dvh; }
 
-          /* ✅ FIX: evita el scroll horizontal que “empuja” testimonios y deja barra rara */
+          /*  FIX: evita el scroll horizontal que “empuja” testimonios y deja barra rara */
           html, body, #root { overflow-x: hidden !important; }
 
-          /* ✅ FIX: wrapper para testimonios (no deja ver “columnas” al mover carrusel) */
+          /*  FIX: wrapper para testimonios (no deja ver “columnas” al mover carrusel) */
           .testimonials-wrap{
             position: relative;
             overflow: hidden;
@@ -275,7 +275,7 @@ export default function Home({
             background: linear-gradient(to left, rgba(0,0,0,.85), transparent);
           }
 
-          /* ✅ FIX: asegura que botones sean clicables aunque haya overlays internos */
+          /*  FIX: asegura que botones sean clicables aunque haya overlays internos */
           .testimonials-wrap button,
           .testimonials-wrap [role="button"]{
             pointer-events: auto;
