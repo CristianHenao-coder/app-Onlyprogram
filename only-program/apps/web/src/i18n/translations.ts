@@ -1,5 +1,44 @@
 export const translations = {
   es: {
+    common: {
+      prev: "Anterior",
+      next: "Siguiente",
+      alerts: "Alertas",
+      live: "En vivo",
+      copy: "Copiar",
+      uiPreview: "Vista UI",
+      techSupport: "Soporte Técnico",
+      tip: "Tip",
+      menu: "Menú",
+      save: "Guardar",
+      viewAllCountries: "Ver todos los países",
+      viewPrices: "Ver precios",
+    },
+
+    countries: {
+      spain: "España",
+      usa: "Estados Unidos",
+      mexico: "México",
+      france: "Francia",
+      germany: "Alemania",
+      argentina: "Argentina",
+      colombia: "Colombia",
+      peru: "Perú",
+      chile: "Chile",
+      uk: "Reino Unido",
+    },
+
+    panelPreview: {
+      title: "Vista del Panel",
+      subtitle:
+        "Pasa el mouse en desktop o toca en móvil para cambiar la vista.",
+      badge: "UI Preview",
+      hintMobile:
+        "Tip: toca los botones de la izquierda para cambiar la vista.",
+      footerLeft: "Only Program • Vista UI",
+      footerRight: "Soporte Técnico",
+    },
+
     nav: {
       home: "Inicio",
       features: "Funciones",
@@ -8,7 +47,9 @@ export const translations = {
       login: "Iniciar Sesión",
       signup: "Crear Cuenta",
       dashboard: "Dashboard",
+      tagline: "Protección & Analíticas • Anti-bot",
     },
+
     hero: {
       badge: "Seguridad de Próxima Generación para Creadores",
       title: "Detén las filtraciones.",
@@ -17,17 +58,21 @@ export const translations = {
         "Detección automática de bots y tecnología anti-leach para tu contenido premium. Genera pasarelas seguras y encriptadas que verifican a cada visitante.",
       cta: "Asegura tu cuenta",
       watchDemo: "Ver Demo",
+      viewPanel: "Ver el panel",
     },
+
     features: {
-      title: "Monitoreo de Seguridad en Tiempo Real",
+      title: "Un panel simple, pero poderoso",
       subtitle:
-        "Nuestro panel de control te otorga el dominio absoluto sobre quién accede a tu contenido. Monitorea el tráfico entrante, bloquea IPs sospechosas al instante y recibe notificaciones de brechas potenciales.",
+        "Crea tu link, conecta tu dominio y controla todo desde un panel claro: seguridad, rutas, Telegram rotativo y analíticas. Sin configuraciones raras.",
+
       encryption: "Encriptación de Grado Militar",
       encryptionDesc:
         "Protección de extremo a extremo para cada enlace generado.",
       botShield: "Escudo Inteligente contra Bots",
       botShieldDesc:
         "Identifica y bloquea el 99.9% de los bots de scraping automáticamente.",
+
       liveLinks: "Enlaces Seguros Activos",
       liveStatus: "ESTADO EN VIVO",
       created: "Creado",
@@ -35,9 +80,64 @@ export const translations = {
       ago: "hace",
       denied: "DENEGADO",
     },
+
     testimonials: {
+      title: "Creadoras que protegen su contenido con",
       subtitle:
-        "Casos de éxito de nuestra comunidad global que prioriza la privacidad.",
+        "Desliza o usa las flechas. La primera queda a la izquierda y en pantallas grandes ves 3 completas.",
+      goTo: "Ir a testimonio {{n}}",
+      items: {
+        t1: {
+          label: "-Zara blonde",
+          name: "Zara",
+          role: "Creadora Premium",
+          quote:
+            "Desde que uso Only Program, mis links están blindados. Se siente profesional.",
+          badge: "Anti-bot",
+        },
+        t2: {
+          label: "Sunnsine",
+          name: "Sun2",
+          role: "Creadora",
+          quote:
+            "Me encanta poder usar mi dominio y que todo se vea de marca y seguro.",
+          badge: "Dominios",
+        },
+        t3: {
+          label: "Mia",
+          name: "Mia",
+          role: "Creadora",
+          quote:
+            "Las analíticas me muestran exactamente qué funciona y desde dónde llega mi tráfico.",
+          badge: "Analytics",
+        },
+        t4: {
+          label: "Helen",
+          name: "Helen",
+          role: "Creadora",
+          quote:
+            "Me siento tranquila porque el acceso está verificado y el bot-shield trabaja solo.",
+          badge: "Seguridad",
+        },
+        t5: {
+          label: "Sarasuuun",
+          name: "Sarasuuun",
+          role: "Creadora",
+          quote:
+            "Puedo pausar o ajustar todo. Es un sistema serio, no un link cualquiera.",
+          badge: "Control",
+        },
+        t6: {
+          label: "Rocioo",
+          name: "Rocioo",
+          role: "Creadora",
+          quote:
+            "La experiencia del usuario es limpia y mis fans llegan sin fricción. Se nota premium.",
+          badge: "Conversión",
+        },
+      },
+
+      // (Dejo tus keys anteriores por compatibilidad si aún las usas en otra parte)
       realStories: "Historias Reales. Resultados Reales.",
       testimonial1:
         "Desde que uso Only Program, las filtraciones de mi contenido han desaparecido por completo. La protección contra bots es simplemente la mejor del mercado.",
@@ -52,6 +152,7 @@ export const translations = {
       name3: "Valeria Ruiz",
       role3: "Artista Independiente",
     },
+
     payments: {
       title: "Métodos de Pago Seguros",
       card: "Tarjeta",
@@ -60,19 +161,51 @@ export const translations = {
       cryptoDesc: "BTC · ETH · USDT · SOL",
       paypal: "PayPal",
       paypalDesc: "Pago rápido y seguro",
+      headline: "Paga como quieras, activa tus links al instante",
+      subheadline:
+        "Métodos flexibles, validación segura y activación sin fricción. En desktop tienes micro-interacciones con hover.",
+      process: {
+        title: "Proceso",
+        instant: "instant",
+        step1: "Selecciona método",
+        step2: "Confirma y valida",
+        step3: "Activación inmediata",
+      },
+      chips: {
+        card: ["VISA", "Mastercard", "Amex", "3DS opcional"],
+        crypto: ["BTC", "ETH", "USDT", "SOL"],
+        paypal: ["PayPal", "Checkout rápido", "Confianza"],
+      },
     },
 
     footer: {
       description:
         "Protección profesional de enlaces para creadores de contenido. Tecnología de punta contra bots y filtraciones.",
-      platform: "Plataforma",
-      company: "Compañía",
-      newsletter: "Newsletter",
-      newsletterText: "Recibe consejos de seguridad",
-      subscribe: "Suscribirse",
+
       rights: "Todos los derechos reservados",
       developedBy: "Desarrollado por",
+      brandDesc:
+        "La solución definitiva en ciberseguridad para creadores de contenido modernos que valoran su privacidad e ingresos.",
+      platform: {
+        title: "Plataforma",
+        items: [
+          "Cómo funciona",
+          "Generador de Links",
+          "Guía de Seguridad",
+          "Docs de API",
+        ],
+      },
+      company: {
+        title: "Compañía",
+        items: ["Sobre Nosotros", "Carreras", "Privacidad", "Términos"],
+      },
+      newsletter: {
+        title: "Mantente al día",
+        placeholder: "Email",
+        button: "Enviar",
+      },
     },
+
     auth: {
       welcomeBack: "Bienvenido de nuevo",
       loginSubtitle: "Ingresa a tu panel de control",
@@ -104,6 +237,7 @@ export const translations = {
       registering: "Creando cuenta...",
       continueWithGoogle: "Continuar con Google",
     },
+
     pricing: {
       title: "Los Planes de Precios",
       subtitle:
@@ -147,15 +281,190 @@ export const translations = {
       paymentMethods: "Métodos de Pago Aceptados",
       recommended: "RECOMENDADO",
     },
+
     dashboard: {
       welcome: "Bienvenido a Only Program",
     },
+
     login: {
       title: "Iniciar Sesión",
       subtitle: "Ingresa a tu cuenta",
     },
+
+    home: {
+      featureViews: {
+        links: {
+          title: "Panel de Links (Landing + Botones)",
+          subtitle:
+            "Cambia textos, orden y CTA. Ves el resultado antes de publicar.",
+        },
+        analytics: {
+          title: "Panel de Analíticas (Tráfico real)",
+          subtitle:
+            "Sabes qué funciona: de dónde llegan, qué tocan y qué convierte.",
+        },
+        telegram: {
+          title: "Panel Telegram Rotativo (Anti-ban)",
+          subtitle:
+            "Reparte clicks entre canales y cambia destino en segundos.",
+        },
+      },
+      preview: {
+        titleBarMid: "PANEL DE CONTROL",
+        userRole: "Seguridad + Conversión",
+        headerAnalytics: "Analíticas claras (sin complicarte)",
+        subAnalytics:
+          "Ves de dónde llega tu gente y qué acciones hacen dentro de tu landing.",
+        headerTelegram: "Telegram Rotativo (sin perder cuentas)",
+        subTelegram:
+          "Rotas destinos para reducir bans y mantener tu tráfico siempre activo.",
+        headerLinks: "Crea tu landing en minutos",
+        subLinks:
+          "Editas botones y secciones. Copias tu link protegido y listo.",
+        kpis: {
+          clicks: "Clicks reales",
+          filtered: "Intentos filtrados",
+          conversion: "Conversión",
+          topCountries: "Top países",
+        },
+        sidebar: {
+          links: "Links",
+          analytics: "Analíticas",
+          rotation: "Rotación",
+          settings: "Ajustes",
+          support: "Soporte",
+        },
+        actions: {
+          logs: "Ver logs",
+          addChannel: "Agregar canal",
+          preview: "Vista previa",
+          save: "Guardar",
+        },
+        cards: {
+          vip: "Canal VIP Privado",
+          ads: "Anuncios",
+          community: "Premium Comunidad",
+          launch: "Lanzamiento",
+          general: "Comunidad",
+          next: "Siguiente:",
+          rotating: "ROTANDO",
+        },
+        config: {
+          freq: "Frecuencia",
+          freqVal: "Cada 500 clicks",
+          dist: "Distribución",
+          distVal: "Equitativo (50/50)",
+          rotationConfig: "Config de rotación",
+          rotationDesc: "Define cómo se reparte el tráfico.",
+        },
+        linksDemo: {
+          btnTitle: "Título del botón",
+          dest: "Destino",
+          subtitle: "Subtítulo",
+          channels: "Canales",
+          previewTitle: "Vista previa",
+          verified: "Perfil verificado",
+          vipAccess: "Acceso VIP",
+          rotary: "Telegram Rotativo",
+        },
+      },
+      simplePanel: {
+        title: "Panel simple. Resultado rápido.",
+        desc: "No necesitas saber de tecnología. Entras, eliges lo que quieres, lo ajustas y publicas. Todo queda claro en el panel.",
+      },
+      finalCta: {
+        title: "Tu primer link protegido en minutos",
+        desc: "Crea tu cuenta, diseña tu landing, conecta tu dominio y activa analíticas.",
+        btn: "Crear cuenta",
+      },
+    },
+
+    pricingPage: {
+      subtitle:
+        "Precios mensuales por link. Descuentos llamativos por volumen.",
+      warning: "Pago no confirmado = link suspendido automáticamente",
+      calculator: {
+        title: "Calculadora",
+        subtitle: "Compra individual o masiva",
+        withTelegram: "Con Telegram rotativo",
+        noTelegram: "Sin Telegram",
+        qtyLabel: "Cantidad de links",
+        base: "Base",
+        totalMonthly: "Total mensual",
+        perLink: "por link",
+        viewDetails: "Ver detalles",
+        notes: [
+          "Pago por cripto: validación manual (seguridad y antifraude).",
+          "Si no se confirma el pago, el link se suspende automáticamente (y se reactiva al ponerse al día).",
+          "20+ links: agenda una llamada con ventas para negociar volumen.",
+        ],
+      },
+      includes: {
+        title: "Incluye",
+        items: [
+          "Protección anti-bot y anti-scrape",
+          "Analytics en tiempo real (dashboard + link público)",
+          "Dominios personalizados por usuario",
+          "Suspensión automática por falta de pago",
+        ],
+      },
+      telegramOrb: {
+        title: "¿Telegram rotativo?",
+        desc: "Diseñado para rotar URLs/bots por cupos y reducir riesgos de baneo. Tiene costo adicional por link.",
+        priceLabel: "Precio por link",
+        billing: "Cobro mensual.",
+      },
+      faq: {
+        q1: "Gestión de pagos",
+        a1: "Puedes gestionar las membresías y los métodos de pago desde tu panel.",
+        q2: "¿Descuento dónde se guarda?",
+        a2: "El descuento queda registrado en la suscripción para el ciclo correspondiente.",
+        q3: "¿20+ links?",
+        a3: "Para volúmenes grandes, coordinamos con ventas para descuentos especiales y onboarding.",
+      },
+      backHome: "Volver al inicio",
+      discount: "Sin descuento",
+    },
   },
+
   en: {
+    common: {
+      prev: "Previous",
+      next: "Next",
+      alerts: "Alerts",
+      live: "Live",
+      copy: "Copy",
+      uiPreview: "UI Preview",
+      techSupport: "Tech Support",
+      tip: "Tip",
+      menu: "Menu",
+      save: "Save",
+      viewAllCountries: "View all countries",
+      viewPrices: "View Prices",
+    },
+
+    countries: {
+      spain: "Spain",
+      usa: "United States",
+      mexico: "Mexico",
+      france: "France",
+      germany: "Germany",
+      argentina: "Argentina",
+      colombia: "Colombia",
+      peru: "Peru",
+      chile: "Chile",
+      uk: "United Kingdom",
+    },
+
+    panelPreview: {
+      title: "Dashboard Preview",
+      subtitle: "Hover on desktop or tap on mobile to switch views.",
+      badge: "UI Preview",
+      hintMobile: "Tip: tap the left buttons to switch views.",
+      footerLeft: "Only Program • UI Preview",
+      footerRight: "Tech Support",
+    },
+
     nav: {
       home: "Home",
       features: "Features",
@@ -164,7 +473,9 @@ export const translations = {
       login: "Log In",
       signup: "Sign Up",
       dashboard: "Dashboard",
+      tagline: "Protection & Analytics • Anti-bot",
     },
+
     hero: {
       badge: "Next-Generation Security for Creators",
       title: "Stop the leaks.",
@@ -173,11 +484,14 @@ export const translations = {
         "Automatic bot detection and anti-leach technology for your premium content. Generate secure, encrypted gateways that verify every visitor.",
       cta: "Secure your account",
       watchDemo: "Watch Demo",
+      viewPanel: "View Panel",
     },
+
     features: {
-      title: "Real-Time Security Monitoring",
+      title: "A simple, powerful dashboard",
       subtitle:
-        "Our control panel gives you absolute domain over who accesses your content. Monitor incoming traffic, block suspicious IPs instantly and receive potential breach notifications.",
+        "Create your link, connect your domain, and control everything from a clear panel: security, routing, rotating Telegram and analytics. No confusing setup.",
+
       encryption: "Military-Grade Encryption",
       encryptionDesc: "End-to-end protection for every generated link.",
       botShield: "Intelligent Bot Shield",
@@ -190,9 +504,64 @@ export const translations = {
       ago: "ago",
       denied: "DENIED",
     },
+
     testimonials: {
-      title: "Trusted by Top Creators",
-      subtitle: "Success stories from our global privacy-first community.",
+      title: "Creators protecting their content with",
+      subtitle:
+        "Swipe or use the arrows. The first stays on the left and on large screens you see 3 fully.",
+      goTo: "Go to testimonial {{n}}",
+      items: {
+        t1: {
+          label: "-Zara blonde",
+          name: "Zara",
+          role: "Premium Creator",
+          quote:
+            "Since using Only Program, my links are armored. It feels professional.",
+          badge: "Anti-bot",
+        },
+        t2: {
+          label: "Sunnsine",
+          name: "Sun2",
+          role: "Creator",
+          quote:
+            "I love using my own domain—everything looks branded and secure.",
+          badge: "Domains",
+        },
+        t3: {
+          label: "Mia",
+          name: "Mia",
+          role: "Creator",
+          quote:
+            "Analytics show me exactly what works and where my traffic comes from.",
+          badge: "Analytics",
+        },
+        t4: {
+          label: "Helen",
+          name: "Helen",
+          role: "Creator",
+          quote:
+            "I feel calm because access is verified and the bot-shield works automatically.",
+          badge: "Security",
+        },
+        t5: {
+          label: "Sarasuuun",
+          name: "Sarasuuun",
+          role: "Creator",
+          quote:
+            "I can pause or adjust everything. It’s a real system, not just a link.",
+          badge: "Control",
+        },
+        t6: {
+          label: "Rocioo",
+          name: "Rocioo",
+          role: "Creator",
+          quote:
+            "The user experience is clean and my fans arrive without friction. It feels premium.",
+          badge: "Conversion",
+        },
+      },
+
+      titleOld: "Trusted by Top Creators",
       realStories: "Real Stories. Real Results.",
       testimonial1:
         "Since using Only Program, leaks of my content have completely disappeared. Bot protection is simply the best on the market.",
@@ -207,6 +576,7 @@ export const translations = {
       name3: "Valeria Ruiz",
       role3: "Independent Artist",
     },
+
     payments: {
       title: "Secure Payment Methods",
       card: "Card",
@@ -215,19 +585,43 @@ export const translations = {
       cryptoDesc: "BTC · ETH · USDT · SOL",
       paypal: "PayPal",
       paypalDesc: "Fast and secure payment",
+      headline: "Pay as you wish, activate your link instantly",
+      subheadline:
+        "Flexible methods, secure validation and frictionless activation. Desktop features hover micro-interactions.",
+      process: {
+        title: "Process",
+        instant: "instant",
+        step1: "Select method",
+        step2: "Confirm & validate",
+        step3: "Immediate activation",
+      },
+      chips: {
+        card: ["VISA", "Mastercard", "Amex", "Optional 3DS"],
+        crypto: ["BTC", "ETH", "USDT", "SOL"],
+        paypal: ["PayPal", "Fast Checkout", "Trusted"],
+      },
     },
 
     footer: {
-      description:
-        "Professional link protection for content creators. Cutting-edge technology against bots and leaks.",
-      platform: "Platform",
-      company: "Company",
-      newsletter: "Newsletter",
-      newsletterText: "Get security tips",
-      subscribe: "Subscribe",
       rights: "All rights reserved",
       developedBy: "Developed by",
+      brandDesc:
+        "The ultimate cybersecurity solution for modern content creators who value their privacy and income.",
+      platform: {
+        title: "Platform",
+        items: ["How it works", "Link Generator", "Security Guide", "API Docs"],
+      },
+      company: {
+        title: "Company",
+        items: ["About Us", "Careers", "Privacy", "Terms"],
+      },
+      newsletter: {
+        title: "Stay updated",
+        placeholder: "Email",
+        button: "Send",
+      },
     },
+
     auth: {
       welcomeBack: "Welcome back",
       loginSubtitle: "Access your control panel",
@@ -259,6 +653,7 @@ export const translations = {
       registering: "Creating account...",
       continueWithGoogle: "Continue with Google",
     },
+
     pricing: {
       title: "The Pricing Plans",
       subtitle: "Choose a plan that fits your goals and scale as you grow.",
@@ -301,15 +696,190 @@ export const translations = {
       paymentMethods: "Accepted Payment Methods",
       recommended: "RECOMMENDED",
     },
+
     dashboard: {
       welcome: "Welcome to Only Program",
     },
+
     login: {
       title: "Log In",
       subtitle: "Sign in to your account",
     },
+
+    home: {
+      featureViews: {
+        links: {
+          title: "Link Panel (Landing + Buttons)",
+          subtitle:
+            "Change texts, order and CTA. See the result before publishing.",
+        },
+        analytics: {
+          title: "Analytics Panel (Real Traffic)",
+          subtitle:
+            "Know what works: where they come from, what they tap, and what converts.",
+        },
+        telegram: {
+          title: "Rotating Telegram Panel (Anti-ban)",
+          subtitle:
+            "Distribute clicks between channels and change destination in seconds.",
+        },
+      },
+      preview: {
+        titleBarMid: "CONTROL PANEL",
+        userRole: "Security + Conversion",
+        headerAnalytics: "Clear Analytics (No hassle)",
+        subAnalytics:
+          "See where your people come from and what actions they take on your landing.",
+        headerTelegram: "Rotating Telegram (No lost accounts)",
+        subTelegram:
+          "Rotate destinations to reduce bans and keep your traffic always active.",
+        headerLinks: "Create your landing in minutes",
+        subLinks:
+          "Edit buttons and sections. Copy your protected link and you're done.",
+        kpis: {
+          clicks: "Real Clicks",
+          filtered: "Filtered Attempts",
+          conversion: "Conversion",
+          topCountries: "Top Countries",
+        },
+        sidebar: {
+          links: "Links",
+          analytics: "Analytics",
+          rotation: "Rotation",
+          settings: "Settings",
+          support: "Support",
+        },
+        actions: {
+          logs: "View logs",
+          addChannel: "Add channel",
+          preview: "Preview",
+          save: "Save",
+        },
+        cards: {
+          vip: "Private VIP Channel",
+          ads: "Ads",
+          community: "Premium Community",
+          launch: "Launch",
+          general: "Community",
+          next: "Next:",
+          rotating: "ROTATING",
+        },
+        config: {
+          freq: "Frequency",
+          freqVal: "Every 500 clicks",
+          dist: "Distribution",
+          distVal: "Equal (50/50)",
+          rotationConfig: "Rotation Config",
+          rotationDesc: "Filters how traffic is distributed.",
+        },
+        linksDemo: {
+          btnTitle: "Button Title",
+          dest: "Destination",
+          subtitle: "Subtitle",
+          channels: "Channels",
+          previewTitle: "Preview",
+          verified: "Verified Profile",
+          vipAccess: "VIP Access",
+          rotary: "Rotating Telegram",
+        },
+      },
+      simplePanel: {
+        title: "Simple panel. Fast results.",
+        desc: "No tech skills needed. Enter, choose what you want, adjust it, and publish. Everything is clear in the panel.",
+      },
+      finalCta: {
+        title: "Your first protected link in minutes",
+        desc: "Create your account, design your landing, connect your domain, and activate analytics.",
+        btn: "Create Account",
+      },
+    },
+
+    pricingPage: {
+      subtitle: "Monthly prices per link. Attractive bulk discounts.",
+      warning: "Unconfirmed payment = link automatically suspended",
+      calculator: {
+        title: "Calculator",
+        subtitle: "Individual or bulk purchase",
+        withTelegram: "With Rotating Telegram",
+        noTelegram: "Without Telegram",
+        qtyLabel: "Number of links",
+        base: "Base",
+        totalMonthly: "Total Monthly",
+        perLink: "per link",
+        viewDetails: "View Details",
+        notes: [
+          "Crypto payment: manual validation (security and anti-fraud).",
+          "If payment is not confirmed, the link is automatically suspended (reactivated upon payment).",
+          "20+ links: schedule a call with sales to negotiate volume.",
+        ],
+      },
+      includes: {
+        title: "Includes",
+        items: [
+          "Anti-bot and anti-scrape protection",
+          "Real-time Analytics (dashboard + public link)",
+          "Custom domains per user",
+          "Automatic suspension for non-payment",
+        ],
+      },
+      telegramOrb: {
+        title: "Rotating Telegram?",
+        desc: "Designed to rotate URLs/bots by slots and reduce ban risks. Additional cost per link.",
+        priceLabel: "Price per link",
+        billing: "Billed monthly.",
+      },
+      faq: {
+        q1: "Payment Management",
+        a1: "You can manage memberships and payment methods from your dashboard.",
+        q2: "Where is the discount saved?",
+        a2: "The discount is registered in the subscription for the corresponding cycle.",
+        q3: "20+ links?",
+        a3: "For large volumes, we coordinate with sales for special discounts and onboarding.",
+      },
+      backHome: "Back to Home",
+      discount: "No discount",
+    },
   },
+
   fr: {
+    common: {
+      prev: "Précédent",
+      next: "Suivant",
+      alerts: "Alertes",
+      live: "En direct",
+      copy: "Copier",
+      uiPreview: "Aperçu UI",
+      viewPrices: "Voir les prix",
+      techSupport: "Support Technique",
+      tip: "Astuce",
+      menu: "Menu",
+      save: "Enregistrer",
+      viewAllCountries: "Voir tous les pays",
+    },
+
+    countries: {
+      spain: "Espagne",
+      usa: "États-Unis",
+      mexico: "Mexique",
+      france: "France",
+      germany: "Allemagne",
+      argentina: "Argentine",
+      colombia: "Colombie",
+      peru: "Pérou",
+      chile: "Chili",
+      uk: "Royaume-Uni",
+    },
+
+    panelPreview: {
+      title: "Aperçu du tableau de bord",
+      subtitle:
+        "Survolez sur desktop ou touchez sur mobile pour changer la vue.",
+      badge: "Aperçu UI",
+      hintMobile: "Astuce : touchez les boutons à gauche pour changer la vue.",
+      footerLeft: "Only Program • Aperçu UI",
+      footerRight: "Support Technique",
+    },
+
     nav: {
       home: "Accueil",
       features: "Fonctionnalités",
@@ -318,7 +888,9 @@ export const translations = {
       login: "Se Connecter",
       signup: "S'inscrire",
       dashboard: "Tableau de bord",
+      tagline: "Protection & Analytique • Anti-bot",
     },
+
     hero: {
       badge: "Sécurité de Nouvelle Génération pour les Créateurs",
       title: "Arrêtez les fuites.",
@@ -327,11 +899,14 @@ export const translations = {
         "Détection automatique des bots et technologie anti-leach pour votre contenu premium. Générez des passerelles sécurisées et cryptées qui vérifient chaque visiteur.",
       cta: "Sécurisez votre compte",
       watchDemo: "Voir la Démo",
+      viewPanel: "Voir le panel",
     },
+
     features: {
-      title: "Surveillance de Sécurité en Temps Réel",
+      title: "Un tableau de bord simple et puissant",
       subtitle:
-        "Notre panneau de contrôle vous donne un contrôle absolu sur qui accède à votre contenu. Surveillez le trafic entrant, bloquez les IP suspectes instantanément et recevez des notifications de violations potentielles.",
+        "Créez votre lien, connectez votre domaine et contrôlez tout depuis un panneau clair : sécurité, routage, Telegram rotatif et analytiques. Sans configuration compliquée.",
+
       encryption: "Cryptage de Niveau Militaire",
       encryptionDesc: "Protection de bout en bout pour chaque lien généré.",
       botShield: "Bouclier Intelligent Anti-Bots",
@@ -344,10 +919,61 @@ export const translations = {
       ago: "il y a",
       denied: "REFUSÉ",
     },
+
     testimonials: {
-      title: "Approuvé par les Meilleurs Créateurs",
+      title: "Créatrices qui protègent leur contenu avec",
       subtitle:
-        "Témoignages de réussite de notre communauté mondiale axée sur la confidentialité.",
+        "Faites défiler ou utilisez les flèches. La première reste à gauche et sur grand écran vous en voyez 3 complètes.",
+      goTo: "Aller au témoignage {{n}}",
+      items: {
+        t1: {
+          label: "-Zara blonde",
+          name: "Zara",
+          role: "Créatrice Premium",
+          quote: "Depuis Only Program, mes liens sont blindés. C’est très pro.",
+          badge: "Anti-bot",
+        },
+        t2: {
+          label: "Sunnsine",
+          name: "Sun2",
+          role: "Créatrice",
+          quote:
+            "J’adore utiliser mon domaine : tout est cohérent, de marque et sécurisé.",
+          badge: "Domaines",
+        },
+        t3: {
+          label: "Mia",
+          name: "Mia",
+          role: "Créatrice",
+          quote:
+            "Les analytiques montrent exactement ce qui marche et d’où vient le trafic.",
+          badge: "Analytiques",
+        },
+        t4: {
+          label: "Helen",
+          name: "Helen",
+          role: "Créatrice",
+          quote: "Je suis rassurée : accès vérifié et bot-shield automatique.",
+          badge: "Sécurité",
+        },
+        t5: {
+          label: "Sarasuuun",
+          name: "Sarasuuun",
+          role: "Créatrice",
+          quote:
+            "Je peux tout ajuster. C’est un vrai système, pas un simple lien.",
+          badge: "Contrôle",
+        },
+        t6: {
+          label: "Rocioo",
+          name: "Rocioo",
+          role: "Créatrice",
+          quote: "Les fans arrivent sans friction. L’expérience est premium.",
+          badge: "Conversion",
+        },
+      },
+
+      titleOld: "Approuvé par les Meilleurs Créateurs",
       realStories: "Histoires Réelles. Résultats Réels.",
       testimonial1:
         "Depuis que j'utilise Only Program, les fuites de mon contenu ont complètement disparu. La protection contre les bots est tout simplement la meilleure du marché.",
@@ -362,6 +988,7 @@ export const translations = {
       name3: "Valeria Ruiz",
       role3: "Artiste Indépendante",
     },
+
     payments: {
       title: "Méthodes de Paiement Sécurisées",
       card: "Carte",
@@ -370,19 +997,48 @@ export const translations = {
       cryptoDesc: "BTC · ETH · USDT · SOL",
       paypal: "PayPal",
       paypalDesc: "Paiement rapide et sécurisé",
+      headline: "Payez comme vous voulez, activez votre lien instantanément",
+      subheadline:
+        "Méthodes flexibles, validation sécurisée et activation sans friction. Sur bureau, micro-interactions au survol.",
+      process: {
+        title: "Processus",
+        instant: "immédiat",
+        step1: "Sélectionner méthode",
+        step2: "Confirmer et valider",
+        step3: "Activation immédiate",
+      },
+      chips: {
+        card: ["VISA", "Mastercard", "Amex", "3DS optionnel"],
+        crypto: ["BTC", "ETH", "USDT", "SOL"],
+        paypal: ["PayPal", "Paiement rapide", "Confiance"],
+      },
     },
 
     footer: {
-      description:
-        "Protection professionnelle de liens pour les créateurs de contenu. Technologie de pointe contre les bots et les fuites.",
-      platform: "Plateforme",
-      company: "Entreprise",
-      newsletter: "Newsletter",
-      newsletterText: "Recevez des conseils de sécurité",
-      subscribe: "S'abonner",
       rights: "Tous droits réservés",
       developedBy: "Développé par",
+      brandDesc:
+        "La solution de cybersécurité ultime pour les créateurs de contenu modernes qui valorisent leur vie privée et leurs revenus.",
+      platform: {
+        title: "Plateforme",
+        items: [
+          "Comment ça marche",
+          "Générateur de liens",
+          "Guide de sécurité",
+          "Docs API",
+        ],
+      },
+      company: {
+        title: "Entreprise",
+        items: ["À propos", "Carrières", "Confidentialité", "Termes"],
+      },
+      newsletter: {
+        title: "Restez à jour",
+        placeholder: "Email",
+        button: "Envoyer",
+      },
     },
+
     auth: {
       welcomeBack: "Bon retour",
       loginSubtitle: "Accédez à votre panneau de contrôle",
@@ -416,6 +1072,7 @@ export const translations = {
       registering: "Création du compte...",
       continueWithGoogle: "Continuer avec Google",
     },
+
     pricing: {
       title: "Les Plans Tarifaires",
       subtitle:
@@ -459,12 +1116,148 @@ export const translations = {
       paymentMethods: "Méthodes de Paiement Acceptées",
       recommended: "RECOMMANDÉ",
     },
+
     dashboard: {
       welcome: "Bienvenue sur Only Program",
     },
+
     login: {
       title: "Se Connecter",
       subtitle: "Connectez-vous à votre compte",
+    },
+
+    home: {
+      featureViews: {
+        links: {
+          title: "Panneau de Liens (Landing + Boutons)",
+          subtitle:
+            "Modifiez textes, ordre et CTA. Voyez le résultat avant de publier.",
+        },
+        analytics: {
+          title: "Panneau d'Analytiques (Trafic Réel)",
+          subtitle:
+            "Sachez ce qui marche : d'où ils viennent, ce qu'ils touchent et ce qui convertit.",
+        },
+        telegram: {
+          title: "Panneau Telegram Rotatif (Anti-ban)",
+          subtitle:
+            "Répartissez les clics entre canaux et changez la destination en quelques secondes.",
+        },
+      },
+      preview: {
+        titleBarMid: "PANNEAU DE CONTRÔLE",
+        userRole: "Sécurité + Conversion",
+        headerAnalytics: "Analytiques claires (sans tracas)",
+        subAnalytics:
+          "Voyez d'où viennent vos gens et quelles actions ils font sur votre landing.",
+        headerTelegram: "Telegram Rotatif (sans perdre de comptes)",
+        subTelegram:
+          "Alternez les destinations pour réduire les bans et garder votre trafic actif.",
+        headerLinks: "Créez votre landing en quelques minutes",
+        subLinks:
+          "Éditez boutons et sections. Copiez votre lien protégé et c'est prêt.",
+        kpis: {
+          clicks: "Clics Réels",
+          filtered: "Tentatives Filtrées",
+          conversion: "Conversion",
+          topCountries: "Top Pays",
+        },
+        sidebar: {
+          links: "Liens",
+          analytics: "Analytiques",
+          rotation: "Rotation",
+          settings: "Paramètres",
+          support: "Support",
+        },
+        actions: {
+          logs: "Voir logs",
+          addChannel: "Ajouter canal",
+          preview: "Aperçu",
+          save: "Enregistrer",
+        },
+        cards: {
+          vip: "Canal VIP Privé",
+          ads: "Publicités",
+          community: "Communauté Premium",
+          launch: "Lancement",
+          general: "Communauté",
+          next: "Suivant :",
+          rotating: "ROTATION",
+        },
+        config: {
+          freq: "Fréquence",
+          freqVal: "Tous les 500 clics",
+          dist: "Distribution",
+          distVal: "Équitable (50/50)",
+          rotationConfig: "Config Rotation",
+          rotationDesc: "Définit comment le trafic est réparti.",
+        },
+        linksDemo: {
+          btnTitle: "Titre du bouton",
+          dest: "Destination",
+          subtitle: "Sous-titre",
+          channels: "Canaux",
+          previewTitle: "Aperçu",
+          verified: "Profil Vérifié",
+          vipAccess: "Accès VIP",
+          rotary: "Telegram Rotatif",
+        },
+      },
+      simplePanel: {
+        title: "Panneau simple. Résultat rapide.",
+        desc: "Pas besoin de compétences techniques. Entrez, choisissez ce que vous voulez, ajustez et publiez. Tout est clair.",
+      },
+      finalCta: {
+        title: "Votre premier lien protégé en quelques minutes",
+        desc: "Créez votre compte, concevez votre landing, connectez votre domaine et activez les analytiques.",
+        btn: "Créer un compte",
+      },
+    },
+
+    pricingPage: {
+      subtitle: "Prix mensuels par lien. Réductions attractives sur le volume.",
+      warning: "Paiement non confirmé = lien suspendu automatiquement",
+      calculator: {
+        title: "Calculatrice",
+        subtitle: "Achat individuel ou en gros",
+        withTelegram: "Avec Telegram Rotatif",
+        noTelegram: "Sans Telegram",
+        qtyLabel: "Nombre de liens",
+        base: "Base",
+        totalMonthly: "Total Mensuel",
+        perLink: "par lien",
+        viewDetails: "Voir détails",
+        notes: [
+          "Paiement crypto : validation manuelle (sécurité et anti-fraude).",
+          "Si le paiement n'est pas confirmé, le lien est suspendu automatiquement (réactivé au paiement).",
+          "20+ liens : planifiez un appel avec les ventes pour négocier le volume.",
+        ],
+      },
+      includes: {
+        title: "Inclus",
+        items: [
+          "Protection anti-bot et anti-scrape",
+          "Analytiques en temps réel (dashboard + lien public)",
+          "Domaines personnalisés par utilisateur",
+          "Suspension automatique pour non-paiement",
+        ],
+      },
+      telegramOrb: {
+        title: "Telegram Rotatif ?",
+        desc: "Conçu pour alterner les URLs/bots par créneaux et réduire les risques de ban. Coût additionnel par lien.",
+        priceLabel: "Prix par lien",
+        billing: "Facturé mensuellement.",
+      },
+      faq: {
+        q1: "Gestion des paiements",
+        a1: "Vous pouvez gérer les abonnements et les méthodes de paiement depuis votre tableau de bord.",
+        q2: "Où est enregistrée la réduction ?",
+        a2: "La réduction est enregistrée dans l'abonnement pour le cycle correspondant.",
+        q3: "20+ liens ?",
+        a3: "Pour les gros volumes, nous coordonnons avec les ventes pour des remises spéciales et l'intégration.",
+      },
+      backHome: "Retour à l'accueil",
+      discount: "Pas de réduction",
     },
   },
 };

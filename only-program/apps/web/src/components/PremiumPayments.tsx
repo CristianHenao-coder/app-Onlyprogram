@@ -1,401 +1,229 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "@/contexts/I18nContext";
+import { cmsService } from "@/services/cmsService";
 
-// ✅ IMPORTS DESDE src/assets (tu caso)
-import zara from "../assets/testimonials/zara.jpeg";
-import sun2 from "../assets/testimonials/sun2.jpeg";
-import mia from "../assets/testimonials/mia.jpeg";
-import helen1 from "../assets/testimonials/helen1.jpeg";
-import sarasuuun from "../assets/testimonials/sarasuuun.jpeg";
-import rocioo from "../assets/testimonials/rocioo.jpeg";
+type PaymentAssetType = "crypto" | "card" | "paypal";
 
-type Testimonial = {
-  id: string;
-  label: string;
-  name: string;
-  role: string;
-  quote: string;
-  badge: string;
-  image: string;
-  tint: string; // rgba(...)
-  videoSrc?: string; // opcional
-};
+export default function PremiumPayments() {
+  const { t } = useTranslation() as any;
+  const [cmsPricing, setCmsPricing] = useState<any[]>([]);
 
-const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
-
-export default function PremiumTestimonials() {
-  const carouselRef = useRef<HTMLDivElement | null>(null);
-  const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
-  const rafRef = useRef<number | null>(null);
-
-  const testimonials: Testimonial[] = useMemo(
-    () => [
-      {
-        id: "t1",
-        label: "TESTIMONIO 01",
-        name: "Creadora 01",
-        role: "Creadora Premium",
-        quote: "Desde que uso Only Program, mis links están blindados. Se siente profesional.",
-        badge: "Anti-bot",
-        image: zara,
-        tint: "rgba(168,85,247,.22)",
-        videoSrc: "https://cdn.coverr.co/videos/coverr-young-woman-working-on-laptop-1570/1080p.mp4",
-      },
-      {
-        id: "t2",
-        label: "TESTIMONIO 02",
-        name: "Creadora 02",
-        role: "Creadora",
-        quote: "Me encanta poder usar mi dominio y que todo se vea de marca y seguro.",
-        badge: "Dominios",
-        image: sun2,
-        tint: "rgba(34,211,238,.18)",
-        videoSrc: "https://cdn.coverr.co/videos/coverr-businesswoman-typing-on-a-laptop-9714/1080p.mp4",
-      },
-      {
-        id: "t3",
-        label: "TESTIMONIO 03",
-        name: "Creadora 03",
-        role: "Creadora",
-        quote: "Las analíticas me muestran exactamente qué funciona y desde dónde llega mi tráfico.",
-        badge: "Analytics",
-        image: mia,
-        tint: "rgba(249,115,22,.16)",
-        videoSrc: "https://cdn.coverr.co/videos/coverr-freelancer-working-at-home-5697/1080p.mp4",
-      },
-      {
-        id: "t4",
-        label: "TESTIMONIO 04",
-        name: "Creadora 04",
-        role: "Creadora",
-        quote: "Me siento tranquila porque el acceso está verificado y el bot-shield trabaja solo.",
-        badge: "Seguridad",
-        image: helen1,
-        tint: "rgba(29,161,242,.18)",
-        videoSrc: "https://cdn.coverr.co/videos/coverr-working-on-a-laptop-while-sitting-5248/1080p.mp4",
-      },
-      {
-        id: "t5",
-        label: "TESTIMONIO 05",
-        name: "Creadora 05",
-        role: "Creadora",
-        quote: "Puedo pausar o ajustar todo. Es un sistema serio, no un link cualquiera.",
-        badge: "Control",
-        image: sarasuuun,
-        tint: "rgba(34,197,94,.14)",
-        videoSrc: "https://cdn.coverr.co/videos/coverr-taking-notes-and-working-on-laptop-7483/1080p.mp4",
-      },
-      {
-        id: "t6",
-        label: "TESTIMONIO 06",
-        name: "Creadora 06",
-        role: "Creadora",
-        quote: "La experiencia del usuario es limpia y mis fans llegan sin fricción. Se nota premium.",
-        badge: "Conversión",
-        image: rocioo,
-        tint: "rgba(244,63,94,.14)",
-        videoSrc: "https://cdn.coverr.co/videos/coverr-woman-working-on-a-laptop-while-sitting-at-a-table-6026/1080p.mp4",
-      },
-    ],
-    []
-  );
-
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  // Background crossfade (2 capas)
-  const [bgA, setBgA] = useState(testimonials[0]?.image);
-  const [bgB, setBgB] = useState<string | null>(null);
-  const [useA, setUseA] = useState(true);
-  const [tint, setTint] = useState(testimonials[0]?.tint);
-
-  const setBackground = (img: string, tintColor: string) => {
-    setTint(tintColor);
-    if (useA) {
-      setBgB(img);
-      setUseA(false);
-    } else {
-      setBgA(img);
-      setUseA(true);
-    }
-  };
-
-  const scrollToIndex = (idx: number) => {
-    const card = cardRefs.current[idx];
-    const container = carouselRef.current;
-    if (!card || !container) return;
-
-    // ✅ snap-start funciona mejor con scrollIntoView en inline:start
-    card.scrollIntoView({
-      behavior: "smooth",
-      inline: "start",
-      block: "nearest",
-    });
-  };
-
-  const computeClosestToFocus = () => {
-    const container = carouselRef.current;
-    if (!container) return 0;
-
-    const rect = container.getBoundingClientRect();
-    // ✅ foco "premium": 35% del ancho (similar a velada: no necesariamente centro exacto)
-    const focusX = rect.left + rect.width * 0.35;
-
-    let bestIdx = 0;
-    let bestDist = Number.POSITIVE_INFINITY;
-
-    cardRefs.current.forEach((card, idx) => {
-      if (!card) return;
-      const r = card.getBoundingClientRect();
-      const cardCenter = r.left + r.width / 2;
-      const dist = Math.abs(focusX - cardCenter);
-      if (dist < bestDist) {
-        bestDist = dist;
-        bestIdx = idx;
-      }
-    });
-
-    return bestIdx;
-  };
-
-  // ✅ Al montar: asegura que inicie pegado a la izquierda
   useEffect(() => {
-    const container = carouselRef.current;
-    if (!container) return;
-    container.scrollLeft = 0;
+    const fetch = async () => {
+      const data = await cmsService.getConfig('pricing');
+      if (data) setCmsPricing(data);
+    };
+    fetch();
   }, []);
 
-  // Scroll -> detect active card (RAF, suave)
-  useEffect(() => {
-    const container = carouselRef.current;
-    if (!container) return;
+  const paymentAssets: Record<PaymentAssetType, string[]> = useMemo(() => {
+    const modules = import.meta.glob("../assets/payments/*.{png,jpg,jpeg,webp,svg}", {
+      eager: true,
+      import: "default",
+    }) as Record<string, string>;
 
-    const onScroll = () => {
-      if (rafRef.current) return;
-      rafRef.current = window.requestAnimationFrame(() => {
-        rafRef.current = null;
-        const idx = computeClosestToFocus();
-        if (idx !== activeIndex) setActiveIndex(idx);
-      });
-    };
+    const all = Object.entries(modules).map(([path, src]) => ({ path: path.toLowerCase(), src }));
 
-    container.addEventListener("scroll", onScroll, { passive: true });
-    return () => container.removeEventListener("scroll", onScroll as any);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIndex]);
+    const crypto = all
+      .filter(
+        (a) =>
+          a.path.includes("btc") ||
+          a.path.includes("bitcoin") ||
+          a.path.includes("eth") ||
+          a.path.includes("ethereum") ||
+          a.path.includes("usdt") ||
+          a.path.includes("tether") ||
+          a.path.includes("sol") ||
+          a.path.includes("solana") ||
+          a.path.includes("coin") ||
+          a.path.includes("crypto")
+      )
+      .map((a) => a.src);
 
-  // When activeIndex changes -> background + video focus
-  useEffect(() => {
-    const t = testimonials[activeIndex];
-    if (!t) return;
+    const card = all
+      .filter(
+        (a) =>
+          a.path.includes("visa") ||
+          a.path.includes("master") ||
+          a.path.includes("mastercard") ||
+          a.path.includes("amex") ||
+          a.path.includes("american") ||
+          a.path.includes("card") ||
+          a.path.includes("bank")
+      )
+      .map((a) => a.src);
 
-    setBackground(t.image, t.tint);
+    const paypal = all
+      .filter(
+        (a) =>
+          a.path.includes("paypal") ||
+          a.path.includes("cash") ||
+          a.path.includes("money") ||
+          a.path.includes("bill") ||
+          a.path.includes("note")
+      )
+      .map((a) => a.src);
 
-    // Play only active video
-    cardRefs.current.forEach((card, idx) => {
-      if (!card) return;
-      const video = card.querySelector("video") as HTMLVideoElement | null;
-      if (!video) return;
+    return { crypto, card, paypal };
+  }, []);
 
-      if (idx === activeIndex) {
-        video.play().catch(() => {});
-      } else {
-        video.pause();
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeIndex]);
+  const hasAny = paymentAssets.crypto.length + paymentAssets.card.length + paymentAssets.paypal.length > 0;
 
-  const goLeft = () => {
-    const next = clamp(activeIndex - 1, 0, testimonials.length - 1);
-    setActiveIndex(next);
-    scrollToIndex(next);
-  };
+  const Card = ({
+    title,
+    desc,
+    icon,
+    chips,
+    assets,
+  }: {
+    title: string;
+    desc: string;
+    icon: string;
+    chips: string[];
+    assets: string[];
+  }) => {
+    return (
+      <div className="rounded-3xl border border-border bg-surface/40 p-6 hover:border-primary/40 transition-all">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-white font-extrabold">{title}</p>
+            <p className="text-silver/60 text-sm mt-1">{desc}</p>
+          </div>
+          <span className="material-symbols-outlined text-primary">{icon}</span>
+        </div>
 
-  const goRight = () => {
-    const next = clamp(activeIndex + 1, 0, testimonials.length - 1);
-    setActiveIndex(next);
-    scrollToIndex(next);
+        <div className="mt-5 flex flex-wrap gap-2">
+          {chips.map((c) => (
+            <span
+              key={c}
+              className="text-[11px] px-2 py-1 rounded-full border border-border bg-background-dark/30 text-silver/70"
+            >
+              {c}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-border bg-background-dark/35 p-4">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-silver/55 font-semibold">{t("payments.process.title")}</p>
+            <span className="text-[10px] font-mono text-primary bg-primary/10 border border-primary/20 px-2 py-1 rounded-full">
+              {t("payments.process.instant")}
+            </span>
+          </div>
+
+          <div className="mt-3 space-y-2 text-sm text-silver/70">
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-primary">done</span>
+              {t("payments.process.step1")}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-primary">done</span>
+              {t("payments.process.step2")}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-outlined text-[18px] text-primary">done</span>
+              {t("payments.process.step3")}
+            </div>
+          </div>
+        </div>
+
+        {/* Logos (si existen) */}
+        {assets.length > 0 && (
+          <div className="mt-5 flex items-center gap-3 flex-wrap opacity-85">
+            {assets.slice(0, 6).map((src, i) => (
+              <div
+                key={`${src}-${i}`}
+                className="h-10 w-14 rounded-xl border border-border bg-surface/30 flex items-center justify-center overflow-hidden"
+              >
+                <img src={src} alt="" className="h-full w-full object-contain" draggable={false} />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
-    <section id="testimonials" className="relative py-24 md:py-32 overflow-hidden" data-reveal>
-      {/* Fondo reactivo */}
-      <div className="absolute inset-0 -z-10">
-        {/* A */}
-        <div
-          className={[
-            "absolute inset-0 bg-cover bg-center transition-opacity duration-[1200ms]",
-            useA ? "opacity-100" : "opacity-0",
-          ].join(" ")}
-          style={{
-            backgroundImage: `url(${bgA})`,
-            filter: "blur(28px) saturate(1.1)",
-            transform: "scale(1.12)",
-            opacity: useA ? 0.22 : 0,
-          }}
-        />
-        {/* B */}
-        <div
-          className={[
-            "absolute inset-0 bg-cover bg-center transition-opacity duration-[1200ms]",
-            !useA ? "opacity-100" : "opacity-0",
-          ].join(" ")}
-          style={{
-            backgroundImage: bgB ? `url(${bgB})` : "none",
-            filter: "blur(28px) saturate(1.1)",
-            transform: "scale(1.12)",
-            opacity: !useA ? 0.22 : 0,
-          }}
-        />
+    <div className="text-center">
+      <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+        {t ? t("payments.headline") : "Paga como quieras, activa tus links al instante"}
+      </h2>
+      <p className="mt-3 text-silver/60 max-w-2xl mx-auto">
+        {t
+          ? t("payments.subheadline")
+          : "Métodos flexibles, validación segura y activación sin fricción. En desktop tienes micro-interacciones con hover."}
+      </p>
 
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0B0B0B]/70 via-[#0B0B0B]/78 to-[#0B0B0B]" />
+      {/* Pricing Tiers from CMS */}
+      {cmsPricing.length > 0 && (
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+          {cmsPricing.map((plan, i) => (
+            <div key={i} className="bg-surface/30 border border-border/50 p-8 rounded-[2.5rem] relative group hover:border-primary/40 transition-all">
+              <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">{plan.name}</p>
+              <div className="flex items-baseline justify-center gap-1 mb-6">
+                 <span className="text-4xl font-black text-white">${plan.price}</span>
+                 <span className="text-silver/40 text-xs font-bold uppercase tracking-widest">/ Mes</span>
+              </div>
+              <ul className="space-y-3 mb-8 text-sm text-silver/60">
+                 <li className="flex items-center justify-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
+                    Full Access
+                 </li>
+                 <li className="flex items-center justify-center gap-2">
+                    <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
+                    Priority Support
+                 </li>
+              </ul>
+              <button className="w-full py-4 bg-white/5 border border-border/40 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white hover:text-black transition-all">
+                Choose Plan
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
-        {/* Glow tint */}
-        <div
-          className="absolute -inset-24 blur-3xl transition-all duration-[1200ms] opacity-40"
-          style={{
-            background: `radial-gradient(circle at 50% 30%, ${tint}, transparent 60%)`,
-          }}
+      <div className="mt-10 grid md:grid-cols-3 gap-6">
+        <Card
+          title={t ? t("payments.card") : "Tarjetas"}
+          desc={t ? t("payments.cardDesc") : "VISA, Mastercard, Amex. Confirmación rápida."}
+          icon="credit_card"
+          chips={(t("payments.chips.card") as string[]) || ["VISA", "Mastercard", "Amex", "3DS opcional"]}
+          assets={paymentAssets.card}
+        />
+        <Card
+          title={t ? t("payments.crypto") : "Cripto"}
+          desc={t ? t("payments.cryptoDesc") : "BTC, ETH, USDT, SOL. Validación manual segura."}
+          icon="currency_bitcoin"
+          chips={(t("payments.chips.crypto") as string[]) || ["BTC", "ETH", "USDT", "SOL"]}
+          assets={paymentAssets.crypto}
+        />
+        <Card
+          title={t ? t("payments.paypal") : "PayPal"}
+          desc={t ? t("payments.paypalDesc") : "Checkout confiable con alta tasa de aprobación."}
+          icon="payments"
+          chips={(t("payments.chips.paypal") as string[]) || ["PayPal", "Checkout rápido", "Confianza"]}
+          assets={paymentAssets.paypal}
         />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-14 md:mb-16" data-reveal>
-          <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight">
-            Creadoras que protegen su contenido con <span className="text-primary">Only Program</span>
-          </h2>
-          <p className="mt-4 text-silver/60 max-w-2xl mx-auto">
-            Desliza o usa las flechas. El fondo reacciona suavemente al testimonio en foco.
-          </p>
-        </div>
-
-        <div className="relative" data-reveal>
-          {/* Flechas */}
-          <div className="hidden md:flex absolute -top-2 right-0 gap-2 z-10">
-            <button
-              onClick={goLeft}
-              className="h-10 w-10 rounded-full bg-surface border border-border hover:border-primary/50 text-silver/70 hover:text-white transition-all"
-              aria-label="Anterior"
-            >
-              <span className="material-symbols-outlined text-lg">chevron_left</span>
-            </button>
-            <button
-              onClick={goRight}
-              className="h-10 w-10 rounded-full bg-surface border border-border hover:border-primary/50 text-silver/70 hover:text-white transition-all"
-              aria-label="Siguiente"
-            >
-              <span className="material-symbols-outlined text-lg">chevron_right</span>
-            </button>
-          </div>
-
-          {/* Carrusel (✅ empieza a la izquierda) */}
-          <div
-            ref={carouselRef}
-            className={[
-              "flex gap-6 md:gap-8 overflow-x-auto pb-6 custom-scrollbar scroll-smooth",
-              "snap-x snap-mandatory",
-              "pl-0 pr-2 sm:pr-4",
-              "scroll-pl-0", // ✅ evita espacio antes de la primera
-            ].join(" ")}
-          >
-            {testimonials.map((t, idx) => {
-              const isActive = idx === activeIndex;
-              return (
-                <div
-                  key={t.id}
-                  ref={(el) => (cardRefs.current[idx] = el)}
-                  className={[
-                    "snap-start flex-none",
-                    "w-[280px] sm:w-[320px] md:w-[360px] lg:w-[420px]",
-                    "transition-all duration-700",
-                    isActive ? "opacity-100 scale-[1]" : "opacity-[0.50] scale-[0.975]",
-                  ].join(" ")}
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveIndex(idx);
-                      scrollToIndex(idx);
-                    }}
-                    className={[
-                      "group text-left w-full relative",
-                      "rounded-3xl overflow-hidden border bg-surface/40",
-                      isActive ? "border-primary/40" : "border-border",
-                      "hover:border-primary/40 transition-all duration-500",
-                      "focus:outline-none focus:ring-2 focus:ring-primary/40",
-                    ].join(" ")}
-                    style={{ transform: "translateZ(0)" }}
-                  >
-                    {t.videoSrc ? (
-                      <video
-                        className={[
-                          "w-full h-[520px] object-cover",
-                          "transition-transform duration-[900ms]",
-                          isActive ? "scale-[1.02]" : "scale-[1.06]",
-                        ].join(" ")}
-                        poster={t.image}
-                        muted
-                        loop
-                        playsInline
-                        preload="none"
-                        src={t.videoSrc}
-                      />
-                    ) : (
-                      <img
-                        className={[
-                          "w-full h-[520px] object-cover",
-                          "transition-transform duration-[900ms]",
-                          isActive ? "scale-[1.02]" : "scale-[1.06]",
-                        ].join(" ")}
-                        src={t.image}
-                        alt={t.name}
-                      />
-                    )}
-
-                    <div className="absolute inset-0 pointer-events-none">
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                    </div>
-
-                    <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-primary bg-primary/10 border border-primary/20 px-2 py-1 rounded-full">
-                        {t.label}
-                      </span>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-white/70">
-                        {t.badge}
-                      </span>
-                    </div>
-
-                    <div className="absolute bottom-5 left-5 right-5">
-                      <p className="text-white font-bold text-lg leading-tight">{t.name}</p>
-                      <p className="text-silver/50 text-xs">{t.role}</p>
-                      <p className="text-silver/70 text-sm mt-2 leading-relaxed">“{t.quote}”</p>
-                    </div>
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Dots */}
-          <div className="flex justify-center gap-2 mt-6">
-            {testimonials.map((_, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => {
-                  setActiveIndex(idx);
-                  scrollToIndex(idx);
-                }}
-                className={[
-                  "h-2.5 rounded-full transition-all",
-                  idx === activeIndex ? "w-8 bg-primary" : "w-2.5 bg-white/15 hover:bg-white/25",
-                ].join(" ")}
-                aria-label={`Ir a testimonio ${idx + 1}`}
-              />
-            ))}
-          </div>
-        </div>
+      <div className="mt-16 bg-primary/10 border border-primary/20 rounded-[2rem] p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8 max-w-4xl mx-auto shadow-2xl shadow-primary/5">
+         <div className="text-center md:text-left space-y-2">
+            <h3 className="text-2xl font-black text-white uppercase tracking-tight">¿Quieres ver cómo funciona?</h3>
+            <p className="text-silver/60 font-medium">Prueba nuestra demo interactiva antes de elegir un plan.</p>
+         </div>
+         <button className="bg-white text-black px-10 py-4 rounded-xl font-black hover:bg-silver transition-all shadow-xl shadow-white/5 flex items-center gap-3 uppercase tracking-widest text-sm group">
+            Ver Demo en Vivo
+            <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">play_circle</span>
+         </button>
       </div>
-    </section>
+
+      {!hasAny && (
+        <p className="mt-6 text-xs text-silver/45">
+          Tip: si quieres logos reales, agrega imágenes en{" "}
+          <span className="font-mono">src/assets/payments/</span> (visa/master/btc/paypal…)
+        </p>
+      )}
+    </div>
   );
 }
