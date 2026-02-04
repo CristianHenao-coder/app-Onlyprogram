@@ -317,7 +317,7 @@ export default function Home({
           paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
-        {/* HERO */}
+        {/*HERO*/}
         <section id="home" className="relative pt-24 sm:pt-32 lg:pt-40 pb-16 sm:pb-20 overflow-hidden">
           <div className="hero-gradient absolute inset-0 -z-10" />
 
