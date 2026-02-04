@@ -35,11 +35,37 @@ export function useAuth() {
     return { data, error };
   };
 
-  const signUpWithEmail = async (email: string, password: string) => {
+  /* 
+    Enhanced signUp to handle profile creation 
+  */
+  const signUpWithEmail = async (
+    email: string, 
+    password: string, 
+    metadata?: { 
+      full_name?: string; 
+      phone?: string; 
+      country?: string; 
+    }
+  ) => {
+    // 1. SignUp with Supabase Auth
+    // We pass metadata so it's stored in user_metadata as well (useful for quick access)
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: metadata?.full_name,
+          phone: metadata?.phone,
+          country: metadata?.country,
+        },
+      },
     });
+
+    if (error) return { data, error };
+
+    // 2. Insert into public.profiles is now handled by a Database Trigger.
+    // We do NOT manually insert here to avoid RLS issues (since user has no session yet).
+
     return { data, error };
   };
 
@@ -47,7 +73,7 @@ export function useAuth() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${window.location.origin}/welcome`,
       },
     });
     return { data, error };

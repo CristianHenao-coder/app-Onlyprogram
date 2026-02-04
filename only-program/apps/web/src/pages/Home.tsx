@@ -103,9 +103,9 @@ export default function Home() {
         ],
         chartBars: [32, 52, 41, 64, 58, 46, 71, 60, 55, 74, 62, 80],
         countryRows: [
-          { c: 'España', v: '52.126' },
-          { c: 'Estados Unidos', v: '34.182' },
-          { c: 'México', v: '18.867' },
+          { c: t('countries.spain'), v: '52.126' },
+          { c: t('countries.usa'), v: '34.182' },
+          { c: t('countries.mexico'), v: '18.867' },
         ],
       };
     }
@@ -333,7 +333,7 @@ export default function Home() {
                 href="#features"
                 className="bg-surface/60 border border-border px-7 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all hover:border-primary/40 text-white flex items-center justify-center gap-2"
               >
-                Ver el panel
+                {t('hero.viewPanel')}
                 <span className="material-symbols-outlined">south</span>
               </a>
             </div>
@@ -779,7 +779,7 @@ export default function Home() {
                     to="/pricing"
                     className="px-7 py-3.5 rounded-xl border border-border bg-background-dark/40 text-white font-bold hover:border-primary/50 transition-all"
                   >
-                    Ver precios
+                    {t('common.viewPrices')}
                   </Link>
                 </div>
               </div>

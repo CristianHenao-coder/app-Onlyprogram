@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthShell from '@/components/AuthShell';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/contexts/I18nContext';
-import logo from '@/assets/img/logoinc.png';
+import Logo from '@/components/Logo';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -12,6 +12,7 @@ export default function Login() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,7 +29,7 @@ export default function Login() {
       return;
     }
 
-    navigate('/dashboard');
+    navigate('/welcome');
   };
 
   const handleGoogleLogin = async () => {
@@ -46,9 +47,7 @@ export default function Login() {
       <div data-reveal className="bg-surface/50 border border-border rounded-3xl p-8 md:p-10 shadow-2xl">
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-6">
-            <div className="h-10 w-10 overflow-hidden rounded-lg">
-              <img src={logo} alt="Only Program" className="h-full w-full object-contain" />
-            </div>
+            <Logo />
             <span className="text-xl font-bold tracking-tight text-white uppercase">
               Only <span className="text-primary text-sm">Program</span>
             </span>
@@ -89,16 +88,28 @@ export default function Login() {
                 {t('auth.forgotPassword')}
               </Link>
             </div>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-background-dark/50 border border-border rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-silver/20"
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-background-dark/50 border border-border rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-silver/20 pr-12"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-4 flex items-center text-silver/50 hover:text-white transition-colors"
+                tabIndex={-1}
+              >
+                <span className="material-symbols-outlined text-xl">
+                  {showPassword ? 'visibility_off' : 'visibility'}
+                </span>
+              </button>
+            </div>
           </div>
 
           <button

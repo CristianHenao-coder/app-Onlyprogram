@@ -12,6 +12,20 @@ export const translations = {
       menu: "Menú",
       save: "Guardar",
       viewAllCountries: "Ver todos los países",
+      viewPrices: "Ver precios",
+    },
+
+    countries: {
+      spain: "España",
+      usa: "Estados Unidos",
+      mexico: "México",
+      france: "Francia",
+      germany: "Alemania",
+      argentina: "Argentina",
+      colombia: "Colombia",
+      peru: "Perú",
+      chile: "Chile",
+      uk: "Reino Unido",
     },
 
     panelPreview: {
@@ -42,6 +56,7 @@ export const translations = {
         "Detección automática de bots y tecnología anti-leach para tu contenido premium. Genera pasarelas seguras y encriptadas que verifican a cada visitante.",
       cta: "Asegura tu cuenta",
       watchDemo: "Ver Demo",
+      viewPanel: "Ver el panel",
     },
 
     features: {
@@ -384,8 +399,8 @@ export const translations = {
         billing: "Cobro mensual.",
       },
       faq: {
-        q1: "¿Qué pasa si no pago?",
-        a1: "El link se desactiva automáticamente al vencer. Al confirmar el pago, se reactiva.",
+        q1: "Gestión de pagos",
+        a1: "Puedes gestionar las membresías y los métodos de pago desde tu panel.",
         q2: "¿Descuento dónde se guarda?",
         a2: "El descuento queda registrado en la suscripción para el ciclo correspondiente.",
         q3: "¿20+ links?",
@@ -409,6 +424,20 @@ export const translations = {
       menu: "Menu",
       save: "Save",
       viewAllCountries: "View all countries",
+      viewPrices: "View Prices",
+    },
+
+    countries: {
+      spain: "Spain",
+      usa: "United States",
+      mexico: "Mexico",
+      france: "France",
+      germany: "Germany",
+      argentina: "Argentina",
+      colombia: "Colombia",
+      peru: "Peru",
+      chile: "Chile",
+      uk: "United Kingdom",
     },
 
     panelPreview: {
@@ -439,6 +468,7 @@ export const translations = {
         "Automatic bot detection and anti-leach technology for your premium content. Generate secure, encrypted gateways that verify every visitor.",
       cta: "Secure your account",
       watchDemo: "Watch Demo",
+      viewPanel: "View Panel",
     },
 
     features: {
@@ -600,6 +630,12 @@ export const translations = {
       selectCountry: "Select your country",
       acceptTerms: "I accept the terms and conditions and privacy policy",
       alreadyHaveAccount: "Already have an account?",
+      confirmPassword: "Confirm Password",
+      fullName: "Full Name",
+      phone: "Phone",
+      country: "Country",
+      selectCountry: "Select your country",
+
       termsLink: "terms and conditions",
       privacyLink: "privacy policy",
       noPaymentInfo: "We do not request payment information during registration",
@@ -777,8 +813,8 @@ export const translations = {
         billing: "Billed monthly.",
       },
       faq: {
-        q1: "What happens if I don't pay?",
-        a1: "The link deactivates automatically when expired. Reactivates upon payment confirmation.",
+        q1: "Payment Management",
+        a1: "You can manage memberships and payment methods from your dashboard.",
         q2: "Where is the discount saved?",
         a2: "The discount is registered in the subscription for the corresponding cycle.",
         q3: "20+ links?",
@@ -797,11 +833,25 @@ export const translations = {
       live: "En direct",
       copy: "Copier",
       uiPreview: "Aperçu UI",
+      viewPrices: "Voir les prix",
       techSupport: "Support Technique",
       tip: "Astuce",
       menu: "Menu",
       save: "Enregistrer",
       viewAllCountries: "Voir tous les pays",
+    },
+
+    countries: {
+      spain: "Espagne",
+      usa: "États-Unis",
+      mexico: "Mexique",
+      france: "France",
+      germany: "Allemagne",
+      argentina: "Argentine",
+      colombia: "Colombie",
+      peru: "Pérou",
+      chile: "Chili",
+      uk: "Royaume-Uni",
     },
 
     panelPreview: {
@@ -832,6 +882,7 @@ export const translations = {
         "Détection automatique des bots et technologie anti-leach pour votre contenu premium. Générez des passerelles sécurisées et cryptées qui vérifient chaque visiteur.",
       cta: "Sécurisez votre compte",
       watchDemo: "Voir la Démo",
+      viewPanel: "Voir le panel",
     },
 
     features: {
@@ -993,6 +1044,12 @@ export const translations = {
       selectCountry: "Sélectionnez votre pays",
       acceptTerms: "J'accepte les termes et conditions et la politique de confidentialité",
       alreadyHaveAccount: "Vous avez déjà un compte?",
+      confirmPassword: "Confirmer le mot de passe",
+      fullName: "Nom Complet",
+      phone: "Téléphone",
+      country: "Pays",
+      selectCountry: "Sélectionnez votre pays",
+
       termsLink: "termes et conditions",
       privacyLink: "politique de confidentialité",
       noPaymentInfo: "Nous ne demandons pas d'informations de paiement lors de l'inscription",
@@ -1170,8 +1227,8 @@ export const translations = {
         billing: "Facturé mensuellement.",
       },
       faq: {
-        q1: "Que se passe-t-il si je ne paie pas ?",
-        a1: "Le lien se désactive automatiquement à l'expiration. Il se réactive à la confirmation du paiement.",
+        q1: "Gestion des paiements",
+        a1: "Vous pouvez gérer les abonnements et les méthodes de paiement depuis votre tableau de bord.",
         q2: "Où est enregistrée la réduction ?",
         a2: "La réduction est enregistrée dans l'abonnement pour le cycle correspondant.",
         q3: "20+ liens ?",

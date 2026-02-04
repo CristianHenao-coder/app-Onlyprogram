@@ -8,6 +8,8 @@ import ResetPassword from '@/pages/ResetPassword';
 import Dashboard from '@/pages/Dashboard/Overview';
 import Pricing from './pages/Pricing';
 import Register from './pages/Register';
+import Welcome from './pages/Welcome';
+import CompleteProfile from './pages/CompleteProfile';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import MotionManager from '@/components/MotionManager';
 import '@/styles/index.css';
@@ -35,6 +37,8 @@ function App() {
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/welcome" element={<Welcome />} />
+          <Route path="/complete-profile" element={<CompleteProfile />} />
           
           {/* Protected Routes */}
           <Route

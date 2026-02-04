@@ -6,7 +6,7 @@ type InterpolateValues = Record<string, string | number | boolean | null | undef
 interface I18nContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string, values?: InterpolateValues) => string;
+  t: (key: string, values?: InterpolateValues) => any;
   availableLanguages: Language[];
 }
 
@@ -59,15 +59,21 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     document.documentElement.lang = language;
   }, [language]);
 
-  const t = (key: string, values?: InterpolateValues): string => {
+  const t = (key: string, values?: InterpolateValues): any => {
     const dict = translations[language] ?? translations.es;
 
     const raw = getByPath(dict, key);
-    if (typeof raw === "string") return interpolate(raw, values);
+    if (raw !== undefined) {
+      if (typeof raw === "string") return interpolate(raw, values);
+      return raw;
+    }
 
     // fallback a español si falta la clave en el idioma actual
     const rawEs = getByPath(translations.es, key);
-    if (typeof rawEs === "string") return interpolate(rawEs, values);
+    if (rawEs !== undefined) {
+      if (typeof rawEs === "string") return interpolate(rawEs, values);
+      return rawEs;
+    }
 
     return key;
   };

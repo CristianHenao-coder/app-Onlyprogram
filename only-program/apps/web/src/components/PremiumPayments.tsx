@@ -150,21 +150,21 @@ export default function PremiumPayments() {
           title={t ? t("payments.card") : "Tarjetas"}
           desc={t ? t("payments.cardDesc") : "VISA, Mastercard, Amex. Confirmación rápida."}
           icon="credit_card"
-          chips={(t("payments.chips.card") as any as string[]) || ["VISA", "Mastercard", "Amex", "3DS opcional"]}
+          chips={(t("payments.chips.card") as string[]) || ["VISA", "Mastercard", "Amex", "3DS opcional"]}
           assets={paymentAssets.card}
         />
         <Card
           title={t ? t("payments.crypto") : "Cripto"}
           desc={t ? t("payments.cryptoDesc") : "BTC, ETH, USDT, SOL. Validación manual segura."}
           icon="currency_bitcoin"
-          chips={(t("payments.chips.crypto") as any as string[]) || ["BTC", "ETH", "USDT", "SOL"]}
+          chips={(t("payments.chips.crypto") as string[]) || ["BTC", "ETH", "USDT", "SOL"]}
           assets={paymentAssets.crypto}
         />
         <Card
           title={t ? t("payments.paypal") : "PayPal"}
           desc={t ? t("payments.paypalDesc") : "Checkout confiable con alta tasa de aprobación."}
           icon="payments"
-          chips={(t("payments.chips.paypal") as any as string[]) || ["PayPal", "Checkout rápido", "Confianza"]}
+          chips={(t("payments.chips.paypal") as string[]) || ["PayPal", "Checkout rápido", "Confianza"]}
           assets={paymentAssets.paypal}
         />
       </div>

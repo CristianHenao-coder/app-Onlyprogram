@@ -121,12 +121,7 @@ export default function Pricing() {
                         >
                           {t('auth.createAccount')}
                         </Link>
-                        <a
-                          href="#faq"
-                          className="px-6 py-3 rounded-xl border border-border bg-surface/30 text-white font-bold hover:border-primary/50 transition-all text-center"
-                        >
-                          {t('pricingPage.calculator.viewDetails')}
-                        </a >
+
                       </div>
                     </div>
                   </div>
@@ -152,6 +147,14 @@ export default function Pricing() {
                     <li className="flex gap-2"><span className="material-symbols-outlined text-primary text-base">check</span>{t('pricingPage.includes.items.2')}</li>
                     <li className="flex gap-2"><span className="material-symbols-outlined text-primary text-base">check</span>{t('pricingPage.includes.items.3')}</li>
                   </ul>
+                  <div className="mt-6">
+                    <a
+                      href="#faq"
+                      className="block w-full py-3 rounded-xl border border-border bg-surface/30 text-white font-bold hover:border-primary/50 transition-all text-center text-sm"
+                    >
+                      {t('pricingPage.calculator.viewDetails')}
+                    </a>
+                  </div>
                 </div>
 
                 <div className="rounded-3xl border border-border bg-surface/40 p-6">

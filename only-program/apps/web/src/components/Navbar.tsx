@@ -1,21 +1,23 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "@/contexts/I18nContext";
 
-// Si tu logo está en: apps/web/src/assets/img/logoinc.png
-import logo from "../assets/img/logoinc.png";
+import Logo from "./Logo";
+
+
 
 type NavItem = { label: string; href: string };
 
 export default function Navbar() {
+  const { pathname } = useLocation();
   const { t, language, setLanguage } = useTranslation() as any;
 
   const items: NavItem[] = useMemo(
     () => [
-      { label: t ? t("nav.home") : "Inicio", href: "#home" },
-      { label: t ? t("nav.features") : "Funciones", href: "#features" },
-      { label: t ? t("nav.pricing") : "Precios", href: "#pricing" },
-      { label: t ? t("nav.testimonials") : "Testimonios", href: "#testimonials" },
+      { label: t ? t("nav.home") : "Inicio", href: "/#home" },
+      { label: t ? t("nav.features") : "Funciones", href: "/#features" },
+      { label: t ? t("nav.pricing") : "Precios", href: "/pricing" },
+      { label: t ? t("nav.testimonials") : "Testimonios", href: "/#testimonials" },
     ],
     [t]
   );
@@ -64,19 +66,7 @@ export default function Navbar() {
         <div className="h-20 flex items-center justify-between gap-4">
           {/* BRAND */}
           <a href="#home" className="group flex items-center gap-3 min-w-0" aria-label="Only Program">
-            <div className="relative">
-              {/* Glow */}
-              <div className="absolute -inset-2 rounded-2xl bg-primary/15 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              {/* Logo container */}
-              <div className="relative h-11 w-11 sm:h-12 sm:w-12 rounded-2xl bg-surface border border-border flex items-center justify-center overflow-hidden">
-                <img
-                  src={logo}
-                  alt="Only Program"
-                  className="h-full w-full object-contain opacity-95 group-hover:opacity-100 transition-opacity"
-                  draggable={false}
-                />
-              </div>
-            </div>
+            <Logo />
 
             <div className="leading-tight min-w-0">
               <div className="flex items-baseline gap-2">
@@ -91,15 +81,35 @@ export default function Navbar() {
 
           {/* NAV */}
           <nav className="hidden md:flex items-center gap-8">
-            {items.map((it) => (
-              <a
-                key={it.href}
-                href={it.href}
-                className="text-sm font-semibold text-silver/70 hover:text-white transition-colors"
-              >
-                {it.label}
-              </a>
-            ))}
+            {items.map((it) => {
+              const isHash = it.href.startsWith("/#") || it.href.startsWith("#");
+              // If we are on home ("/" or "") and it's a hash link, treat it as local anchor
+              const isLocal = isHash && (pathname === "/" || pathname === "");
+              
+              const targetHref = isHash ? (it.href.includes("#") ? `#${it.href.split("#")[1]}` : it.href) : it.href;
+
+              if (isLocal) {
+                 return (
+                   <a
+                     key={it.href}
+                     href={targetHref}
+                     className="text-sm font-semibold text-silver/70 hover:text-white transition-colors"
+                   >
+                     {it.label}
+                   </a>
+                 );
+              }
+
+              return (
+                <Link
+                  key={it.href}
+                  to={it.href}
+                  className="text-sm font-semibold text-silver/70 hover:text-white transition-colors"
+                >
+                  {it.label}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* ACTIONS */}

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import logo from '@/assets/img/logoinc.png';
+import Logo from './Logo';
 
 
 import { useTranslation } from "@/contexts/I18nContext";
@@ -14,14 +14,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center gap-2 mb-6">
-              <div className="h-8 w-8 overflow-hidden rounded">
-                <img 
-                  src={logo} 
-                  alt="Only Program Logo" 
-                  className="h-full w-full object-contain"
-                />
-
-              </div>
+              <Logo className="h-10 w-10" />
               <span className="text-lg font-bold text-white uppercase">
                 Only <span className="text-primary text-sm">Program</span>
               </span>
@@ -46,7 +39,7 @@ export default function Footer() {
           <div>
             <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-6">{t("footer.platform.title")}</h4>
             <ul className="space-y-3 text-sm text-silver/60">
-              {(t("footer.platform.items") as any as string[]).map((item, i) => (
+              {(t("footer.platform.items") as string[]).map((item, i) => (
                 <li key={i}><Link className="hover:text-primary transition-colors" to="/">{item}</Link></li>
               ))}
             </ul>
@@ -56,7 +49,7 @@ export default function Footer() {
           <div>
             <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-6">{t("footer.company.title")}</h4>
             <ul className="space-y-3 text-sm text-silver/60">
-              {(t("footer.company.items") as any as string[]).map((item, i) => (
+              {(t("footer.company.items") as string[]).map((item, i) => (
                 <li key={i}><Link className="hover:text-primary transition-colors" to="/">{item}</Link></li>
               ))}
             </ul>
