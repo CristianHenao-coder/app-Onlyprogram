@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
 import { translations, Language } from "../i18n/translations";
 
 type InterpolateValues = Record<string, string | number | boolean | null | undefined>;
@@ -36,7 +36,7 @@ function detectDefaultLanguage(): Language {
   try {
     const saved = localStorage.getItem(STORAGE_KEY) as Language | null;
     if (saved && (saved === "es" || saved === "en" || saved === "fr")) return saved;
-  } catch {}
+  } catch { }
 
   const nav = (navigator.language || "es").toLowerCase();
   if (nav.startsWith("fr")) return "fr";
@@ -51,7 +51,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     setLanguageState(lang);
     try {
       localStorage.setItem(STORAGE_KEY, lang);
-    } catch {}
+    } catch { }
     document.documentElement.lang = lang;
   };
 

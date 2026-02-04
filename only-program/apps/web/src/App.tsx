@@ -1,22 +1,26 @@
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, Outlet } from 'react-router-dom';
 import { I18nProvider } from '@/contexts/I18nContext';
+import { ModalProvider } from '@/contexts/ModalContext';
 import Home from '@/pages/Home';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
-import Dashboard from '@/pages/Dashboard/Overview';
+import Pricing from './pages/Pricing';
+import Welcome from './pages/Welcome';
+import CompleteProfile from './pages/CompleteProfile';
+
+// Dashboard Pages
 import Analytics from '@/pages/Dashboard/Analytics';
+import Links from '@/pages/Dashboard/Links';
 import Telegram from '@/pages/Dashboard/Telegram';
 import Settings from '@/pages/Dashboard/Settings';
 import CreateLink from '@/pages/Dashboard/CreateLink';
 import LinkConfigurator from '@/pages/Dashboard/LinkConfigurator';
 import Support from '@/pages/Dashboard/Support';
-import Pricing from './pages/Pricing';
-import Register from './pages/Register';
-import Welcome from './pages/Welcome';
-import CompleteProfile from './pages/CompleteProfile';
+import Payments from '@/pages/Dashboard/Payments';
+import HomeDashboard from '@/pages/Dashboard/Home';
 
 // Admin Pages
 import AdminDashboard from '@/pages/Admin/Dashboard';
@@ -27,16 +31,12 @@ import CouponManager from '@/pages/Admin/CouponManager';
 import AdminSettings from '@/pages/Admin/Settings';
 import AuditLogs from './pages/Admin/AuditLogs';
 
+// Components
 import DashboardLayout from '@/components/DashboardLayout';
-import Overview from '@/pages/Dashboard/Overview';
-import Payments from '@/pages/Dashboard/Payments';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminRoute from '@/components/AdminRoute';
-import DashboardLayout from '@/components/DashboardLayout';
 import AdminLayout from '@/components/AdminLayout';
 import MotionManager from '@/components/MotionManager';
-import { Outlet } from 'react-router-dom';
-import { ModalProvider } from '@/contexts/ModalContext';
 import '@/styles/index.css';
 
 function ScrollToTop() {
@@ -65,7 +65,7 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/complete-profile" element={<CompleteProfile />} />
-            
+
             {/* Dashboard Protected Routes */}
             <Route
               path="/dashboard"
@@ -77,15 +77,18 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Dashboard />} />
+              <Route index element={<Navigate to="/dashboard/links" replace />} />
+              <Route path="home" element={<HomeDashboard />} />
+              <Route path="links" element={<Links />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="telegram" element={<Telegram />} />
               <Route path="settings" element={<Settings />} />
+              <Route path="payments" element={<Payments />} />
               <Route path="links/new" element={<CreateLink />} />
               <Route path="links/:id/edit" element={<LinkConfigurator />} />
               <Route path="support" element={<Support />} />
             </Route>
-  
+
             {/* Admin Protected Routes */}
             <Route
               path="/admin"
@@ -110,29 +113,6 @@ function App() {
         </Router>
       </ModalProvider>
     </I18nProvider>
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        
-        {/* Protected Routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Overview />} />
-          <Route path="payments" element={<Payments />} />
-          {/* Aquí irían otras rutas como links, settings, etc. */}
-        </Route>
-      </Routes>
-    </Router>
   );
 }
 
