@@ -70,10 +70,13 @@ export default function Overview() {
               <PaymentSelector />
               
               <div className="mt-12 flex flex-col items-center gap-6">
-                 <button className="w-full max-w-md bg-primary hover:bg-primary-dark text-white font-black py-5 rounded-2xl transition-all shadow-2xl shadow-primary/40 transform hover:scale-[1.02] active:scale-95 text-lg uppercase tracking-widest flex items-center justify-center gap-3">
+                 <Link 
+                   to="/dashboard/support"
+                   className="w-full max-w-md bg-primary hover:bg-primary-dark text-white font-black py-5 rounded-2xl transition-all shadow-2xl shadow-primary/40 transform hover:scale-[1.02] active:scale-95 text-lg uppercase tracking-widest flex items-center justify-center gap-3"
+                 >
                     Comprar Links Ahora
                     <span className="material-symbols-outlined font-black">shopping_cart</span>
-                 </button>
+                 </Link>
                  <p className="text-[11px] text-silver/40 font-bold uppercase tracking-widest flex items-center gap-2">
                     <span className="material-symbols-outlined text-sm">verified_user</span> Transacción 100% Protegida por Only Program
                  </p>

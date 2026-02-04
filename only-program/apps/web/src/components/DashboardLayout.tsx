@@ -1,6 +1,22 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
+interface DashboardLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const { pathname } = useLocation();
+  const { signOut, user } = useAuth();
+  const navigate = useNavigate();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const menuItems = [
+    { label: 'Mis Links', icon: 'link', href: '/dashboard' },
+    { label: 'Analíticas', icon: 'analytics', href: '/dashboard/analytics' },
+    { label: 'Telegram Rotating', icon: 'sync', href: '/dashboard/telegram' },
+    { label: 'Soporte', icon: 'support_agent', href: '/dashboard/support' },
+  ];
 export default function DashboardLayout() {
   const { signOut, user } = useAuth();
   const location = useLocation();

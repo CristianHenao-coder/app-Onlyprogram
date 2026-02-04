@@ -4,17 +4,26 @@ import { cmsService } from "@/services/cmsService";
 
 type PaymentAssetType = "crypto" | "card" | "paypal";
 
-export default function PremiumPayments() {
+export default function PremiumPayments({ 
+  previewData
+}: { 
+  previewData?: any[];
+}) {
   const { t } = useTranslation() as any;
   const [cmsPricing, setCmsPricing] = useState<any[]>([]);
 
   useEffect(() => {
+    if (previewData) {
+      setCmsPricing(previewData);
+      return;
+    }
+
     const fetch = async () => {
       const data = await cmsService.getConfig('pricing');
       if (data) setCmsPricing(data);
     };
     fetch();
-  }, []);
+  }, [previewData]);
 
   const paymentAssets: Record<PaymentAssetType, string[]> = useMemo(() => {
     const modules = import.meta.glob("../assets/payments/*.{png,jpg,jpeg,webp,svg}", {
@@ -183,7 +192,7 @@ export default function PremiumPayments() {
         </div>
       )}
 
-      <div className="mt-10 grid md:grid-cols-3 gap-6">
+      <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card
           title={t ? t("payments.card") : "Tarjetas"}
           desc={t ? t("payments.cardDesc") : "VISA, Mastercard, Amex. Confirmación rápida."}
@@ -212,10 +221,13 @@ export default function PremiumPayments() {
             <h3 className="text-2xl font-black text-white uppercase tracking-tight">¿Quieres ver cómo funciona?</h3>
             <p className="text-silver/60 font-medium">Prueba nuestra demo interactiva antes de elegir un plan.</p>
          </div>
-         <button className="bg-white text-black px-10 py-4 rounded-xl font-black hover:bg-silver transition-all shadow-xl shadow-white/5 flex items-center gap-3 uppercase tracking-widest text-sm group">
+         <a 
+           href="/#features"
+           className="bg-white text-black px-10 py-4 rounded-xl font-black hover:bg-silver transition-all shadow-xl shadow-white/5 flex items-center gap-3 uppercase tracking-widest text-sm group"
+         >
             Ver Demo en Vivo
             <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">play_circle</span>
-         </button>
+         </a>
       </div>
 
       {!hasAny && (

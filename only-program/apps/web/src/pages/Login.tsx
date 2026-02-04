@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import AuthShell from '@/components/AuthShell';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/contexts/I18nContext';
+import { supabase } from '@/services/supabase';
 import Logo from '@/components/Logo';
 
 export default function Login() {
@@ -21,7 +22,7 @@ export default function Login() {
     setLoading(true);
     setError(null);
 
-    const { error } = await signInWithEmail(email, password);
+    const { data, error } = await signInWithEmail(email, password);
 
     if (error) {
       setError(error.message);
@@ -29,7 +30,26 @@ export default function Login() {
       return;
     }
 
-    navigate('/welcome');
+    if (data.user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role, profile_completed, full_name, phone, country')
+        .eq('id', data.user.id)
+        .single();
+      
+      const isComplete = profile?.profile_completed || (profile?.full_name && profile?.phone && profile?.country);
+      
+      if (!isComplete) {
+        navigate('/complete-profile');
+        return;
+      }
+
+      if (profile?.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+    }
   };
 
   const handleGoogleLogin = async () => {

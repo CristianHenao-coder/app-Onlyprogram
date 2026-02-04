@@ -1,15 +1,124 @@
-import { Router } from "express";
+import { Router, Response } from "express";
+import { createClient } from "@supabase/supabase-js";
 import {
   authenticateToken,
   requireAdmin,
   AuthRequest,
 } from "../middlewares/auth.middleware";
+import { sendAdminVerificationCode } from "../services/brevo.service";
+import { config } from "../config/env";
 
 const router = Router();
+
+const supabase = createClient(
+  config.supabase.url,
+  config.supabase.serviceRoleKey,
+);
 
 // Todas las rutas requieren autenticación y rol admin
 router.use(authenticateToken);
 router.use(requireAdmin);
+
+/**
+ * POST /api/admin/request-promotion-code
+ * Solicita un código para promover a un usuario a admin
+ */
+router.post(
+  "/request-promotion-code",
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { targetUserId } = req.body;
+      const adminId = req.user?.id;
+      const adminEmail = req.user?.email || "";
+
+      if (!targetUserId) {
+        return res
+          .status(400)
+          .json({ error: "Se requiere el ID del usuario destino" });
+      }
+
+      // Generar código de 6 dígitos
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+      // Guardar en la DB
+      const { error } = await supabase.from("admin_verification_codes").insert({
+        admin_id: adminId,
+        code,
+        action_type: "promote_user",
+        target_id: targetUserId,
+        expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+      });
+
+      if (error) throw error;
+
+      // Enviar por email
+      await sendAdminVerificationCode(
+        adminEmail,
+        code,
+        "Promover usuario a administrador",
+      );
+
+      res.json({ message: "Código enviado correctamente" });
+    } catch (err: any) {
+      console.error("Error al solicitar código:", err);
+      res.status(500).json({ error: "Error al generar código de seguridad" });
+    }
+  },
+);
+
+/**
+ * POST /api/admin/verify-promotion-code
+ * Verifica el código y promueve al usuario
+ */
+router.post(
+  "/verify-promotion-code",
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { code, targetUserId } = req.body;
+      const adminId = req.user?.id;
+
+      if (!code || !targetUserId) {
+        return res
+          .status(400)
+          .json({ error: "Código e ID de destino son requeridos" });
+      }
+
+      // Verificar código
+      const { data: verif, error: verifError } = await supabase
+        .from("admin_verification_codes")
+        .select("*")
+        .eq("admin_id", adminId)
+        .eq("code", code)
+        .eq("target_id", targetUserId)
+        .eq("is_used", false)
+        .gt("expires_at", new Date().toISOString())
+        .single();
+
+      if (verifError || !verif) {
+        return res.status(400).json({ error: "Código inválido o expirado" });
+      }
+
+      // Marcar código como usado
+      await supabase
+        .from("admin_verification_codes")
+        .update({ is_used: true })
+        .eq("id", verif.id);
+
+      // Promover usuario
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ role: "admin" })
+        .eq("id", targetUserId);
+
+      if (updateError) throw updateError;
+
+      res.json({ message: "Usuario promovido a administrador exitosamente" });
+    } catch (err: any) {
+      console.error("Error al verificar código:", err);
+      res.status(500).json({ error: "Error al procesar la promoción" });
+    }
+  },
+);
 
 /**
  * GET /api/admin/users
@@ -17,7 +126,7 @@ router.use(requireAdmin);
  */
 router.get("/users", async (req: AuthRequest, res) => {
   res.json({
-    message: "Endpoint de administración - Por implementar",
+    message: "Endpoint de administración",
     admin: req.user,
   });
 });

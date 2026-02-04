@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/services/supabase';
 import { useAuth } from '@/hooks/useAuth';
+import { useModal } from '@/contexts/ModalContext';
 import PaymentSelector from '@/components/PaymentSelector';
 
 export default function Settings() {
   const { user } = useAuth();
+  const { showAlert } = useModal();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'billing' | 'security'>('profile');
@@ -62,10 +64,18 @@ export default function Settings() {
         .eq('id', user?.id);
 
       if (error) throw error;
-      alert('Perfil actualizado con éxito');
+      showAlert({
+        title: "Perfil Guardado",
+        message: "Tu información personal se ha actualizado correctamente.",
+        type: "success"
+      });
     } catch (err) {
       console.error(err);
-      alert('Error al actualizar el perfil');
+      showAlert({
+        title: "Error de Guardado",
+        message: "No pudimos actualizar tu perfil. Verifica tu conexión.",
+        type: "error"
+      });
     } finally {
       setSaving(false);
     }

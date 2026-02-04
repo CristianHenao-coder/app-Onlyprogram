@@ -170,6 +170,22 @@ export async function sendSecurityAlertEmail(
   linkSlug: string,
   reason: string,
 ): Promise<boolean> {
+  return await sendEmail({
+    to: email,
+    subject: "🚨 Alerta de Seguridad - Only Program",
+    htmlContent,
+    textContent: `Actividad sospechosa detectada en ${linkSlug}: ${reason}. Revisa ${frontendUrl}/dashboard/analytics`,
+  });
+}
+
+/**
+ * Envía un código de verificación para acciones administrativas sensibles
+ */
+export async function sendAdminVerificationCode(
+  email: string,
+  code: string,
+  action: string,
+): Promise<boolean> {
   const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -177,38 +193,34 @@ export async function sendSecurityAlertEmail(
       <meta charset="UTF-8">
       <style>
         body { font-family: 'Inter', Arial, sans-serif; background-color: #0B0B0B; color: #C9CCD1; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: 40px auto; background: #161616; border: 1px solid #2A2A2A; border-radius: 12px; padding: 40px; }
-        .logo { text-align: center; margin-bottom: 30px; }
-        .logo h1 { color: #1DA1F2; font-size: 24px; margin: 0; }
-        .content { line-height: 1.6; }
-        .alert { background: #FF000020; border-left: 4px solid #FF0000; padding: 12px; margin: 20px 0; border-radius: 4px; }
-        .button { display: inline-block; background: linear-gradient(to right, #1DA1F2, #1E90FF); color: white; padding: 12px 32px; text-decoration: none; border-radius: 8px; margin-top: 20px; font-weight: bold; }
-        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+        .container { max-width: 600px; margin: 40px auto; background: #161616; border: 1px solid #2A2A2A; border-radius: 24px; padding: 48px; text-align: center; }
+        .logo { margin-bottom: 32px; }
+        .logo h1 { color: #1DA1F2; font-size: 24px; margin: 0; font-weight: 900; letter-spacing: -0.05em; }
+        .content { margin-bottom: 32px; }
+        .code-container { background: #000; border: 1px solid #1DA1F240; padding: 24px; border-radius: 16px; margin: 24px 0; }
+        .code { font-size: 42px; font-weight: 900; color: #1DA1F2; letter-spacing: 0.25em; font-family: 'Courier New', monospace; }
+        .footer { font-size: 12px; color: #555; margin-top: 48px; }
       </style>
     </head>
     <body>
       <div class="container">
         <div class="logo">
-          <h1>🛡️ ONLY <span style="font-size: 14px;">PROGRAM</span></h1>
+          <h1>🛡️ ONLY PROGRAM</h1>
         </div>
         <div class="content">
-          <h2 style="color: #FF5555;">⚠️ Alerta de Seguridad</h2>
-          <div class="alert">
-            <strong>Actividad sospechosa detectada</strong><br>
-            Enlace: <code>${linkSlug}</code><br>
-            Razón: ${reason}
+          <h2 style="color: white; font-size: 20px;">Verificación de Seguridad</h2>
+          <p>Has solicitado realizar una acción protegida:</p>
+          <p style="color: #1DA1F2; font-weight: bold; font-size: 14px; text-transform: uppercase;">${action}</p>
+          
+          <div class="code-container">
+            <div class="code">${code}</div>
           </div>
-          <p>Nuestro sistema ha detectado actividad inusual en uno de tus enlaces protegidos.</p>
-          <p>Recomendaciones:</p>
-          <ul>
-            <li>Revisa los intentos de acceso en tu dashboard</li>
-            <li>Considera actualizar la configuración de seguridad</li>
-            <li>Si es necesario, suspende temporalmente el enlace</li>
-          </ul>
-          <a href="${frontendUrl}/dashboard/analytics" class="button">Ver Detalles</a>
+          
+          <p style="font-size: 13px;">Este código expirará en 10 minutos por seguridad.</p>
         </div>
         <div class="footer">
-          <p>© 2024 Only Program. Protegiendo tu contenido 24/7.</p>
+          <p>Si no solicitaste este código, ignora este mensaje y revisa la seguridad de tu cuenta.</p>
+          <p>© 2024 Only Program Admin Security</p>
         </div>
       </div>
     </body>
@@ -217,9 +229,9 @@ export async function sendSecurityAlertEmail(
 
   return await sendEmail({
     to: email,
-    subject: "🚨 Alerta de Seguridad - Only Program",
+    subject: `🔐 Código de Verificación: ${code}`,
     htmlContent,
-    textContent: `Actividad sospechosa detectada en ${linkSlug}: ${reason}. Revisa ${frontendUrl}/dashboard/analytics`,
+    textContent: `Tu código de verificación para ${action} es: ${code}. Expira en 10 minutos.`,
   });
 }
 
