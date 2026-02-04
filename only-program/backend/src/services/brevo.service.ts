@@ -234,3 +234,59 @@ export async function sendAdminVerificationCode(
     textContent: `Tu código de verificación para ${action} es: ${code}. Expira en 10 minutos.`,
   });
 }
+
+/**
+ * Envía email de confirmación de pago
+ */
+export async function sendPaymentConfirmationEmail(
+  email: string,
+  amount: number,
+  currency: string,
+  orderId: string
+): Promise<boolean> {
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Inter', Arial, sans-serif; background-color: #0B0B0B; color: #C9CCD1; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background: #161616; border: 1px solid #2A2A2A; border-radius: 12px; padding: 40px; }
+        .logo { text-align: center; margin-bottom: 30px; }
+        .logo h1 { color: #1DA1F2; font-size: 24px; margin: 0; }
+        .content { line-height: 1.6; }
+        .success { background: #00FF0020; border-left: 4px solid #00FF00; padding: 12px; margin: 20px 0; border-radius: 4px; }
+        .button { display: inline-block; background: linear-gradient(to right, #1DA1F2, #1E90FF); color: white; padding: 12px 32px; text-decoration: none; border-radius: 8px; margin-top: 20px; font-weight: bold; }
+        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="logo">
+          <h1>🛡️ ONLY <span style="font-size: 14px;">PROGRAM</span></h1>
+        </div>
+        <div class="content">
+          <h2 style="color: #00FF00;">¡Pago Exitoso!</h2>
+          <div class="success">
+            <strong>Tu pago ha sido procesado correctamente</strong><br>
+            Monto: ${amount} ${currency}<br>
+            ID de Orden: <code>${orderId}</code>
+          </div>
+          <p>Gracias por tu compra. Tu cuenta ha sido actualizada.</p>
+          <a href="${frontendUrl}/dashboard/billing" class="button">Ver Facturación</a>
+        </div>
+        <div class="footer">
+          <p>© 2024 Only Program. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return await sendEmail({
+    to: email,
+    subject: "✅ Confirmación de Pago - Only Program",
+    htmlContent,
+    textContent: `Pago exitoso de ${amount} ${currency}. ID: ${orderId}.`,
+  });
+}
