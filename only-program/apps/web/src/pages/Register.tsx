@@ -38,7 +38,7 @@ export default function Register() {
       setError(error.message);
     } else if (data?.session) {
       // Si Supabase devuelve una sesión, es que no requiere confirmación
-      // Redirigimos directo al dashboard
+    
       navigate('/dashboard');
     } else {
       // Si no hay sesión, es que requiere confirmación por email

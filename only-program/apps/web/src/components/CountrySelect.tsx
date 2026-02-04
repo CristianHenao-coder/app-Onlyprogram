@@ -9,20 +9,20 @@ interface CountrySelectProps {
 }
 
 // Common countries list. You can expand this list as needed.
-const COUNTRIES = [
-  { code: 'US', name: 'United States' },
-  { code: 'ES', name: 'España' },
-  { code: 'MX', name: 'México' },
-  { code: 'CO', name: 'Colombia' },
-  { code: 'AR', name: 'Argentina' },
-  { code: 'CL', name: 'Chile' },
-  { code: 'PE', name: 'Perú' },
-  { code: 'FR', name: 'France' },
-  { code: 'DE', name: 'Deutschland' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'BR', name: 'Brasil' },
-  { code: 'IT', name: 'Italia' },
+export const COUNTRIES = [
+  { code: 'US', name: 'United States', dial: '+1' },
+  { code: 'ES', name: 'España', dial: '+34' },
+  { code: 'MX', name: 'México', dial: '+52' },
+  { code: 'CO', name: 'Colombia', dial: '+57' },
+  { code: 'AR', name: 'Argentina', dial: '+54' },
+  { code: 'CL', name: 'Chile', dial: '+56' },
+  { code: 'PE', name: 'Perú', dial: '+51' },
+  { code: 'FR', name: 'France', dial: '+33' },
+  { code: 'DE', name: 'Deutschland', dial: '+49' },
+  { code: 'GB', name: 'United Kingdom', dial: '+44' },
+  { code: 'CA', name: 'Canada', dial: '+1' },
+  { code: 'BR', name: 'Brasil', dial: '+55' },
+  { code: 'IT', name: 'Italia', dial: '+39' },
 ];
 
 export default function CountrySelect({ value, onChange, required = false }: CountrySelectProps) {
@@ -34,7 +34,7 @@ export default function CountrySelect({ value, onChange, required = false }: Cou
   // Let's standarize to use the CODE as value if possible, or mapping for backward compatibility?
   // Previous list: ['spain', 'usa', 'mexico'...]
   // Let's use the CODE as the value for new entries to be standard.
-  
+
   return (
     <div className="relative">
       <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none z-10">
@@ -44,7 +44,7 @@ export default function CountrySelect({ value, onChange, required = false }: Cou
           <span className="material-symbols-outlined text-silver/50 text-xl">public</span>
         )}
       </div>
-      
+
       <select
         id="country"
         required={required}

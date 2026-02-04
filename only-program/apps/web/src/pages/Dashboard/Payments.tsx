@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { paymentsService, Payment } from "../../services/payments.service";
+import PaymentSelector from "@/components/PaymentSelector";
 
 export default function Payments() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'card' | 'paypal' | 'crypto'>('card');
+  const [useNewMethod, setUseNewMethod] = useState(false);
 
   useEffect(() => {
     loadPayments();
@@ -21,91 +23,140 @@ export default function Payments() {
     }
   };
 
-  const handlePayPalPayment = async () => {
-    try {
-      setProcessing(true);
-      // Ejemplo: Pago de $10
-      const order = await paymentsService.createPayPalOrder(10.00);
-
-      // Encontrar el link de aprobación
-      const approveLink = order.links?.find((l: any) => l.rel === "approve");
-
-      if (approveLink) {
-        // En un flujo real, redirigirías al usuario o abrirías un popup
-        window.open(approveLink.href, "_blank");
-
-        // Simulación: Preguntar por el Order ID para capturar (en producción esto se hace en una página de retorno)
-        const orderId = prompt("Por favor completa el pago en la nueva ventana y pega aquí el Order ID (token) de la URL:");
-        if (orderId) {
-          await paymentsService.capturePayPalOrder(orderId);
-          alert("Pago completado con éxito!");
-          loadPayments();
-        }
-      } else {
-        console.error("Respuesta de PayPal incompleta:", order);
-        alert("Error: No se recibió el link de aprobación de PayPal. Revisa la consola.");
-      }
-    } catch (error: any) {
-      console.error("Payment failed:", error);
-      alert(`Error al procesar el pago: ${error.message}`);
-    } finally {
-      setProcessing(false);
-    }
+  const handlePaymentMethodSelect = (method: 'card' | 'paypal' | 'crypto') => {
+    setSelectedPaymentMethod(method);
   };
 
-  const handleCryptoPayment = async () => {
-    try {
-      setProcessing(true);
-      const order = await paymentsService.createCryptoOrder(10.00);
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <span className="animate-spin material-symbols-outlined text-4xl text-primary">progress_activity</span>
+      </div>
+    );
+  }
 
-      if (order.internalOrderId) {
-        alert(`Orden Crypto creada! ID: ${order.internalOrderId}. Redirigiendo a pasarela...`);
-        // Aquí redirigirías a la URL de pago de RedotPay si la tuvieras en la respuesta
-        console.log("Crypto Order:", order);
-      } else {
-        console.error("Respuesta de Crypto incompleta:", order);
-        alert("Error: No se recibió el ID de la orden. Revisa la consola.");
-      }
-    } catch (error: any) {
-      console.error("Crypto payment failed:", error);
-      alert(`Error al crear orden crypto: ${error.message}`);
-    } finally {
-      setProcessing(false);
-    }
-  };
+  const hasSavedMethod = payments.length > 0;
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-white">Pagos y Facturación</h1>
-        <div className="space-x-4">
-          <button
-            onClick={handlePayPalPayment}
-            disabled={processing}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50"
-          >
-            {processing ? "Procesando..." : "Pagar con PayPal ($10)"}
-          </button>
-          <button
-            onClick={handleCryptoPayment}
-            disabled={processing}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded disabled:opacity-50"
-          >
-            {processing ? "Procesando..." : "Pagar con Crypto ($10)"}
-          </button>
+    <div className="p-6 space-y-8 max-w-5xl mx-auto pb-20 animate-fade-in">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight uppercase">Registra tu Pago</h1>
+        <p className="text-silver/60 max-w-2xl mx-auto font-medium">
+          Configura tu método de pago para activar tu suscripción mensual.
+        </p>
+      </div>
+
+      {/* Subscription Warning */}
+      <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-2xl p-6 flex items-start gap-4">
+        <div className="h-10 w-10 rounded-full bg-yellow-500/20 flex items-center justify-center shrink-0">
+          <span className="material-symbols-outlined text-yellow-500">info</span>
+        </div>
+        <div className="flex-1 space-y-2">
+          <h3 className="text-sm font-black text-yellow-500 uppercase tracking-wide">Pago Mensual Recurrente</h3>
+          <p className="text-xs text-silver/70 leading-relaxed">
+            Este es un servicio de <strong>suscripción mensual</strong>. Te recomendamos usar <strong>tarjeta de crédito</strong> para débito automático.
+            Si eliges otro método, deberás realizar el pago manualmente cada mes. <span className="text-yellow-500 font-bold">El servicio se suspenderá si no se recibe el pago a tiempo.</span>
+          </p>
         </div>
       </div>
 
-      <div className="bg-[#161616] rounded-lg border border-[#2A2A2A] overflow-hidden">
-        <div className="p-4 border-b border-[#2A2A2A]">
-          <h2 className="font-semibold text-gray-200">Historial de Transacciones</h2>
-        </div>
+      {/* Saved Payment Method Section */}
+      {hasSavedMethod && !useNewMethod && (
+        <div className="bg-surface/40 border border-border rounded-3xl p-8 space-y-6 animate-fade-in">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-black text-white uppercase tracking-tight">Método Guardado</h2>
+            <span className="text-[10px] font-black bg-green-500/20 text-green-500 border border-green-500/20 px-3 py-1 rounded-full uppercase">Verificado</span>
+          </div>
 
-        {loading ? (
-          <div className="p-8 text-center text-gray-400">Cargando...</div>
-        ) : payments.length === 0 ? (
-          <div className="p-8 text-center text-gray-400">No hay transacciones registradas</div>
-        ) : (
+          <div className="bg-background-dark/50 border border-border/50 rounded-2xl p-6 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-xl bg-blue-500 flex items-center justify-center">
+                <span className="material-symbols-outlined text-white text-2xl">credit_card</span>
+              </div>
+              <div>
+                <p className="text-white font-bold">Tarjeta de Crédito</p>
+                <p className="text-silver/60 text-sm font-mono">•••• •••• •••• 1234</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setUseNewMethod(true)}
+              className="text-primary hover:text-primary/80 text-sm font-bold transition-all"
+            >
+              Cambiar método
+            </button>
+          </div>
+
+          <button
+            type="button"
+            className="w-full bg-white text-black font-black px-8 py-4 rounded-xl hover:bg-silver transition-all shadow-xl shadow-white/5 active:scale-95 uppercase tracking-widest"
+          >
+            Usar este método y continuar
+          </button>
+        </div>
+      )}
+
+      {/* New Payment Method Section */}
+      {(!hasSavedMethod || useNewMethod) && (
+        <div className="bg-surface/40 border border-border rounded-3xl p-8 md:p-12 shadow-2xl animate-fade-in">
+          {useNewMethod && (
+            <button
+              onClick={() => setUseNewMethod(false)}
+              className="mb-6 text-silver/60 hover:text-white text-sm font-bold flex items-center gap-2 transition-all"
+            >
+              <span className="material-symbols-outlined text-sm">arrow_back</span>
+              Volver al método guardado
+            </button>
+          )}
+          <PaymentSelector onSelect={handlePaymentMethodSelect} initialMethod={selectedPaymentMethod} />
+        </div>
+      )}
+
+      {/* Payment Methods Footer - Decorative */}
+      <div className="bg-surface/20 border border-white/5 rounded-2xl p-8">
+        <h3 className="text-center text-xs font-black text-silver/40 uppercase tracking-widest mb-6">Métodos de Pago Aceptados</h3>
+        <div className="flex items-center justify-center gap-8 flex-wrap">
+          {/* Crypto */}
+          <div className="flex flex-col items-center gap-2 opacity-60 hover:opacity-100 transition-all">
+            <div className="h-12 w-12 rounded-xl bg-orange-500/20 flex items-center justify-center">
+              <span className="material-symbols-outlined text-orange-500 text-2xl">currency_bitcoin</span>
+            </div>
+            <span className="text-[10px] font-bold text-silver/60 uppercase">Crypto</span>
+          </div>
+
+          {/* PayPal */}
+          <div className="flex flex-col items-center gap-2 opacity-60 hover:opacity-100 transition-all">
+            <div className="h-12 w-12 rounded-xl bg-[#0070ba]/20 flex items-center justify-center">
+              <span className="material-symbols-outlined text-[#0070ba] text-2xl">account_balance_wallet</span>
+            </div>
+            <span className="text-[10px] font-bold text-silver/60 uppercase">PayPal</span>
+          </div>
+
+          {/* Mastercard */}
+          <div className="flex flex-col items-center gap-2 opacity-60 hover:opacity-100 transition-all">
+            <div className="h-12 w-12 rounded-xl bg-red-500/20 flex items-center justify-center">
+              <span className="material-symbols-outlined text-red-500 text-2xl">credit_card</span>
+            </div>
+            <span className="text-[10px] font-bold text-silver/60 uppercase">Mastercard</span>
+          </div>
+
+          {/* Visa */}
+          <div className="flex flex-col items-center gap-2 opacity-60 hover:opacity-100 transition-all">
+            <div className="h-12 w-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+              <span className="material-symbols-outlined text-blue-500 text-2xl">credit_card</span>
+            </div>
+            <span className="text-[10px] font-bold text-silver/60 uppercase">Visa</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Transaction History (if exists) */}
+      {payments.length > 0 && (
+        <div className="bg-[#161616] rounded-lg border border-[#2A2A2A] overflow-hidden animate-fade-in">
+          <div className="p-4 border-b border-[#2A2A2A]">
+            <h2 className="font-semibold text-gray-200">Historial de Transacciones</h2>
+          </div>
+
           <table className="w-full text-left">
             <thead className="bg-[#1A1A1A] text-gray-400 text-sm">
               <tr>
@@ -130,11 +181,10 @@ export default function Payments() {
                     {payment.amount} {payment.currency}
                   </td>
                   <td className="p-4">
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      payment.status === 'completed'
-                        ? 'bg-green-900/30 text-green-400 border border-green-900'
-                        : 'bg-yellow-900/30 text-yellow-400 border border-yellow-900'
-                    }`}>
+                    <span className={`px-2 py-1 rounded text-xs ${payment.status === 'completed'
+                      ? 'bg-green-900/30 text-green-400 border border-green-900'
+                      : 'bg-yellow-900/30 text-yellow-400 border border-yellow-900'
+                      }`}>
                       {payment.status}
                     </span>
                   </td>
@@ -142,8 +192,8 @@ export default function Payments() {
               ))}
             </tbody>
           </table>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

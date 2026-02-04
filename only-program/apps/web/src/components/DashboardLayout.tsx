@@ -16,8 +16,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   const navItems = [
-    { path: '/dashboard', label: 'Overview', icon: 'dashboard' },
+    { path: '/', label: 'Inicio', icon: 'home', external: true },
+    { path: '/dashboard/home', label: 'Dashboard', icon: 'dashboard' },
     { path: '/dashboard/links', label: 'Links', icon: 'link' },
+    { path: '/dashboard/analytics', label: 'Analytics', icon: 'analytics' },
     { path: '/dashboard/payments', label: 'Pagos', icon: 'payments' },
     { path: '/dashboard/settings', label: 'Configuración', icon: 'settings' },
   ];
@@ -35,16 +37,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         <nav className="flex-1 px-4 py-4 space-y-1">
           {navItems.map((item) => {
-            const isActive = location.pathname === item.path;
+            const isActive = pathname === item.path;
             return (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
-                  isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-silver hover:bg-white/5 hover:text-white'
-                }`}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${isActive
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-silver hover:bg-white/5 hover:text-white'
+                  }`}
               >
                 <span className="material-symbols-outlined">{item.icon}</span>
                 <span className="font-medium text-sm">{item.label}</span>

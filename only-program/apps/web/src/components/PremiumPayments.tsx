@@ -4,9 +4,9 @@ import { cmsService } from "@/services/cmsService";
 
 type PaymentAssetType = "crypto" | "card" | "paypal";
 
-export default function PremiumPayments({ 
+export default function PremiumPayments({
   previewData
-}: { 
+}: {
   previewData?: any[];
 }) {
   const { t } = useTranslation() as any;
@@ -171,18 +171,18 @@ export default function PremiumPayments({
             <div key={i} className="bg-surface/30 border border-border/50 p-8 rounded-[2.5rem] relative group hover:border-primary/40 transition-all">
               <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">{plan.name}</p>
               <div className="flex items-baseline justify-center gap-1 mb-6">
-                 <span className="text-4xl font-black text-white">${plan.price}</span>
-                 <span className="text-silver/40 text-xs font-bold uppercase tracking-widest">/ Mes</span>
+                <span className="text-4xl font-black text-white">${plan.price}</span>
+                <span className="text-silver/40 text-xs font-bold uppercase tracking-widest">/ Mes</span>
               </div>
               <ul className="space-y-3 mb-8 text-sm text-silver/60">
-                 <li className="flex items-center justify-center gap-2">
-                    <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
-                    Full Access
-                 </li>
-                 <li className="flex items-center justify-center gap-2">
-                    <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
-                    Priority Support
-                 </li>
+                <li className="flex items-center justify-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
+                  Full Access
+                </li>
+                <li className="flex items-center justify-center gap-2">
+                  <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
+                  Priority Support
+                </li>
               </ul>
               <button className="w-full py-4 bg-white/5 border border-border/40 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white hover:text-black transition-all">
                 Choose Plan
@@ -214,20 +214,6 @@ export default function PremiumPayments({
           chips={(t("payments.chips.paypal") as string[]) || ["PayPal", "Checkout rápido", "Confianza"]}
           assets={paymentAssets.paypal}
         />
-      </div>
-
-      <div className="mt-16 bg-primary/10 border border-primary/20 rounded-[2rem] p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8 max-w-4xl mx-auto shadow-2xl shadow-primary/5">
-         <div className="text-center md:text-left space-y-2">
-            <h3 className="text-2xl font-black text-white uppercase tracking-tight">¿Quieres ver cómo funciona?</h3>
-            <p className="text-silver/60 font-medium">Prueba nuestra demo interactiva antes de elegir un plan.</p>
-         </div>
-         <a 
-           href="/#features"
-           className="bg-white text-black px-10 py-4 rounded-xl font-black hover:bg-silver transition-all shadow-xl shadow-white/5 flex items-center gap-3 uppercase tracking-widest text-sm group"
-         >
-            Ver Demo en Vivo
-            <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">play_circle</span>
-         </a>
       </div>
 
       {!hasAny && (
