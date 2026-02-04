@@ -14,7 +14,7 @@ import CreateLink from '@/pages/Dashboard/CreateLink';
 import LinkConfigurator from '@/pages/Dashboard/LinkConfigurator';
 import Support from '@/pages/Dashboard/Support';
 import Pricing from './pages/Pricing';
-import Register from './pages/Register';
+
 import Welcome from './pages/Welcome';
 import CompleteProfile from './pages/CompleteProfile';
 
@@ -28,15 +28,15 @@ import AdminSettings from '@/pages/Admin/Settings';
 import AuditLogs from './pages/Admin/AuditLogs';
 
 import DashboardLayout from '@/components/DashboardLayout';
-import Overview from '@/pages/Dashboard/Overview';
-import Payments from '@/pages/Dashboard/Payments';
+
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminRoute from '@/components/AdminRoute';
-import DashboardLayout from '@/components/DashboardLayout';
+
 import AdminLayout from '@/components/AdminLayout';
 import MotionManager from '@/components/MotionManager';
 import { Outlet } from 'react-router-dom';
 import { ModalProvider } from '@/contexts/ModalContext';
+import LoadingScreen from '@/components/LoadingScreen';
 import '@/styles/index.css';
 
 function ScrollToTop() {
@@ -52,6 +52,7 @@ function ScrollToTop() {
 function App() {
   return (
     <I18nProvider>
+      <LoadingScreen />
       <ModalProvider>
         <Router>
           <ScrollToTop />
@@ -110,29 +111,6 @@ function App() {
         </Router>
       </ModalProvider>
     </I18nProvider>
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        
-        {/* Protected Routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <DashboardLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Overview />} />
-          <Route path="payments" element={<Payments />} />
-          {/* Aquí irían otras rutas como links, settings, etc. */}
-        </Route>
-      </Routes>
-    </Router>
   );
 }
 
