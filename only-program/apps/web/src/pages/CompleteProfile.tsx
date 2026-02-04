@@ -4,6 +4,7 @@ import AuthShell from '@/components/AuthShell';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/contexts/I18nContext';
 import { supabase } from '@/services/supabase';
+import CountrySelect from '@/components/CountrySelect';
 
 export default function CompleteProfile() {
   const navigate = useNavigate();
@@ -19,18 +20,15 @@ export default function CompleteProfile() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load existing metadata if available
   useEffect(() => {
     if (user?.user_metadata) {
       if (user.user_metadata.full_name) setFullName(user.user_metadata.full_name);
     }
   }, [user]);
 
-  /* UI States */
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  /* Password Logic */
   const hasMinLength = password.length >= 6;
   const hasLetter = /[A-Za-z]/.test(password);
   const hasNumber = /\d/.test(password);
@@ -66,24 +64,18 @@ export default function CompleteProfile() {
     setLoading(true);
 
     try {
-      // 1. Update User Password (enables email login for Google users)
       const { error: pwdError } = await supabase.auth.updateUser({ password });
       if (pwdError) throw pwdError;
 
-      // 2. Update Metadata and Profile
       const { error: metaError } = await supabase.auth.updateUser({
         data: { full_name: fullName, phone, country, profile_completed: true }
       });
       if (metaError) throw metaError;
 
-      // 3. Update public.profiles table
-      // We use update() because the trigger should have created the row.
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          role: 'user', 
           is_suspended: false,
-          // If you decide to add columns to profiles later, add them here.
         })
         .eq('id', user?.id);
         
@@ -107,9 +99,6 @@ export default function CompleteProfile() {
     </div>
   );
 
-  // Same country list
-  const countryList = ['spain', 'usa', 'mexico', 'france', 'germany', 'argentina', 'colombia', 'peru', 'chile', 'uk'];
-
   return (
     <AuthShell>
       <div data-reveal className="bg-surface/50 border border-border rounded-3xl p-8 md:p-10 shadow-2xl">
@@ -125,8 +114,7 @@ export default function CompleteProfile() {
         )}
 
         <form onSubmit={handleUpdate} className="space-y-4">
-           {/* Full Name */}
-           <div>
+            <div>
               <label className="block text-xs font-semibold text-silver/70 uppercase tracking-wider mb-2">
                 {t('auth.fullName')}
               </label>
@@ -140,7 +128,6 @@ export default function CompleteProfile() {
               />
             </div>
 
-            {/* Phone */}
              <div>
               <label className="block text-xs font-semibold text-silver/70 uppercase tracking-wider mb-2">
                 {t('auth.phone')}
@@ -155,11 +142,6 @@ export default function CompleteProfile() {
               />
             </div>
 
-import CountrySelect from '@/components/CountrySelect';
-
-// ... inside CompleteProfile ...
-
-            {/* Country */}
             <div>
               <label className="block text-xs font-semibold text-silver/70 uppercase tracking-wider mb-2">
                 {t('auth.country')}
@@ -171,7 +153,6 @@ import CountrySelect from '@/components/CountrySelect';
               />
             </div>
 
-            {/* Password Setting */}
              <div>
               <label className="block text-xs font-semibold text-silver/70 uppercase tracking-wider mb-2">
                  Establecer Contraseña
@@ -198,7 +179,6 @@ import CountrySelect from '@/components/CountrySelect';
                 </button>
               </div>
 
-              {/* Real-time Checklist */}
               {password.length > 0 && (
                 <div className="mt-3 grid grid-cols-2 gap-2 p-3 bg-surface/30 rounded-lg border border-white/5">
                   <PasswordRequirement met={hasMinLength} text="Mínimo 6 caracteres" />

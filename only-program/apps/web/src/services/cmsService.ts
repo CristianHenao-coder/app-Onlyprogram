@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { retryWithBackoff } from "../utils/retryHelper";
 
 export interface SiteConfig {
   key: string;
@@ -36,11 +37,15 @@ export const cmsService = {
     if (!userData.user)
       throw new Error("Authenticated user required to save config");
 
-    const { error } = await supabase.from("site_configs").upsert({
-      key,
-      value,
-      updated_at: new Date().toISOString(),
-      updated_by: userData.user.id,
+    const { error } = await retryWithBackoff(async () => {
+      const result = await supabase.from("site_configs").upsert({
+        key,
+        value,
+        updated_at: new Date().toISOString(),
+        updated_by: userData.user.id,
+      });
+      if (result.error) throw result.error;
+      return result;
     });
 
     if (error) throw error;

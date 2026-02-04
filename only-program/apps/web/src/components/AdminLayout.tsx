@@ -1,15 +1,40 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
+import { useTranslation } from '@/contexts/I18nContext';
 
 const AdminLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const { language, setLanguage } = useTranslation() as any;
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement | null>(null);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (!langRef.current) return;
+      if (!langRef.current.contains(e.target as any)) setLangOpen(false);
+    };
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown as any);
+  }, []);
+
+  const currentLang = (language || "es").toLowerCase();
+
+  const setLang = (lng: "es" | "en" | "fr") => {
+    if (setLanguage) setLanguage(lng);
+    setLangOpen(false);
+  };
 
   return (
     <div className="flex min-h-screen bg-background-dark font-sans selection:bg-primary/30 selection:text-white">
       {/* Sidebar for Desktop */}
-      <div className="hidden lg:block">
-        <AdminSidebar />
+      <div className="hidden lg:block transition-all duration-300">
+        <AdminSidebar 
+          isCollapsed={isSidebarCollapsed} 
+          onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
+        />
       </div>
 
       {/* Mobile Sidebar Overlay */}
@@ -41,12 +66,51 @@ const AdminLayout = () => {
             </button>
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
-              <h2 className="text-sm font-bold text-white/40 uppercase tracking-widest">Admin Control</h2>
+              <h2 className="text-sm font-bold text-white/40 uppercase tracking-widest">Panel Administrativo</h2>
             </div>
           </div>
           
           <div className="flex items-center gap-4">
-            <button className="h-10 w-10 rounded-xl bg-surface/30 border border-border flex items-center justify-center text-silver hover:text-white transition-all">
+            {/* Language Selector */}
+            <div className="relative" ref={langRef}>
+              <button
+                type="button"
+                onClick={() => setLangOpen((v) => !v)}
+                className="flex items-center gap-2 h-10 px-4 rounded-xl bg-surface/30 border border-border text-xs font-bold text-silver hover:text-white transition-all shadow-lg shadow-black/20"
+              >
+                <span className="material-symbols-outlined text-lg">language</span>
+                <span>{currentLang.toUpperCase()}</span>
+                <span className="material-symbols-outlined text-sm opacity-50">expand_more</span>
+              </button>
+
+              <div
+                className={`
+                  absolute right-0 mt-2 w-40 rounded-2xl border border-border bg-[#0B0B0B] shadow-2xl overflow-hidden z-50
+                  transition-all duration-200 origin-top-right
+                  ${langOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 -translate-y-2 pointer-events-none"}
+                `}
+              >
+                {[
+                  { id: 'es', label: 'Español' },
+                  { id: 'en', label: 'English' },
+                  { id: 'fr', label: 'Français' }
+                ].map((l) => (
+                  <button
+                    key={l.id}
+                    type="button"
+                    onClick={() => setLang(l.id as any)}
+                    className={`
+                      w-full text-left px-4 py-3 text-xs font-bold transition-colors
+                      ${currentLang === l.id ? 'bg-primary/10 text-primary' : 'text-silver/70 hover:bg-white/5 hover:text-white'}
+                    `}
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button className="h-10 w-10 rounded-xl bg-surface/30 border border-border flex items-center justify-center text-silver hover:text-white transition-all shadow-lg shadow-black/20">
               <span className="material-symbols-outlined text-xl">notifications</span>
             </button>
           </div>

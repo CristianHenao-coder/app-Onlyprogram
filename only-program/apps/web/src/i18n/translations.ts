@@ -57,7 +57,7 @@ export const translations = {
       subtitle:
         "Detección automática de bots y tecnología anti-leach para tu contenido premium. Genera pasarelas seguras y encriptadas que verifican a cada visitante.",
       cta: "Asegura tu cuenta",
-      watchDemo: "Ver Demo",
+      watchDemo: "Ver Video Demo",
       viewPanel: "Ver el panel",
     },
 
@@ -425,6 +425,82 @@ export const translations = {
       backHome: "Volver al inicio",
       discount: "Sin descuento",
     },
+
+    admin: {
+      menu: {
+        main: "Menú Principal",
+        overview: "Resumen",
+        cms: "Editor Home (CMS)",
+        users: "Usuarios",
+        links: "Links Globales",
+        coupons: "Cupones",
+        settings: "Ajustes",
+        auditLogs: "Historial de Acciones",
+        back: "Volver a la App",
+      },
+      audit: {
+        title: "Historial de Auditoría",
+        subtitle:
+          "Registro detallado de todas las acciones administrativas realizadas en la plataforma.",
+        searchPlaceholder: "Buscar por acción, recurso o administrador...",
+        table: {
+          date: "Fecha y Hora",
+          admin: "Administrador",
+          action: "Acción",
+          resource: "Recurso",
+          details: "Detalles",
+          empty: "No se encontraron logs de auditoría.",
+        },
+      },
+      dashboard: {
+        title: "Resumen de la Plataforma",
+        subtitle: "Métricas en tiempo real de todos los usuarios y enlaces.",
+        totalUsers: "Total Usuarios",
+        activeLinks: "Enlaces Activos",
+        totalPayments: "Total Pagos",
+        grossMetrics: "Métricas Brutas",
+      },
+      coupon: {
+        title: "Gestión de Cupones",
+        subtitle: "Crea y gestiona códigos de descuento para tus usuarios.",
+        new: "Nuevo Cupón",
+        code: "Código del Cupón",
+        discount: "Descuento %",
+        create: "Crear Cupón",
+        creating: "Creando...",
+        active: "Activo",
+        inactive: "Inactivo",
+        deleteConfirm: "¿Estás seguro de que quieres eliminar este cupón?",
+      },
+      links: {
+        title: "Gestión de Enlaces Globales",
+        subtitle:
+          "Supervisa y activa las solicitudes de enlaces de todos los creadores.",
+        smartLink: "Enlace Inteligente",
+        owner: "Dueño",
+        views: "Vistas",
+        status: "Estado",
+        user: "Usuario",
+        domain: "Dominio",
+        date: "Fecha",
+        actions: "Acciones",
+        activate: "Activar",
+        deactivate: "Desactivar",
+        untitled: "Sin título",
+        unknown: "Desconocido",
+      },
+      user: {
+        title: "Gestión de Usuarios",
+        subtitle: "Gestiona cuentas, verifica pagos y maneja la moderación.",
+        profile: "Perfil",
+        role: "Rol/Plan",
+        status: "Estado",
+        actions: "Acciones",
+        suspend: "Suspender",
+        unsuspend: "Activar",
+        suspended: "Suspendido",
+      },
+    },
   },
 
   en: {
@@ -483,7 +559,7 @@ export const translations = {
       subtitle:
         "Automatic bot detection and anti-leach technology for your premium content. Generate secure, encrypted gateways that verify every visitor.",
       cta: "Secure your account",
-      watchDemo: "Watch Demo",
+      watchDemo: "Watch Demo Video",
       viewPanel: "View Panel",
     },
 
@@ -839,6 +915,34 @@ export const translations = {
       backHome: "Back to Home",
       discount: "No discount",
     },
+
+    admin: {
+      menu: {
+        main: "Main Menu",
+        overview: "Overview",
+        cms: "CMS (Home Editor)",
+        users: "User Management",
+        links: "Global Links",
+        coupons: "Coupons",
+        settings: "Settings",
+        auditLogs: "Audit Logs",
+        back: "Back to User App",
+      },
+      audit: {
+        title: "Audit History",
+        subtitle:
+          "Detailed log of all administrative actions performed on the platform.",
+        searchPlaceholder: "Search by action, resource, or administrator...",
+        table: {
+          date: "Date & Time",
+          admin: "Administrator",
+          action: "Action",
+          resource: "Resource",
+          details: "Details",
+          empty: "No audit logs found.",
+        },
+      },
+    },
   },
 
   fr: {
@@ -898,7 +1002,7 @@ export const translations = {
       subtitle:
         "Détection automatique des bots et technologie anti-leach pour votre contenu premium. Générez des passerelles sécurisées et cryptées qui vérifient chaque visiteur.",
       cta: "Sécurisez votre compte",
-      watchDemo: "Voir la Démo",
+      watchDemo: "Voir la Vidéo Démo",
       viewPanel: "Voir le panel",
     },
 
@@ -1258,6 +1362,35 @@ export const translations = {
       },
       backHome: "Retour à l'accueil",
       discount: "Pas de réduction",
+    },
+
+    admin: {
+      menu: {
+        main: "Menu Principal",
+        overview: "Aperçu",
+        cms: "Éditeur Home (CMS)",
+        users: "Gestion Utilisateurs",
+        links: "Liens Globaux",
+        coupons: "Coupons",
+        settings: "Ajustes",
+        auditLogs: "Historique des Actions",
+        back: "Retour à l'App",
+      },
+      audit: {
+        title: "Historique d'audit",
+        subtitle:
+          "Journal détaillé de toutes les actions administratives effectuées sur la plateforme.",
+        searchPlaceholder:
+          "Rechercher par action, ressource ou administrateur...",
+        table: {
+          date: "Date & Heure",
+          admin: "Administrateur",
+          action: "Action",
+          resource: "Ressource",
+          details: "Détails",
+          empty: "Aucun log d'audit trouvé.",
+        },
+      },
     },
   },
 };

@@ -1,10 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/contexts/I18nContext";
 import { cmsService } from "@/services/cmsService";
-
-import zara from "../assets/testimonials/zara.jpeg";
-import sun2 from "../assets/testimonials/sun2.jpeg";
-import mia from "../assets/testimonials/mia.jpeg";
+import errorImage from "../assets/error/error.png";
 
 type Testimonial = {
   id: string;
@@ -20,7 +17,7 @@ type Testimonial = {
 
 const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
-export default function PremiumTestimonials() {
+export default function PremiumTestimonials({ previewData }: { previewData?: any[] }) {
   const { t } = useTranslation();
   const carouselRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<Array<HTMLDivElement | null>>([]);
@@ -33,12 +30,17 @@ export default function PremiumTestimonials() {
   const [cmsTestimonials, setCmsTestimonials] = useState<any[]>([]);
   
   useEffect(() => {
+    if (previewData) {
+      setCmsTestimonials(previewData);
+      return;
+    }
+
     const fetch = async () => {
       const data = await cmsService.getConfig('testimonials');
       if (data) setCmsTestimonials(data);
     };
     fetch();
-  }, []);
+  }, [previewData]);
 
   const staticTestimonials: Testimonial[] = useMemo(
     () => [
@@ -49,7 +51,7 @@ export default function PremiumTestimonials() {
         role: t('testimonials.items.t1.role'),
         quote: t('testimonials.items.t1.quote'),
         badge: t('testimonials.items.t1.badge'),
-        image: zara,
+        image: errorImage,
         tint: "rgba(168,85,247,.22)",
         videoSrc: "https://cdn.coverr.co/videos/coverr-young-woman-working-on-laptop-1570/1080p.mp4",
       },
@@ -60,7 +62,7 @@ export default function PremiumTestimonials() {
         role: t('testimonials.items.t2.role'),
         quote: t('testimonials.items.t2.quote'),
         badge: t('testimonials.items.t2.badge'),
-        image: sun2,
+        image: errorImage,
         tint: "rgba(34,211,238,.18)",
         videoSrc: "https://cdn.coverr.co/videos/coverr-businesswoman-typing-on-a-laptop-9714/1080p.mp4",
       },
@@ -71,7 +73,7 @@ export default function PremiumTestimonials() {
         role: t('testimonials.items.t3.role'),
         quote: t('testimonials.items.t3.quote'),
         badge: t('testimonials.items.t3.badge'),
-        image: mia,
+        image: errorImage,
         tint: "rgba(249,115,22,.16)",
         videoSrc: "https://cdn.coverr.co/videos/coverr-freelancer-working-at-home-5697/1080p.mp4",
       }
@@ -86,11 +88,11 @@ export default function PremiumTestimonials() {
         label: "Creator",
         name: ct.name,
         role: ct.role,
-        quote: ct.quote,
+        quote: ct.content || ct.quote,
         badge: ct.badge || "Verified",
-        image: staticTestimonials[i % staticTestimonials.length].image,
+        image: ct.avatar || errorImage,
         tint: staticTestimonials[i % staticTestimonials.length].tint,
-        videoSrc: staticTestimonials[i % staticTestimonials.length].videoSrc
+        videoSrc: ct.videoSrc || staticTestimonials[i % staticTestimonials.length].videoSrc
       }));
     }
     return staticTestimonials;

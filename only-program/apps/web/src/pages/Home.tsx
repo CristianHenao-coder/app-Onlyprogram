@@ -7,9 +7,12 @@ import { useTranslation } from '@/contexts/I18nContext';
 import PremiumPayments from "../components/PremiumPayments";
 import { cmsService } from '@/services/cmsService';
 
-const clamp = (n: number, min: number, max: number) => Math.max(min, Math.min(max, n));
 
-export default function Home() {
+export default function Home({ 
+  previewData
+}: { 
+  previewData?: any;
+}) {
   const { t } = useTranslation();
 
   // ✅ Velada-like reveal: aparece en foco y se atenúa si sale (sin borrar nada, solo agrega)
@@ -177,17 +180,43 @@ export default function Home() {
 
   // ✅ Load CMS Configs
   const [heroConfig, setHeroConfig] = useState<any>(null);
+  const [showVideo, setShowVideo] = useState(false);
   
   useEffect(() => {
+    if (previewData?.hero) {
+      setHeroConfig(previewData.hero);
+      return;
+    }
+
     const fetchHomeConfigs = async () => {
       const hero = await cmsService.getConfig('hero');
       if (hero) setHeroConfig(hero);
     };
     fetchHomeConfigs();
-  }, []);
+  }, [previewData]);
 
   return (
     <div className="scroll-smooth dark">
+      {/* Video Modal */}
+      {showVideo && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm animate-in fade-in duration-300">
+           <button 
+             onClick={() => setShowVideo(false)}
+             className="absolute top-6 right-6 text-white hover:text-primary transition-colors"
+           >
+              <span className="material-symbols-outlined text-4xl">close</span>
+           </button>
+           <div className="w-full max-w-5xl aspect-video rounded-3xl overflow-hidden border border-white/10 shadow-2xl bg-surface animate-in zoom-in-95 duration-500">
+              <video 
+                src="https://cdn.coverr.co/videos/coverr-woman-typing-on-a-laptop-9262/1080p.mp4" 
+                controls 
+                autoPlay 
+                className="w-full h-full object-cover"
+              />
+           </div>
+        </div>
+      )}
+
       <style>
         {`
           /* ===== Velada-like Scroll Reveal ===== */
@@ -267,6 +296,12 @@ export default function Home() {
           }
           .fake-btn:hover{ transform: translateY(-1px); }
           .tab-glow{ box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 18px 40px rgba(0,0,0,.45); }
+
+          @media (max-width: 480px) {
+            .xs\:inline { display: inline !important; }
+            .xs\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+            .xs\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+          }
         `}
       </style>
 
@@ -343,6 +378,14 @@ export default function Home() {
                 {t('hero.viewPanel')}
                 <span className="material-symbols-outlined">south</span>
               </a>
+
+              <button
+                onClick={() => setShowVideo(true)}
+                className="bg-primary/10 border border-primary/20 px-7 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all hover:bg-primary/20 text-primary flex items-center justify-center gap-2"
+              >
+                {t('hero.watchDemo') || "Ver Video"}
+                <span className="material-symbols-outlined">play_circle</span>
+              </button>
             </div>
 
             <div data-reveal data-delay="4" className="mt-10 flex flex-wrap justify-center gap-3 text-xs text-silver/45">
@@ -412,8 +455,8 @@ export default function Home() {
                   />
                   <div className="absolute inset-0 dash-softgrid opacity-[0.65]" />
 
-                  <div className="relative p-4 sm:p-5">
-                    <div className="flex items-center justify-between gap-3 border border-white/10 bg-background-dark/40 rounded-2xl px-4 py-3">
+                  <div className="relative p-3 sm:p-5">
+                    <div className="flex items-center justify-between gap-3 border border-white/10 bg-background-dark/40 rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3">
                       <div className="flex items-center gap-2 min-w-0">
                         <div className="h-8 w-8 rounded-xl bg-surface border border-border flex items-center justify-center">
                           <span className="material-symbols-outlined text-primary text-[18px]">verified</span>
@@ -453,7 +496,7 @@ export default function Home() {
                     </div>
 
                     <div className="mt-4 grid grid-cols-12 gap-4">
-                      <div className="col-span-12 sm:col-span-4 lg:col-span-4">
+                      <div className="col-span-12 sm:col-span-4 lg:col-span-4 hidden sm:block">
                         <div className="rounded-2xl border border-white/10 bg-background-dark/40 p-3">
                           <div className="flex items-center justify-between gap-2">
                             <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">Menú</p>
@@ -510,14 +553,14 @@ export default function Home() {
                                   key={`${b.label}-${i}`}
                                   type="button"
                                   className={[
-                                    "hidden md:inline-flex items-center gap-1.5 text-[11px] px-3 py-2 rounded-xl border transition-all fake-btn",
+                                    "inline-flex items-center gap-1.5 text-[11px] px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl border transition-all fake-btn",
                                     b.primary
                                       ? "border-primary/30 bg-primary/10 text-primary hover:border-primary/50"
                                       : "border-border bg-surface/30 text-silver/70 hover:text-white hover:border-primary/30",
                                   ].join(" ")}
                                 >
                                   <span className="material-symbols-outlined text-[16px]">{b.icon}</span>
-                                  {b.label}
+                                  <span className="hidden xs:inline">{b.label}</span>
                                 </button>
                               ))}
 
@@ -526,14 +569,14 @@ export default function Home() {
                                   key={`${b.label}-${i}`}
                                   type="button"
                                   className={[
-                                    "hidden md:inline-flex items-center gap-1.5 text-[11px] px-3 py-2 rounded-xl border transition-all fake-btn",
+                                    "inline-flex items-center gap-1.5 text-[11px] px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl border transition-all fake-btn",
                                     b.primary
                                       ? "border-primary/30 bg-primary text-white hover:bg-primary-dark"
                                       : "border-border bg-surface/30 text-silver/70 hover:text-white hover:border-primary/30",
                                   ].join(" ")}
                                 >
                                   <span className="material-symbols-outlined text-[16px]">{b.icon}</span>
-                                  {b.label}
+                                  <span className="hidden xs:inline">{b.label}</span>
                                 </button>
                               ))}
                             </div>
@@ -564,7 +607,7 @@ export default function Home() {
                                 </div>
 
                                 <p className="mt-4 text-[10px] font-mono text-silver/40 uppercase tracking-widest">{t('home.preview.linksDemo.channels')}</p>
-                                <div className="mt-2 grid grid-cols-4 gap-2">
+                                <div className="mt-2 grid grid-cols-2 xs:grid-cols-4 gap-2">
                                   {(featurePreview as any).socials.map((s: string, i: number) => (
                                     <button
                                       key={`${s}-${i}`}
@@ -579,7 +622,7 @@ export default function Home() {
 
                               <div className="rounded-2xl border border-white/10 bg-surface/20 p-4">
                                 <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">{t('home.preview.linksDemo.previewTitle')}</p>
-                                <div className="mt-3 mx-auto w-full max-w-[320px] rounded-[34px] border border-white/10 bg-background-dark/70 p-3">
+                                <div className="mt-3 mx-auto w-full max-w-[280px] sm:max-w-[320px] rounded-[34px] border border-white/10 bg-background-dark/70 p-2 sm:p-3">
                                   <div className="rounded-[26px] border border-white/10 bg-black/40 overflow-hidden">
                                     <div className="p-4 flex items-center gap-3 border-b border-white/10">
                                       <div className="h-10 w-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
@@ -612,7 +655,7 @@ export default function Home() {
 
                           {activeFeatureView === 'analytics' && (
                             <div className="mt-5 space-y-4">
-                              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                                 {(featurePreview as any).kpis.map((k: any, i: number) => (
                                   <div key={`${k.label}-${i}`} className="rounded-2xl border border-white/10 bg-surface/20 p-4">
                                     <div className="flex items-center justify-between">
@@ -667,7 +710,7 @@ export default function Home() {
 
                           {activeFeatureView === 'telegram' && (
                             <div className="mt-5 space-y-4">
-                              <div className="grid md:grid-cols-3 gap-3">
+                              <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3">
                                 {(featurePreview as any).cards.map((c: any, i: number) => (
                                   <button
                                     key={`${c.title}-${i}`}
@@ -753,49 +796,40 @@ export default function Home() {
             </p>
 
             <div data-reveal data-delay="2" className="mt-10">
-              <PremiumPayments />
+              <PremiumPayments previewData={previewData?.pricing} />
             </div>
           </div>
         </section>
 
-        {/* Final CTA */}
         <section className="py-16">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div
               data-reveal
               className="rounded-3xl border border-border bg-surface/40 p-8 sm:p-10 text-center overflow-hidden relative"
             >
-              <div
-                className="absolute -inset-16 blur-3xl"
-                style={{ background: 'radial-gradient(circle at 50% 40%, rgba(29,161,242,.22) 0%, transparent 65%)' }}
-              />
-              <div className="relative">
-                <h3 className="text-2xl sm:text-3xl font-extrabold text-white">{t('home.finalCta.title')}</h3>
-                <p className="mt-4 text-silver/70 max-w-2xl mx-auto">
-                  {t('home.finalCta.desc')}
-                </p>
-                <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-                  <Link
-                    to="/register"
-                    data-magnetic="0.12"
-                    className="px-7 py-3.5 rounded-xl bg-primary text-white font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/25"
-                  >
-                    {t('home.finalCta.btn')}
-                  </Link>
-                  <Link
-                    to="/pricing"
-                    className="px-7 py-3.5 rounded-xl border border-border bg-background-dark/40 text-white font-bold hover:border-primary/50 transition-all"
-                  >
-                    {t('common.viewPrices')}
-                  </Link>
-                </div>
+              <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 blur-3xl rounded-full" />
+              <h3 className="text-3xl font-black text-white mb-4 relative z-10">{t('home.finalCta.title')}</h3>
+              <p className="text-silver/60 mb-8 max-w-xl mx-auto relative z-10">{t('home.finalCta.desc')}</p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center relative z-10">
+                <Link
+                  to="/register"
+                  className="px-8 py-4 rounded-xl bg-primary text-white font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/25"
+                >
+                  {t('home.finalCta.btn')}
+                </Link>
+                <Link
+                  to="/pricing"
+                  className="px-8 py-4 rounded-xl border border-border bg-background-dark/40 text-white font-bold hover:border-primary/50 transition-all"
+                >
+                  {t('common.viewPrices') || 'Ver Precios'}
+                </Link>
               </div>
             </div>
           </div>
         </section>
-      </main>
 
-      <Footer />
+        <Footer />
+      </main>
     </div>
   );
 }

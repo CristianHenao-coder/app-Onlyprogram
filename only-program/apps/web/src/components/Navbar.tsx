@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "@/contexts/I18nContext";
 
@@ -8,18 +8,18 @@ import Logo from "./Logo";
 
 type NavItem = { label: string; href: string };
 
-export default function Navbar() {
+export default function Navbar({ previewData }: { previewData?: any }) {
   const { pathname } = useLocation();
   const { t, language, setLanguage } = useTranslation() as any;
 
   const items: NavItem[] = useMemo(
     () => [
-      { label: t ? t("nav.home") : "Inicio", href: "/#home" },
-      { label: t ? t("nav.features") : "Funciones", href: "/#features" },
-      { label: t ? t("nav.pricing") : "Precios", href: "/pricing" },
-      { label: t ? t("nav.testimonials") : "Testimonios", href: "/#testimonials" },
+      { label: previewData?.general?.menuHome || (t ? t("nav.home") : "Inicio"), href: "/#home" },
+      { label: previewData?.general?.menuFeatures || (t ? t("nav.features") : "Funciones"), href: "/#features" },
+      { label: previewData?.general?.menuPricing || (t ? t("nav.pricing") : "Precios"), href: "/pricing" },
+      { label: previewData?.general?.menuTestimonials || (t ? t("nav.testimonials") : "Testimonios"), href: "/#testimonials" },
     ],
-    [t]
+    [t, previewData]
   );
 
   const [scrolled, setScrolled] = useState(false);
@@ -66,15 +66,19 @@ export default function Navbar() {
         <div className="h-20 flex items-center justify-between gap-4">
           {/* BRAND */}
           <a href="#home" className="group flex items-center gap-3 min-w-0" aria-label="Only Program">
-            <Logo />
+            <Logo customSrc={previewData?.general?.logoUrl} />
 
             <div className="leading-tight min-w-0">
-              <div className="flex items-baseline gap-2">
-                <span className="text-white font-extrabold tracking-tight text-lg sm:text-xl">ONLY</span>
-                <span className="text-primary font-extrabold tracking-tight text-lg sm:text-xl">PROGRAM</span>
+              <div className="flex items-baseline gap-1.5 uppercase">
+                <span className="text-white font-black tracking-tight text-lg sm:text-xl">
+                  {previewData?.general?.logoText?.split(' ')[0] || "ONLY"}
+                </span>
+                <span className="text-primary font-black tracking-tight text-lg sm:text-xl">
+                  {previewData?.general?.logoText?.split(' ').slice(1).join(' ') || previewData?.general?.logoSub || "PROGRAM"}
+                </span>
               </div>
-              <div className="text-[10px] sm:text-[11px] text-silver/50 font-medium tracking-wide">
-                {t ? t("nav.tagline") : "Protección & Analíticas • Anti-bot"}
+              <div className="text-[10px] sm:text-[11px] text-silver/50 font-black tracking-[0.2em] uppercase opacity-70">
+                {previewData?.general?.tagline || (t ? t("nav.tagline") : "Security & Ethics")}
               </div>
             </div>
           </a>
