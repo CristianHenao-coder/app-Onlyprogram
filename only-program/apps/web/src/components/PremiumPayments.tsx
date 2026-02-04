@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "@/contexts/I18nContext";
 
 type PaymentAssetType = "crypto" | "card" | "paypal";
@@ -167,6 +167,17 @@ export default function PremiumPayments() {
           chips={(t("payments.chips.paypal") as string[]) || ["PayPal", "Checkout rápido", "Confianza"]}
           assets={paymentAssets.paypal}
         />
+      </div>
+
+      <div className="mt-16 bg-primary/10 border border-primary/20 rounded-[2rem] p-8 md:p-12 flex flex-col md:flex-row items-center justify-between gap-8 max-w-4xl mx-auto shadow-2xl shadow-primary/5">
+         <div className="text-center md:text-left space-y-2">
+            <h3 className="text-2xl font-black text-white uppercase tracking-tight">¿Quieres ver cómo funciona?</h3>
+            <p className="text-silver/60 font-medium">Prueba nuestra demo interactiva antes de elegir un plan.</p>
+         </div>
+         <button className="bg-white text-black px-10 py-4 rounded-xl font-black hover:bg-silver transition-all shadow-xl shadow-white/5 flex items-center gap-3 uppercase tracking-widest text-sm group">
+            Ver Demo en Vivo
+            <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">play_circle</span>
+         </button>
       </div>
 
       {!hasAny && (

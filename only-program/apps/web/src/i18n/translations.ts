@@ -30,9 +30,11 @@ export const translations = {
 
     panelPreview: {
       title: "Vista del Panel",
-      subtitle: "Pasa el mouse en desktop o toca en móvil para cambiar la vista.",
+      subtitle:
+        "Pasa el mouse en desktop o toca en móvil para cambiar la vista.",
       badge: "UI Preview",
-      hintMobile: "Tip: toca los botones de la izquierda para cambiar la vista.",
+      hintMobile:
+        "Tip: toca los botones de la izquierda para cambiar la vista.",
       footerLeft: "Only Program • Vista UI",
       footerRight: "Soporte Técnico",
     },
@@ -65,9 +67,11 @@ export const translations = {
         "Crea tu link, conecta tu dominio y controla todo desde un panel claro: seguridad, rutas, Telegram rotativo y analíticas. Sin configuraciones raras.",
 
       encryption: "Encriptación de Grado Militar",
-      encryptionDesc: "Protección de extremo a extremo para cada enlace generado.",
+      encryptionDesc:
+        "Protección de extremo a extremo para cada enlace generado.",
       botShield: "Escudo Inteligente contra Bots",
-      botShieldDesc: "Identifica y bloquea el 99.9% de los bots de scraping automáticamente.",
+      botShieldDesc:
+        "Identifica y bloquea el 99.9% de los bots de scraping automáticamente.",
 
       liveLinks: "Enlaces Seguros Activos",
       liveStatus: "ESTADO EN VIVO",
@@ -87,42 +91,48 @@ export const translations = {
           label: "-Zara blonde",
           name: "Zara",
           role: "Creadora Premium",
-          quote: "Desde que uso Only Program, mis links están blindados. Se siente profesional.",
+          quote:
+            "Desde que uso Only Program, mis links están blindados. Se siente profesional.",
           badge: "Anti-bot",
         },
         t2: {
           label: "Sunnsine",
           name: "Sun2",
           role: "Creadora",
-          quote: "Me encanta poder usar mi dominio y que todo se vea de marca y seguro.",
+          quote:
+            "Me encanta poder usar mi dominio y que todo se vea de marca y seguro.",
           badge: "Dominios",
         },
         t3: {
           label: "Mia",
           name: "Mia",
           role: "Creadora",
-          quote: "Las analíticas me muestran exactamente qué funciona y desde dónde llega mi tráfico.",
+          quote:
+            "Las analíticas me muestran exactamente qué funciona y desde dónde llega mi tráfico.",
           badge: "Analytics",
         },
         t4: {
           label: "Helen",
           name: "Helen",
           role: "Creadora",
-          quote: "Me siento tranquila porque el acceso está verificado y el bot-shield trabaja solo.",
+          quote:
+            "Me siento tranquila porque el acceso está verificado y el bot-shield trabaja solo.",
           badge: "Seguridad",
         },
         t5: {
           label: "Sarasuuun",
           name: "Sarasuuun",
           role: "Creadora",
-          quote: "Puedo pausar o ajustar todo. Es un sistema serio, no un link cualquiera.",
+          quote:
+            "Puedo pausar o ajustar todo. Es un sistema serio, no un link cualquiera.",
           badge: "Control",
         },
         t6: {
           label: "Rocioo",
           name: "Rocioo",
           role: "Creadora",
-          quote: "La experiencia del usuario es limpia y mis fans llegan sin fricción. Se nota premium.",
+          quote:
+            "La experiencia del usuario es limpia y mis fans llegan sin fricción. Se nota premium.",
           badge: "Conversión",
         },
       },
@@ -152,7 +162,8 @@ export const translations = {
       paypal: "PayPal",
       paypalDesc: "Pago rápido y seguro",
       headline: "Paga como quieras, activa tus links al instante",
-      subheadline: "Métodos flexibles, validación segura y activación sin fricción. En desktop tienes micro-interacciones con hover.",
+      subheadline:
+        "Métodos flexibles, validación segura y activación sin fricción. En desktop tienes micro-interacciones con hover.",
       process: {
         title: "Proceso",
         instant: "instant",
@@ -173,30 +184,26 @@ export const translations = {
 
       rights: "Todos los derechos reservados",
       developedBy: "Desarrollado por",
-      brandDesc: "La solución definitiva en ciberseguridad para creadores de contenido modernos que valoran su privacidad e ingresos.",
+      brandDesc:
+        "La solución definitiva en ciberseguridad para creadores de contenido modernos que valoran su privacidad e ingresos.",
       platform: {
         title: "Plataforma",
         items: [
           "Cómo funciona",
           "Generador de Links",
           "Guía de Seguridad",
-          "Docs de API"
-        ]
+          "Docs de API",
+        ],
       },
       company: {
         title: "Compañía",
-        items: [
-          "Sobre Nosotros",
-          "Carreras",
-          "Privacidad",
-          "Términos"
-        ]
+        items: ["Sobre Nosotros", "Carreras", "Privacidad", "Términos"],
       },
       newsletter: {
         title: "Mantente al día",
         placeholder: "Email",
-        button: "Enviar"
-      }
+        button: "Enviar",
+      },
     },
 
     auth: {
@@ -220,7 +227,8 @@ export const translations = {
       phone: "Teléfono",
       country: "País",
       selectCountry: "Selecciona tu país",
-      acceptTerms: "Acepto los términos y condiciones y la política de privacidad",
+      acceptTerms:
+        "Acepto los términos y condiciones y la política de privacidad",
       alreadyHaveAccount: "¿Ya tienes cuenta?",
       termsLink: "términos y condiciones",
       privacyLink: "política de privacidad",
@@ -232,7 +240,8 @@ export const translations = {
 
     pricing: {
       title: "Los Planes de Precios",
-      subtitle: "Elige un plan que se adapte a tus objetivos y escala a medida que creces.",
+      subtitle:
+        "Elige un plan que se adapte a tus objetivos y escala a medida que creces.",
       monthly: "Mensual",
       yearly: "Anual",
       save: "Ahorra",
@@ -286,26 +295,32 @@ export const translations = {
       featureViews: {
         links: {
           title: "Panel de Links (Landing + Botones)",
-          subtitle: "Cambia textos, orden y CTA. Ves el resultado antes de publicar.",
+          subtitle:
+            "Cambia textos, orden y CTA. Ves el resultado antes de publicar.",
         },
         analytics: {
           title: "Panel de Analíticas (Tráfico real)",
-          subtitle: "Sabes qué funciona: de dónde llegan, qué tocan y qué convierte.",
+          subtitle:
+            "Sabes qué funciona: de dónde llegan, qué tocan y qué convierte.",
         },
         telegram: {
           title: "Panel Telegram Rotativo (Anti-ban)",
-          subtitle: "Reparte clicks entre canales y cambia destino en segundos.",
+          subtitle:
+            "Reparte clicks entre canales y cambia destino en segundos.",
         },
       },
       preview: {
         titleBarMid: "PANEL DE CONTROL",
         userRole: "Seguridad + Conversión",
         headerAnalytics: "Analíticas claras (sin complicarte)",
-        subAnalytics: "Ves de dónde llega tu gente y qué acciones hacen dentro de tu landing.",
+        subAnalytics:
+          "Ves de dónde llega tu gente y qué acciones hacen dentro de tu landing.",
         headerTelegram: "Telegram Rotativo (sin perder cuentas)",
-        subTelegram: "Rotas destinos para reducir bans y mantener tu tráfico siempre activo.",
+        subTelegram:
+          "Rotas destinos para reducir bans y mantener tu tráfico siempre activo.",
         headerLinks: "Crea tu landing en minutos",
-        subLinks: "Editas botones y secciones. Copias tu link protegido y listo.",
+        subLinks:
+          "Editas botones y secciones. Copias tu link protegido y listo.",
         kpis: {
           clicks: "Clicks reales",
           filtered: "Intentos filtrados",
@@ -363,9 +378,10 @@ export const translations = {
         btn: "Crear cuenta",
       },
     },
-    
+
     pricingPage: {
-      subtitle: "Precios mensuales por link. Descuentos llamativos por volumen.",
+      subtitle:
+        "Precios mensuales por link. Descuentos llamativos por volumen.",
       warning: "Pago no confirmado = link suspendido automáticamente",
       calculator: {
         title: "Calculadora",
@@ -389,7 +405,7 @@ export const translations = {
           "Protección anti-bot y anti-scrape",
           "Analytics en tiempo real (dashboard + link público)",
           "Dominios personalizados por usuario",
-          "Suspensión automática por falta de pago"
+          "Suspensión automática por falta de pago",
         ],
       },
       telegramOrb: {
@@ -479,7 +495,8 @@ export const translations = {
       encryption: "Military-Grade Encryption",
       encryptionDesc: "End-to-end protection for every generated link.",
       botShield: "Intelligent Bot Shield",
-      botShieldDesc: "Identifies and blocks 99.9% of scraping bots automatically.",
+      botShieldDesc:
+        "Identifies and blocks 99.9% of scraping bots automatically.",
       liveLinks: "Active Secure Links",
       liveStatus: "LIVE STATUS",
       created: "Created",
@@ -498,42 +515,48 @@ export const translations = {
           label: "-Zara blonde",
           name: "Zara",
           role: "Premium Creator",
-          quote: "Since using Only Program, my links are armored. It feels professional.",
+          quote:
+            "Since using Only Program, my links are armored. It feels professional.",
           badge: "Anti-bot",
         },
         t2: {
           label: "Sunnsine",
           name: "Sun2",
           role: "Creator",
-          quote: "I love using my own domain—everything looks branded and secure.",
+          quote:
+            "I love using my own domain—everything looks branded and secure.",
           badge: "Domains",
         },
         t3: {
           label: "Mia",
           name: "Mia",
           role: "Creator",
-          quote: "Analytics show me exactly what works and where my traffic comes from.",
+          quote:
+            "Analytics show me exactly what works and where my traffic comes from.",
           badge: "Analytics",
         },
         t4: {
           label: "Helen",
           name: "Helen",
           role: "Creator",
-          quote: "I feel calm because access is verified and the bot-shield works automatically.",
+          quote:
+            "I feel calm because access is verified and the bot-shield works automatically.",
           badge: "Security",
         },
         t5: {
           label: "Sarasuuun",
           name: "Sarasuuun",
           role: "Creator",
-          quote: "I can pause or adjust everything. It’s a real system, not just a link.",
+          quote:
+            "I can pause or adjust everything. It’s a real system, not just a link.",
           badge: "Control",
         },
         t6: {
           label: "Rocioo",
           name: "Rocioo",
           role: "Creator",
-          quote: "The user experience is clean and my fans arrive without friction. It feels premium.",
+          quote:
+            "The user experience is clean and my fans arrive without friction. It feels premium.",
           badge: "Conversion",
         },
       },
@@ -563,7 +586,8 @@ export const translations = {
       paypal: "PayPal",
       paypalDesc: "Fast and secure payment",
       headline: "Pay as you wish, activate your link instantly",
-      subheadline: "Flexible methods, secure validation and frictionless activation. Desktop features hover micro-interactions.",
+      subheadline:
+        "Flexible methods, secure validation and frictionless activation. Desktop features hover micro-interactions.",
       process: {
         title: "Process",
         instant: "instant",
@@ -581,30 +605,21 @@ export const translations = {
     footer: {
       rights: "All rights reserved",
       developedBy: "Developed by",
-      brandDesc: "The ultimate cybersecurity solution for modern content creators who value their privacy and income.",
+      brandDesc:
+        "The ultimate cybersecurity solution for modern content creators who value their privacy and income.",
       platform: {
         title: "Platform",
-        items: [
-          "How it works",
-          "Link Generator",
-          "Security Guide",
-          "API Docs"
-        ]
+        items: ["How it works", "Link Generator", "Security Guide", "API Docs"],
       },
       company: {
         title: "Company",
-        items: [
-          "About Us",
-          "Careers",
-          "Privacy",
-          "Terms"
-        ]
+        items: ["About Us", "Careers", "Privacy", "Terms"],
       },
       newsletter: {
         title: "Stay updated",
         placeholder: "Email",
-        button: "Send"
-      }
+        button: "Send",
+      },
     },
 
     auth: {
@@ -630,15 +645,10 @@ export const translations = {
       selectCountry: "Select your country",
       acceptTerms: "I accept the terms and conditions and privacy policy",
       alreadyHaveAccount: "Already have an account?",
-      confirmPassword: "Confirm Password",
-      fullName: "Full Name",
-      phone: "Phone",
-      country: "Country",
-      selectCountry: "Select your country",
-
       termsLink: "terms and conditions",
       privacyLink: "privacy policy",
-      noPaymentInfo: "We do not request payment information during registration",
+      noPaymentInfo:
+        "We do not request payment information during registration",
       joinCreators: "Join thousands of creators protecting their content",
       registering: "Creating account...",
       continueWithGoogle: "Continue with Google",
@@ -700,26 +710,32 @@ export const translations = {
       featureViews: {
         links: {
           title: "Link Panel (Landing + Buttons)",
-          subtitle: "Change texts, order and CTA. See the result before publishing.",
+          subtitle:
+            "Change texts, order and CTA. See the result before publishing.",
         },
         analytics: {
           title: "Analytics Panel (Real Traffic)",
-          subtitle: "Know what works: where they come from, what they tap, and what converts.",
+          subtitle:
+            "Know what works: where they come from, what they tap, and what converts.",
         },
         telegram: {
           title: "Rotating Telegram Panel (Anti-ban)",
-          subtitle: "Distribute clicks between channels and change destination in seconds.",
+          subtitle:
+            "Distribute clicks between channels and change destination in seconds.",
         },
       },
       preview: {
         titleBarMid: "CONTROL PANEL",
         userRole: "Security + Conversion",
         headerAnalytics: "Clear Analytics (No hassle)",
-        subAnalytics: "See where your people come from and what actions they take on your landing.",
+        subAnalytics:
+          "See where your people come from and what actions they take on your landing.",
         headerTelegram: "Rotating Telegram (No lost accounts)",
-        subTelegram: "Rotate destinations to reduce bans and keep your traffic always active.",
+        subTelegram:
+          "Rotate destinations to reduce bans and keep your traffic always active.",
         headerLinks: "Create your landing in minutes",
-        subLinks: "Edit buttons and sections. Copy your protected link and you're done.",
+        subLinks:
+          "Edit buttons and sections. Copy your protected link and you're done.",
         kpis: {
           clicks: "Real Clicks",
           filtered: "Filtered Attempts",
@@ -803,7 +819,7 @@ export const translations = {
           "Anti-bot and anti-scrape protection",
           "Real-time Analytics (dashboard + public link)",
           "Custom domains per user",
-          "Automatic suspension for non-payment"
+          "Automatic suspension for non-payment",
         ],
       },
       telegramOrb: {
@@ -856,7 +872,8 @@ export const translations = {
 
     panelPreview: {
       title: "Aperçu du tableau de bord",
-      subtitle: "Survolez sur desktop ou touchez sur mobile pour changer la vue.",
+      subtitle:
+        "Survolez sur desktop ou touchez sur mobile pour changer la vue.",
       badge: "Aperçu UI",
       hintMobile: "Astuce : touchez les boutons à gauche pour changer la vue.",
       footerLeft: "Only Program • Aperçu UI",
@@ -893,7 +910,8 @@ export const translations = {
       encryption: "Cryptage de Niveau Militaire",
       encryptionDesc: "Protection de bout en bout pour chaque lien généré.",
       botShield: "Bouclier Intelligent Anti-Bots",
-      botShieldDesc: "Identifie et bloque 99,9% des bots de scraping automatiquement.",
+      botShieldDesc:
+        "Identifie et bloque 99,9% des bots de scraping automatiquement.",
       liveLinks: "Liens Sécurisés Actifs",
       liveStatus: "STATUT EN DIRECT",
       created: "Créé",
@@ -919,14 +937,16 @@ export const translations = {
           label: "Sunnsine",
           name: "Sun2",
           role: "Créatrice",
-          quote: "J’adore utiliser mon domaine : tout est cohérent, de marque et sécurisé.",
+          quote:
+            "J’adore utiliser mon domaine : tout est cohérent, de marque et sécurisé.",
           badge: "Domaines",
         },
         t3: {
           label: "Mia",
           name: "Mia",
           role: "Créatrice",
-          quote: "Les analytiques montrent exactement ce qui marche et d’où vient le trafic.",
+          quote:
+            "Les analytiques montrent exactement ce qui marche et d’où vient le trafic.",
           badge: "Analytiques",
         },
         t4: {
@@ -940,7 +960,8 @@ export const translations = {
           label: "Sarasuuun",
           name: "Sarasuuun",
           role: "Créatrice",
-          quote: "Je peux tout ajuster. C’est un vrai système, pas un simple lien.",
+          quote:
+            "Je peux tout ajuster. C’est un vrai système, pas un simple lien.",
           badge: "Contrôle",
         },
         t6: {
@@ -977,7 +998,8 @@ export const translations = {
       paypal: "PayPal",
       paypalDesc: "Paiement rapide et sécurisé",
       headline: "Payez comme vous voulez, activez votre lien instantanément",
-      subheadline: "Méthodes flexibles, validation sécurisée et activation sans friction. Sur bureau, micro-interactions au survol.",
+      subheadline:
+        "Méthodes flexibles, validation sécurisée et activation sans friction. Sur bureau, micro-interactions au survol.",
       process: {
         title: "Processus",
         instant: "immédiat",
@@ -995,30 +1017,26 @@ export const translations = {
     footer: {
       rights: "Tous droits réservés",
       developedBy: "Développé par",
-      brandDesc: "La solution de cybersécurité ultime pour les créateurs de contenu modernes qui valorisent leur vie privée et leurs revenus.",
+      brandDesc:
+        "La solution de cybersécurité ultime pour les créateurs de contenu modernes qui valorisent leur vie privée et leurs revenus.",
       platform: {
         title: "Plateforme",
         items: [
           "Comment ça marche",
           "Générateur de liens",
           "Guide de sécurité",
-          "Docs API"
-        ]
+          "Docs API",
+        ],
       },
       company: {
         title: "Entreprise",
-        items: [
-          "À propos",
-          "Carrières",
-          "Confidentialité",
-          "Termes"
-        ]
+        items: ["À propos", "Carrières", "Confidentialité", "Termes"],
       },
       newsletter: {
         title: "Restez à jour",
         placeholder: "Email",
-        button: "Envoyer"
-      }
+        button: "Envoyer",
+      },
     },
 
     auth: {
@@ -1042,25 +1060,23 @@ export const translations = {
       phone: "Téléphone",
       country: "Pays",
       selectCountry: "Sélectionnez votre pays",
-      acceptTerms: "J'accepte les termes et conditions et la politique de confidentialité",
+      acceptTerms:
+        "J'accepte les termes et conditions et la politique de confidentialité",
       alreadyHaveAccount: "Vous avez déjà un compte?",
-      confirmPassword: "Confirmer le mot de passe",
-      fullName: "Nom Complet",
-      phone: "Téléphone",
-      country: "Pays",
-      selectCountry: "Sélectionnez votre pays",
-
       termsLink: "termes et conditions",
       privacyLink: "politique de confidentialité",
-      noPaymentInfo: "Nous ne demandons pas d'informations de paiement lors de l'inscription",
-      joinCreators: "Rejoignez des milliers de créateurs protégeant leur contenu",
+      noPaymentInfo:
+        "Nous ne demandons pas d'informations de paiement lors de l'inscription",
+      joinCreators:
+        "Rejoignez des milliers de créateurs protégeant leur contenu",
       registering: "Création du compte...",
       continueWithGoogle: "Continuer avec Google",
     },
 
     pricing: {
       title: "Les Plans Tarifaires",
-      subtitle: "Choisissez un plan qui correspond à vos objectifs et évoluez à mesure que vous grandissez.",
+      subtitle:
+        "Choisissez un plan qui correspond à vos objectifs et évoluez à mesure que vous grandissez.",
       monthly: "Mensuel",
       yearly: "Annuel",
       save: "Économisez",
@@ -1114,26 +1130,32 @@ export const translations = {
       featureViews: {
         links: {
           title: "Panneau de Liens (Landing + Boutons)",
-          subtitle: "Modifiez textes, ordre et CTA. Voyez le résultat avant de publier.",
+          subtitle:
+            "Modifiez textes, ordre et CTA. Voyez le résultat avant de publier.",
         },
         analytics: {
           title: "Panneau d'Analytiques (Trafic Réel)",
-          subtitle: "Sachez ce qui marche : d'où ils viennent, ce qu'ils touchent et ce qui convertit.",
+          subtitle:
+            "Sachez ce qui marche : d'où ils viennent, ce qu'ils touchent et ce qui convertit.",
         },
         telegram: {
           title: "Panneau Telegram Rotatif (Anti-ban)",
-          subtitle: "Répartissez les clics entre canaux et changez la destination en quelques secondes.",
+          subtitle:
+            "Répartissez les clics entre canaux et changez la destination en quelques secondes.",
         },
       },
       preview: {
         titleBarMid: "PANNEAU DE CONTRÔLE",
         userRole: "Sécurité + Conversion",
         headerAnalytics: "Analytiques claires (sans tracas)",
-        subAnalytics: "Voyez d'où viennent vos gens et quelles actions ils font sur votre landing.",
+        subAnalytics:
+          "Voyez d'où viennent vos gens et quelles actions ils font sur votre landing.",
         headerTelegram: "Telegram Rotatif (sans perdre de comptes)",
-        subTelegram: "Alternez les destinations pour réduire les bans et garder votre trafic actif.",
+        subTelegram:
+          "Alternez les destinations pour réduire les bans et garder votre trafic actif.",
         headerLinks: "Créez votre landing en quelques minutes",
-        subLinks: "Éditez boutons et sections. Copiez votre lien protégé et c'est prêt.",
+        subLinks:
+          "Éditez boutons et sections. Copiez votre lien protégé et c'est prêt.",
         kpis: {
           clicks: "Clics Réels",
           filtered: "Tentatives Filtrées",
@@ -1217,7 +1239,7 @@ export const translations = {
           "Protection anti-bot et anti-scrape",
           "Analytiques en temps réel (dashboard + lien public)",
           "Domaines personnalisés par utilisateur",
-          "Suspension automatique pour non-paiement"
+          "Suspension automatique pour non-paiement",
         ],
       },
       telegramOrb: {
@@ -1237,7 +1259,6 @@ export const translations = {
       backHome: "Retour à l'accueil",
       discount: "Pas de réduction",
     },
-
   },
 };
 
