@@ -181,7 +181,11 @@ export default function Links() {
 
   // Payment Modal
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  // DISCOUNT STATE
   const [discountCode, setDiscountCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState<{ code: string, percent: number } | null>(null);
+  const [discountError, setDiscountError] = useState('');
 
   // Derived
   const currentPage = pages.find(p => p.id === selectedPageId) || pages[0];
@@ -297,9 +301,36 @@ export default function Links() {
     const countRotator = rotatorPages.length;
     const countStandard = standardPages.length;
 
-    const total = (countStandard * LINK_PRICE_STANDARD) + (countRotator * LINK_PRICE_ROTATOR);
+    const subtotal = (countStandard * LINK_PRICE_STANDARD) + (countRotator * LINK_PRICE_ROTATOR);
 
-    return { countRotator, countStandard, total };
+    // DISCOUNT LOGIC
+    let discountAmount = 0;
+    if (appliedDiscount) {
+      discountAmount = (subtotal * appliedDiscount.percent) / 100;
+    }
+
+    const total = subtotal - discountAmount;
+
+    return { countRotator, countStandard, subtotal, discountAmount, total };
+  };
+
+  // APPLY COUPON
+  const handleApplyDiscount = () => {
+    const code = discountCode.trim().toUpperCase();
+    if (!code) return;
+
+    if (code === 'PRO20') {
+      setAppliedDiscount({ code: 'PRO20', percent: 20 });
+      setDiscountError('');
+      toast.success('¡Código aplicado! 20% OFF');
+    } else if (code === 'WELCOME10') {
+      setAppliedDiscount({ code: 'WELCOME10', percent: 10 });
+      setDiscountError('');
+      toast.success('¡Código aplicado! 10% OFF');
+    } else {
+      setDiscountError('Código inválido');
+      setAppliedDiscount(null);
+    }
   };
 
   const handleProcessPayment = () => {
@@ -309,10 +340,10 @@ export default function Links() {
       return;
     }
 
-    const { total, countRotator, countStandard } = getPaymentDetails();
+    const { total, countRotator, countStandard, discountAmount, subtotal } = getPaymentDetails();
 
     if (MOCK_USER_HAS_CARD) {
-      toast.success(`Pago exitoso de $${total}.00`);
+      toast.success(`Pago exitoso de $${total.toFixed(2)}`);
       // Upgrade status to active logic would go here
       setPages(prev => prev.map(p => p.status === 'draft' ? { ...p, status: 'active' } : p));
       setShowPaymentModal(false);
@@ -325,8 +356,8 @@ export default function Links() {
               type: 'extra_links',
               quantity: draftPages.length,
               amount: total,
-              discountCode,
-              details: { countStandard, countRotator }
+              discountApplied: appliedDiscount ? { ...appliedDiscount, amount: discountAmount } : null,
+              details: { countStandard, countRotator, subtotal }
             }
           }
         });
@@ -703,7 +734,7 @@ export default function Links() {
 
           {/* PAYMENT BAR: VISIBLE ONLY IF THERE ARE DRAFTS */}
           <div className={`absolute bottom-6 left-1/2 -translate-x-1/2 z-40 transition-all ${draftPages.length > 0 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
-            <button onClick={() => { setDiscountCode(''); setShowPaymentModal(true); }} className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-amber-600 rounded-full text-white font-black uppercase tracking-widest shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:scale-105 transition-all flex items-center gap-2 whitespace-nowrap">
+            <button onClick={() => { setDiscountCode(''); setAppliedDiscount(null); setDiscountError(''); setShowPaymentModal(true); }} className="px-8 py-3 bg-gradient-to-r from-yellow-500 to-amber-600 rounded-full text-white font-black uppercase tracking-widest shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:scale-105 transition-all flex items-center gap-2 whitespace-nowrap">
               <span className="material-symbols-outlined">shopping_cart</span>
               <span className="font-bold">Comprar Links</span>
               <span className="bg-black/20 px-2 py-0.5 rounded text-xs ml-2">${paymentDetails.total}</span>
@@ -775,7 +806,46 @@ export default function Links() {
                   </div>
                 )}
 
-                <div className="border-t border-white/10 pt-3 flex justify-between items-center font-bold text-lg mt-2"><span>Total a Pagar</span><span>${paymentDetails.total.toFixed(2)}</span></div>
+                <div className="border-t border-white/10 pt-3">
+                  <div className="flex justify-between items-center font-semibold text-silver/60 text-sm mb-1"><span>Subtotal</span><span>${paymentDetails.subtotal.toFixed(2)}</span></div>
+
+                  {/* COUPON INPUT */}
+                  <div className="flex gap-2 mb-3 mt-3">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        placeholder="Código de referido..."
+                        value={discountCode}
+                        onChange={(e) => setDiscountCode(e.target.value)}
+                        disabled={!!appliedDiscount}
+                        className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary uppercase disabled:opacity-50"
+                      />
+                      {appliedDiscount && (
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 text-green-500">
+                          <span className="material-symbols-outlined text-sm">check_circle</span>
+                        </div>
+                      )}
+                    </div>
+                    {!appliedDiscount ? (
+                      <button onClick={handleApplyDiscount} className="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg text-xs font-bold">Aplicar</button>
+                    ) : (
+                      <button onClick={() => { setAppliedDiscount(null); setDiscountCode(''); }} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 px-3 py-2 rounded-lg text-xs font-bold">Quitar</button>
+                    )}
+                  </div>
+                  {discountError && <p className="text-red-500 text-[10px] mb-2">{discountError}</p>}
+
+                  {appliedDiscount && (
+                    <div className="flex justify-between items-center text-green-500 text-sm font-bold animate-fade-in mb-1">
+                      <span>Descuento ({appliedDiscount.percent}%)</span>
+                      <span>-${paymentDetails.discountAmount.toFixed(2)}</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center font-bold text-xl text-white mt-2 pt-2 border-t border-white/5">
+                    <span>Total a Pagar</span>
+                    <span>${paymentDetails.total.toFixed(2)}</span>
+                  </div>
+                </div>
               </div>
               <button onClick={handleProcessPayment} className="w-full py-4 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all uppercase tracking-wider shadow-lg">Continuar al Pago</button>
             </div>
