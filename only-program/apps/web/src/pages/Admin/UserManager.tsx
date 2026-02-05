@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import { supabase } from '@/services/supabase';
 import { useTranslation } from '@/contexts/I18nContext';
 import { useModal } from '@/contexts/ModalContext';
 import { logActions } from '@/services/auditService';
 import { retryWithBackoff } from '@/utils/retryHelper';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005/api';
 
  const UserManager = () => {
    const { t } = useTranslation();
-   const { showAlert } = useModal();
+   const { showAlert, showConfirm } = useModal();
    const [users, setUsers] = useState<any[]>([]);
    const [loading, setLoading] = useState(true);
    const [search, setSearch] = useState('');
@@ -73,11 +73,19 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
    };
 
    const handleDeleteUser = async (user: any) => {
-        if (!confirm(`¿Estás seguro de que quieres eliminar al usuario ${user.full_name || user.email}? Esta acción no se puede deshacer.`)) return;
+        const userName = user.full_name || user.email || user.id || 'Desconocido';
+        const confirmed = await showConfirm({
+            title: "Eliminar Usuario",
+            message: `¿Estás seguro de que quieres eliminar al usuario ${userName}? Esta acción no se puede deshacer.`,
+            confirmText: "Eliminar",
+            cancelText: "Cancelar"
+        });
+
+        if (!confirmed) return;
 
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            const response = await fetch(`${API_URL}/api/admin/users/${user.id}`, {
+            const response = await fetch(`${API_URL}/admin/users/${user.id}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${session?.access_token}`
@@ -111,7 +119,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
      setIsSendingCode(true);
      try {
        const { data: { session } } = await supabase.auth.getSession();
-       const response = await fetch(`${API_URL}/api/admin/request-promotion-code`, {
+       const response = await fetch(`${API_URL}/admin/request-promotion-code`, {
          method: 'POST',
          headers: {
            'Content-Type': 'application/json',
@@ -140,7 +148,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
      setIsVerifying(true);
      try {
        const { data: { session } } = await supabase.auth.getSession();
-       const response = await fetch(`${API_URL}/api/admin/verify-promotion-code`, {
+       const response = await fetch(`${API_URL}/admin/verify-promotion-code`, {
          method: 'POST',
          headers: {
            'Content-Type': 'application/json',
@@ -227,8 +235,8 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
            </thead>
            <tbody className="divide-y divide-border/20">
              {filteredUsers.map((user) => (
-               <>
-                <tr key={user.id} className="group hover:bg-white/[0.02] transition-colors relative z-10 bg-surface/30">
+               <Fragment key={user.id}>
+                <tr className="group hover:bg-white/[0.02] transition-colors relative z-10 bg-surface/30">
                  <td className="px-2 py-5 text-center">
                     <button 
                         onClick={() => toggleExpand(user.id)}
@@ -380,7 +388,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
                        </td>
                    </tr>
                )}
-               </>
+               </Fragment>
              ))}
            </tbody>
          </table>
