@@ -14,9 +14,9 @@ const CmsEditor = () => {
   const { showAlert, showConfirm } = useModal();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showPreview, setShowPreview] = useState(true);
+  const [showPreview, setShowPreview] = useState(window.innerWidth >= 1280); // Default hidden on mobile/tablet
   const [previewMode, setPreviewMode] = useState<'desktop' | 'mobile'>('desktop');
-  const [previewScale, setPreviewScale] = useState(1);
+  const [previewScale, setPreviewScale] = useState(0); // Start at 0 to avoid flash
   const [previewKey, setPreviewKey] = useState(0);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [undoAction, setUndoAction] = useState<any>(null);
@@ -640,11 +640,12 @@ const CmsEditor = () => {
                    width: previewMode === 'desktop' ? '1440px' : '375px',
                    minHeight: previewMode === 'desktop' ? '900px' : '812px',
                    maxHeight: previewMode === 'desktop' ? '4000px' : '3000px',
-                   transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                   transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease',
                    backgroundColor: '#050505',
                    boxShadow: '0 50px 100px -20px rgba(0,0,0,0.7)',
                    border: 'none',
                    borderRadius: previewMode === 'mobile' ? '48px' : '0px',
+                   opacity: previewScale > 0 ? 1 : 0
                 }}
                 className="relative shrink-0"
              >

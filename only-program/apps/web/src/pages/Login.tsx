@@ -6,6 +6,7 @@ import { useTranslation } from '@/contexts/I18nContext';
 import { supabase } from '@/services/supabase';
 import Logo from '@/components/Logo';
 import Turnstile from '@/components/Turnstile';
+import PasswordInput from '@/components/PasswordInput';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -14,7 +15,6 @@ export default function Login() {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
@@ -110,28 +110,15 @@ export default function Login() {
                 {t('auth.forgotPassword')}
               </Link>
             </div>
-            <div className="relative">
-              <input
+            <PasswordInput
                 id="password"
                 name="password"
-                type={showPassword ? "text" : "password"}
-                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-background-dark/50 border border-border rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-silver/20 pr-12"
+                required
                 placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-4 flex items-center text-silver/50 hover:text-white transition-colors"
-                tabIndex={-1}
-              >
-                <span className="material-symbols-outlined text-xl">
-                  {showPassword ? 'visibility_off' : 'visibility'}
-                </span>
-              </button>
-            </div>
+                showStrength={false}
+            />
           </div>
 
           <Turnstile onVerify={setCaptchaToken} />

@@ -368,7 +368,7 @@ export default function Home({
             </p>
 
             <div data-reveal data-delay="4" className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-              {user ? (
+              {user && user.id ? (
                 <Link
                   to="/dashboard/links"
                   data-magnetic="0.12"
@@ -379,12 +379,12 @@ export default function Home({
                 </Link>
               ) : (
                 <Link
-                  to="/register"
+                  to="/login"
                   data-magnetic="0.12"
                   className="bg-primary hover:bg-primary-dark text-white px-7 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all shadow-xl shadow-primary/25 flex items-center justify-center gap-2 hover:translate-y-[-1px]"
                 >
-                  {heroConfig?.ctaText || t('hero.cta')}
-                  <span className="material-symbols-outlined">chevron_right</span>
+                  {t('nav.login') || "Iniciar Sesión"}
+                  <span className="material-symbols-outlined">login</span>
                 </Link>
               )}
 
