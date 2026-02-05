@@ -657,7 +657,7 @@ export default function Home({
             </p>
 
             <div data-reveal data-delay="2" className="mt-10">
-              <PremiumPayments previewData={previewData?.pricing} />
+              <PremiumPayments />
             </div>
           </div>
         </section>
