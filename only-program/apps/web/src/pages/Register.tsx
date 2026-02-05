@@ -176,7 +176,7 @@ export default function Register() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading || !captchaToken}
+              disabled={loading}
               className="w-full bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
             >
               {loading ? 'Creando cuenta...' : 'Registrarse'}
@@ -196,7 +196,7 @@ export default function Register() {
             <button
               type="button"
               onClick={handleGoogleLogin}
-              disabled={loading || !captchaToken}
+              disabled={loading}
               className="w-full bg-background-dark/50 border border-border hover:border-white/15 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
