@@ -5,6 +5,7 @@ import { ModalProvider } from '@/contexts/ModalContext';
 import Home from '@/pages/Home';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
+import Features from '@/pages/Features';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import Pricing from './pages/Pricing';
@@ -63,6 +64,7 @@ function App() {
           <MotionManager />
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/features" element={<Features />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/pricing" element={<Pricing />} />

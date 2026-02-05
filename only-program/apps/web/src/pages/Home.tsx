@@ -5,16 +5,21 @@ import Footer from '@/components/Footer';
 import PremiumTestimonials from '@/components/PremiumTestimonials';
 import { useTranslation } from '@/contexts/I18nContext';
 import PremiumPayments from "../components/PremiumPayments";
+import ManagerReviews from "@/components/ManagerReviews";
 import { cmsService } from '@/services/cmsService';
 
 
+
 import { useAuth } from '@/hooks/useAuth';
+import instagramLogo from '../assets/animations/instagram.png';
+import tiktokLogo from '../assets/animations/tik-tok.png';
 
 export default function Home({
   previewData
 }: {
   previewData?: any;
 }) {
+
   const { t } = useTranslation();
   const { user } = useAuth();
 
@@ -87,97 +92,7 @@ export default function Home({
     [t]
   );
 
-  const featurePreview = useMemo(() => {
-    const base = {
-      titleBarMid: t('home.preview.titleBarMid'),
-      userName: 'Only Program',
-      userRole: t('home.preview.userRole'),
-    };
 
-    if (activeFeatureView === 'analytics') {
-      return {
-        ...base,
-        header: t('home.preview.headerAnalytics'),
-        sub: t('home.preview.subAnalytics'),
-        kpis: [
-          { label: t('home.preview.kpis.clicks'), value: '124.582', icon: 'ads_click', tone: 'text-primary' },
-          { label: t('home.preview.kpis.filtered'), value: '8.214', icon: 'shield', tone: 'text-green-500' },
-          { label: t('home.preview.kpis.conversion'), value: '24.8%', icon: 'trending_up', tone: 'text-purple-400' },
-          { label: t('home.preview.kpis.topCountries'), value: 'ES • USA • MX', icon: 'public', tone: 'text-silver/70' },
-        ],
-        sidebar: [
-          { icon: 'link', label: t('home.preview.sidebar.links'), active: false },
-          { icon: 'monitoring', label: t('home.preview.sidebar.analytics'), active: true },
-          { icon: 'settings', label: t('home.preview.sidebar.settings'), active: false },
-          { icon: 'support_agent', label: t('home.preview.sidebar.support'), active: false },
-        ],
-        chartBars: [32, 52, 41, 64, 58, 46, 71, 60, 55, 74, 62, 80],
-        countryRows: [
-          { c: t('countries.spain'), v: '52.126' },
-          { c: t('countries.usa'), v: '34.182' },
-          { c: t('countries.mexico'), v: '18.867' },
-        ],
-      };
-    }
-
-    if (activeFeatureView === 'telegram') {
-      return {
-        ...base,
-        header: t('home.preview.headerTelegram'),
-        sub: t('home.preview.subTelegram'),
-        sidebar: [
-          { icon: 'link', label: t('home.preview.sidebar.links'), active: false },
-          { icon: 'monitoring', label: t('home.preview.sidebar.analytics'), active: false },
-          { icon: 'autorenew', label: t('home.preview.sidebar.rotation'), active: true },
-          { icon: 'settings', label: t('home.preview.sidebar.settings'), active: false },
-          { icon: 'support_agent', label: t('home.preview.sidebar.support'), active: false },
-        ],
-        topActions: [
-          { label: t('home.preview.actions.logs'), icon: 'receipt_long', primary: false },
-          { label: t('home.preview.actions.addChannel'), icon: 'add', primary: true },
-        ],
-        cards: [
-          { title: t('home.preview.cards.vip'), badge: t('home.preview.cards.rotating'), meta: `${t('home.preview.cards.next')} 12:46`, tone: 'text-primary' },
-          { title: t('home.preview.cards.ads'), badge: t('home.preview.cards.rotating'), meta: `${t('home.preview.cards.next')} 14:12`, tone: 'text-silver/70' },
-          { title: t('home.preview.cards.community'), badge: t('home.preview.cards.rotating'), meta: `${t('home.preview.cards.next')} 15:10`, tone: 'text-silver/70' },
-          { title: t('home.preview.cards.launch'), badge: t('home.preview.cards.rotating'), meta: `${t('home.preview.cards.next')} 16:20`, tone: 'text-silver/70' },
-          { title: t('home.preview.cards.general'), badge: t('home.preview.cards.rotating'), meta: `${t('home.preview.cards.next')} 18:02`, tone: 'text-silver/70' },
-        ],
-        config: [
-          { label: t('home.preview.config.freq'), value: t('home.preview.config.freqVal') },
-          { label: t('home.preview.config.dist'), value: t('home.preview.config.distVal') },
-        ],
-      };
-    }
-
-    // links default
-    return {
-      ...base,
-      header: t('home.preview.headerLinks'),
-      sub: t('home.preview.subLinks'),
-      sidebar: [
-        { icon: 'link', label: t('home.preview.sidebar.links'), active: true },
-        { icon: 'monitoring', label: t('home.preview.sidebar.analytics'), active: false },
-        { icon: 'autorenew', label: t('home.preview.sidebar.rotation'), active: false },
-        { icon: 'settings', label: t('home.preview.sidebar.settings'), active: false },
-        { icon: 'support_agent', label: t('home.preview.sidebar.support'), active: false },
-      ],
-      toolbar: [
-        { label: t('home.preview.actions.preview'), icon: 'visibility', primary: false },
-        { label: t('home.preview.actions.save'), icon: 'save', primary: true },
-      ],
-      form: {
-        title: t('home.preview.linksDemo.vipAccess'),
-        url: 'https://onlyfans.com/tuusuario',
-        subtitle: t('home.preview.linksDemo.subtitle'),
-      },
-      socials: ['Instagram', 'TikTok', 'X', 'Email'],
-      phone: {
-        name: 'Tu Marca',
-        items: [t('home.preview.linksDemo.vipAccess'), t('home.preview.linksDemo.rotary')],
-      },
-    };
-  }, [activeFeatureView, t]);
 
   const activeFeatureAccent = useMemo(() => {
     const found = featureViews.find(v => v.key === activeFeatureView);
@@ -368,65 +283,45 @@ export default function Home({
             </p>
 
             <div data-reveal data-delay="4" className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-              {user && user.id ? (
-                <Link
-                  to="/dashboard/links"
-                  data-magnetic="0.12"
-                  className="bg-primary hover:bg-primary-dark text-white px-7 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all shadow-xl shadow-primary/25 flex items-center justify-center gap-2 hover:translate-y-[-1px]"
-                >
-                  <span className="material-symbols-outlined">dashboard</span>
-                  Dashboard
-                </Link>
-              ) : (
-                <Link
-                  to="/login"
-                  data-magnetic="0.12"
-                  className="bg-primary hover:bg-primary-dark text-white px-7 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all shadow-xl shadow-primary/25 flex items-center justify-center gap-2 hover:translate-y-[-1px]"
-                >
-                  {t('nav.login') || "Iniciar Sesión"}
-                  <span className="material-symbols-outlined">login</span>
-                </Link>
-              )}
-
               <a
                 href="#features"
-                className="bg-surface/60 border border-border px-7 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all hover:border-primary/40 text-white flex items-center justify-center gap-2"
+                data-magnetic="0.12"
+                className="group relative bg-gradient-to-r from-primary via-blue-500 to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white px-8 sm:px-10 py-4 sm:py-5 rounded-2xl font-black text-lg sm:text-xl transition-all shadow-[0_0_30px_rgba(29,161,242,0.4)] hover:shadow-[0_0_50px_rgba(147,51,234,0.6)] flex items-center justify-center gap-3 hover:-translate-y-1 overflow-hidden"
               >
-                {t('hero.viewPanel')}
-                <span className="material-symbols-outlined">south</span>
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 rounded-2xl" />
+                <span className="relative z-10 uppercase tracking-wide">Explora Tu Potencial</span>
+                 <span className="material-symbols-outlined relative z-10 group-hover:rotate-12 transition-transform">rocket_launch</span>
               </a>
-
-              <button
-                onClick={() => setShowVideo(true)}
-                className="bg-primary/10 border border-primary/20 px-7 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all hover:bg-primary/20 text-primary flex items-center justify-center gap-2"
-              >
-                {t('hero.watchDemo') || "Ver Video"}
-                <span className="material-symbols-outlined">play_circle</span>
-              </button>
             </div>
 
-            <div data-reveal data-delay="4" className="mt-10 flex flex-wrap justify-center gap-3 text-xs text-silver/45">
-              <span className="px-3 py-1 rounded-full border border-border bg-surface/30">{t('home.preview.linksDemo.verified')}</span>
-              <span className="px-3 py-1 rounded-full border border-border bg-surface/30">{t('home.preview.linksDemo.channels')}</span>
-              <span className="px-3 py-1 rounded-full border border-border bg-surface/30">{t('home.featureViews.analytics.title')}</span>
-              <span className="px-3 py-1 rounded-full border border-border bg-surface/30">{t('home.featureViews.telegram.title')}</span>
+            <div data-reveal data-delay="4" className="mt-16 flex flex-wrap justify-center gap-4 text-xs text-silver/45">
+              <span className="px-4 py-1.5 rounded-full border border-border bg-surface/30 uppercase tracking-wider font-medium">{t('home.preview.linksDemo.verified')}</span>
+              <span className="px-4 py-1.5 rounded-full border border-border bg-surface/30 uppercase tracking-wider font-medium">{t('home.preview.linksDemo.channels')}</span>
+              <span className="px-4 py-1.5 rounded-full border border-border bg-surface/30 uppercase tracking-wider font-medium">{t('home.featureViews.analytics.title')}</span>
+              <span className="px-4 py-1.5 rounded-full border border-border bg-surface/30 uppercase tracking-wider font-medium">{t('home.featureViews.telegram.title')}</span>
             </div>
           </div>
+          
+          {/* Soft Gradient Transition & Ambient Glow */}
+          <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-b from-transparent to-background z-20" />
+          <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-primary/20 blur-[120px] rounded-full z-10 opacity-50 pointer-events-none" />
         </section>
 
-        {/* ✅ FEATURES: SOLO “VISTA DEL PANEL” (se quitó la parte de monitoreo/mock anterior) */}
-        <section id="features" className="py-16 sm:py-20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* ✅ FEATURES: SOLO “VISTA DEL PANEL” */}
+        <section id="features" className="py-24 sm:py-32 bg-background relative z-10 overflow-hidden">
+             {/* Organic shapes for background depth */}
+             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-900/20 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/3 pointer-events-none" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div className="grid grid-cols-12 gap-10 items-start">
               <div className="col-span-12 text-center mb-6">
                 <h2 data-reveal className="text-2xl sm:text-3xl md:text-4xl font-bold text-white">
-                  {t('home.simplePanel.title')}
+                  Lo que puedes hacer con nosotros
                 </h2>
-                <p data-reveal data-delay="2" className="mt-5 text-silver/70 leading-relaxed">
+                <p data-reveal data-delay="2" className="mt-5 text-silver/70 leading-relaxed max-w-2xl mx-auto">
                   {t('home.simplePanel.desc')}
                 </p>
 
-                <div className=" flex flex-col items-center mb-8">
+                <div className="flex flex-col items-center mb-8 mt-12 sm:mt-16">
                   {/* Horizontal scroll container for mobile, centered wrapped for desktop */}
                   <div data-reveal data-delay="3" className="w-full overflow-x-auto pb-4 -mb-4 sm:overflow-visible sm:pb-0 sm:mb-0 flex justify-start sm:justify-center px-4 sm:px-0">
                     <div className="flex flex-nowrap sm:flex-wrap gap-3 sm:gap-4 shrink-0 mx-auto sm:mx-0">
@@ -465,341 +360,300 @@ export default function Home({
               </div>
               <div className="col-span-12">
                 <div className="w-full overflow-x-auto pb-6 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible sm:pb-0">
-                  <div
-                    data-reveal
-                    data-delay="2"
-                    className="relative rounded-3xl border border-border bg-surface/40 overflow-hidden dash-shell min-w-[350px] xs:min-w-full"
-                  >
                     <div
-                      className="absolute -inset-10 blur-3xl transition-all duration-700"
-                      style={{ background: activeFeatureAccent }}
-                    />
-                    <div className="absolute inset-0 dash-softgrid opacity-[0.65]" />
+                      data-reveal
+                      data-delay="2"
+                      className="relative rounded-3xl border border-border bg-surface/40 overflow-hidden dash-shell min-w-[350px] xs:min-w-full"
+                    >
+                      <div
+                        className="absolute -inset-10 blur-3xl transition-all duration-700"
+                        style={{ background: activeFeatureAccent }}
+                      />
+                      <div className="absolute inset-0 dash-softgrid opacity-[0.65]" />
 
-                  <div className="relative p-3 sm:p-5">
-                    <div className="flex items-center justify-between gap-3 border border-white/10 bg-background-dark/40 rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="h-8 w-8 rounded-xl bg-surface border border-border flex items-center justify-center">
-                          <span className="material-symbols-outlined text-primary text-[18px]">verified</span>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[10px] text-silver/40 font-mono uppercase tracking-widest">
-                            {featurePreview.titleBarMid}
-                          </p>
-                          <p className="text-white font-bold truncate">{featurePreview.header}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          className="inline-flex items-center gap-1.5 text-[11px] px-3 py-2 rounded-xl border border-primary/30 bg-primary/10 text-primary hover:border-primary/50 transition-all fake-btn"
-                        >
-                          <span className="material-symbols-outlined text-[16px]">lock</span>
-                          {t('home.preview.linksDemo.verified')}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-12 gap-4">
-                      <div className="col-span-12 sm:col-span-4 lg:col-span-4 hidden sm:block">
-                        <div className="rounded-2xl border border-white/10 bg-background-dark/40 p-3">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">Menú</p>
-                            <span className="text-[10px] text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
-                              {featurePreview.userName}
-                            </span>
-                          </div>
-
-                          <div className="mt-3 space-y-2">
-                            {featurePreview.sidebar.map((it: any, i: number) => (
-                              <button
-                                key={`${it.label}-${i}`}
-                                type="button"
-                                className={[
-                                  "w-full flex items-center gap-2 px-3 py-2 rounded-xl border transition-all fake-btn",
-                                  it.active
-                                    ? "border-primary/40 bg-primary/10 text-white"
-                                    : "border-transparent bg-surface/20 text-silver/70 hover:bg-surface/30 hover:text-white",
-                                ].join(" ")}
-                              >
-                                <span className={["material-symbols-outlined text-[18px]", it.active ? "text-primary" : "text-silver/50"].join(" ")}>
-                                  {it.icon}
-                                </span>
-                                <span className="text-sm font-semibold">{it.label}</span>
-                              </button>
-                            ))}
-                          </div>
-
-                          <div className="mt-3 rounded-xl border border-white/10 bg-surface/20 p-3">
-                            <div className="flex items-center gap-2">
-                              <div className="h-9 w-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-silver/60">person</span>
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-white font-bold text-sm truncate">{featurePreview.userName}</p>
-                                <p className="text-[11px] text-silver/45">{featurePreview.userRole}</p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="col-span-12 sm:col-span-8 lg:col-span-8">
-                        <div className="rounded-2xl border border-white/10 bg-background-dark/40 p-4 sm:p-5">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="min-w-0">
-                              <p className="text-white font-extrabold text-lg">{featurePreview.header}</p>
-                              <p className="text-silver/60 text-sm mt-1">{featurePreview.sub}</p>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              {(featurePreview as any).toolbar?.map((b: any, i: number) => (
-                                <button
-                                  key={`${b.label}-${i}`}
-                                  type="button"
-                                  className={[
-                                    "inline-flex items-center gap-1.5 text-[11px] px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl border transition-all fake-btn",
-                                    b.primary
-                                      ? "border-primary/30 bg-primary/10 text-primary hover:border-primary/50"
-                                      : "border-border bg-surface/30 text-silver/70 hover:text-white hover:border-primary/30",
-                                  ].join(" ")}
-                                >
-                                  <span className="material-symbols-outlined text-[16px]">{b.icon}</span>
-                                  <span className="hidden xs:inline">{b.label}</span>
-                                </button>
-                              ))}
-
-                              {(featurePreview as any).topActions?.map((b: any, i: number) => (
-                                <button
-                                  key={`${b.label}-${i}`}
-                                  type="button"
-                                  className={[
-                                    "inline-flex items-center gap-1.5 text-[11px] px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl border transition-all fake-btn",
-                                    b.primary
-                                      ? "border-primary/30 bg-primary text-white hover:bg-primary-dark"
-                                      : "border-border bg-surface/30 text-silver/70 hover:text-white hover:border-primary/30",
-                                  ].join(" ")}
-                                >
-                                  <span className="material-symbols-outlined text-[16px]">{b.icon}</span>
-                                  <span className="hidden xs:inline">{b.label}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          {activeFeatureView === 'links' && (
-                            <div className="mt-5 grid md:grid-cols-2 gap-4">
-                              <div className="rounded-2xl border border-white/10 bg-surface/20 p-4">
-                                <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">{t('home.preview.linksDemo.btnTitle')}</p>
-                                <div className="mt-2 rounded-xl border border-border bg-background-dark/40 px-3 py-2.5">
-                                  <p className="text-white text-sm font-semibold">{(featurePreview as any).form.title}</p>
-                                </div>
-
-                                <p className="mt-4 text-[10px] font-mono text-silver/40 uppercase tracking-widest">{t('home.preview.linksDemo.dest')}</p>
-                                <div className="mt-2 rounded-xl border border-border bg-background-dark/40 px-3 py-2.5 flex items-center justify-between gap-2">
-                                  <p className="text-silver/70 text-xs truncate">{(featurePreview as any).form.url}</p>
-                                  <button
-                                    type="button"
-                                    className="text-[10px] px-2 py-1 rounded-lg border border-border bg-surface/30 text-silver/70 hover:text-white hover:border-primary/30 transition-all fake-btn"
-                                  >
-                                    {t('common.copy')}
-                                  </button>
-                                </div>
-
-                                <p className="mt-4 text-[10px] font-mono text-silver/40 uppercase tracking-widest">{t('home.preview.linksDemo.subtitle')}</p>
-                                <div className="mt-2 rounded-xl border border-border bg-background-dark/40 px-3 py-2.5">
-                                  <p className="text-silver/70 text-sm">{(featurePreview as any).form.subtitle}</p>
-                                </div>
-
-                                <p className="mt-4 text-[10px] font-mono text-silver/40 uppercase tracking-widest">{t('home.preview.linksDemo.channels')}</p>
-                                <div className="mt-2 grid grid-cols-2 xs:grid-cols-4 gap-2">
-                                  {(featurePreview as any).socials.map((s: string, i: number) => (
-                                    <button
-                                      key={`${s}-${i}`}
-                                      type="button"
-                                      className="rounded-xl border border-border bg-surface/20 px-2 py-2 text-[10px] text-silver/60 hover:text-white hover:border-primary/30 transition-all fake-btn"
-                                    >
-                                      {s}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-
-                              <div className="rounded-2xl border border-white/10 bg-surface/20 p-4">
-                                <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">{t('home.preview.linksDemo.previewTitle')}</p>
-                                <div className="mt-3 mx-auto w-full max-w-[280px] sm:max-w-[320px] rounded-[34px] border border-white/10 bg-background-dark/70 p-2 sm:p-3">
-                                  <div className="rounded-[26px] border border-white/10 bg-black/40 overflow-hidden">
-                                    <div className="p-4 flex items-center gap-3 border-b border-white/10">
-                                      <div className="h-10 w-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                                        <span className="material-symbols-outlined text-silver/60">person</span>
-                                      </div>
-                                      <div className="min-w-0">
-                                        <p className="text-white font-bold text-sm truncate">{(featurePreview as any).phone.name}</p>
-                                        <p className="text-[11px] text-silver/45">{t('home.preview.linksDemo.verified')}</p>
-                                      </div>
+                      <div className="relative p-6 sm:p-10 min-h-[500px] flex items-center justify-center">
+                        {/* ✅ VIEW: LINKS (Phone Mockup) */}
+                        {activeFeatureView === 'links' && (
+                          <div className="w-full grid lg:grid-cols-2 gap-10 items-center animate-in slide-in-from-right-8 fade-in duration-500">
+                             {/* Left: Text Info */}
+                             <div className="text-left space-y-8">
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 text-blue-400">
+                                        <span className="material-symbols-outlined">hub</span>
+                                        <h3 className="font-bold text-lg">Unifica tus Redes</h3>
                                     </div>
-                                    <div className="p-4 space-y-2">
-                                      {(featurePreview as any).phone.items.map((it: string, i: number) => (
-                                        <button
-                                          key={`${it}-${i}`}
-                                          type="button"
-                                          className="w-full rounded-2xl border border-border bg-surface/20 px-3 py-3 text-left hover:border-primary/40 transition-all fake-btn"
-                                        >
-                                          <div className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-primary text-[18px]">link</span>
-                                            <span className="text-white text-sm font-semibold">{it}</span>
+                                    <p className="text-silver/70 leading-relaxed text-base sm:text-lg">
+                                        Convierte seguidores de Instagram, TikTok y Twitter en clientes. 
+                                        Centraliza todo tu tráfico en un solo lugar y maximiza tus conversiones.
+                                    </p>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 text-primary">
+                                        <span className="material-symbols-outlined">verified_user</span>
+                                        <h3 className="font-bold text-lg">Protección Simple y Total</h3>
+                                    </div>
+                                    <p className="text-silver/70 leading-relaxed text-base sm:text-lg">
+                                        Olvídate de las filtraciones. Nuestro sistema bloquea automáticamente a los "toms peepers" y bots. 
+                                        Tu contenido exclusivo solo lo verán personas reales.
+                                    </p>
+                                </div>
+                                <div className="space-y-4">
+                                    <div className="flex items-center gap-2 text-white">
+                                        <span className="material-symbols-outlined">dns</span>
+                                        <h3 className="font-bold text-lg">Tu Nombre, Tu Marca</h3>
+                                    </div>
+                                    <p className="text-silver/70 leading-relaxed text-base sm:text-lg">
+                                        Dale confianza a tus seguidores. En lugar de un link extraño, usa tu propio dominio personalizado.
+                                    </p>
+                                    
+                                    {/* Domain Example Visual */}
+                                    <div className="mt-4 bg-[#0B0B0B] border border-white/10 rounded-xl p-4 flex items-center justify-between group cursor-default hover:border-primary/30 transition-colors">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center text-green-400">
+                                                <span className="material-symbols-outlined text-sm">lock</span>
+                                            </div>
+                                            <div className="flex flex-col">
+                                                <span className="text-[10px] text-silver/50 uppercase tracking-wider font-bold">Ejemplo Real</span>
+                                                <span className="text-white font-mono text-sm sm:text-base">links.zara-exclusive.com</span>
+                                            </div>
+                                        </div>
+                                        <span className="material-symbols-outlined text-silver/30 group-hover:text-primary transition-colors">check_circle</span>
+                                    </div>
+                                </div>
+                             </div>
+
+                             {/* Right: Phone Mockup with Rotation */}
+                             <div className="flex justify-center perspective-[1000px]">
+                                 <PhoneRotator />
+                             </div>
+                          </div>
+                        )}
+
+                        {/* ✅ VIEW: ANALYTICS (PC + Mobile / Split Layout) */}
+                        {activeFeatureView === 'analytics' && (
+                          <div className="w-full grid lg:grid-cols-2 gap-10 items-center animate-in slide-in-from-right-8 fade-in duration-500">
+                             {/* Left: Text Info */}
+                             <div className="text-left space-y-8">
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2 text-primary">
+                                        <span className="material-symbols-outlined">monitoring</span>
+                                        <h3 className="font-bold text-lg">Métricas en Tiempo Real</h3>
+                                    </div>
+                                    <p className="text-silver/70 leading-relaxed">
+                                        Visualiza clicks, países y dispositivos al instante. Toma decisiones basadas en datos reales, no en suposiciones.
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2 text-purple-400">
+                                        <span className="material-symbols-outlined">shield</span>
+                                        <h3 className="font-bold text-lg">Filtrado de Bots</h3>
+                                    </div>
+                                    <p className="text-silver/70 leading-relaxed">
+                                        Nuestro sistema elimina el tráfico basura automáticamente, asegurando que solo pagues por usuarios reales.
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2 text-green-400">
+                                        <span className="material-symbols-outlined">public</span>
+                                        <h3 className="font-bold text-lg">Geolocalización Precisa</h3>
+                                    </div>
+                                    <p className="text-silver/70 leading-relaxed">
+                                        Entiende de dónde viene tu audiencia y optimiza tus campañas por región o idioma.
+                                    </p>
+                                </div>
+                             </div>
+
+                             {/* Right: Visuals (PC + Mobile overlay) */}
+                             <div className="relative">
+                                {/* PC Mockup */}
+                                <div className="relative bg-background-dark border border-white/10 rounded-xl shadow-2xl p-2 aspect-[16/10] overflow-hidden">
+                                     <div className="absolute inset-x-0 top-0 h-6 bg-surface border-b border-white/5 flex items-center px-4 gap-1.5">
+                                         <div className="w-2.5 h-2.5 rounded-full bg-red-500/20" />
+                                         <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20" />
+                                         <div className="w-2.5 h-2.5 rounded-full bg-green-500/20" />
+                                     </div>
+                                     <div className="mt-6 h-full w-full bg-background-dark flex flex-col p-4 gap-4">
+                                          {/* Analytics Fake UI */}
+                                          <div className="grid grid-cols-3 gap-3">
+                                              <div className="bg-surface/30 rounded-lg p-3 border border-white/5">
+                                                  <div className="text-[10px] text-silver/50">Total Clicks</div>
+                                                  <div className="text-xl font-bold text-white">124k</div>
+                                              </div>
+                                              <div className="bg-surface/30 rounded-lg p-3 border border-white/5">
+                                                  <div className="text-[10px] text-silver/50">Conv. Rate</div>
+                                                  <div className="text-xl font-bold text-green-400">24.8%</div>
+                                              </div>
+                                              <div className="bg-surface/30 rounded-lg p-3 border border-white/5">
+                                                  <div className="text-[10px] text-silver/50">Countries</div>
+                                                  <div className="text-xl font-bold text-primary">12</div>
+                                              </div>
                                           </div>
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </div>
+                                          <div className="flex-1 bg-surface/20 rounded-lg border border-white/5 p-4 flex items-end justify-between gap-1 relative overflow-hidden">
+                                              {/* Scanning Line Animation */}
+                                              <div className="absolute top-0 bottom-0 w-[2px] bg-primary/50 shadow-[0_0_10px_rgba(29,161,242,0.8)] z-10 animate-[scan_3s_ease-in-out_infinite]" />
+                                              
+                                              {[40, 60, 45, 70, 50, 80, 65, 90, 75].map((h, i) => (
+                                                  <div key={i} className="flex-1 bg-primary/20 rounded-t-sm hover:bg-primary/40 transition-colors relative group" style={{ height: `${h}%` }}>
+                                                      <div className="absolute bottom-0 left-0 right-0 h-full bg-primary/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                                  </div>
+                                              ))}
+                                          </div>
+                                     </div>
                                 </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {activeFeatureView === 'analytics' && (
-                            <div className="mt-5 space-y-4">
-                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                                {(featurePreview as any).kpis.map((k: any, i: number) => (
-                                  <div key={`${k.label}-${i}`} className="rounded-2xl border border-white/10 bg-surface/20 p-4">
-                                    <div className="flex items-center justify-between">
-                                      <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">{k.label}</p>
-                                      <span className={["material-symbols-outlined text-[18px]", k.tone].join(" ")}>{k.icon}</span>
+                                {/* Mobile Overlay */}
+                                <div className="absolute -bottom-6 -right-2 w-32 sm:w-40 bg-black border-[4px] border-zinc-800 rounded-[28px] shadow-2xl overflow-hidden aspect-[9/19] flex flex-col">
+                                    <div className="bg-zinc-900 p-2 flex items-center justify-between border-b border-white/5">
+                                        <div className="w-8 h-2 rounded bg-white/10" />
+                                        <div className="w-4 h-4 rounded-full bg-primary/20" />
                                     </div>
-                                    <p className="mt-2 text-white font-extrabold text-lg">{k.value}</p>
-                                    <p className="mt-1 text-[11px] text-silver/45">Actualizado hace 1m</p>
-                                  </div>
-                                ))}
-                              </div>
-
-                              <div className="grid lg:grid-cols-3 gap-4">
-                                <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-surface/20 p-4">
-                                  <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">Actividad</p>
-                                  <div className="mt-4 flex items-end gap-2 h-40">
-                                    {(featurePreview as any).chartBars.map((h: number, i: number) => (
-                                      <div
-                                        key={i}
-                                        className="flex-1 rounded-lg border border-white/10 bg-primary/10 hover:bg-primary/15 transition-all fake-btn"
-                                        style={{ height: `${h + 18}%` }}
-                                        title={`Día ${i + 1}`}
-                                      />
-                                    ))}
-                                  </div>
-                                </div>
-
-                                <div className="rounded-2xl border border-white/10 bg-surface/20 p-4">
-                                  <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">Top países</p>
-                                  <div className="mt-3 space-y-2">
-                                    {(featurePreview as any).countryRows.map((r: any, i: number) => (
-                                      <button
-                                        key={`${r.c}-${i}`}
-                                        type="button"
-                                        className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-background-dark/30 px-3 py-2 hover:border-primary/30 transition-all fake-btn"
-                                      >
-                                        <span className="text-white text-sm font-semibold">{r.c}</span>
-                                        <span className="text-silver/60 text-xs font-mono">{r.v}</span>
-                                      </button>
-                                    ))}
-                                  </div>
-                                  <button
-                                    type="button"
-                                    className="mt-3 w-full rounded-xl border border-border bg-surface/20 px-3 py-2 text-[11px] text-silver/60 hover:text-white hover:border-primary/30 transition-all fake-btn"
-                                  >
-                                    Ver más
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {activeFeatureView === 'telegram' && (
-                            <div className="mt-5 space-y-4">
-                              <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3">
-                                {(featurePreview as any).cards.map((c: any, i: number) => (
-                                  <button
-                                    key={`${c.title}-${i}`}
-                                    type="button"
-                                    className="rounded-2xl border border-white/10 bg-surface/20 p-4 text-left hover:border-primary/30 transition-all fake-btn"
-                                  >
-                                    <div className="flex items-center justify-between gap-3">
-                                      <p className="text-white font-bold text-sm">{c.title}</p>
-                                      <span className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
-                                        {c.badge}
-                                      </span>
+                                    <div className="p-2 space-y-2 flex-1 bg-black">
+                                        <div className="bg-surface/40 p-2 rounded border border-white/5">
+                                            <div className="h-2 w-12 bg-white/20 rounded mb-1" />
+                                            <div className="h-4 w-16 bg-green-500/20 rounded" />
+                                        </div>
+                                        <div className="flex gap-1">
+                                             <div className="flex-1 bg-surface/40 h-16 rounded border border-white/5" />
+                                             <div className="flex-1 bg-surface/40 h-16 rounded border border-white/5" />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <div className="h-6 w-full bg-surface/40 rounded border border-white/5 flex items-center px-2">
+                                                 <div className="w-4 h-4 rounded bg-primary/20 mr-2" />
+                                                 <div className="w-10 h-1 bg-white/10 rounded" />
+                                            </div>
+                                            <div className="h-6 w-full bg-surface/40 rounded border border-white/5 flex items-center px-2">
+                                                 <div className="w-4 h-4 rounded bg-purple-500/20 mr-2" />
+                                                 <div className="w-8 h-1 bg-white/10 rounded" />
+                                            </div>
+                                        </div>
                                     </div>
-                                    <p className="mt-2 text-[11px] text-silver/55">{c.meta}</p>
-                                    <div className="mt-3 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                                      <div className="h-full bg-primary/60" style={{ width: `${42 + (i * 9)}%` }} />
-                                    </div>
-                                  </button>
-                                ))}
-                              </div>
-
-                              <div className="rounded-2xl border border-white/10 bg-surface/20 p-4">
-                                <div className="flex items-center justify-between gap-3">
-                                  <div>
-                                    <p className="text-white font-extrabold">{t('home.preview.config.rotationConfig')}</p>
-                                    <p className="text-silver/60 text-sm mt-1">{t('home.preview.config.rotationDesc')}</p>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    className="rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-[11px] text-primary hover:border-primary/50 transition-all fake-btn"
-                                  >
-                                    Guardar
-                                  </button>
                                 </div>
+                             </div>
+                          </div>
+                        )}
 
-                                <div className="mt-4 grid md:grid-cols-2 gap-3">
-                                  {(featurePreview as any).config.map((row: any, i: number) => (
-                                    <div key={`${row.label}-${i}`} className="rounded-2xl border border-white/10 bg-background-dark/30 p-4">
-                                      <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">{row.label}</p>
-                                      <button
-                                        type="button"
-                                        className="mt-2 w-full rounded-xl border border-border bg-surface/20 px-3 py-2 text-left text-sm text-white hover:border-primary/30 transition-all fake-btn"
-                                      >
-                                        {row.value}
-                                      </button>
+                        {/* ✅ VIEW: TELEGRAM (2 Phones + Chat) */}
+                        {activeFeatureView === 'telegram' && (
+                           <div className="w-full grid lg:grid-cols-2 gap-16 items-center animate-in slide-in-from-right-8 fade-in duration-500">
+                               {/* Left: 2 Phones */}
+                               <div className="relative h-[480px] flex justify-center items-center">
+                                   {/* Phone 1 */}
+                                   <div className="absolute left-0 lg:left-4 transform -rotate-12 scale-90 z-10 w-[250px] bg-black border-[8px] border-zinc-900 rounded-[36px] shadow-2xl overflow-hidden aspect-[9/19]">
+                                        <div className="bg-[#182533] w-full h-full flex flex-col">
+                                            {/* Header */}
+                                            <div className="bg-[#232E3C] p-4 text-white flex items-center gap-3 shadow-md">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-sm font-bold shadow-lg">OP</div>
+                                                <div>
+                                                    <div className="font-bold text-sm">Canal VIP</div>
+                                                    <div className="text-xs text-blue-300 font-medium">15.4k suscriptores</div>
+                                                </div>
+                                            </div>
+                                            {/* Chat */}
+                                            <div className="p-4 space-y-4">
+                                                <div className="bg-[#1F2C39] p-3 rounded-tr-xl rounded-bl-xl rounded-br-xl max-w-[90%] text-xs text-white shadow-sm border border-white/5">
+                                                    ¡Chicos! Acabo de subir contenido exclusivo. 👀🔥
+                                                </div>
+                                                <div className="bg-[#1F2C39] p-3 rounded-lg text-white shadow-sm border border-white/5">
+                                                    <div className="w-full aspect-video bg-black/40 mb-3 rounded-lg flex items-center justify-center relative overflow-hidden group">
+                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                                         <span className="material-symbols-outlined text-4xl text-white/80 drop-shadow-lg z-10">play_circle</span>
+                                                    </div>
+                                                    <p className="text-xs mb-3 font-medium text-blue-100">Haz click para ver el video completo 👇</p>
+                                                    <button className="w-full bg-[#2AABEE] hover:bg-[#229ED9] py-2.5 rounded-lg text-xs font-bold shadow-lg shadow-[#2AABEE]/20 transition-all active:scale-95">Abrir Bot Privado</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                   </div>
+                                   {/* Phone 2 */}
+                                   <div className="absolute right-0 lg:right-4 transform rotate-6 z-20 w-[250px] bg-black border-[8px] border-zinc-900 rounded-[36px] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden aspect-[9/19]">
+                                        <div className="bg-[#182533] w-full h-full flex flex-col">
+                                             {/* Header */}
+                                             <div className="bg-[#232E3C] p-4 text-white flex items-center gap-3 shadow-md">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-sm font-bold shadow-lg">Bot</div>
+                                                <div>
+                                                    <div className="font-bold text-sm">Rotation Bot</div>
+                                                    <div className="text-xs text-blue-300 font-medium">Automatizado</div>
+                                                </div>
+                                            </div>
+                                            {/* Chat */}
+                                            <div className="p-4 space-y-4 flex flex-col">
+                                                <div className="bg-[#2B5278] p-3 rounded-tl-xl rounded-bl-xl rounded-br-xl max-w-[90%] text-xs text-white self-end shadow-sm">
+                                                    /start
+                                                </div>
+                                                <div className="bg-[#1F2C39] p-3 rounded-tr-xl rounded-bl-xl rounded-br-xl max-w-[95%] text-xs text-white self-start shadow-sm border border-white/5">
+                                                    <p className="font-bold text-[#2AABEE] mb-1">¡Hola! 👋</p>
+                                                    Bienvenido al sistema de rotación inteligente.
+                                                    <div className="my-2 p-2 bg-black/20 rounded border border-white/5">
+                                                        <div className="flex items-center gap-2 text-[10px] text-green-400 mb-1">
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                                            Anti-ban activo
+                                                        </div>
+                                                        <span className="text-silver/60 text-[10px]">Tu enlace seguro temporal:</span>
+                                                        <div className="text-[#2AABEE] underline font-mono mt-0.5">op.link/tmp/x9s2</div>
+                                                    </div>
+                                                    <p className="text-[10px] text-silver/50">Este enlace expirará en 24h.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                   </div>
+                               </div>
+
+                               {/* Right: Text Info */}
+                               <div className="text-left space-y-10">
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-3 text-[#2AABEE]">
+                                            <div className="p-2 rounded-lg bg-[#2AABEE]/10">
+                                                <span className="material-symbols-outlined text-2xl">autorenew</span>
+                                            </div>
+                                            <h3 className="font-bold text-2xl">Rotación Inteligente</h3>
+                                        </div>
+                                        <p className="text-silver/70 leading-relaxed text-lg pl-14">
+                                            Distribuye el tráfico entre múltiples canales o bots automáticamente. Evita saturaciones y baneos distribuyendo la carga de forma equitativa.
+                                        </p>
                                     </div>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="mt-3 flex items-center justify-between text-[10px] text-silver/40 px-1">
-                          <span>Only Program • {t('home.preview.linksDemo.previewTitle')}</span>
-                          <span className="hidden sm:inline">{t('home.preview.sidebar.support')}</span>
-                        </div>
+                                    <div className="space-y-3">
+                                        <div className="flex items-center gap-3 text-white">
+                                            <div className="p-2 rounded-lg bg-white/10">
+                                                <span className="material-symbols-outlined text-2xl">chat</span>
+                                            </div>
+                                            <h3 className="font-bold text-2xl">Gestión de Conversaciones</h3>
+                                        </div>
+                                        <p className="text-silver/70 leading-relaxed text-lg pl-14">
+                                            Simula conversaciones reales y mantén a tu audiencia engaged con respuestas automáticas, menús interactivos y flujos de venta predefinidos.
+                                        </p>
+                                    </div>
+                               </div>
+                           </div>
+                        )}
                       </div>
                     </div>
-
-                    <div className="mt-4 sm:hidden text-center text-xs text-silver/45">
-                      {t('panelPreview.hintMobile')}
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
-            </div>
+
           </div>
         </section>
 
-        {/* ✅ FIX WRAP: Testimonials (evita corrimiento + barra rara + botones que “mueren”) */}
-        <section className="testimonials-wrap">
+        {/* Ambient Transition to Testimonials */}
+        <div className="relative h-20 w-full overflow-hidden pointer-events-none">
+            <div className="absolute inset-0 bg-gradient-to-b from-background to-transparent" />
+             <div className="absolute top-1/2 left-1/4 w-[600px] h-[200px] bg-blue-600/10 blur-[90px] rounded-full -translate-y-1/2" />
+        </div>
+
+        <section className="testimonials-wrap relative z-10">
           <PremiumTestimonials />
         </section>
 
+        {/* ✅ Manager Reviews */}
+        <ManagerReviews />
+
         {/* ✅ Payments: SOLO PremiumPayments (sin lluvia / sin sección duplicada / sin payments.headline roto) */}
-        <section className="relative py-16 border-y border-border overflow-hidden">
+        <section id="pricing" className="relative py-16 border-y border-border overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
-            <h3 data-reveal className="text-3xl sm:text-4xl font-extrabold text-white">
-              {t('payments.title')}
+            <h3 data-reveal className="text-3xl sm:text-4xl font-black text-white uppercase tracking-tight">
+              Paga como quieras, <span className="text-primary">sin complicaciones</span>
             </h3>
-            <p data-reveal data-delay="1" className="mt-3 text-silver/70 max-w-2xl mx-auto">
-              {t('pricingPage.subtitle')}
+            <p data-reveal data-delay="1" className="mt-4 text-lg text-silver/60 max-w-2xl mx-auto leading-relaxed">
+              Aceptamos todos los métodos de pago principales. Activación instantánea para que no pierdas tiempo.
             </p>
 
             <div data-reveal data-delay="2" className="mt-10">
@@ -812,40 +666,258 @@ export default function Home({
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div
               data-reveal
-              className="rounded-3xl border border-border bg-surface/40 p-8 sm:p-10 text-center overflow-hidden relative"
+              className="relative rounded-[3rem] overflow-hidden p-10 sm:p-20 text-center group"
             >
-              <div className="absolute top-0 left-0 w-64 h-64 bg-primary/5 blur-3xl rounded-full" />
-              <h3 className="text-3xl font-black text-white mb-4 relative z-10">{t('home.finalCta.title')}</h3>
-              <p className="text-silver/60 mb-8 max-w-xl mx-auto relative z-10">{t('home.finalCta.desc')}</p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center relative z-10">
-                {user ? (
-                  <Link
-                    to="/dashboard/links"
-                    className="px-8 py-4 rounded-xl bg-primary text-white font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/25"
-                  >
-                    Ir al Dashboard
-                  </Link>
-                ) : (
-                  <Link
-                    to="/register"
-                    className="px-8 py-4 rounded-xl bg-primary text-white font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/25"
-                  >
-                    {t('home.finalCta.btn')}
-                  </Link>
-                )}
-                <Link
-                  to="/pricing"
-                  className="px-8 py-4 rounded-xl border border-border bg-background-dark/40 text-white font-bold hover:border-primary/50 transition-all"
-                >
-                  {t('common.viewPrices') || 'Ver Precios'}
-                </Link>
+              {/* Hypnotic Background */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(76,29,149,0.4),transparent_70%)] animate-pulse" />
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              
+              {/* Floating Orbs */}
+              <div className="absolute top-10 left-10 w-32 h-32 bg-primary/20 rounded-full blur-[80px] animate-bounce duration-[5000ms]" />
+              <div className="absolute bottom-10 right-10 w-40 h-40 bg-purple-500/20 rounded-full blur-[80px] animate-bounce duration-[7000ms]" />
+
+              <div className="relative z-10 max-w-3xl mx-auto space-y-8">
+                  <h3 className="text-4xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-white drop-shadow-2xl tracking-tight">
+                    {t('home.finalCta.title')}
+                  </h3>
+                  <p className="text-lg sm:text-xl text-blue-200/80 leading-relaxed font-medium">
+                    {t('home.finalCta.desc')}
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row gap-5 justify-center mt-10">
+                    {user ? (
+                      <Link
+                        to="/dashboard/links"
+                        className="px-10 py-5 rounded-2xl bg-white text-black font-black text-lg hover:bg-blue-50 transition-all shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] transform hover:-translate-y-1"
+                      >
+                        Ir al Dashboard
+                      </Link>
+                    ) : (
+                      <Link
+                        to="/register"
+                        className="px-10 py-5 rounded-2xl bg-gradient-to-r from-primary to-blue-600 text-white font-black text-lg hover:brightness-110 transition-all shadow-[0_0_40px_rgba(29,161,242,0.4)] hover:shadow-[0_0_60px_rgba(29,161,242,0.6)] transform hover:-translate-y-1"
+                      >
+                        {t('home.finalCta.btn')}
+                      </Link>
+                    )}
+                    <Link
+                      to="/pricing"
+                      className="px-10 py-5 rounded-2xl border border-white/10 bg-white/5 text-white font-bold backdrop-blur-md hover:bg-white/10 transition-all flex items-center justify-center gap-2 group-hover:border-white/20"
+                    >
+                      <span>Ver Planes y Precios</span>
+                      <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    </Link>
+                  </div>
               </div>
             </div>
           </div>
         </section>
 
+        <FloatingScrollButton />
+        
         <Footer />
       </main>
     </div>
   );
 }
+
+function PhoneRotator() {
+    const [step, setStep] = useState(0); // 0: LinkBuilder, 1: Instagram, 2: TikTok
+    const [animating, setAnimating] = useState(false);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setAnimating(true);
+            setTimeout(() => {
+                setStep((prev) => (prev + 1) % 3);
+                setAnimating(false);
+            }, 600); // Wait for half rotation to switch content
+        }, 4000);
+        return () => clearInterval(interval);
+    }, []);
+
+    return (
+        <div className="relative flex justify-center items-center">
+            
+            {/* Background Animations (Behind Phone) */}
+            <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none">
+                 {/* Instagram Bg */}
+                 <div className={`absolute transition-all duration-1000 transform ${step === 1 ? 'opacity-100 scale-125 blur-sm' : 'opacity-0 scale-50'}`}>
+                    <img src={instagramLogo} alt="Instagram" className="w-[500px] h-[500px] max-w-none opacity-60 object-contain" />
+                 </div>
+                 {/* TikTok Bg */}
+                 <div className={`absolute transition-all duration-1000 transform ${step === 2 ? 'opacity-100 scale-125 blur-sm' : 'opacity-0 scale-50'}`}>
+                    <img src={tiktokLogo} alt="TikTok" className="w-[500px] h-[500px] max-w-none opacity-60 invert dark:invert-0 object-contain" />
+                 </div>
+            </div>
+
+            {/* Phone Device */}
+            <div 
+                className={`relative z-10 w-[280px] h-[580px] bg-black rounded-[40px] border-[8px] border-zinc-800 shadow-2xl overflow-hidden ring-1 ring-white/10 transition-all duration-1000 transform-style-3d ${animating ? 'rotate-y-180 scale-95' : 'rotate-y-0 scale-100'}`}
+            >
+                {/* Notch */}
+                <div className="absolute top-0 inset-x-0 h-6 bg-black z-20 flex justify-center">
+                    <div className="w-32 h-4 bg-zinc-800 rounded-b-xl" />
+                </div>
+
+                {/* Content Container */}
+                <div className="h-full w-full bg-zinc-900 text-white scrollbar-hide transition-opacity duration-300">
+                    
+                    {/* STATE 0: LINK BUILDER */}
+                    {step === 0 && (
+                        <div className="h-full overflow-y-auto pt-10 pb-4 px-4 animate-in fade-in duration-300">
+                            <div className="flex flex-col items-center">
+                                <div className="w-24 h-24 rounded-full border-2 border-white/10 shadow-lg mb-3 relative group">
+                                    <img
+                                        src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80" 
+                                        alt="Profile" 
+                                        className="w-full h-full rounded-full object-cover"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-1 mb-1">
+                                    <h2 className="text-xl font-bold">Zara</h2>
+                                    <span className="material-symbols-outlined text-blue-400 text-base">verified</span>
+                                </div>
+                                <p className="text-sm text-zinc-400 mb-6 text-center max-w-[200px]">Creadora de contenido ✨<br/>Aquí abajo todos mis links 👇</p>
+                                
+                                <div className="w-full space-y-3">
+                                    <button className="w-full bg-[#E1306C] hover:bg-[#C13584] text-white py-3.5 px-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#E1306C]/20">
+                                        <i className="fab fa-instagram text-xl"></i>
+                                        Sígueme en IG
+                                    </button>
+                                    <button className="w-full bg-[#229ED9] hover:bg-[#1C88BD] text-white py-3.5 px-4 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#229ED9]/20">
+                                        <i className="fab fa-telegram text-xl"></i>
+                                        Telegram VIP
+                                    </button>
+                                    <button className="w-full bg-black hover:bg-zinc-900 text-white py-3.5 px-4 rounded-xl font-bold flex items-center justify-center gap-2 border border-white/10 shadow-lg">
+                                        <i className="fab fa-tiktok text-xl"></i>
+                                        TikTok
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* STATE 1: INSTAGRAM */}
+                    {step === 1 && (
+                        <div className="h-full flex flex-col bg-black pt-10 animate-in fade-in duration-300">
+                            {/* Fake Header */}
+                            <div className="flex items-center justify-between px-4 pb-2 border-b border-white/10">
+                                <span className="material-symbols-outlined text-lg">arrow_back</span>
+                                <span className="font-bold text-sm">zara_official</span>
+                                <span className="material-symbols-outlined text-lg">more_horiz</span>
+                            </div>
+                            {/* Profile Info */}
+                            <div className="p-4">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="w-20 h-20 rounded-full p-[2px] bg-gradient-to-tr from-yellow-400 to-fuchsia-600">
+                                        <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1" className="w-full h-full rounded-full object-cover border-2 border-black" />
+                                    </div>
+                                    <div className="flex gap-4 text-center">
+                                        <div><div className="font-bold">1.2k</div><div className="text-[10px]">Posts</div></div>
+                                        <div><div className="font-bold">45k</div><div className="text-[10px]">Followers</div></div>
+                                        <div><div className="font-bold">320</div><div className="text-[10px]">Following</div></div>
+                                    </div>
+                                </div>
+                                <div className="text-xs space-y-1">
+                                    <div className="font-bold">Zara</div>
+                                    <div className="text-zinc-300">Creadora de contenido</div>
+                                    <div>Aquí abajo todos mis links 👇</div>
+                                    <div className="text-[#E0F1FF] font-semibold bg-[#2AABEE]/20 rounded px-1 w-fit mt-1">links.zara-exclusive.com</div>
+                                </div>
+                                <div className="flex gap-2 mt-4">
+                                    <button className="flex-1 bg-[#1F1F1F] py-1.5 rounded-lg text-xs font-semibold">Following</button>
+                                    <button className="flex-1 bg-[#1F1F1F] py-1.5 rounded-lg text-xs font-semibold">Message</button>
+                                </div>
+                            </div>
+                            {/* Grid */}
+                            <div className="flex-1 grid grid-cols-3 gap-0.5 mt-2">
+                                {[1,2,3,4,5,6,7,8,9].map(i => (
+                                    <div key={i} className="aspect-square bg-zinc-800 border border-black/50" />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* STATE 2: TIKTOK */}
+                    {step === 2 && (
+                        <div className="h-full flex flex-col bg-black pt-10 animate-in fade-in duration-300">
+                             {/* Fake Header */}
+                             <div className="flex items-center justify-between px-4 py-2">
+                                <span className="material-symbols-outlined text-lg">person_add</span>
+                                <span className="font-bold text-sm">Zara <span className="material-symbols-outlined text-blue-400 text-[10px] align-middle">verified</span></span>
+                                <span className="material-symbols-outlined text-lg">menu</span>
+                            </div>
+                            {/* Profile */}
+                            <div className="flex flex-col items-center p-4 border-b border-white/5">
+                                 <div className="w-24 h-24 rounded-full border-2 border-white/10 mb-3">
+                                    <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1" className="w-full h-full rounded-full object-cover" />
+                                 </div>
+                                 <h3 className="font-bold text-lg">@zara_exclusive</h3>
+                                 <div className="flex gap-6 my-4 text-center">
+                                     <div><div className="font-bold">128</div><div className="text-[10px] text-zinc-400">Following</div></div>
+                                     <div><div className="font-bold">120.4k</div><div className="text-[10px] text-zinc-400">Followers</div></div>
+                                     <div><div className="font-bold">1.2M</div><div className="text-[10px] text-zinc-400">Likes</div></div>
+                                 </div>
+                                 <div className="text-center text-xs space-y-1 mb-3">
+                                    <p>Creadora de contenido</p>
+                                    <p>Aquí abajo todos mis links 👇</p>
+                                    <div className="flex items-center justify-center gap-1 text-[#FE2C55] font-semibold mt-1">
+                                        <span className="material-symbols-outlined text-sm">link</span>
+                                        links.zara-exclusive.com
+                                    </div>
+                                 </div>
+                                 <div className="flex gap-2 w-full px-8">
+                                    <button className="flex-1 bg-[#FE2C55] py-2 rounded text-xs font-bold">Follow</button>
+                                    <button className="w-10 bg-zinc-800 rounded flex items-center justify-center"><span className="material-symbols-outlined text-sm">arrow_drop_down</span></button>
+                                 </div>
+                            </div>
+                             {/* Grid */}
+                             <div className="flex-1 grid grid-cols-3 gap-0.5">
+                                {[1,2,3,4,5,6].map(i => (
+                                    <div key={i} className="aspect-[3/4] bg-zinc-800 border border-black/50" />
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                </div>
+                
+                {/* Home Indicator */}
+                <div className="absolute bottom-1 inset-x-0 h-4 flex justify-center items-end pb-1 pointer-events-none z-30">
+                    <div className="w-32 h-1 bg-white/20 rounded-full" />
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function FloatingScrollButton() {
+    const scrollToNextSection = () => {
+        const sections = document.querySelectorAll('section');
+        const scrollPosition = window.scrollY + window.innerHeight / 3; // Tolerance
+        
+        for (const section of sections) {
+            if (section.offsetTop > scrollPosition) {
+                section.scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+        }
+        // If no more sections, scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    return (
+        <button 
+            onClick={scrollToNextSection}
+            className="fixed bottom-6 right-6 z-50 bg-primary hover:bg-primary-dark text-white p-4 rounded-full shadow-2xl shadow-primary/40 transition-all hover:scale-110 active:scale-95 animate-bounce"
+            aria-label="Next Section"
+        >
+            <span className="material-symbols-outlined text-2xl">arrow_downward</span>
+        </button>
+    );
+}
+
+
