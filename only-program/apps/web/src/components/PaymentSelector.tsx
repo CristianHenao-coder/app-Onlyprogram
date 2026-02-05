@@ -107,10 +107,6 @@ export default function PaymentSelector({ onSelect, initialMethod = 'card', amou
                 console.log("Payment Success");
               }}
             />
-
-            <p className="text-center text-xs text-silver/40 mt-4">
-              Pagos procesados de forma segura por Wompi Bancolombia.
-            </p>
           </div>
         )}
 
