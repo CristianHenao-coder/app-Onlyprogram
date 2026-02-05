@@ -258,7 +258,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005/api';
                         )}
                      </div>
                      <div>
-                       <p className="text-sm font-bold text-white">{user.full_name || 'Sin nombre'}</p>
+                       <p className="text-sm font-bold text-white">{user.full_name || user.email?.split('@')[0] || user.email || 'Usuario'}</p>
                        <p className="text-[10px] text-silver/40 font-mono truncate max-w-[150px]">{user.id}</p>
                        <span className="text-[10px] text-primary/60 font-bold flex items-center gap-1 mt-1">
                             <span className="material-symbols-outlined text-[10px]">link</span>

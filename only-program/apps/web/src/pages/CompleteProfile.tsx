@@ -35,11 +35,6 @@ export default function CompleteProfile() {
   const hasSpecial = /[@$!%*#?&]/.test(password);
   const isPasswordValid = hasMinLength && hasLetter && hasNumber && hasSpecial;
 
-  const validatePhone = (ph: string) => {
-    const regex = /^\+[1-9]\d{1,14}$/;
-    return regex.test(ph);
-  };
-
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -56,10 +51,8 @@ export default function CompleteProfile() {
       setError('Selecciona un país.');
       return;
     }
-    if (!validatePhone(phone)) {
-      setError('El teléfono debe incluir el código de país (ej. +573001234567).');
-      return;
-    }
+    // Phone is now optional
+    // if (!validatePhone(phone)) ...
 
     setLoading(true);
 
@@ -134,7 +127,6 @@ export default function CompleteProfile() {
             </label>
             <input
               type="tel"
-              required
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               className="w-full bg-background-dark/50 border border-border rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
