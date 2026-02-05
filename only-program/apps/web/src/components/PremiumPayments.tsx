@@ -10,20 +10,11 @@ export default function PremiumPayments({
   previewData?: any[];
 }) {
   const { t } = useTranslation() as any;
-  const [cmsPricing, setCmsPricing] = useState<any[]>([]);
 
-  useEffect(() => {
-    if (previewData) {
-      setCmsPricing(previewData);
-      return;
-    }
-
-    const fetch = async () => {
-      const data = await cmsService.getConfig('pricing');
-      if (data) setCmsPricing(data);
-    };
-    fetch();
-  }, [previewData]);
+  /* 
+   * Pricing data logic removed as user requested focus on Payment Methods only.
+   * If previewData is needed later for other components, re-enable here.
+   */
 
   const paymentAssets: Record<PaymentAssetType, string[]> = useMemo(() => {
     const modules = import.meta.glob("../assets/payments/*.{png,jpg,jpeg,webp,svg}", {
