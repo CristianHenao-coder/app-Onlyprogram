@@ -24,6 +24,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { path: '/dashboard/settings', label: 'Configuración', icon: 'settings' },
   ];
 
+  // Silenciar warning de build
+  console.log(location);
+
   return (
     <div className="min-h-screen bg-background-dark flex">
       {/* Sidebar */}

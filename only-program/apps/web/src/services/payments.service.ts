@@ -15,7 +15,11 @@ export interface Payment {
 async function handleResponse(response: Response) {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || errorData.message || `Error ${response.status}: ${response.statusText}`);
+    throw new Error(
+      errorData.error ||
+        errorData.message ||
+        `Error ${response.status}: ${response.statusText}`,
+    );
   }
   return response.json();
 }
@@ -25,7 +29,9 @@ async function getAuthHeaders() {
   const token = session.session?.access_token;
 
   if (!token) {
-    throw new Error("No hay sesión activa. Por favor inicia sesión nuevamente.");
+    throw new Error(
+      "No hay sesión activa. Por favor inicia sesión nuevamente.",
+    );
   }
 
   return {
@@ -43,7 +49,7 @@ export const paymentsService = {
 
     const response = await fetch(`${API_URL}/payments`, {
       headers: {
-        Authorization: headers.Authorization
+        Authorization: headers.Authorization,
       },
     });
 
