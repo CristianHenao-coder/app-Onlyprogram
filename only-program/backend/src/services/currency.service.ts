@@ -28,7 +28,7 @@ export const CurrencyService = {
                 throw new Error(`Currency API failed: ${response.statusText}`);
             }
 
-            const data = await response.json();
+            const data = await response.json() as any; // Cast to any to avoid TS unknown error
             const rate = data.rates?.COP;
 
             if (!rate) {
