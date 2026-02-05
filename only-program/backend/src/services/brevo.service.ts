@@ -170,6 +170,25 @@ export async function sendSecurityAlertEmail(
   linkSlug: string,
   reason: string,
 ): Promise<boolean> {
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+    </head>
+    <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+      <div style="background-color: white; padding: 20px; border-radius: 5px;">
+        <h2 style="color: #d9534f;">🚨 Alerta de Seguridad</h2>
+        <p>Se ha detectado actividad sospechosa en tu enlace:</p>
+        <p><strong>Slug:</strong> ${linkSlug}</p>
+        <p><strong>Motivo:</strong> ${reason}</p>
+        <p>Por favor, revisa tus analíticas para más detalles.</p>
+        <a href="${frontendUrl}/dashboard/analytics" style="display: inline-block; background-color: #0275d8; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Ir al Dashboard</a>
+      </div>
+    </body>
+    </html>
+  `;
+
   return await sendEmail({
     to: email,
     subject: "🚨 Alerta de Seguridad - Only Program",
@@ -242,7 +261,7 @@ export async function sendPaymentConfirmationEmail(
   email: string,
   amount: number,
   currency: string,
-  orderId: string
+  orderId: string,
 ): Promise<boolean> {
   const htmlContent = `
     <!DOCTYPE html>
