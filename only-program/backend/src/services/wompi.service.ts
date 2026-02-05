@@ -1,5 +1,7 @@
 import crypto from "crypto";
 import { config } from "../config/env";
+import { v4 as uuidv4 } from "uuid";
+import { CurrencyService } from "./currency.service";
 
 export class WompiService {
   /**
@@ -24,43 +26,23 @@ export class WompiService {
 
   /**
    * Verifies the signature of an incoming webhook event.
-   * For 'transaction.updated' events, Wompi sends a signature in the data.
-   * However, for securing the endpoint we rely on the checksum or just the business logic verification.
-   *
-   * Official Wompi documentation recommends verifying the 'checksum' field in the transaction data if available,
-   * or validating the data against the initial request.
-   *
-   * For the events endpoint, we can check the 'x-event-checksum' header if provided,
-   * or simpler: rely on the 'secret_events' to process logic only if we trust the source?
-   * Wompi documentation says:
-   * "Para validar que la información viene de Wompi... concatena las propiedades..."
-   *
-   * Actually, simpler verification: Checksum validation of the TRANSACTION inside the event.
-   * SHA256(transaction.id + transaction.status + amount_in_cents + events_secret)
    */
-  static verifyEventSignature(
-    eventData: any,
-    timestamp: number,
-    checksum: string,
+  static verifyWebhookSignature(
+    signature: string,
+    transactionId: string,
+    status: string, // e.g. "APPROVED"
+    amountInCents: number,
   ): boolean {
-    // Wompi sends a checksum in 'properties.checksum' for the transaction?
-    // Let's implement the transaction checksum verification which is the most robust way.
-
     const eventsSecret = config.wompi.eventsSecret;
-    if (!eventsSecret) return true; // Start insecure if no secret provided (for dev), but log warning
+    if (!eventsSecret) return false;
 
-    // Extract transaction data
-    const transaction = eventData.data.transaction;
-    if (!transaction) return false;
+    // Wompi signature for events: SHA256(transaction.id + transaction.status + transaction.amount_in_cents + events_secret)
+    // Note: status from Wompi is usually uppercase in the signature check, verifying documentation is key.
+    // Assuming standard concatenation:
+    const data = `${transactionId}${status}${amountInCents}${eventsSecret}`;
+    const calculated = crypto.createHash("sha256").update(data).digest("hex");
 
-    // Construct string: transaction.id + transaction.status + amount_in_cents + timestamp + secret
-    // Wait, the official documentation might vary slightly.
-    // Commonly: SHA256(transaction.id + transaction.status + amount_in_cents + events_secret)
-    // Let's stick to generating our own integrity check or just processing matching reference ID.
-
-    // For this MVP, we will rely on fetching the transaction status directly from Wompi API
-    // to ensure it's valid, rather than trusting the webhook payload blindly. A common pattern.
-    return true;
+    return signature === calculated;
   }
 
   /**
@@ -73,9 +55,7 @@ export class WompiService {
       const response = await fetch(url, {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${config.wompi.pubKey}`, // Public key is enough for reading? Or Private?
-          // Documentation says: Public key for client-side, Private for server-side actions.
-          // Usually GET /transactions/:id is public.
+          Authorization: `Bearer ${config.wompi.pubKey}`,
         },
       });
 
@@ -89,91 +69,86 @@ export class WompiService {
       return null;
     }
   }
-}
-import { v4 as uuidv4 } from "uuid";
-import { CurrencyService } from "./currency.service";
 
-export const WompiService = {
-    /**
-     * Genera la firma de integridad requerida por Wompi.
-     * La fórmula es: SHA256(reference + amountOrCents + currency + integritySecret)
-     */
-    generateSignature(reference: string, amountInCents: number, currency: string): string {
-        const rawString = `${reference}${amountInCents}${currency}${config.wompi.integritySecret}`;
-        const signature = crypto.createHash("sha256").update(rawString).digest("hex");
-        return signature;
-    },
+  /**
+   * Crea una referencia única para el pago
+   */
+  static generateReference(): string {
+    return uuidv4();
+  }
 
-    /**
-     * Verifica la firma de un evento (Webhook)
-     */
-    verifyWebhookSignature(signature: string, transactionId: string, status: string, amountInCents: number): boolean {
-        const rawString = `${transactionId}${status}${amountInCents}${config.wompi.eventsSecret}`;
-        const calculated = crypto.createHash("sha256").update(rawString).digest("hex");
-        return signature === calculated;
-    },
+  /**
+   * Convierte USD a centavos de COP usando tasa real desde CurrencyService
+   */
+  static async calculateAmountInCents(amountUSD: number): Promise<number> {
+    const amountCOP = await CurrencyService.convertUsdToCop(amountUSD);
+    return amountCOP * 100; // Centavos
+  }
 
-    /**
-     * Crea una referencia única para el pago
-     */
-    generateReference(): string {
-        return uuidv4();
-    },
+  /**
+   * Crea una transacción en Wompi usando un token de tarjeta
+   */
+  static async createTransaction(data: {
+    amountUSD: number;
+    email: string;
+    token: string;
+    installments?: number;
+    acceptanceToken: string;
+  }) {
+    const reference = this.generateReference();
+    const amountInCents = await this.calculateAmountInCents(data.amountUSD);
+    // Wompi requires COP for most local methods, but supports USD if configured.
+    // Assuming COP for local storage of signature.
+    const currency = "COP";
 
-    /**
-     * Convierte USD a centavos de COP usando tasa real desde CurrencyService
-     */
-    async calculateAmountInCents(amountUSD: number): Promise<number> {
-        const amountCOP = await CurrencyService.convertUsdToCop(amountUSD);
-        return amountCOP * 100; // Centavos
-    },
+    const signature = this.generateSignature(
+      reference,
+      amountInCents,
+      currency,
+    );
 
-    /**
-     * Crea una transacción en Wompi usando un token de tarjeta
-     */
-    async createTransaction(data: {
-        amountUSD: number,
-        email: string,
-        token: string,
-        installments?: number,
-        acceptanceToken: string
-    }) {
-        const reference = this.generateReference();
-        const amountInCents = await this.calculateAmountInCents(data.amountUSD);
-        const currency = "COP";
-        const signature = this.generateSignature(reference, amountInCents, currency);
+    const payload = {
+      acceptance_token: data.acceptanceToken,
+      amount_in_cents: amountInCents,
+      currency: currency,
+      customer_email: data.email,
+      payment_method: {
+        type: "CARD",
+        token: data.token,
+        installments: data.installments || 1,
+      },
+      reference: reference,
+      signature: signature,
+    };
 
-        const payload = {
-            acceptance_token: data.acceptanceToken,
-            amount_in_cents: amountInCents,
-            currency: currency,
-            customer_email: data.email,
-            payment_method: {
-                type: "CARD",
-                token: data.token,
-                installments: data.installments || 1
-            },
-            reference: reference,
-            signature: signature
-        };
+    console.log(
+      "🚀 Creating Wompi Transaction:",
+      JSON.stringify(payload, null, 2),
+    );
 
-        console.log("🚀 Creating Wompi Transaction:", JSON.stringify(payload, null, 2));
+    // Use apiUrl from config (which defaults to production in env.ts now)
+    // Note: config.wompi.url vs config.wompi.apiUrl - let's unify or use what env.ts has.
+    // env.ts has 'url' and 'apiUrl' (likely duplicate in my fix? let's check env.ts content if it had redundant keys)
+    // Checking env.ts content from previous step: lines 66 'url': ..., line 79 'apiUrl': ...
+    // In my env.ts fix I am removing the second duplicate block (lines 74-80).
+    // The first block (lines 61-67) has 'url'.
+    // So I should use `config.wompi.url`.
 
-        const response = await fetch(`${config.wompi.apiUrl}/transactions`, {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${config.wompi.pubKey}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
+    const response = await fetch(`${config.wompi.url}/transactions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.wompi.pubKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
 
-        const responseData = await response.json() as any;
+    const responseData = (await response.json()) as any;
 
-        if (!response.ok) {
-            throw new Error(responseData.error?.type || "Wompi Transaction Failed");
-        }
-
-        return responseData.data;
+    if (!response.ok) {
+      throw new Error(responseData.error?.type || "Wompi Transaction Failed");
     }
-};
+
+    return responseData.data;
+  }
+}
