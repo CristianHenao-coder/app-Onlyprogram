@@ -58,6 +58,14 @@ export const config = {
     backend: process.env.BACKEND_URL || "http://localhost:4005",
   },
 
+  wompi: {
+    pubKey: process.env.WOMPI_PUB_KEY || "",
+    prvKey: process.env.WOMPI_PRV_KEY || "",
+    eventsSecret: process.env.WOMPI_EVENTS_SECRET || "",
+    integritySecret: process.env.WOMPI_INTEGRITY_SECRET || "",
+    url: process.env.WOMPI_API_URL || "https://production.wompi.co/v1", // Default to production
+  },
+
   turnstile: {
     siteKey: process.env.TURNSTILE_SITE_KEY || "",
     secretKey: process.env.TURNSTILE_SECRET_KEY || "",
