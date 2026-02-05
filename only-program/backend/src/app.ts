@@ -108,4 +108,6 @@ app.listen(config.port, () => {
   process.on('SIGTERM', () => clearInterval(pinger));
   process.on('SIGINT', () => clearInterval(pinger));
 
-  export default app;
+});
+
+export default app;
