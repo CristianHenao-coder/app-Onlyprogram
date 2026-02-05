@@ -19,10 +19,7 @@ import Settings from '@/pages/Dashboard/Settings';
 import CreateLink from '@/pages/Dashboard/CreateLink';
 import LinkConfigurator from '@/pages/Dashboard/LinkConfigurator';
 import Support from '@/pages/Dashboard/Support';
-import Pricing from './pages/Pricing';
 
-import Welcome from './pages/Welcome';
-import CompleteProfile from './pages/CompleteProfile';
 import Payments from '@/pages/Dashboard/Payments';
 import HomeDashboard from '@/pages/Dashboard/Home';
 
