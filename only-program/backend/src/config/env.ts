@@ -72,11 +72,11 @@ export const config = {
   },
 
   wompi: {
-    pubKey: process.env.WOMPI_PUB_KEY || "pub_test_Q5yWAz", // Default Sandbox Test Key
-    prvKey: process.env.WOMPI_PRV_KEY || "prv_test_H6w7iL",
-    integritySecret: process.env.WOMPI_INTEGRITY_SECRET || "test_integrity_secret", // En sandbox dashboard
-    eventsSecret: process.env.WOMPI_EVENTS_SECRET || "test_events_secret",
-    apiUrl: process.env.WOMPI_API_URL || "https://sandbox.wompi.co/v1",
+    pubKey: process.env.WOMPI_PUB_KEY || "", // MUST be set in Render (pub_prod_...)
+    prvKey: process.env.WOMPI_PRV_KEY || "", // MUST be set in Render (prv_prod_...)
+    integritySecret: process.env.WOMPI_INTEGRITY_SECRET || "",
+    eventsSecret: process.env.WOMPI_EVENTS_SECRET || "",
+    apiUrl: process.env.WOMPI_API_URL || "https://production.wompi.co/v1", // Default to Production
   },
 };
 
