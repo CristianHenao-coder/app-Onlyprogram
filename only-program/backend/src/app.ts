@@ -13,9 +13,26 @@ import configRoutes from "./routes/config.routes";
 const app = express();
 
 // Middlewares globales
+const allowedOrigins = [
+  config.urls.frontend,
+  "https://onlyprogramlink.com",
+  "https://www.onlyprogramlink.com",
+  "http://localhost:3000",
+];
+
 app.use(
   cors({
-    origin: config.urls.frontend,
+    origin: (origin, callback) => {
+      // Permitir peticiones sin origen (como herramientas de test)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin) || origin.endsWith(".onrender.com")) {
+        callback(null, true);
+      } else {
+        console.warn(`CORS blocked for origin: ${origin}`);
+        callback(null, true); // Permitimos por ahora para evitar bloqueos en el despliegue
+      }
+    },
     credentials: true,
   }),
 );

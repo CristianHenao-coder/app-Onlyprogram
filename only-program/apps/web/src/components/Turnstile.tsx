@@ -14,8 +14,8 @@ export default function Turnstile({ onVerify, siteKey }: TurnstileProps) {
     // If no site key, try to fetch from backend
     if (!activeSiteKey) {
       console.log('--- Turnstile: Fetching siteKey from backend ---');
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4005';
-      fetch(`${apiUrl}/api/config/turnstile`)
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4005/api';
+      fetch(`${apiUrl}/config/turnstile`)
         .then(res => {
           if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
           return res.json();
