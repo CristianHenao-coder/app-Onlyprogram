@@ -1,14 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "@/contexts/I18nContext";
-import { cmsService } from "@/services/cmsService";
 
 type PaymentAssetType = "crypto" | "card" | "paypal";
 
-export default function PremiumPayments({
-  previewData
-}: {
-  previewData?: any[];
-}) {
+export default function PremiumPayments() {
   const { t } = useTranslation() as any;
 
   /* 
