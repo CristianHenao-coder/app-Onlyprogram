@@ -138,7 +138,7 @@ export default function Login() {
 
           <button
             type="submit"
-            disabled={loading || !captchaToken}
+            disabled={loading}
             data-magnetic="0.12"
             className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -167,7 +167,7 @@ export default function Login() {
           <button
             type="button"
             onClick={handleGoogleLogin}
-            disabled={loading || !captchaToken}
+            disabled={loading}
             className="w-full bg-background-dark/50 border border-border hover:border-white/15 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
