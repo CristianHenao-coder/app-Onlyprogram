@@ -550,6 +550,79 @@ export const translations = {
         suspended: "Suspendido",
       },
     },
+
+    featuresPage: {
+      title: "Explora Todo el Potencial",
+      subtitle:
+        "Cada herramienta diseñada para maximizar tu seguridad y tus ingresos.",
+      links: {
+        title: "Gestión de Enlaces",
+        desc: "Crea, edita y organiza tus enlaces en segundos. Personaliza la apariencia y el destino de cada botón.",
+      },
+      analytics: {
+        title: "Analíticas Avanzadas",
+        desc: "Datos en tiempo real sobre tus visitantes. Geolocalización, dispositivo, retención y más.",
+      },
+      telegram: {
+        title: "Telegram Rotativo",
+        desc: "Distribuye el tráfico inteligentemente entre múltiples canales o bots para evitar bloqueos.",
+      },
+      cta: "Empieza Ahora",
+    },
+
+    managerReviews: {
+      title: "Confianza de Agencias y Managers",
+      subtitle:
+        "No solo las modelos aman Only Program. Los equipos que gestionan el éxito detrás de cámaras también nos eligen.",
+      r1: {
+        name: "Carlos R.",
+        role: "Director de Agencia",
+        comment:
+          "La función de rotación ha salvado nuestras cuentas de publicidad. Una herramienta indispensable para escalar.",
+      },
+      r2: {
+        name: "Ana M.",
+        role: "Manager VIP",
+        comment:
+          "Gestionar 50 modelos era un caos hasta que empezamos a usar Only Program. Las analíticas son oro puro.",
+      },
+      r3: {
+        name: "Elite Agency",
+        role: "Partner Verificado",
+        comment:
+          "Incrementamos nuestro ROI un 40% gracias a la optimización de tráfico. El soporte es excelente y muy rápido.",
+      },
+      r4: {
+        name: "Luis G.",
+        role: "Traffic Manager",
+        comment:
+          "La simplicidad del panel hace que mi equipo sea mucho más rápido. Adiós a las hojas de cálculo complicadas.",
+      },
+      r5: {
+        name: "Sofía L.",
+        role: "Content Manager",
+        comment:
+          "Poder simular conversaciones en Telegram ha aumentado nuestra conversión drásticamente. ¡Brutal!",
+      },
+      r6: {
+        name: "Digital Growth",
+        role: "Agencia de Marketing",
+        comment:
+          "La mejor inversión para gestionar múltiples perfiles. La estabilidad del sistema es impresionante.",
+      },
+      r7: {
+        name: "Jorge B.",
+        role: "Team Loader",
+        comment:
+          "El filtrado de bots nos ahorra miles de dólares en tráfico basura. Simplemente funciona.",
+      },
+      r8: {
+        name: "Laura P.",
+        role: "Account Manager",
+        comment:
+          "Mis modelos están encantadas con el diseño de sus perfiles. Y yo con los datos que recibo.",
+      },
+    },
   },
 
   en: {
@@ -1039,6 +1112,78 @@ export const translations = {
           details: "Details",
           empty: "No audit logs found.",
         },
+      },
+    },
+
+    featuresPage: {
+      title: "Explore the Full Potential",
+      subtitle: "Every tool designed to maximize your security and income.",
+      links: {
+        title: "Link Management",
+        desc: "Create, edit, and organize your links in seconds. Customize the appearance and destination of each button.",
+      },
+      analytics: {
+        title: "Advanced Analytics",
+        desc: "Real-time data on your visitors. Geolocation, device, retention, and more.",
+      },
+      telegram: {
+        title: "Rotary Telegram",
+        desc: "Distribute traffic intelligently across multiple channels or bots to avoid blocks.",
+      },
+      cta: "Start Now",
+    },
+
+    managerReviews: {
+      title: "Trusted by Agencies and Managers",
+      subtitle:
+        "Not only models love Only Program. The teams managing success behind the scenes choose us too.",
+      r1: {
+        name: "Carlos R.",
+        role: "Agency Director",
+        comment:
+          "The rotation feature saved our ad accounts. An indispensable tool for scaling.",
+      },
+      r2: {
+        name: "Ana M.",
+        role: "VIP Manager",
+        comment:
+          "Managing 50 models was chaos until we started using Only Program. The analytics are pure gold.",
+      },
+      r3: {
+        name: "Elite Agency",
+        role: "Verified Partner",
+        comment:
+          "We increased our ROI by 40% thanks to traffic optimization. Support is excellent and very fast.",
+      },
+      r4: {
+        name: "Luis G.",
+        role: "Traffic Manager",
+        comment:
+          "The simplicity of the panel makes my team much faster. Goodbye to complicated spreadsheets.",
+      },
+      r5: {
+        name: "Sofía L.",
+        role: "Content Manager",
+        comment:
+          "Being able to simulate Telegram conversations drastically increased our conversion. Brutal!",
+      },
+      r6: {
+        name: "Digital Growth",
+        role: "Marketing Agency",
+        comment:
+          "The best investment for managing multiple profiles. System stability is impressive.",
+      },
+      r7: {
+        name: "Jorge B.",
+        role: "Team Leader",
+        comment:
+          "Bot filtering saves us thousands of dollars in junk traffic. It simply works.",
+      },
+      r8: {
+        name: "Laura P.",
+        role: "Account Manager",
+        comment:
+          "My models are delighted with their profile designs. And I am with the data I receive.",
       },
     },
   },
@@ -1535,8 +1680,80 @@ export const translations = {
           action: "Action",
           resource: "Ressource",
           details: "Détails",
-          empty: "Aucun log d'audit trouvé.",
         },
+      },
+    },
+
+    featuresPage: {
+      title: "Explorez Tout le Potentiel",
+      subtitle:
+        "Chaque outil conçu pour maximiser votre sécurité et vos revenus.",
+      links: {
+        title: "Gestion des Liens",
+        desc: "Créez, modifiez et organisez vos liens en quelques secondes. Personnalisez l'apparence et la destination de chaque bouton.",
+      },
+      analytics: {
+        title: "Analytiques Avancées",
+        desc: "Données en temps réel sur vos visiteurs. Géolocalisation, appareil, rétention et plus.",
+      },
+      telegram: {
+        title: "Telegram Rotatif",
+        desc: "Distribuez le trafic intelligemment entre plusieurs canaux ou bots pour éviter les blocages.",
+      },
+      cta: "Commencer Maintenant",
+    },
+
+    managerReviews: {
+      title: "Confiance des Agences et Managers",
+      subtitle:
+        "Non seulement les modèles aiment Only Program. Les équipes qui gèrent le succès en coulisses nous choisissent aussi.",
+      r1: {
+        name: "Carlos R.",
+        role: "Directeur d'Agence",
+        comment:
+          "La fonction de rotation a sauvé nos comptes publicitaires. Un outil indispensable pour passer à l'échelle.",
+      },
+      r2: {
+        name: "Ana M.",
+        role: "Manager VIP",
+        comment:
+          "Gérer 50 modèles était un chaos jusqu'à ce que nous commencions à utiliser Only Program. Les analytiques sont de l'or pur.",
+      },
+      r3: {
+        name: "Elite Agency",
+        role: "Partenaire Vérifié",
+        comment:
+          "Nous avons augmenté notre ROI de 40% grâce à l'optimisation du trafic. Le support est excellent et très rapide.",
+      },
+      r4: {
+        name: "Luis G.",
+        role: "Traffic Manager",
+        comment:
+          "La simplicité du panneau rend mon équipe beaucoup plus rapide. Adieu les feuilles de calcul compliquées.",
+      },
+      r5: {
+        name: "Sofía L.",
+        role: "Content Manager",
+        comment:
+          "Pouvoir simuler des conversations Telegram a considérablement augmenté notre conversion. Brutal !",
+      },
+      r6: {
+        name: "Digital Growth",
+        role: "Agence Marketing",
+        comment:
+          "Le meilleur investissement pour gérer plusieurs profils. La stabilité du système est impressionnante.",
+      },
+      r7: {
+        name: "Jorge B.",
+        role: "Team Leader",
+        comment:
+          "Le filtrage des bots nous fait économiser des milliers de dollars en trafic indésirable. Ça marche simplement.",
+      },
+      r8: {
+        name: "Laura P.",
+        role: "Account Manager",
+        comment:
+          "Mes modèles sont ravies du design de leurs profils. Et moi des données que je reçois.",
       },
     },
   },

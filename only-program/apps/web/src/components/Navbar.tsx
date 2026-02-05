@@ -17,7 +17,7 @@ export default function Navbar({ previewData }: { previewData?: any }) {
   const items: NavItem[] = useMemo(
     () => [
       { label: previewData?.general?.menuHome || (t ? t("nav.home") : "Inicio"), href: "/#home" },
-      { label: previewData?.general?.menuFeatures || (t ? t("nav.features") : "Funciones"), href: "/#features" },
+      { label: previewData?.general?.menuFeatures || (t ? t("nav.features") : "Características"), href: "/features" },
       { label: previewData?.general?.menuPricing || (t ? t("nav.pricing") : "Precios"), href: "/pricing" },
       { label: previewData?.general?.menuTestimonials || (t ? t("nav.testimonials") : "Testimonios"), href: "/#testimonials" },
     ],

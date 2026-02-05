@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import PremiumTestimonials from '@/components/PremiumTestimonials';
 import { useTranslation } from '@/contexts/I18nContext';
 import PremiumPayments from "../components/PremiumPayments";
+import ManagerReviews from "@/components/ManagerReviews";
 import { cmsService } from '@/services/cmsService';
 
 
@@ -600,6 +601,9 @@ export default function Home({
         <section className="testimonials-wrap">
           <PremiumTestimonials />
         </section>
+
+        {/* ✅ Manager Reviews */}
+        <ManagerReviews />
 
         {/* ✅ Payments: SOLO PremiumPayments (sin lluvia / sin sección duplicada / sin payments.headline roto) */}
         <section className="relative py-16 border-y border-border overflow-hidden">
