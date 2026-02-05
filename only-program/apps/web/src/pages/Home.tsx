@@ -63,6 +63,7 @@ export default function Home({
         key: 'links' as const,
         title: t('home.featureViews.links.title'),
         subtitle: t('home.featureViews.links.subtitle'),
+        label: 'Links',
         icon: 'link',
         accent: 'rgba(29,161,242,.18)',
       },
@@ -70,6 +71,7 @@ export default function Home({
         key: 'analytics' as const,
         title: t('home.featureViews.analytics.title'),
         subtitle: t('home.featureViews.analytics.subtitle'),
+        label: 'Analíticas',
         icon: 'monitoring',
         accent: 'rgba(34,211,238,.14)',
       },
@@ -77,6 +79,7 @@ export default function Home({
         key: 'telegram' as const,
         title: t('home.featureViews.telegram.title'),
         subtitle: t('home.featureViews.telegram.subtitle'),
+        label: 'Telegram',
         icon: 'send',
         accent: 'rgba(111,214,255,.14)',
       },
@@ -424,31 +427,34 @@ export default function Home({
                 </p>
 
                 <div className=" flex flex-col items-center mb-8">
-                  <div data-reveal data-delay="3" className="flex flex-wrap justify-center gap-3">
-                    {featureViews.map((v) => {
-                      const isActive = v.key === activeFeatureView;
-                      return (
-                        <button
-                          key={v.key}
-                          type="button"
-                          onMouseEnter={() => setActiveFeatureView(v.key)}
-                          onClick={() => setActiveFeatureView(v.key)}
-                          className={[
-                            "flex items-center gap-2 px-5 py-3 rounded-full border transition-all fake-btn",
-                            isActive
-                              ? "border-primary/60 bg-primary/10 tab-glow"
-                              : "border-border bg-surface/40 hover:border-white/15",
-                          ].join(" ")}
-                        >
-                          <span className={["material-symbols-outlined", isActive ? "text-primary" : "text-silver/50"].join(" ")}>
-                            {v.icon}
-                          </span>
-                          <span className={isActive ? "text-white font-bold" : "text-silver/70 font-medium"}>
-                            {v.title.split(' ')[0]} {/* Short title for tabs */}
-                          </span>
-                        </button>
-                      );
-                    })}
+                  {/* Horizontal scroll container for mobile, centered wrapped for desktop */}
+                  <div data-reveal data-delay="3" className="w-full overflow-x-auto pb-4 -mb-4 sm:overflow-visible sm:pb-0 sm:mb-0 flex justify-start sm:justify-center px-4 sm:px-0">
+                    <div className="flex flex-nowrap sm:flex-wrap gap-3 sm:gap-4 shrink-0 mx-auto sm:mx-0">
+                      {featureViews.map((v) => {
+                        const isActive = v.key === activeFeatureView;
+                        return (
+                          <button
+                            key={v.key}
+                            type="button"
+                            onMouseEnter={() => setActiveFeatureView(v.key)}
+                            onClick={() => setActiveFeatureView(v.key)}
+                            className={[
+                              "flex items-center gap-2 px-4 py-2.5 sm:px-5 sm:py-3 rounded-full border transition-all fake-btn shrink-0 whitespace-nowrap",
+                              isActive
+                                ? "border-primary/60 bg-primary/10 tab-glow"
+                                : "border-border bg-surface/40 hover:border-white/15",
+                            ].join(" ")}
+                          >
+                            <span className={["material-symbols-outlined", isActive ? "text-primary" : "text-silver/50"].join(" ")}>
+                              {v.icon}
+                            </span>
+                            <span className={isActive ? "text-white font-bold" : "text-silver/70 font-medium"}>
+                              {v.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                   <p className="mt-4 text-sm text-silver/50 hidden md:block">
                     {featureViews.find(v => v.key === activeFeatureView)?.title} - {featureViews.find(v => v.key === activeFeatureView)?.subtitle}
@@ -458,16 +464,17 @@ export default function Home({
 
               </div>
               <div className="col-span-12">
-                <div
-                  data-reveal
-                  data-delay="2"
-                  className="relative rounded-3xl border border-border bg-surface/40 overflow-hidden dash-shell"
-                >
+                <div className="w-full overflow-x-auto pb-6 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible sm:pb-0">
                   <div
-                    className="absolute -inset-10 blur-3xl transition-all duration-700"
-                    style={{ background: activeFeatureAccent }}
-                  />
-                  <div className="absolute inset-0 dash-softgrid opacity-[0.65]" />
+                    data-reveal
+                    data-delay="2"
+                    className="relative rounded-3xl border border-border bg-surface/40 overflow-hidden dash-shell min-w-[350px] xs:min-w-full"
+                  >
+                    <div
+                      className="absolute -inset-10 blur-3xl transition-all duration-700"
+                      style={{ background: activeFeatureAccent }}
+                    />
+                    <div className="absolute inset-0 dash-softgrid opacity-[0.65]" />
 
                   <div className="relative p-3 sm:p-5">
                     <div className="flex items-center justify-between gap-3 border border-white/10 bg-background-dark/40 rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3">
@@ -489,21 +496,6 @@ export default function Home({
                           className="inline-flex items-center gap-1.5 text-[11px] px-3 py-2 rounded-xl border border-primary/30 bg-primary/10 text-primary hover:border-primary/50 transition-all fake-btn"
                         >
                           <span className="material-symbols-outlined text-[16px]">lock</span>
-                          {t('home.preview.linksDemo.previewTitle')} // Using "previewTitle" or "verified" ? Using "Protected" actually...
-                          {/* Wait, "Protegido" is not in my keys, I used "verified". Let me check keys again. "verified" is "Perfil verificado". I will use "Protegido" hardcode or add key? 
-                              Actually I see "Protegido" in the UI preview button. 
-                              Let me add a quick inline translation for "Protegido" or reuse exists. 
-                              I'll use "verified" for now or just t('common.save') if appropriate? No.
-                              I will keep 'Protegido' as is or map it. 
-                              Let's use "verified" from my keys which is "Perfil verificado" or just 'Protegido' string if I missed it.
-                              I missed "Protegido" key in my previous step. I'll add a dirty fix or just map to 'Protected' if I have it. I don't.
-                              I'll replace it with "Secured" or similar if I have it. 
-                              Actually I can just use "Protegido" and map it to t('home.preview.linksDemo.verified') which is close enough or use t('home.preview.linksDemo.previewTitle').
-                              Actually, looking at the code: "Protegido" button. 
-                              I will use t('home.preview.linksDemo.verified') which is 'Perfil verificado' -> maybe 'Verified'?
-                              Let's just use "Protegido" as literal for now if I missed it, OR use t('hero.badge') parts? 
-                              Let's use t('home.preview.linksDemo.verified') for now.
-                          */}
                           {t('home.preview.linksDemo.verified')}
                         </button>
                       </div>
@@ -790,6 +782,7 @@ export default function Home({
                   </div>
                 </div>
               </div>
+            </div>
             </div>
           </div>
         </section>
