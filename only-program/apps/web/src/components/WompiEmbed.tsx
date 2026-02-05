@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { paymentsService } from "@/services/payments.service";
 
 interface WompiSignatureResponse {
     reference: string;
@@ -15,37 +16,12 @@ export default function WompiEmbed({ amount, email }: { amount: number, email?: 
     useEffect(() => {
         // 1. Obtener firma del backend
         setLoading(true);
-
-        // Obtener token de la sesión (ajusta esto según cómo manejes la auth en tu app)
-        const sessionStr = localStorage.getItem('sb-agrtbd-auth-token') || localStorage.getItem('supabase.auth.token'); // Fallback o ajuste específico
-        let token = "";
-        try {
-            if (sessionStr) {
-                const session = JSON.parse(sessionStr);
-                token = session.access_token || session.currentSession?.access_token;
-            }
-        } catch (e) { console.error("Error parsing session", e); }
-
-        fetch("/api/payments/wompi/get-signature", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                ...(token ? { "Authorization": `Bearer ${token}` } : {})
-            },
-            body: JSON.stringify({
-                amount,
-                currency: "COP"
-            })
-        })
-            .then(async (res) => {
-                if (!res.ok) throw new Error("Network response was not ok");
-                return res.json();
-            })
-            .then((responseData: WompiSignatureResponse) => {
+        paymentsService.getWompiSignature(amount, "COP")
+            .then((responseData) => {
                 setData(responseData);
                 setLoading(false);
             })
-            .catch((err: any) => {
+            .catch((err) => {
                 console.error("Error getting Wompi signature:", err);
                 setLoading(false);
             });

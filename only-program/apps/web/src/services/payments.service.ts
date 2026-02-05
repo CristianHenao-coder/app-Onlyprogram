@@ -80,6 +80,17 @@ export const paymentsService = {
 
 
 
+  async getWompiSignature(amount: number, currency: string = "COP") {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_URL}/payments/wompi/get-signature`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ amount, currency }),
+    });
+
+    return handleResponse(response);
+  },
+
   async submitManualCryptoPayment(data: {
     amount: number;
     currency: string;
