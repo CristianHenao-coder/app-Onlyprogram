@@ -8,6 +8,7 @@ const requiredEnvVars = [
   "SUPABASE_URL",
   "SUPABASE_SERVICE_ROLE_KEY",
   "SUPABASE_ANON_KEY",
+  "JWT_SECRET", // Ahora es obligatorio
 ];
 
 for (const envVar of requiredEnvVars) {
@@ -32,7 +33,7 @@ export const config = {
   },
 
   jwt: {
-    secret: process.env.JWT_SECRET || "default-secret-change-in-production",
+    secret: process.env.JWT_SECRET!, // Forzado por la validación anterior
   },
 
   brevo: {
@@ -59,6 +60,6 @@ export const config = {
   },
 };
 
-console.log("✅ Variables de entorno cargadas correctamente");
-console.log(`📍 Supabase URL: ${config.supabase.url}`);
-console.log(`🌍 Frontend URL: ${config.urls.frontend}`);
+console.log("Variables de entorno cargadas correctamente");
+console.log("Variables de entorno cargadas correctamente");
+// Logs de URL eliminados por seguridad (Info Disclosure)

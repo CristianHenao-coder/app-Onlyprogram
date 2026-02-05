@@ -85,12 +85,26 @@ export class CryptoService {
     payload: any,
     signature: string
   ): boolean {
-    // Implementar verificación real según docs de RedotPay
-    // Por ahora retornamos true para no bloquear desarrollo si no hay docs a mano
-    return true;
+    if (!config.redotpay.apiKey) {
+      console.error("❌ RedotPay API Key missing for signature verification");
+      return false;
+    }
 
-    // Ejemplo real:
-    // const computedSignature = this.generateSignature(payload);
-    // return computedSignature === signature;
+    // Generar la firma esperada usando HMAC-SHA256 y la API Key
+    // Nota: Asegurarse que RedotPay usa la API Key como secret. 
+    // Si usa un secret diferente, se debe añadir a las variables de entorno.
+    const computedSignature = this.generateSignature(payload);
+
+    // Comparación segura contra ataques de tiempo
+    // Si la firma viene en hex, asegurarnos que computedSignature también lo sea (lo es por generateSignature)
+    try {
+      return crypto.timingSafeEqual(
+        Buffer.from(signature),
+        Buffer.from(computedSignature)
+      );
+    } catch (e) {
+      console.error("❌ Error verificando firma (posible diferencia de longitud):", e);
+      return false;
+    }
   }
 }

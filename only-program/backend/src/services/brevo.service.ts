@@ -37,7 +37,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     }
 
     await apiInstance.sendTransacEmail(sendSmtpEmail);
-    console.log(`✅ Email enviado a ${options.to}`);
+    console.log(`✅ Email enviado exitosamente (Destinatario oculto por privacidad)`);
     return true;
   } catch (error) {
     console.error("❌ Error al enviar email:", error);
@@ -170,6 +170,18 @@ export async function sendSecurityAlertEmail(
   linkSlug: string,
   reason: string,
 ): Promise<boolean> {
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <body>
+      <h2>🚨 Alerta de Seguridad</h2>
+      <p>Actividad sospechosa detectada en tu enlace <strong>${linkSlug}</strong>.</p>
+      <p>Razón: ${reason}</p>
+      <p>Por favor revisa tu panel de control inmediatamente.</p>
+    </body>
+    </html>
+  `;
+
   return await sendEmail({
     to: email,
     subject: "🚨 Alerta de Seguridad - Only Program",

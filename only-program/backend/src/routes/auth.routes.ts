@@ -32,7 +32,7 @@ router.post("/register", async (req: Request, res: Response) => {
     const { data, error } = await supabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Auto-confirmar email en desarrollo
+      email_confirm: false, // Requiere confirmación de email
     });
 
     if (error || !data.user) {

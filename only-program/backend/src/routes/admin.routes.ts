@@ -1,4 +1,5 @@
 import { Router, Response } from "express";
+import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 import {
   authenticateToken,
@@ -37,8 +38,8 @@ router.post(
           .json({ error: "Se requiere el ID del usuario destino" });
       }
 
-      // Generar código de 6 dígitos
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      // Generar código de 6 dígitos seguro
+      const code = crypto.randomInt(100000, 999999).toString();
 
       // Guardar en la DB
       const { error } = await supabase.from("admin_verification_codes").insert({
