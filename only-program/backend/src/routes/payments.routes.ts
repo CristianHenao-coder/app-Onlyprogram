@@ -165,47 +165,69 @@ router.post("/paypal/capture-order", async (req: AuthRequest, res) => {
 
 // --- CRYPTO (RedotPay) ---
 
-router.post("/crypto/create-order", async (req: AuthRequest, res) => {
+// --- STRIPE ---
+
+router.post("/stripe/create-intent", async (req: AuthRequest, res) => {
   try {
-    const { amount, currency = "USD", subscriptionId } = req.body;
+    const { amount, currency = "usd", metadata } = req.body;
 
-    if (!amount) {
-      return res.status(400).json({ error: "Amount is required" });
-    }
+    if (!amount) return res.status(400).json({ error: "Amount is required" });
 
-    const paymentId = uuidv4();
+    // Incluir userId en metadata para rastreo
+    const finalMetadata = {
+      ...metadata,
+      userId: req.user?.id,
+      email: req.user?.email
+    };
 
-    const order = await CryptoService.createOrder({
-      amount,
-      currency,
-      orderId: paymentId,
-      email: req.user?.email,
-    });
+    const intent = await import("../services/stripe.service").then(m =>
+      m.StripeService.createPaymentIntent(amount, currency, finalMetadata)
+    );
 
-    // Guardar intento de pago
-    if (req.user) {
-      await supabase.from("payments").insert({
-        id: paymentId,
-        user_id: req.user.id,
-        subscription_id: subscriptionId || null,
-        amount,
-        currency,
-        provider: "redotpay",
-        status: "pending",
-        tx_reference: null,
-        created_at: new Date().toISOString(),
-      });
-    }
-
-    res.json({
-      ...order,
-      internalOrderId: paymentId,
-    });
+    res.json(intent);
   } catch (error: any) {
-    console.error("Error creating Crypto order:", error);
+    console.error("Error creating Stripe Intent:", error);
     res.status(500).json({ error: error.message });
   }
 });
+
+// --- MANUAL CRYPTO ---
+
+router.post("/crypto/manual", async (req: AuthRequest, res) => {
+  try {
+    const { amount, currency, transactionHash, walletUsed, subscriptionId } = req.body;
+
+    if (!amount || !transactionHash) {
+      return res.status(400).json({ error: "Amount and Transaction Hash are required" });
+    }
+
+    const { ManualCryptoService } = await import("../services/manual-crypto.service");
+
+    const payment = await ManualCryptoService.createManualPayment({
+      userId: req.user!.id,
+      amount,
+      currency: currency || "USDT",
+      transactionHash,
+      walletUsed,
+      subscriptionId
+    });
+
+    // Notificar al admin sobre el nuevo pago manual (Opcional, implementar luego)
+    // await notifyAdmin("New Crypto Payment", payment);
+
+    res.json({
+      success: true,
+      message: "Pago registrado para verificación manual",
+      payment
+    });
+  } catch (error: any) {
+    console.error("Error registering manual crypto payment:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Deprecated RedotPay kept for reference or removal
+// router.post("/crypto/create-order", ... );
 
 /**
  * GET /api/payments

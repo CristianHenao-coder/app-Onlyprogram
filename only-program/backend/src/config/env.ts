@@ -62,6 +62,11 @@ export const config = {
     siteKey: process.env.TURNSTILE_SITE_KEY || "",
     secretKey: process.env.TURNSTILE_SECRET_KEY || "",
   },
+
+  stripe: {
+    secretKey: process.env.STRIPE_SECRET_KEY || "",
+    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
+  },
 };
 
 console.log("✅ Variables de entorno cargadas correctamente");

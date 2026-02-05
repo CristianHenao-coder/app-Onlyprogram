@@ -72,14 +72,32 @@ export const paymentsService = {
     return handleResponse(response);
   },
 
-  async createCryptoOrder(amount: number, subscriptionId?: string) {
+  async createStripeIntent(amount: number, currency: string = "usd") {
     const headers = await getAuthHeaders();
-    const response = await fetch(`${API_URL}/payments/crypto/create-order`, {
+    const response = await fetch(`${API_URL}/payments/stripe/create-intent`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ amount, subscriptionId }),
+      body: JSON.stringify({ amount, currency }),
+    });
+
+    return handleResponse(response);
+  },
+
+  async submitManualCryptoPayment(data: {
+    amount: number;
+    currency: string;
+    transactionHash: string;
+    walletUsed?: string;
+    subscriptionId?: string;
+  }) {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_URL}/payments/crypto/manual`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(data),
     });
 
     return handleResponse(response);
   },
 };
+

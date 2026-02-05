@@ -57,6 +57,12 @@ export class PayPalService {
           },
         },
       ],
+      application_context: {
+        return_url: `${config.urls.frontend}/dashboard/payments?status=success`,
+        cancel_url: `${config.urls.frontend}/dashboard/payments?status=cancel`,
+        user_action: "PAY_NOW",
+        brand_name: "Only Program"
+      }
     };
 
     const response = await fetch(`${config.paypal.apiUrl}/v2/checkout/orders`, {
