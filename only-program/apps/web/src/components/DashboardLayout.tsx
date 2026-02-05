@@ -6,7 +6,7 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { pathname } = useLocation();
+  // const { pathname } = useLocation(); // Unused
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
 

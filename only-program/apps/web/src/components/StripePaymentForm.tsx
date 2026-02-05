@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 // NOTE: Replace with your actual publishable key or use env var
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || "pk_test_sample");
 
-function CheckoutForm({ amount, onSuccess }: { amount: number; onSuccess: (details: any) => void }) {
+function CheckoutForm({ onSuccess }: { amount: number; onSuccess: (details: any) => void }) {
     const stripe = useStripe();
     const elements = useElements();
     const [errorMessage, setErrorMessage] = useState<string | null>(null);

@@ -6,7 +6,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-    apiVersion: "2023-10-16", // Usar una versión reciente
+    apiVersion: "2023-10-16" as any, // Cast to any to avoid TS version mismatch errors during build
 });
 
 export const StripeService = {
