@@ -5,12 +5,15 @@ import { useModal } from '@/contexts/ModalContext';
 import { logActions } from '@/services/auditService';
 import { retryWithBackoff } from '@/utils/retryHelper';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
  const UserManager = () => {
    const { t } = useTranslation();
    const { showAlert } = useModal();
    const [users, setUsers] = useState<any[]>([]);
    const [loading, setLoading] = useState(true);
    const [search, setSearch] = useState('');
+   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
    
    // Promotion Security State
    const [promotionTarget, setPromotionTarget] = useState<any | null>(null);
@@ -24,7 +27,7 @@ import { retryWithBackoff } from '@/utils/retryHelper';
      try {
        const { data, error } = await supabase
          .from('profiles')
-         .select('*')
+         .select('*, smart_links(*)')
          .order('created_at', { ascending: false });
 
        if (error) throw error;
@@ -69,12 +72,46 @@ import { retryWithBackoff } from '@/utils/retryHelper';
      }
    };
 
+   const handleDeleteUser = async (user: any) => {
+        if (!confirm(`¿Estás seguro de que quieres eliminar al usuario ${user.full_name || user.email}? Esta acción no se puede deshacer.`)) return;
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            const response = await fetch(`${API_URL}/api/admin/users/${user.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${session?.access_token}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Error al eliminar usuario');
+            }
+
+            showAlert({
+                title: "Usuario Eliminado",
+                message: "El usuario ha sido eliminado correctamente del sistema.",
+                type: "success"
+            });
+            
+            fetchUsers();
+        } catch (err: any) {
+            console.error(err);
+            showAlert({
+                title: "Error",
+                message: err.message || "No se pudo eliminar el usuario.",
+                type: "error"
+            });
+        }
+    };
+
    const handleRequestPromotion = async () => {
      if (!promotionTarget) return;
      setIsSendingCode(true);
      try {
        const { data: { session } } = await supabase.auth.getSession();
-       const response = await fetch('http://localhost:3001/api/admin/request-promotion-code', {
+       const response = await fetch(`${API_URL}/api/admin/request-promotion-code`, {
          method: 'POST',
          headers: {
            'Content-Type': 'application/json',
@@ -103,7 +140,7 @@ import { retryWithBackoff } from '@/utils/retryHelper';
      setIsVerifying(true);
      try {
        const { data: { session } } = await supabase.auth.getSession();
-       const response = await fetch('http://localhost:3001/api/admin/verify-promotion-code', {
+       const response = await fetch(`${API_URL}/api/admin/verify-promotion-code`, {
          method: 'POST',
          headers: {
            'Content-Type': 'application/json',
@@ -140,6 +177,16 @@ import { retryWithBackoff } from '@/utils/retryHelper';
      }
    };
 
+    const toggleExpand = (userId: string) => {
+        const newExpanded = new Set(expandedUsers);
+        if (newExpanded.has(userId)) {
+            newExpanded.delete(userId);
+        } else {
+            newExpanded.add(userId);
+        }
+        setExpandedUsers(newExpanded);
+    };
+
    const filteredUsers = users.filter(u => 
      u.full_name?.toLowerCase().includes(search.toLowerCase()) || 
      u.id.toLowerCase().includes(search.toLowerCase())
@@ -168,9 +215,10 @@ import { retryWithBackoff } from '@/utils/retryHelper';
        </div>
 
        <div className="bg-surface/30 border border-border/50 rounded-3xl overflow-hidden shadow-2xl">
-         <table className="w-full text-left">
+         <table className="w-full text-left border-collapse">
            <thead className="bg-white/5 border-b border-border/50">
              <tr>
+               <th className="px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest w-12"></th>
                <th className="px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest">{t('admin.user.profile')}</th>
                <th className="px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest">{t('admin.user.role')}</th>
                <th className="px-6 py-4 text-[10px] font-black text-white uppercase tracking-widest">{t('admin.user.status')}</th>
@@ -179,7 +227,19 @@ import { retryWithBackoff } from '@/utils/retryHelper';
            </thead>
            <tbody className="divide-y divide-border/20">
              {filteredUsers.map((user) => (
-               <tr key={user.id} className="group hover:bg-white/[0.02] transition-colors">
+               <>
+                <tr key={user.id} className="group hover:bg-white/[0.02] transition-colors relative z-10 bg-surface/30">
+                 <td className="px-2 py-5 text-center">
+                    <button 
+                        onClick={() => toggleExpand(user.id)}
+                        className={`
+                            h-8 w-8 rounded-full flex items-center justify-center transition-all duration-300
+                            ${expandedUsers.has(user.id) ? 'bg-primary text-white rotate-90' : 'text-silver/40 hover:text-white hover:bg-white/10'}
+                        `}
+                    >
+                        <span className="material-symbols-outlined text-lg">chevron_right</span>
+                    </button>
+                 </td>
                  <td className="px-6 py-5">
                    <div className="flex items-center gap-3">
                      <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
@@ -192,6 +252,10 @@ import { retryWithBackoff } from '@/utils/retryHelper';
                      <div>
                        <p className="text-sm font-bold text-white">{user.full_name || 'Sin nombre'}</p>
                        <p className="text-[10px] text-silver/40 font-mono truncate max-w-[150px]">{user.id}</p>
+                       <span className="text-[10px] text-primary/60 font-bold flex items-center gap-1 mt-1">
+                            <span className="material-symbols-outlined text-[10px]">link</span>
+                            {user.smart_links?.length || 0} Links
+                       </span>
                      </div>
                    </div>
                  </td>
@@ -234,9 +298,89 @@ import { retryWithBackoff } from '@/utils/retryHelper';
                        >
                           {user.is_suspended ? t('admin.user.unsuspend') : t('admin.user.suspend')}
                        </button>
+
+                       <button 
+                           onClick={() => handleDeleteUser(user)}
+                           className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all ml-2"
+                        >
+                           Eliminar
+                        </button>
                     </div>
                  </td>
                </tr>
+               
+               {/* Expanded Links View - Tree/Fork Style */}
+               {expandedUsers.has(user.id) && (
+                   <tr className="bg-black/20">
+                       <td colSpan={5} className="p-0 relative">
+                           {/* Rama Principal Vertical */}
+                           <div className="absolute left-6 top-0 bottom-0 w-px bg-gradient-to-b from-primary/50 to-transparent h-full z-0 ml-px"></div>
+                           
+                           <div className="py-4 pl-16 pr-6 relative">
+                               {user.smart_links && user.smart_links.length > 0 ? (
+                                   <div className="flex flex-col gap-3">
+                                       <h4 className="text-[10px] font-black uppercase tracking-widest text-silver/40 mb-2 pl-2">Links Asociados al Usuario</h4>
+                                       {user.smart_links.map((link: any, index: number) => (
+                                           <div key={link.id} className="relative flex items-center gap-4 group">
+                                                {/* Conector Rama Horizontal */}
+                                                <div className="absolute -left-10 top-1/2 w-8 h-px bg-primary/30 group-hover:bg-primary/60 transition-colors"></div>
+                                                {/* Nodo */}
+                                                <div className="absolute -left-10 top-1/2 w-2 h-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary/20 group-hover:bg-primary transition-all shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]"></div>
+
+                                               <div className="w-full bg-white/[0.03] hover:bg-white/[0.05] border border-white/5 hover:border-primary/20 rounded-xl p-3 flex items-center justify-between transition-all group-hover:translate-x-1">
+                                                   <div className="flex items-center gap-3">
+                                                       <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500/20 to-purple-500/20 flex items-center justify-center text-white border border-white/10">
+                                                           {link.config?.icon ? (
+                                                               <span className="text-base">{link.config.icon}</span>
+                                                           ) : (
+                                                               <span className="material-symbols-outlined text-base">link</span>
+                                                           )}
+                                                       </div>
+                                                       <div>
+                                                           <p className="text-xs font-bold text-white">{link.title}</p>
+                                                           <div className="flex items-center gap-2">
+                                                               <p className="text-[10px] text-silver/60 font-mono">/{link.slug}</p>
+                                                               <span className={`text-[8px] px-1.5 py-0.5 rounded-md font-bold uppercase ${link.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                                                                    {link.is_active ? 'Activo' : 'Inactivo'}
+                                                               </span>
+                                                           </div>
+                                                       </div>
+                                                   </div>
+                                                   
+                                                   <div className="flex items-center gap-4">
+                                                       <div className="text-right">
+                                                            <span className="text-[10px] text-silver/40 font-bold block">Clicks</span>
+                                                            <span className="text-xs font-mono text-white">{link.clicks || 0}</span>
+                                                       </div>
+                                                       <div className="text-right">
+                                                            <span className="text-[10px] text-silver/40 font-bold block">Creado</span>
+                                                            <span className="text-[10px] font-mono text-silver">{new Date(link.created_at).toLocaleDateString()}</span>
+                                                       </div>
+                                                       <a 
+                                                            href={`/${link.slug}`} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer"
+                                                            className="h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-silver hover:text-white transition-colors border border-white/5"
+                                                        >
+                                                            <span className="material-symbols-outlined text-sm">open_in_new</span>
+                                                        </a>
+                                                   </div>
+                                               </div>
+                                           </div>
+                                       ))}
+                                   </div>
+                               ) : (
+                                   <div className="p-4 rounded-xl border border-white/5 bg-white/[0.01] text-center relative">
+                                        {/* Conector vacío */}
+                                        <div className="absolute -left-10 top-1/2 w-8 h-px bg-white/10 border-t border-dashed border-silver/20 opacity-50"></div>
+                                        <span className="text-xs text-silver/30 font-medium italic">Este usuario no tiene links creados.</span>
+                                   </div>
+                               )}
+                           </div>
+                       </td>
+                   </tr>
+               )}
+               </>
              ))}
            </tbody>
          </table>
