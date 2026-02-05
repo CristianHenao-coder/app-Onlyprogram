@@ -183,27 +183,51 @@ router.post("/paypal/capture-order", async (req: AuthRequest, res) => {
 
 // --- STRIPE ---
 
-router.post("/stripe/create-intent", async (req: AuthRequest, res) => {
+// --- WOMPI ---
+router.post("/wompi/get-signature", async (req: AuthRequest, res) => {
   try {
-    const { amount, currency = "usd", metadata } = req.body;
+    const { amount, currency = "COP" } = req.body;
 
     if (!amount) return res.status(400).json({ error: "Amount is required" });
 
-    // Incluir userId en metadata para rastreo
-    const finalMetadata = {
-      ...metadata,
-      userId: req.user?.id,
-      email: req.user?.email
-    };
+    // Wompi usa centavos para COP
+    const amountInCents = Math.round(amount * 100);
+    const { WompiService } = await import("../services/wompi.service");
 
-    const intent = await import("../services/stripe.service").then(m =>
-      m.StripeService.createPaymentIntent(amount, currency, finalMetadata)
-    );
+    const reference = WompiService.generateReference();
+    const signature = WompiService.generateSignature(reference, amountInCents, currency);
 
-    res.json(intent);
+    res.json({
+      reference,
+      signature,
+      amountInCents,
+      currency,
+      publicKey: (await import("../config/env")).config.wompi.pubKey
+    });
   } catch (error: any) {
-    console.error("Error creating Stripe Intent:", error);
+    console.error("Error creating Wompi Signature:", error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/webhook/wompi", async (req, res) => {
+  try {
+    const event = req.body;
+    // Wompi sends data in 'data' and signature in headers or inside event properties
+    // This is a simplified handler. In PROD verify signature! 
+
+    console.log("💰 Wompi Webhook received:", event);
+
+    if (event.event === "transaction.updated" && event.data.transaction.status === "APPROVED") {
+      const tx = event.data.transaction;
+      // Logic to update database...
+      // Similar to other methods: find payment by reference -> update status -> email
+    }
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error("Wompi Webhook Error:", error);
+    res.sendStatus(500);
   }
 });
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import StripePaymentForm from './StripePaymentForm';
+import WompiEmbed from './WompiEmbed';
 import { paymentsService } from '@/services/payments.service';
 import toast from 'react-hot-toast';
 import { QRCodeSVG } from 'qrcode.react';
@@ -91,17 +91,22 @@ export default function PaymentSelector({ onSelect, initialMethod = 'card', amou
       {/* Payment Content */}
       <div className="mt-8 p-8 bg-background-dark/30 border border-border/50 rounded-3xl min-h-[300px]">
 
-        {/* STRIPE */}
+        {/* WOMPI */}
         {paymentMethod === 'card' && (
-          <div className="animate-fade-in">
-            <h4 className="text-lg font-black text-white px-1 mb-6">Pagar con Tarjeta</h4>
-            <StripePaymentForm
+          <div className="animate-fade-in w-full">
+            <div className="flex items-center justify-between w-full mb-6">
+              <h4 className="text-lg font-black text-white px-1">Pagar con Wompi (Tarjeta/PSE/Bancolombia)</h4>
+              <span className="text-[10px] font-black bg-purple-500/20 text-purple-400 border border-purple-500/20 px-3 py-1 rounded-full uppercase">Seguro</span>
+            </div>
+
+            <WompiEmbed
               amount={amount}
-              onSuccess={(details) => {
-                toast.success("¡Pago con tarjeta exitoso!", { duration: 5000 });
-                console.log("Stripe Success:", details);
-              }}
+              email="" // TODO: Pass user email if available
             />
+
+            <p className="text-center text-xs text-silver/40 mt-4">
+              Serás redirigido o verás el widget seguro de Wompi Bancolombia.
+            </p>
           </div>
         )}
 

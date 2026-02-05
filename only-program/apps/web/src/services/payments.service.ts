@@ -17,8 +17,8 @@ async function handleResponse(response: Response) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
       errorData.error ||
-        errorData.message ||
-        `Error ${response.status}: ${response.statusText}`,
+      errorData.message ||
+      `Error ${response.status}: ${response.statusText}`,
     );
   }
   return response.json();
@@ -78,16 +78,7 @@ export const paymentsService = {
     return handleResponse(response);
   },
 
-  async createStripeIntent(amount: number, currency: string = "usd") {
-    const headers = await getAuthHeaders();
-    const response = await fetch(`${API_URL}/payments/stripe/create-intent`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ amount, currency }),
-    });
 
-    return handleResponse(response);
-  },
 
   async submitManualCryptoPayment(data: {
     amount: number;

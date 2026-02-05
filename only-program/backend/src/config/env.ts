@@ -63,9 +63,11 @@ export const config = {
     secretKey: process.env.TURNSTILE_SECRET_KEY || "",
   },
 
-  stripe: {
-    secretKey: process.env.STRIPE_SECRET_KEY || "",
-    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
+  wompi: {
+    pubKey: process.env.WOMPI_PUB_KEY || "pub_test_Q5yWAz", // Default Sandbox Test Key
+    prvKey: process.env.WOMPI_PRV_KEY || "prv_test_H6w7iL",
+    integritySecret: process.env.WOMPI_INTEGRITY_SECRET || "test_integrity_secret", // En sandbox dashboard
+    eventsSecret: process.env.WOMPI_EVENTS_SECRET || "test_events_secret",
   },
 };
 
