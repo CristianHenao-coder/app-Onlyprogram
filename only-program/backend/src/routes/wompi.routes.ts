@@ -144,10 +144,46 @@ router.post("/webhook", async (req, res) => {
         return res.status(404).json({ error: "Payment not found" });
       }
 
-      // 2. Activate User Links
-      // We interpret "paying" as activating ALL pending links (is_active=false)
-      // Or ideally, we should have linked specific items to the payment.
-      // For this flow: "Smart Cart" pays for ALL pending.
+      // 2. Capture Payment Token for Recurring Billing
+      // Extract token from transaction payment_method
+      const paymentMethod = transaction.payment_method;
+      const cardToken = paymentMethod?.token; // e.g., "tok_prod_12345_..."
+      const last4 = paymentMethod?.extra?.last_four || "";
+
+      if (cardToken) {
+        console.log(`💳 Captured payment token for user ${payment.user_id}`);
+
+        // Check if subscription already exists
+        const { data: existingSub } = await supabase
+          .from("subscriptions")
+          .select("id")
+          .eq("user_id", payment.user_id)
+          .eq("status", "active")
+          .single();
+
+        if (!existingSub) {
+          // Create new subscription with 30-day billing cycle
+          const nextPayment = new Date();
+          nextPayment.setDate(nextPayment.getDate() + 30);
+
+          await supabase.from("subscriptions").insert({
+            user_id: payment.user_id,
+            status: "active",
+            wompi_token: cardToken,
+            payment_method_last4: last4,
+            current_period_start: new Date().toISOString(),
+            current_period_end: nextPayment.toISOString(),
+            next_payment_at: nextPayment.toISOString(),
+            last_payment_at: new Date().toISOString(),
+            total_amount: payment.amount,
+            total_links: 1, // Adjust based on your business logic
+          });
+
+          console.log(`✅ Subscription created for user ${payment.user_id}`);
+        }
+      }
+
+      // 3. Activate User Links
       const { error: linkError } = await supabase
         .from("smart_links")
         .update({ is_active: true })
@@ -156,7 +192,7 @@ router.post("/webhook", async (req, res) => {
 
       if (linkError) console.error("Error activating links:", linkError);
 
-      // 3. Send Notification
+      // 4. Send Notification
       const { data: userData } = await supabase.auth.admin.getUserById(
         payment.user_id,
       );

@@ -10,6 +10,7 @@ import analyticsRoutes from "./routes/analytics.routes";
 import adminRoutes from "./routes/admin.routes";
 import configRoutes from "./routes/config.routes";
 import wompiRoutes from "./routes/wompi.routes";
+import { startBillingCron } from "./cron/billing.cron";
 
 const app = express();
 
@@ -88,6 +89,9 @@ app.listen(config.port, () => {
 ║   🔐 Supabase Auth activo             ║
 ╚════════════════════════════════════════╝
   `);
+
+  // Start subscription billing cron job
+  startBillingCron();
   // Keep-Alive Mechanism for Render Free Tier
   // Pings the health endpoint every 5 minutes to prevent sleep
   const PING_INTERVAL = 5 * 60 * 1000; // 5 minutes
@@ -97,7 +101,9 @@ app.listen(config.port, () => {
     try {
       const response = await fetch(`${SERVER_URL}/health`);
       if (response.ok) {
-        console.log(`[Keep-Alive] Ping successful to ${SERVER_URL}/health at ${new Date().toISOString()}`);
+        console.log(
+          `[Keep-Alive] Ping successful to ${SERVER_URL}/health at ${new Date().toISOString()}`,
+        );
       } else {
         console.warn(`[Keep-Alive] Ping failed with status ${response.status}`);
       }
@@ -107,9 +113,8 @@ app.listen(config.port, () => {
   }, PING_INTERVAL);
 
   // Ensure interval is cleared on shutdown (optional but good practice)
-  process.on('SIGTERM', () => clearInterval(pinger));
-  process.on('SIGINT', () => clearInterval(pinger));
-
+  process.on("SIGTERM", () => clearInterval(pinger));
+  process.on("SIGINT", () => clearInterval(pinger));
 });
 
 export default app;
