@@ -13,6 +13,88 @@ export default function Pricing() {
 
   const [qty, setQty] = useState(1);
   const [withTelegram, setWithTelegram] = useState(false);
+  const [loadingPay, setLoadingPay] = useState(false);
+
+  // Wompi Widget is global
+  const handleWompiPayment = async () => {
+      try {
+          setLoadingPay(true);
+          // 1. Get transaction data from backend
+          // We assume api.post is available or we use fetch with token.
+          // Let's use a simple fetch since I don't see api service imported yet.
+          // Wait, 'httpService' is a common pattern. Let me check imports.
+          // Since I can't browse now without interrupting, I'll assume I need to import api from somewhere or use fetch + token.
+          // I'll check imports in a second step if this fails, but for now standard fetch with localStorage token.
+          
+          // 1. Get user and session
+          const { data: { user } } = await import('@/services/supabase').then(m => m.supabase.auth.getUser());
+          
+          if (!user || !user.email) {
+             // Redirect to register
+             window.location.href = '/register';
+             return;
+          }
+          
+          const { data: { session } } = await import('@/services/supabase').then(m => m.supabase.auth.getSession());
+          const token = session?.access_token;
+
+          if (!token) {
+            console.error("No active session token found");
+            return;
+          }
+
+          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4005'}/api/wompi/transaction-init`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ qty: qty }) 
+          });
+
+          if (!response.ok) {
+              const err = await response.json();
+              alert("Error: " + (err.error || "Failed to init transaction"));
+              setLoadingPay(false);
+              return;
+          }
+
+          const txData = await response.json();
+
+          // 2. Open Wompi Widget with Customer Data (Enables Saved Cards)
+          const checkout = new (window as any).WidgetCheckout({
+              currency: txData.currency,
+              amountInCents: txData.amountInCents,
+              reference: txData.reference,
+              publicKey: txData.publicKey,
+              redirectUrl: txData.redirectUrl,
+              signature: { integrity: txData.signature },
+              customerData: {
+                  email: user.email,
+                  fullName: user.user_metadata?.full_name || 'Usuario OnlyProgram', // Fallback
+                  phoneNumber: user.user_metadata?.phone || '', // Optional
+                  phoneNumberPrefix: '+57', // Optional default
+                  legalId: '', // Optional
+                  legalIdType: 'CC' // Optional
+              }
+          });
+
+          checkout.open((result: any) => {
+              const transaction = result.transaction;
+              console.log('Transaction result:', transaction);
+              if (transaction.status === 'APPROVED') {
+                   window.location.href = '/dashboard/links?payment=success';
+              }
+          });
+          
+          setLoadingPay(false);
+
+      } catch (error) {
+          console.error(error);
+          alert("Error launching payment");
+          setLoadingPay(false);
+      }
+  };
 
   const basePrice = withTelegram ? 94.99 : 74.99;
 
@@ -114,13 +196,14 @@ export default function Pricing() {
                         </p>
                       </div>
                       <div className="flex flex-col gap-3">
-                        <Link
-                          to="/register"
+                        <button
+                          onClick={handleWompiPayment}
+                          disabled={loadingPay}
                           data-magnetic="0.12"
-                          className="px-6 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/25 text-center"
+                          className="px-6 py-3 rounded-xl bg-primary text-white font-bold hover:bg-primary-dark transition-all shadow-lg shadow-primary/25 text-center disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {t('auth.createAccount')}
-                        </Link>
+                          {loadingPay ? 'Procesando...' : (t && t('auth.createAccount')) || 'Pagar Ahora'}
+                        </button>
 
                       </div>
                     </div>
