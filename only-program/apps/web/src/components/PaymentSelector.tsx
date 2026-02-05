@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import WompiEmbed from './WompiEmbed';
+import WompiCreditCardForm from './WompiCreditCardForm';
 import { paymentsService } from '@/services/payments.service';
 import toast from 'react-hot-toast';
 import { QRCodeSVG } from 'qrcode.react';
@@ -95,17 +95,21 @@ export default function PaymentSelector({ onSelect, initialMethod = 'card', amou
         {paymentMethod === 'card' && (
           <div className="animate-fade-in w-full">
             <div className="flex items-center justify-between w-full mb-6">
-              <h4 className="text-lg font-black text-white px-1">Pagar con Wompi (Tarjeta/PSE/Bancolombia)</h4>
+              <h4 className="text-lg font-black text-white px-1">Pagar con Tarjeta</h4>
               <span className="text-[10px] font-black bg-purple-500/20 text-purple-400 border border-purple-500/20 px-3 py-1 rounded-full uppercase">Seguro</span>
             </div>
 
-            <WompiEmbed
+            <WompiCreditCardForm
               amount={amount}
-              email="" // TODO: Pass user email if available
+              email="" // TODO: Get user email from context/props
+              onSuccess={() => {
+                // Handle success (maybe redirect or show modal)
+                console.log("Payment Success");
+              }}
             />
 
             <p className="text-center text-xs text-silver/40 mt-4">
-              Serás redirigido o verás el widget seguro de Wompi Bancolombia.
+              Pagos procesados de forma segura por Wompi Bancolombia.
             </p>
           </div>
         )}

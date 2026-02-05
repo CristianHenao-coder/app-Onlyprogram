@@ -210,6 +210,48 @@ router.post("/wompi/get-signature", async (req: AuthRequest, res) => {
   }
 });
 
+router.post("/wompi/transaction", async (req: AuthRequest, res) => {
+  try {
+    const { amount, email, token, installments, acceptanceToken } = req.body;
+
+    if (!amount || !token || !email || !acceptanceToken) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const { WompiService } = await import("../services/wompi.service");
+
+    const transaction = await WompiService.createTransaction({
+      amountUSD: amount, // Frontend sends USD
+      email,
+      token,
+      installments,
+      acceptanceToken
+    });
+
+    // Guardar transacción en DB
+    if (req.user) {
+      // Lógica para guardar en tabla 'payments'
+      // Podemos reusar la lógica existente, o insertar aquí
+      const { error } = await supabase.from("payments").insert({
+        user_id: req.user.id,
+        amount, // USD
+        currency: "USD",
+        provider: "wompi",
+        status: transaction.status === "APPROVED" ? "completed" : "pending",
+        tx_reference: transaction.id,
+        created_at: new Date().toISOString()
+      });
+
+      if (error) console.error("Error saving payment:", error);
+    }
+
+    res.json(transaction);
+  } catch (error: any) {
+    console.error("Error creating Wompi Transaction:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post("/webhook/wompi", async (req, res) => {
   try {
     const event = req.body;

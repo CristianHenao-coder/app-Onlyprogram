@@ -41,6 +41,17 @@ async function getAuthHeaders() {
 }
 
 export const paymentsService = {
+  async createWompiTransaction(data: { amount: number, email: string, token: string, acceptanceToken: string, installments?: number }) {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_URL}/payments/wompi/transaction`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(data),
+    });
+
+    return handleResponse(response);
+  },
+
   async getHistory() {
     const headers = await getAuthHeaders();
     // getAuthHeaders devuelve Content-Type, pero para GET no es estrictamente necesario, aunque no daña.
