@@ -158,9 +158,11 @@ export default function Pricing() {
                 </div>
 
                 <div className="rounded-3xl border border-border bg-surface/40 p-6">
-                  <p className="text-white font-bold">{t('pricingPage.telegramOrb.title')}</p>
+                  <p className="text-white font-bold">
+                    {withTelegram ? t('pricingPage.telegramOrb.title') : t('pricingPage.telegramOrb.titleSolo')}
+                  </p>
                   <p className="text-sm text-silver/60 mt-2">
-                    {t('pricingPage.telegramOrb.desc')}
+                    {withTelegram ? t('pricingPage.telegramOrb.desc') : t('pricingPage.telegramOrb.descSolo')}
                   </p>
                   <div className="mt-4 rounded-2xl border border-border bg-background-dark/40 p-4">
                     <p className="text-xs text-silver/50">{t('pricingPage.telegramOrb.priceLabel')}</p>

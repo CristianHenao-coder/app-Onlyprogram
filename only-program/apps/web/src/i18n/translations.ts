@@ -41,7 +41,7 @@ export const translations = {
 
     nav: {
       home: "Inicio",
-      features: "Funciones",
+      features: "Características",
       pricing: "Precios",
       testimonials: "Testimonios",
       login: "Iniciar Sesión",
@@ -301,7 +301,8 @@ export const translations = {
         title: "Título",
         mainUrl: "URL Principal",
         activateRotator: "Activar Rotativo",
-        rotatorDesc: "Activa esta función para rotar entre múltiples enlaces. +$30 USD al valor de este link.",
+        rotatorDesc:
+          "Activa esta función para rotar entre múltiples enlaces. +$30 USD al valor de este link.",
         addExtraLinks: "Añade hasta 5 links adicionales:",
         styles: "Estilos",
         background: "Fondo",
@@ -456,6 +457,9 @@ export const translations = {
       telegramOrb: {
         title: "¿Telegram rotativo?",
         desc: "Diseñado para rotar URLs/bots por cupos y reducir riesgos de baneo. Tiene costo adicional por link.",
+        titleSolo: "Solo el Link",
+        descSolo:
+          "Tu link protegido con la mejor seguridad del mercado. Sin rotación.",
         priceLabel: "Precio por link",
         billing: "Cobro mensual.",
       },
@@ -837,7 +841,8 @@ export const translations = {
         title: "Title",
         mainUrl: "Main URL",
         activateRotator: "Activate Rotator",
-        rotatorDesc: "Activate this feature to rotate between multiple links. +$30 USD to the value of this link.",
+        rotatorDesc:
+          "Activate this feature to rotate between multiple links. +$30 USD to the value of this link.",
         addExtraLinks: "Add up to 5 additional links:",
         styles: "Styles",
         background: "Background",
@@ -991,6 +996,9 @@ export const translations = {
       telegramOrb: {
         title: "Rotating Telegram?",
         desc: "Designed to rotate URLs/bots by slots and reduce ban risks. Additional cost per link.",
+        titleSolo: "Link Only",
+        descSolo:
+          "Your protected link with the best security in the market. No rotation.",
         priceLabel: "Price per link",
         billing: "Billed monthly.",
       },
@@ -1076,7 +1084,7 @@ export const translations = {
 
     nav: {
       home: "Accueil",
-      features: "Fonctionnalités",
+      features: "Caractéristiques",
       pricing: "Tarifs",
       testimonials: "Témoignages",
       login: "Se Connecter",
@@ -1330,7 +1338,8 @@ export const translations = {
         title: "Titre",
         mainUrl: "URL Principale",
         activateRotator: "Activer Rotatif",
-        rotatorDesc: "Activez cette fonction pour alterner entre plusieurs liens. +30 $ USD à la valeur de ce lien.",
+        rotatorDesc:
+          "Activez cette fonction pour alterner entre plusieurs liens. +30 $ USD à la valeur de ce lien.",
         addExtraLinks: "Ajoutez jusqu'à 5 liens supplémentaires :",
         styles: "Styles",
         background: "Fond",
@@ -1484,6 +1493,9 @@ export const translations = {
       telegramOrb: {
         title: "Telegram Rotatif ?",
         desc: "Conçu pour alterner les URLs/bots par créneaux et réduire les risques de ban. Coût additionnel par lien.",
+        titleSolo: "Lien Seul",
+        descSolo:
+          "Votre lien protégé avec la meilleure sécurité du marché. Sans rotation.",
         priceLabel: "Prix par lien",
         billing: "Facturé mensuellement.",
       },

@@ -87,97 +87,7 @@ export default function Home({
     [t]
   );
 
-  const featurePreview = useMemo(() => {
-    const base = {
-      titleBarMid: t('home.preview.titleBarMid'),
-      userName: 'Only Program',
-      userRole: t('home.preview.userRole'),
-    };
 
-    if (activeFeatureView === 'analytics') {
-      return {
-        ...base,
-        header: t('home.preview.headerAnalytics'),
-        sub: t('home.preview.subAnalytics'),
-        kpis: [
-          { label: t('home.preview.kpis.clicks'), value: '124.582', icon: 'ads_click', tone: 'text-primary' },
-          { label: t('home.preview.kpis.filtered'), value: '8.214', icon: 'shield', tone: 'text-green-500' },
-          { label: t('home.preview.kpis.conversion'), value: '24.8%', icon: 'trending_up', tone: 'text-purple-400' },
-          { label: t('home.preview.kpis.topCountries'), value: 'ES • USA • MX', icon: 'public', tone: 'text-silver/70' },
-        ],
-        sidebar: [
-          { icon: 'link', label: t('home.preview.sidebar.links'), active: false },
-          { icon: 'monitoring', label: t('home.preview.sidebar.analytics'), active: true },
-          { icon: 'settings', label: t('home.preview.sidebar.settings'), active: false },
-          { icon: 'support_agent', label: t('home.preview.sidebar.support'), active: false },
-        ],
-        chartBars: [32, 52, 41, 64, 58, 46, 71, 60, 55, 74, 62, 80],
-        countryRows: [
-          { c: t('countries.spain'), v: '52.126' },
-          { c: t('countries.usa'), v: '34.182' },
-          { c: t('countries.mexico'), v: '18.867' },
-        ],
-      };
-    }
-
-    if (activeFeatureView === 'telegram') {
-      return {
-        ...base,
-        header: t('home.preview.headerTelegram'),
-        sub: t('home.preview.subTelegram'),
-        sidebar: [
-          { icon: 'link', label: t('home.preview.sidebar.links'), active: false },
-          { icon: 'monitoring', label: t('home.preview.sidebar.analytics'), active: false },
-          { icon: 'autorenew', label: t('home.preview.sidebar.rotation'), active: true },
-          { icon: 'settings', label: t('home.preview.sidebar.settings'), active: false },
-          { icon: 'support_agent', label: t('home.preview.sidebar.support'), active: false },
-        ],
-        topActions: [
-          { label: t('home.preview.actions.logs'), icon: 'receipt_long', primary: false },
-          { label: t('home.preview.actions.addChannel'), icon: 'add', primary: true },
-        ],
-        cards: [
-          { title: t('home.preview.cards.vip'), badge: t('home.preview.cards.rotating'), meta: `${t('home.preview.cards.next')} 12:46`, tone: 'text-primary' },
-          { title: t('home.preview.cards.ads'), badge: t('home.preview.cards.rotating'), meta: `${t('home.preview.cards.next')} 14:12`, tone: 'text-silver/70' },
-          { title: t('home.preview.cards.community'), badge: t('home.preview.cards.rotating'), meta: `${t('home.preview.cards.next')} 15:10`, tone: 'text-silver/70' },
-          { title: t('home.preview.cards.launch'), badge: t('home.preview.cards.rotating'), meta: `${t('home.preview.cards.next')} 16:20`, tone: 'text-silver/70' },
-          { title: t('home.preview.cards.general'), badge: t('home.preview.cards.rotating'), meta: `${t('home.preview.cards.next')} 18:02`, tone: 'text-silver/70' },
-        ],
-        config: [
-          { label: t('home.preview.config.freq'), value: t('home.preview.config.freqVal') },
-          { label: t('home.preview.config.dist'), value: t('home.preview.config.distVal') },
-        ],
-      };
-    }
-
-    // links default
-    return {
-      ...base,
-      header: t('home.preview.headerLinks'),
-      sub: t('home.preview.subLinks'),
-      sidebar: [
-        { icon: 'link', label: t('home.preview.sidebar.links'), active: true },
-        { icon: 'monitoring', label: t('home.preview.sidebar.analytics'), active: false },
-        { icon: 'autorenew', label: t('home.preview.sidebar.rotation'), active: false },
-        { icon: 'settings', label: t('home.preview.sidebar.settings'), active: false },
-        { icon: 'support_agent', label: t('home.preview.sidebar.support'), active: false },
-      ],
-      toolbar: [
-        { label: t('home.preview.actions.preview'), icon: 'visibility', primary: false },
-        { label: t('home.preview.actions.save'), icon: 'save', primary: true },
-      ],
-      form: {
-        title: t('home.preview.linksDemo.vipAccess'),
-        url: 'https://onlyfans.com/tuusuario',
-        subtitle: t('home.preview.linksDemo.subtitle'),
-      },
-      socials: ['Instagram', 'TikTok', 'X', 'Email'],
-      phone: {
-        name: 'Tu Marca',
-        items: [t('home.preview.linksDemo.vipAccess'), t('home.preview.linksDemo.rotary')],
-      },
-    };
-  }, [activeFeatureView, t]);
 
   const activeFeatureAccent = useMemo(() => {
     const found = featureViews.find(v => v.key === activeFeatureView);
@@ -396,13 +306,7 @@ export default function Home({
                 <span className="material-symbols-outlined">south</span>
               </a>
 
-              <button
-                onClick={() => setShowVideo(true)}
-                className="bg-primary/10 border border-primary/20 px-7 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold text-base sm:text-lg transition-all hover:bg-primary/20 text-primary flex items-center justify-center gap-2"
-              >
-                {t('hero.watchDemo') || "Ver Video"}
-                <span className="material-symbols-outlined">play_circle</span>
-              </button>
+
             </div>
 
             <div data-reveal data-delay="4" className="mt-10 flex flex-wrap justify-center gap-3 text-xs text-silver/45">
@@ -465,325 +369,230 @@ export default function Home({
               </div>
               <div className="col-span-12">
                 <div className="w-full overflow-x-auto pb-6 -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible sm:pb-0">
-                  <div
-                    data-reveal
-                    data-delay="2"
-                    className="relative rounded-3xl border border-border bg-surface/40 overflow-hidden dash-shell min-w-[350px] xs:min-w-full"
-                  >
                     <div
-                      className="absolute -inset-10 blur-3xl transition-all duration-700"
-                      style={{ background: activeFeatureAccent }}
-                    />
-                    <div className="absolute inset-0 dash-softgrid opacity-[0.65]" />
+                      data-reveal
+                      data-delay="2"
+                      className="relative rounded-3xl border border-border bg-surface/40 overflow-hidden dash-shell min-w-[350px] xs:min-w-full"
+                    >
+                      <div
+                        className="absolute -inset-10 blur-3xl transition-all duration-700"
+                        style={{ background: activeFeatureAccent }}
+                      />
+                      <div className="absolute inset-0 dash-softgrid opacity-[0.65]" />
 
-                  <div className="relative p-3 sm:p-5">
-                    <div className="flex items-center justify-between gap-3 border border-white/10 bg-background-dark/40 rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="h-8 w-8 rounded-xl bg-surface border border-border flex items-center justify-center">
-                          <span className="material-symbols-outlined text-primary text-[18px]">verified</span>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[10px] text-silver/40 font-mono uppercase tracking-widest">
-                            {featurePreview.titleBarMid}
-                          </p>
-                          <p className="text-white font-bold truncate">{featurePreview.header}</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          className="inline-flex items-center gap-1.5 text-[11px] px-3 py-2 rounded-xl border border-primary/30 bg-primary/10 text-primary hover:border-primary/50 transition-all fake-btn"
-                        >
-                          <span className="material-symbols-outlined text-[16px]">lock</span>
-                          {t('home.preview.linksDemo.verified')}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-12 gap-4">
-                      <div className="col-span-12 sm:col-span-4 lg:col-span-4 hidden sm:block">
-                        <div className="rounded-2xl border border-white/10 bg-background-dark/40 p-3">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">Menú</p>
-                            <span className="text-[10px] text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
-                              {featurePreview.userName}
-                            </span>
-                          </div>
-
-                          <div className="mt-3 space-y-2">
-                            {featurePreview.sidebar.map((it: any, i: number) => (
-                              <button
-                                key={`${it.label}-${i}`}
-                                type="button"
-                                className={[
-                                  "w-full flex items-center gap-2 px-3 py-2 rounded-xl border transition-all fake-btn",
-                                  it.active
-                                    ? "border-primary/40 bg-primary/10 text-white"
-                                    : "border-transparent bg-surface/20 text-silver/70 hover:bg-surface/30 hover:text-white",
-                                ].join(" ")}
-                              >
-                                <span className={["material-symbols-outlined text-[18px]", it.active ? "text-primary" : "text-silver/50"].join(" ")}>
-                                  {it.icon}
-                                </span>
-                                <span className="text-sm font-semibold">{it.label}</span>
-                              </button>
-                            ))}
-                          </div>
-
-                          <div className="mt-3 rounded-xl border border-white/10 bg-surface/20 p-3">
-                            <div className="flex items-center gap-2">
-                              <div className="h-9 w-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                                <span className="material-symbols-outlined text-silver/60">person</span>
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-white font-bold text-sm truncate">{featurePreview.userName}</p>
-                                <p className="text-[11px] text-silver/45">{featurePreview.userRole}</p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="col-span-12 sm:col-span-8 lg:col-span-8">
-                        <div className="rounded-2xl border border-white/10 bg-background-dark/40 p-4 sm:p-5">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="min-w-0">
-                              <p className="text-white font-extrabold text-lg">{featurePreview.header}</p>
-                              <p className="text-silver/60 text-sm mt-1">{featurePreview.sub}</p>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                              {(featurePreview as any).toolbar?.map((b: any, i: number) => (
-                                <button
-                                  key={`${b.label}-${i}`}
-                                  type="button"
-                                  className={[
-                                    "inline-flex items-center gap-1.5 text-[11px] px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl border transition-all fake-btn",
-                                    b.primary
-                                      ? "border-primary/30 bg-primary/10 text-primary hover:border-primary/50"
-                                      : "border-border bg-surface/30 text-silver/70 hover:text-white hover:border-primary/30",
-                                  ].join(" ")}
-                                >
-                                  <span className="material-symbols-outlined text-[16px]">{b.icon}</span>
-                                  <span className="hidden xs:inline">{b.label}</span>
-                                </button>
-                              ))}
-
-                              {(featurePreview as any).topActions?.map((b: any, i: number) => (
-                                <button
-                                  key={`${b.label}-${i}`}
-                                  type="button"
-                                  className={[
-                                    "inline-flex items-center gap-1.5 text-[11px] px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl border transition-all fake-btn",
-                                    b.primary
-                                      ? "border-primary/30 bg-primary text-white hover:bg-primary-dark"
-                                      : "border-border bg-surface/30 text-silver/70 hover:text-white hover:border-primary/30",
-                                  ].join(" ")}
-                                >
-                                  <span className="material-symbols-outlined text-[16px]">{b.icon}</span>
-                                  <span className="hidden xs:inline">{b.label}</span>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          {activeFeatureView === 'links' && (
-                            <div className="mt-5 grid md:grid-cols-2 gap-4">
-                              <div className="rounded-2xl border border-white/10 bg-surface/20 p-4">
-                                <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">{t('home.preview.linksDemo.btnTitle')}</p>
-                                <div className="mt-2 rounded-xl border border-border bg-background-dark/40 px-3 py-2.5">
-                                  <p className="text-white text-sm font-semibold">{(featurePreview as any).form.title}</p>
+                      <div className="relative p-6 sm:p-10 min-h-[500px] flex items-center justify-center">
+                        {/* ✅ VIEW: LINKS (Phone Mockup) */}
+                        {activeFeatureView === 'links' && (
+                          <div className="flex flex-col items-center animate-in fade-in zoom-in-95 duration-500">
+                             <div className="relative w-[300px] h-[600px] bg-black rounded-[40px] border-[8px] border-zinc-800 shadow-2xl overflow-hidden ring-1 ring-white/10">
+                                {/* Notch */}
+                                <div className="absolute top-0 inset-x-0 h-6 bg-black z-20 flex justify-center">
+                                    <div className="w-32 h-4 bg-zinc-800 rounded-b-xl" />
                                 </div>
-
-                                <p className="mt-4 text-[10px] font-mono text-silver/40 uppercase tracking-widest">{t('home.preview.linksDemo.dest')}</p>
-                                <div className="mt-2 rounded-xl border border-border bg-background-dark/40 px-3 py-2.5 flex items-center justify-between gap-2">
-                                  <p className="text-silver/70 text-xs truncate">{(featurePreview as any).form.url}</p>
-                                  <button
-                                    type="button"
-                                    className="text-[10px] px-2 py-1 rounded-lg border border-border bg-surface/30 text-silver/70 hover:text-white hover:border-primary/30 transition-all fake-btn"
-                                  >
-                                    {t('common.copy')}
-                                  </button>
-                                </div>
-
-                                <p className="mt-4 text-[10px] font-mono text-silver/40 uppercase tracking-widest">{t('home.preview.linksDemo.subtitle')}</p>
-                                <div className="mt-2 rounded-xl border border-border bg-background-dark/40 px-3 py-2.5">
-                                  <p className="text-silver/70 text-sm">{(featurePreview as any).form.subtitle}</p>
-                                </div>
-
-                                <p className="mt-4 text-[10px] font-mono text-silver/40 uppercase tracking-widest">{t('home.preview.linksDemo.channels')}</p>
-                                <div className="mt-2 grid grid-cols-2 xs:grid-cols-4 gap-2">
-                                  {(featurePreview as any).socials.map((s: string, i: number) => (
-                                    <button
-                                      key={`${s}-${i}`}
-                                      type="button"
-                                      className="rounded-xl border border-border bg-surface/20 px-2 py-2 text-[10px] text-silver/60 hover:text-white hover:border-primary/30 transition-all fake-btn"
-                                    >
-                                      {s}
-                                    </button>
-                                  ))}
-                                </div>
-                              </div>
-
-                              <div className="rounded-2xl border border-white/10 bg-surface/20 p-4">
-                                <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">{t('home.preview.linksDemo.previewTitle')}</p>
-                                <div className="mt-3 mx-auto w-full max-w-[280px] sm:max-w-[320px] rounded-[34px] border border-white/10 bg-background-dark/70 p-2 sm:p-3">
-                                  <div className="rounded-[26px] border border-white/10 bg-black/40 overflow-hidden">
-                                    <div className="p-4 flex items-center gap-3 border-b border-white/10">
-                                      <div className="h-10 w-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                                        <span className="material-symbols-outlined text-silver/60">person</span>
-                                      </div>
-                                      <div className="min-w-0">
-                                        <p className="text-white font-bold text-sm truncate">{(featurePreview as any).phone.name}</p>
-                                        <p className="text-[11px] text-silver/45">{t('home.preview.linksDemo.verified')}</p>
-                                      </div>
+                                {/* Content */}
+                                <div className="h-full w-full overflow-y-auto bg-zinc-900 text-white pt-10 pb-4 px-4 scrollbar-hide">
+                                    <div className="flex flex-col items-center">
+                                        <div className="w-24 h-24 rounded-full border-2 border-white/10 shadow-lg mb-3 relative group">
+                                            <img
+                                              src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&auto=format&fit=crop&w=256&q=80" 
+                                              alt="Profile" 
+                                              className="w-full h-full rounded-full object-cover"
+                                            />
+                                        </div>
+                                        <h2 className="text-xl font-bold mb-1">Zara</h2>
+                                        <p className="text-sm text-zinc-400 mb-6 text-center max-w-[200px]">Content Creator & Model ✨ Exclusive content below 👇</p>
+                                        
+                                        <div className="w-full space-y-3">
+                                            <button className="w-full bg-[#E1306C] hover:bg-[#C13584] text-white py-3.5 px-4 rounded-xl font-bold transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2 shadow-lg shadow-[#E1306C]/20">
+                                                <i className="fab fa-instagram text-xl"></i>
+                                                Sígueme en IG
+                                            </button>
+                                            <button className="w-full bg-[#229ED9] hover:bg-[#1C88BD] text-white py-3.5 px-4 rounded-xl font-bold transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2 shadow-lg shadow-[#229ED9]/20">
+                                                <i className="fab fa-telegram text-xl"></i>
+                                                Telegram VIP
+                                            </button>
+                                            <button className="w-full bg-zinc-800 hover:bg-zinc-700 text-white py-3.5 px-4 rounded-xl font-bold transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2 border border-white/5">
+                                                Nuevo Botón
+                                            </button>
+                                            <button className="w-full bg-black hover:bg-zinc-900 text-white py-3.5 px-4 rounded-xl font-bold transition-all transform hover:scale-[1.02] flex items-center justify-center gap-2 border border-white/10 shadow-lg">
+                                                <i className="fab fa-tiktok text-xl"></i>
+                                                TikTok
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="p-4 space-y-2">
-                                      {(featurePreview as any).phone.items.map((it: string, i: number) => (
-                                        <button
-                                          key={`${it}-${i}`}
-                                          type="button"
-                                          className="w-full rounded-2xl border border-border bg-surface/20 px-3 py-3 text-left hover:border-primary/40 transition-all fake-btn"
-                                        >
-                                          <div className="flex items-center gap-2">
-                                            <span className="material-symbols-outlined text-primary text-[18px]">link</span>
-                                            <span className="text-white text-sm font-semibold">{it}</span>
+                                </div>
+                                {/* Home Indicator */}
+                                <div className="absolute bottom-1 inset-x-0 h-4 flex justify-center items-end pb-1 pointer-events-none">
+                                    <div className="w-32 h-1 bg-white/20 rounded-full" />
+                                </div>
+                             </div>
+                          </div>
+                        )}
+
+                        {/* ✅ VIEW: ANALYTICS (PC + Mobile / Split Layout) */}
+                        {activeFeatureView === 'analytics' && (
+                          <div className="w-full grid lg:grid-cols-2 gap-10 items-center animate-in slide-in-from-right-8 fade-in duration-500">
+                             {/* Left: Text Info */}
+                             <div className="text-left space-y-8">
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2 text-primary">
+                                        <span className="material-symbols-outlined">monitoring</span>
+                                        <h3 className="font-bold text-lg">Métricas en Tiempo Real</h3>
+                                    </div>
+                                    <p className="text-silver/70 leading-relaxed">
+                                        Visualiza clicks, países y dispositivos al instante. Toma decisiones basadas en datos reales, no en suposiciones.
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2 text-purple-400">
+                                        <span className="material-symbols-outlined">shield</span>
+                                        <h3 className="font-bold text-lg">Filtrado de Bots</h3>
+                                    </div>
+                                    <p className="text-silver/70 leading-relaxed">
+                                        Nuestro sistema elimina el tráfico basura automáticamente, asegurando que solo pagues por usuarios reales.
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2 text-green-400">
+                                        <span className="material-symbols-outlined">public</span>
+                                        <h3 className="font-bold text-lg">Geolocalización Precisa</h3>
+                                    </div>
+                                    <p className="text-silver/70 leading-relaxed">
+                                        Entiende de dónde viene tu audiencia y optimiza tus campañas por región o idioma.
+                                    </p>
+                                </div>
+                             </div>
+
+                             {/* Right: Visuals (PC + Mobile overlay) */}
+                             <div className="relative">
+                                {/* PC Mockup */}
+                                <div className="relative bg-background-dark border border-white/10 rounded-xl shadow-2xl p-2 aspect-[16/10] overflow-hidden">
+                                     <div className="absolute inset-x-0 top-0 h-6 bg-surface border-b border-white/5 flex items-center px-4 gap-1.5">
+                                         <div className="w-2.5 h-2.5 rounded-full bg-red-500/20" />
+                                         <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/20" />
+                                         <div className="w-2.5 h-2.5 rounded-full bg-green-500/20" />
+                                     </div>
+                                     <div className="mt-6 h-full w-full bg-background-dark flex flex-col p-4 gap-4">
+                                          {/* Analytics Fake UI */}
+                                          <div className="grid grid-cols-3 gap-3">
+                                              <div className="bg-surface/30 rounded-lg p-3 border border-white/5">
+                                                  <div className="text-[10px] text-silver/50">Total Clicks</div>
+                                                  <div className="text-xl font-bold text-white">124k</div>
+                                              </div>
+                                              <div className="bg-surface/30 rounded-lg p-3 border border-white/5">
+                                                  <div className="text-[10px] text-silver/50">Conv. Rate</div>
+                                                  <div className="text-xl font-bold text-green-400">24.8%</div>
+                                              </div>
+                                              <div className="bg-surface/30 rounded-lg p-3 border border-white/5">
+                                                  <div className="text-[10px] text-silver/50">Countries</div>
+                                                  <div className="text-xl font-bold text-primary">12</div>
+                                              </div>
                                           </div>
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </div>
+                                          <div className="flex-1 bg-surface/20 rounded-lg border border-white/5 p-4 flex items-end justify-between gap-1">
+                                              {[40, 60, 45, 70, 50, 80, 65, 90, 75].map((h, i) => (
+                                                  <div key={i} className="flex-1 bg-primary/20 rounded-t-sm hover:bg-primary/40 transition-colors" style={{ height: `${h}%` }} />
+                                              ))}
+                                          </div>
+                                     </div>
                                 </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {activeFeatureView === 'analytics' && (
-                            <div className="mt-5 space-y-4">
-                              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                                {(featurePreview as any).kpis.map((k: any, i: number) => (
-                                  <div key={`${k.label}-${i}`} className="rounded-2xl border border-white/10 bg-surface/20 p-4">
-                                    <div className="flex items-center justify-between">
-                                      <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">{k.label}</p>
-                                      <span className={["material-symbols-outlined text-[18px]", k.tone].join(" ")}>{k.icon}</span>
+                                {/* Mobile Overlay */}
+                                <div className="absolute -bottom-6 -right-2 w-28 sm:w-36 bg-black border-[4px] border-zinc-800 rounded-[24px] shadow-2xl overflow-hidden aspect-[9/19]">
+                                    <div className="w-full h-full bg-surface flex flex-col p-2">
+                                        <div className="w-full h-20 bg-primary/10 rounded-lg mb-2" />
+                                        <div className="w-full h-8 bg-white/5 rounded-md mb-1" />
+                                        <div className="w-full h-8 bg-white/5 rounded-md mb-1" />
+                                        <div className="w-full h-8 bg-white/5 rounded-md" />
                                     </div>
-                                    <p className="mt-2 text-white font-extrabold text-lg">{k.value}</p>
-                                    <p className="mt-1 text-[11px] text-silver/45">Actualizado hace 1m</p>
-                                  </div>
-                                ))}
-                              </div>
-
-                              <div className="grid lg:grid-cols-3 gap-4">
-                                <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-surface/20 p-4">
-                                  <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">Actividad</p>
-                                  <div className="mt-4 flex items-end gap-2 h-40">
-                                    {(featurePreview as any).chartBars.map((h: number, i: number) => (
-                                      <div
-                                        key={i}
-                                        className="flex-1 rounded-lg border border-white/10 bg-primary/10 hover:bg-primary/15 transition-all fake-btn"
-                                        style={{ height: `${h + 18}%` }}
-                                        title={`Día ${i + 1}`}
-                                      />
-                                    ))}
-                                  </div>
                                 </div>
+                             </div>
+                          </div>
+                        )}
 
-                                <div className="rounded-2xl border border-white/10 bg-surface/20 p-4">
-                                  <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">Top países</p>
-                                  <div className="mt-3 space-y-2">
-                                    {(featurePreview as any).countryRows.map((r: any, i: number) => (
-                                      <button
-                                        key={`${r.c}-${i}`}
-                                        type="button"
-                                        className="w-full flex items-center justify-between rounded-xl border border-white/10 bg-background-dark/30 px-3 py-2 hover:border-primary/30 transition-all fake-btn"
-                                      >
-                                        <span className="text-white text-sm font-semibold">{r.c}</span>
-                                        <span className="text-silver/60 text-xs font-mono">{r.v}</span>
-                                      </button>
-                                    ))}
-                                  </div>
-                                  <button
-                                    type="button"
-                                    className="mt-3 w-full rounded-xl border border-border bg-surface/20 px-3 py-2 text-[11px] text-silver/60 hover:text-white hover:border-primary/30 transition-all fake-btn"
-                                  >
-                                    Ver más
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          )}
+                        {/* ✅ VIEW: TELEGRAM (2 Phones + Chat) */}
+                        {activeFeatureView === 'telegram' && (
+                           <div className="w-full grid lg:grid-cols-2 gap-10 items-center animate-in slide-in-from-right-8 fade-in duration-500">
+                               {/* Left: 2 Phones */}
+                               <div className="relative h-[400px] flex justify-center items-center">
+                                   {/* Phone 1 */}
+                                   <div className="absolute left-0 lg:left-10 transform -rotate-6 scale-90 z-10 w-[240px] bg-black border-[6px] border-zinc-800 rounded-[32px] shadow-2xl overflow-hidden aspect-[9/18]">
+                                        <div className="bg-[#182533] w-full h-full flex flex-col">
+                                            {/* Header */}
+                                            <div className="bg-[#232E3C] p-3 text-white flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-bold">OP</div>
+                                                <div>
+                                                    <div className="font-bold text-xs">Canal VIP</div>
+                                                    <div className="text-[10px] text-blue-300">15.4k suscriptores</div>
+                                                </div>
+                                            </div>
+                                            {/* Chat */}
+                                            <div className="p-3 space-y-3">
+                                                <div className="bg-[#1F2C39] p-2 rounded-tr-lg rounded-bl-lg rounded-br-lg max-w-[85%] text-[10px] text-white self-start">
+                                                    ¡Nuevo contenido disponible! 🔥
+                                                </div>
+                                                <div className="bg-[#1F2C39] p-3 rounded-lg text-white">
+                                                    <div className="w-full aspect-video bg-black/40 mb-2 rounded flex items-center justify-center text-xs text-white/30">
+                                                        Video Preview
+                                                    </div>
+                                                    <p className="text-[10px]">Haz click abajo para entrar</p>
+                                                    <button className="mt-2 w-full bg-[#2AABEE] py-1.5 rounded text-[10px] font-bold">Entrar al Bot</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                   </div>
+                                   {/* Phone 2 */}
+                                   <div className="absolute right-0 lg:right-10 transform rotate-6 z-20 w-[240px] bg-black border-[6px] border-zinc-800 rounded-[32px] shadow-2xl overflow-hidden aspect-[9/18]">
+                                        <div className="bg-[#182533] w-full h-full flex flex-col">
+                                             {/* Header */}
+                                             <div className="bg-[#232E3C] p-3 text-white flex items-center gap-3">
+                                                <div className="w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center text-xs font-bold">Bot</div>
+                                                <div>
+                                                    <div className="font-bold text-xs">Rotation Bot</div>
+                                                    <div className="text-[10px] text-blue-300">bot</div>
+                                                </div>
+                                            </div>
+                                            {/* Chat */}
+                                            <div className="p-3 space-y-3 flex flex-col">
+                                                <div className="bg-[#2B5278] p-2 rounded-tl-lg rounded-bl-lg rounded-br-lg max-w-[85%] text-[10px] text-white self-end">
+                                                    /start
+                                                </div>
+                                                <div className="bg-[#1F2C39] p-2 rounded-tr-lg rounded-bl-lg rounded-br-lg max-w-[85%] text-[10px] text-white self-start">
+                                                    Bienvenido al sistema de rotación. Tu link temporal es:
+                                                    <span className="block mt-1 text-[#2AABEE] underline">only-program.com/temp/x9s2</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                   </div>
+                               </div>
 
-                          {activeFeatureView === 'telegram' && (
-                            <div className="mt-5 space-y-4">
-                              <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 gap-3">
-                                {(featurePreview as any).cards.map((c: any, i: number) => (
-                                  <button
-                                    key={`${c.title}-${i}`}
-                                    type="button"
-                                    className="rounded-2xl border border-white/10 bg-surface/20 p-4 text-left hover:border-primary/30 transition-all fake-btn"
-                                  >
-                                    <div className="flex items-center justify-between gap-3">
-                                      <p className="text-white font-bold text-sm">{c.title}</p>
-                                      <span className="text-[10px] px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
-                                        {c.badge}
-                                      </span>
+                               {/* Right: Text Info */}
+                               <div className="text-left space-y-8">
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-[#2AABEE]">
+                                            <span className="material-symbols-outlined">autorenew</span>
+                                            <h3 className="font-bold text-lg">Rotación Inteligente</h3>
+                                        </div>
+                                        <p className="text-silver/70 leading-relaxed">
+                                            Distribuye el tráfico entre múltiples canales o bots automáticamente. Evita saturaciones y baneos distribuyendo la carga.
+                                        </p>
                                     </div>
-                                    <p className="mt-2 text-[11px] text-silver/55">{c.meta}</p>
-                                    <div className="mt-3 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                                      <div className="h-full bg-primary/60" style={{ width: `${42 + (i * 9)}%` }} />
+                                    <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-white">
+                                            <span className="material-symbols-outlined">chat</span>
+                                            <h3 className="font-bold text-lg">Gestión de Conversaciones</h3>
+                                        </div>
+                                        <p className="text-silver/70 leading-relaxed">
+                                            Simula conversaciones reales y mantén a tu audiencia engaged con respuestas automáticas y flujos predefinidos.
+                                        </p>
                                     </div>
-                                  </button>
-                                ))}
-                              </div>
-
-                              <div className="rounded-2xl border border-white/10 bg-surface/20 p-4">
-                                <div className="flex items-center justify-between gap-3">
-                                  <div>
-                                    <p className="text-white font-extrabold">{t('home.preview.config.rotationConfig')}</p>
-                                    <p className="text-silver/60 text-sm mt-1">{t('home.preview.config.rotationDesc')}</p>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    className="rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-[11px] text-primary hover:border-primary/50 transition-all fake-btn"
-                                  >
-                                    Guardar
-                                  </button>
-                                </div>
-
-                                <div className="mt-4 grid md:grid-cols-2 gap-3">
-                                  {(featurePreview as any).config.map((row: any, i: number) => (
-                                    <div key={`${row.label}-${i}`} className="rounded-2xl border border-white/10 bg-background-dark/30 p-4">
-                                      <p className="text-[10px] font-mono text-silver/40 uppercase tracking-widest">{row.label}</p>
-                                      <button
-                                        type="button"
-                                        className="mt-2 w-full rounded-xl border border-border bg-surface/20 px-3 py-2 text-left text-sm text-white hover:border-primary/30 transition-all fake-btn"
-                                      >
-                                        {row.value}
-                                      </button>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="mt-3 flex items-center justify-between text-[10px] text-silver/40 px-1">
-                          <span>Only Program • {t('home.preview.linksDemo.previewTitle')}</span>
-                          <span className="hidden sm:inline">{t('home.preview.sidebar.support')}</span>
-                        </div>
+                               </div>
+                           </div>
+                        )}
                       </div>
                     </div>
-
-                    <div className="mt-4 sm:hidden text-center text-xs text-silver/45">
-                      {t('panelPreview.hintMobile')}
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
-            </div>
+
           </div>
         </section>
 
