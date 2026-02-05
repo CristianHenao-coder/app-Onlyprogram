@@ -86,6 +86,26 @@ app.listen(config.port, () => {
 ║   🔐 Supabase Auth activo             ║
 ╚════════════════════════════════════════╝
   `);
-});
+  // Keep-Alive Mechanism for Render Free Tier
+  // Pings the health endpoint every 5 minutes to prevent sleep
+  const PING_INTERVAL = 5 * 60 * 1000; // 5 minutes
+  const SERVER_URL = config.urls.backend || `http://localhost:${config.port}`;
 
-export default app;
+  const pinger = setInterval(async () => {
+    try {
+      const response = await fetch(`${SERVER_URL}/health`);
+      if (response.ok) {
+        console.log(`[Keep-Alive] Ping successful to ${SERVER_URL}/health at ${new Date().toISOString()}`);
+      } else {
+        console.warn(`[Keep-Alive] Ping failed with status ${response.status}`);
+      }
+    } catch (error: any) {
+      console.error(`[Keep-Alive] Ping error: ${error.message}`);
+    }
+  }, PING_INTERVAL);
+
+  // Ensure interval is cleared on shutdown (optional but good practice)
+  process.on('SIGTERM', () => clearInterval(pinger));
+  process.on('SIGINT', () => clearInterval(pinger));
+
+  export default app;
