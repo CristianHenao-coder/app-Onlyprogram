@@ -457,7 +457,6 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005/api';
                      </button>
                      <button onClick={() => setStep('confirm')} className="text-silver/40 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors">Atrás</button>
                    </div>
-                 </div>
                  </>
                )}
              </div>
