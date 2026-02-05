@@ -36,10 +36,7 @@ export const ManualCryptoService = {
                 provider: "manual_crypto",
                 status: "pending", // Queda pendiente de revisión manual por el admin
                 tx_reference: data.transactionHash,
-                metadata: {
-                    user_wallet: data.walletUsed,
-                    verification_method: "manual"
-                },
+
                 created_at: new Date().toISOString(),
             })
             .select()
