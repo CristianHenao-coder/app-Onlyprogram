@@ -13,22 +13,16 @@ import configRoutes from "./routes/config.routes";
 const app = express();
 
 // Middlewares globales
+const allowedOrigins = [
+  config.urls.frontend,
+  "https://onlyprogramlink.com",
+  "https://www.onlyprogramlink.com",
+  "http://localhost:3000",
+];
+
 app.use(
   cors({
-    origin: (origin, callback) => {
-      const allowedOrigins = [
-        config.urls.frontend,
-        config.urls.frontend.replace(/\/$/, ""),
-        "https://onlyprogramlink.com",
-        "https://www.onlyprogramlink.com",
-        "https://app-onlyprogram.onrender.com"
-      ];
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`Not allowed by CORS: ${origin}`));
-      }
-    },
+    origin: config.urls.frontend,
     credentials: true,
   }),
 );

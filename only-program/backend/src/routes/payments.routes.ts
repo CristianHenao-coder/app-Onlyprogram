@@ -21,7 +21,9 @@ router.post("/webhook/redotpay", async (req, res) => {
 
     // Procesar el pago exitoso
     if (payload.status === "PAID" || payload.status === "COMPLETED") {
-      console.log(`💰 Crypto payment received for order ${payload.merchantOrderId}`);
+      console.log(
+        `💰 Crypto payment received for order ${payload.merchantOrderId}`,
+      );
 
       // 1. Actualizar estado en la tabla 'payments'
       const { data: payment, error } = await supabase
@@ -41,14 +43,21 @@ router.post("/webhook/redotpay", async (req, res) => {
         // 2. Actualizar Suscripción si existe
         if (payment.subscription_id) {
           try {
-            await SubscriptionService.processSuccessfulPayment(payment.subscription_id);
+            await SubscriptionService.processSuccessfulPayment(
+              payment.subscription_id,
+            );
           } catch (subError) {
-            console.error("Failed to update subscription after crypto payment:", subError);
+            console.error(
+              "Failed to update subscription after crypto payment:",
+              subError,
+            );
           }
         }
 
         // 3. Enviar Email
-        const { data: userData } = await supabase.auth.admin.getUserById(payment.user_id);
+        const { data: userData } = await supabase.auth.admin.getUserById(
+          payment.user_id,
+        );
         const userEmail = userData.user?.email;
 
         if (userEmail) {
@@ -56,7 +65,7 @@ router.post("/webhook/redotpay", async (req, res) => {
             userEmail,
             payment.amount,
             payment.currency,
-            payload.merchantOrderId
+            payload.merchantOrderId,
           );
         }
       }
@@ -79,11 +88,11 @@ router.post("/paypal/create-order", async (req: AuthRequest, res) => {
     const { amount, description, subscriptionId } = req.body;
     if (!amount) return res.status(400).json({ error: "Amount is required" });
 
-    const order = await PayPalService.createOrder({
+    const order = (await PayPalService.createOrder({
       amount,
       description,
       referenceId: subscriptionId,
-    });
+    })) as any;
 
     // Guardar intento de pago
     if (req.user) {
@@ -111,14 +120,16 @@ router.post("/paypal/create-order", async (req: AuthRequest, res) => {
 router.post("/paypal/capture-order", async (req: AuthRequest, res) => {
   try {
     const { orderId } = req.body;
-    if (!orderId) return res.status(400).json({ error: "Order ID is required" });
+    if (!orderId)
+      return res.status(400).json({ error: "Order ID is required" });
 
-    const capture = await PayPalService.captureOrder(orderId);
+    const capture = (await PayPalService.captureOrder(orderId)) as any;
 
     if (capture.status === "COMPLETED") {
       const purchaseUnit = capture.purchase_units?.[0];
       const amountVal = purchaseUnit?.payments?.captures?.[0]?.amount?.value;
-      const currency = purchaseUnit?.payments?.captures?.[0]?.amount?.currency_code;
+      const currency =
+        purchaseUnit?.payments?.captures?.[0]?.amount?.currency_code;
       const captureId = purchaseUnit?.payments?.captures?.[0]?.id;
 
       // 1. Actualizar pago en DB
@@ -139,9 +150,14 @@ router.post("/paypal/capture-order", async (req: AuthRequest, res) => {
         // 2. Actualizar Suscripción
         if (payment.subscription_id) {
           try {
-            await SubscriptionService.processSuccessfulPayment(payment.subscription_id);
+            await SubscriptionService.processSuccessfulPayment(
+              payment.subscription_id,
+            );
           } catch (subError) {
-            console.error("Failed to update subscription after PayPal payment:", subError);
+            console.error(
+              "Failed to update subscription after PayPal payment:",
+              subError,
+            );
           }
         }
 
@@ -151,7 +167,7 @@ router.post("/paypal/capture-order", async (req: AuthRequest, res) => {
             req.user.email,
             parseFloat(amountVal),
             currency || "USD",
-            captureId || orderId
+            captureId || orderId,
           );
         }
       }
@@ -238,13 +254,15 @@ router.get("/", async (req: AuthRequest, res) => {
 
     const { data: payments, error } = await supabase
       .from("payments")
-      .select(`
+      .select(
+        `
         *,
         subscriptions (
           plan_id,
           status
         )
-      `)
+      `,
+      )
       .eq("user_id", req.user.id)
       .order("created_at", { ascending: false });
 
