@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
 interface DashboardLayoutProps {
@@ -6,7 +6,7 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const location = useLocation();
+  // const { pathname } = useLocation(); // Unused
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
 

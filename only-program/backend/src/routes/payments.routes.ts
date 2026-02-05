@@ -181,47 +181,135 @@ router.post("/paypal/capture-order", async (req: AuthRequest, res) => {
 
 // --- CRYPTO (RedotPay) ---
 
-router.post("/crypto/create-order", async (req: AuthRequest, res) => {
+// --- STRIPE ---
+
+// --- WOMPI ---
+router.post("/wompi/get-signature", async (req: AuthRequest, res) => {
   try {
-    const { amount, currency = "USD", subscriptionId } = req.body;
+    const { amount, currency = "COP" } = req.body;
 
-    if (!amount) {
-      return res.status(400).json({ error: "Amount is required" });
-    }
+    if (!amount) return res.status(400).json({ error: "Amount is required" });
 
-    const paymentId = uuidv4();
+    // Wompi usa centavos para COP
+    const amountInCents = Math.round(amount * 100);
+    const { WompiService } = await import("../services/wompi.service");
 
-    const order = await CryptoService.createOrder({
-      amount,
-      currency,
-      orderId: paymentId,
-      email: req.user?.email,
-    });
-
-    // Guardar intento de pago
-    if (req.user) {
-      await supabase.from("payments").insert({
-        id: paymentId,
-        user_id: req.user.id,
-        subscription_id: subscriptionId || null,
-        amount,
-        currency,
-        provider: "redotpay",
-        status: "pending",
-        tx_reference: null,
-        created_at: new Date().toISOString(),
-      });
-    }
+    const reference = WompiService.generateReference();
+    const signature = WompiService.generateSignature(reference, amountInCents, currency);
 
     res.json({
-      ...order,
-      internalOrderId: paymentId,
+      reference,
+      signature,
+      amountInCents,
+      currency,
+      publicKey: (await import("../config/env")).config.wompi.pubKey
     });
   } catch (error: any) {
-    console.error("Error creating Crypto order:", error);
+    console.error("Error creating Wompi Signature:", error);
     res.status(500).json({ error: error.message });
   }
 });
+
+router.post("/wompi/transaction", async (req: AuthRequest, res) => {
+  try {
+    const { amount, email, token, installments, acceptanceToken } = req.body;
+
+    if (!amount || !token || !email || !acceptanceToken) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const { WompiService } = await import("../services/wompi.service");
+
+    const transaction = await WompiService.createTransaction({
+      amountUSD: amount, // Frontend sends USD
+      email,
+      token,
+      installments,
+      acceptanceToken
+    });
+
+    // Guardar transacción en DB
+    if (req.user) {
+      // Lógica para guardar en tabla 'payments'
+      // Podemos reusar la lógica existente, o insertar aquí
+      const { error } = await supabase.from("payments").insert({
+        user_id: req.user.id,
+        amount, // USD
+        currency: "USD",
+        provider: "wompi",
+        status: transaction.status === "APPROVED" ? "completed" : "pending",
+        tx_reference: transaction.id,
+        created_at: new Date().toISOString()
+      });
+
+      if (error) console.error("Error saving payment:", error);
+    }
+
+    res.json(transaction);
+  } catch (error: any) {
+    console.error("Error creating Wompi Transaction:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/webhook/wompi", async (req, res) => {
+  try {
+    const event = req.body;
+    // Wompi sends data in 'data' and signature in headers or inside event properties
+    // This is a simplified handler. In PROD verify signature! 
+
+    console.log("💰 Wompi Webhook received:", event);
+
+    if (event.event === "transaction.updated" && event.data.transaction.status === "APPROVED") {
+      const tx = event.data.transaction;
+      // Logic to update database...
+      // Similar to other methods: find payment by reference -> update status -> email
+    }
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error("Wompi Webhook Error:", error);
+    res.sendStatus(500);
+  }
+});
+
+// --- MANUAL CRYPTO ---
+
+router.post("/crypto/manual", async (req: AuthRequest, res) => {
+  try {
+    const { amount, currency, transactionHash, walletUsed, subscriptionId } = req.body;
+
+    if (!amount || !transactionHash) {
+      return res.status(400).json({ error: "Amount and Transaction Hash are required" });
+    }
+
+    const { ManualCryptoService } = await import("../services/manual-crypto.service");
+
+    const payment = await ManualCryptoService.createManualPayment({
+      userId: req.user!.id,
+      amount,
+      currency: currency || "USDT",
+      transactionHash,
+      walletUsed,
+      subscriptionId
+    });
+
+    // Notificar al admin sobre el nuevo pago manual (Opcional, implementar luego)
+    // await notifyAdmin("New Crypto Payment", payment);
+
+    res.json({
+      success: true,
+      message: "Pago registrado para verificación manual",
+      payment
+    });
+  } catch (error: any) {
+    console.error("Error registering manual crypto payment:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Deprecated RedotPay kept for reference or removal
+// router.post("/crypto/create-order", ... );
 
 /**
  * GET /api/payments

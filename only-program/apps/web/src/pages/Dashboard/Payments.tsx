@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { paymentsService, Payment } from "../../services/payments.service";
 import PaymentSelector from "@/components/PaymentSelector";
 
 export default function Payments() {
+  const location = useLocation();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'card' | 'paypal' | 'crypto'>('card');
@@ -96,6 +98,38 @@ export default function Payments() {
         </div>
       )}
 
+      {/* Order Summary Section */}
+      {location.state?.pendingPurchase && (
+        <div className="bg-surface/40 border border-border rounded-3xl p-8 mb-8 animate-fade-in relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-10">
+            <span className="material-symbols-outlined text-9xl text-primary">shopping_cart</span>
+          </div>
+          <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-3">
+            <span className="material-symbols-outlined text-primary">receipt_long</span>
+            Resumen de Compra
+          </h2>
+
+          <div className="space-y-4 max-w-lg relative z-10">
+            <div className="flex justify-between items-center text-silver">
+              <span>{location.state.pendingPurchase.quantity} Links Adicionales</span>
+              <span className="font-mono">${location.state.pendingPurchase.amount.toFixed(2)}</span>
+            </div>
+
+            {location.state.pendingPurchase.discountApplied && (
+              <div className="flex justify-between items-center text-green-400 text-sm">
+                <span>Descuento ({location.state.pendingPurchase.discountApplied.code})</span>
+                <span className="font-mono">-${location.state.pendingPurchase.discountApplied.amount.toFixed(2)}</span>
+              </div>
+            )}
+
+            <div className="border-t border-white/10 pt-4 flex justify-between items-center">
+              <span className="text-xl font-bold text-white">Total a Pagar</span>
+              <span className="text-3xl font-black text-primary">${location.state.pendingPurchase.amount.toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* New Payment Method Section */}
       {(!hasSavedMethod || useNewMethod) && (
         <div className="bg-surface/40 border border-border rounded-3xl p-8 md:p-12 shadow-2xl animate-fade-in">
@@ -108,7 +142,12 @@ export default function Payments() {
               Volver al método guardado
             </button>
           )}
-          <PaymentSelector onSelect={handlePaymentMethodSelect} initialMethod={selectedPaymentMethod} />
+
+          <PaymentSelector
+            onSelect={handlePaymentMethodSelect}
+            initialMethod={selectedPaymentMethod}
+            amount={location.state?.pendingPurchase?.amount || 10} // Pass dynamic amount
+          />
         </div>
       )}
 

@@ -44,7 +44,7 @@ export const config = {
   paypal: {
     clientId: process.env.PAYPAL_CLIENT_ID || "",
     clientSecret: process.env.PAYPAL_CLIENT_SECRET || "",
-    apiUrl: process.env.PAYPAL_API_URL || "https://api-m.sandbox.paypal.com",
+    apiUrl: process.env.PAYPAL_API_URL || "https://api-m.paypal.com",
   },
 
   redotpay: {
@@ -69,6 +69,14 @@ export const config = {
   turnstile: {
     siteKey: process.env.TURNSTILE_SITE_KEY || "",
     secretKey: process.env.TURNSTILE_SECRET_KEY || "",
+  },
+
+  wompi: {
+    pubKey: process.env.WOMPI_PUB_KEY || "pub_test_Q5yWAz", // Default Sandbox Test Key
+    prvKey: process.env.WOMPI_PRV_KEY || "prv_test_H6w7iL",
+    integritySecret: process.env.WOMPI_INTEGRITY_SECRET || "test_integrity_secret", // En sandbox dashboard
+    eventsSecret: process.env.WOMPI_EVENTS_SECRET || "test_events_secret",
+    apiUrl: process.env.WOMPI_API_URL || "https://sandbox.wompi.co/v1",
   },
 };
 

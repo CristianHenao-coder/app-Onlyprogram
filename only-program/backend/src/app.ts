@@ -23,17 +23,7 @@ const allowedOrigins = [
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Permitir peticiones sin origen (como herramientas de test)
-      if (!origin) return callback(null, true);
-
-      if (allowedOrigins.includes(origin) || origin.endsWith(".onrender.com")) {
-        callback(null, true);
-      } else {
-        console.warn(`CORS blocked for origin: ${origin}`);
-        callback(null, true); // Permitimos por ahora para evitar bloqueos en el despliegue
-      }
-    },
+    origin: config.urls.frontend,
     credentials: true,
   }),
 );
@@ -98,6 +88,28 @@ app.listen(config.port, () => {
 ║   🔐 Supabase Auth activo             ║
 ╚════════════════════════════════════════╝
   `);
+  // Keep-Alive Mechanism for Render Free Tier
+  // Pings the health endpoint every 5 minutes to prevent sleep
+  const PING_INTERVAL = 5 * 60 * 1000; // 5 minutes
+  const SERVER_URL = config.urls.backend || `http://localhost:${config.port}`;
+
+  const pinger = setInterval(async () => {
+    try {
+      const response = await fetch(`${SERVER_URL}/health`);
+      if (response.ok) {
+        console.log(`[Keep-Alive] Ping successful to ${SERVER_URL}/health at ${new Date().toISOString()}`);
+      } else {
+        console.warn(`[Keep-Alive] Ping failed with status ${response.status}`);
+      }
+    } catch (error: any) {
+      console.error(`[Keep-Alive] Ping error: ${error.message}`);
+    }
+  }, PING_INTERVAL);
+
+  // Ensure interval is cleared on shutdown (optional but good practice)
+  process.on('SIGTERM', () => clearInterval(pinger));
+  process.on('SIGINT', () => clearInterval(pinger));
+
 });
 
 export default app;
