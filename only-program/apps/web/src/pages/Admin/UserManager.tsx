@@ -5,7 +5,7 @@ import { useModal } from '@/contexts/ModalContext';
 import { logActions } from '@/services/auditService';
 import { retryWithBackoff } from '@/utils/retryHelper';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
 
  const UserManager = () => {
    const { t } = useTranslation();
@@ -320,7 +320,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
                                {user.smart_links && user.smart_links.length > 0 ? (
                                    <div className="flex flex-col gap-3">
                                        <h4 className="text-[10px] font-black uppercase tracking-widest text-silver/40 mb-2 pl-2">Links Asociados al Usuario</h4>
-                                       {user.smart_links.map((link: any, index: number) => (
+                                       {user.smart_links.map((link: any) => (
                                            <div key={link.id} className="relative flex items-center gap-4 group">
                                                 {/* Conector Rama Horizontal */}
                                                 <div className="absolute -left-10 top-1/2 w-8 h-px bg-primary/30 group-hover:bg-primary/60 transition-colors"></div>
