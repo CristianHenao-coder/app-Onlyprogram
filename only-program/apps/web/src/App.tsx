@@ -5,6 +5,7 @@ import { ModalProvider } from '@/contexts/ModalContext';
 import Home from '@/pages/Home';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
+import Features from '@/pages/Features';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import Pricing from './pages/Pricing';
@@ -19,6 +20,7 @@ import Settings from '@/pages/Dashboard/Settings';
 import CreateLink from '@/pages/Dashboard/CreateLink';
 import LinkConfigurator from '@/pages/Dashboard/LinkConfigurator';
 import Support from '@/pages/Dashboard/Support';
+
 import Payments from '@/pages/Dashboard/Payments';
 import HomeDashboard from '@/pages/Dashboard/Home';
 
@@ -33,10 +35,13 @@ import AuditLogs from './pages/Admin/AuditLogs';
 
 // Components
 import DashboardLayout from '@/components/DashboardLayout';
+
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AdminRoute from '@/components/AdminRoute';
+
 import AdminLayout from '@/components/AdminLayout';
 import MotionManager from '@/components/MotionManager';
+import LoadingScreen from '@/components/LoadingScreen';
 import '@/styles/index.css';
 
 function ScrollToTop() {
@@ -52,12 +57,14 @@ function ScrollToTop() {
 function App() {
   return (
     <I18nProvider>
+      <LoadingScreen />
       <ModalProvider>
         <Router>
           <ScrollToTop />
           <MotionManager />
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/features" element={<Features />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/pricing" element={<Pricing />} />

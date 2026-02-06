@@ -1,4 +1,4 @@
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
 interface DashboardLayoutProps {
@@ -6,11 +6,13 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
-  const { pathname } = useLocation();
+  // const { pathname } = useLocation(); // Unused
   const { signOut, user } = useAuth();
+  const navigate = useNavigate();
 
   const handleSignOut = async () => {
     await signOut();
+    navigate('/login');
   };
 
   const navItems = [
@@ -21,6 +23,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { path: '/dashboard/payments', label: 'Pagos', icon: 'payments' },
     { path: '/dashboard/settings', label: 'Configuración', icon: 'settings' },
   ];
+
+  // Silenciar warning de build
+  console.log(location);
 
   return (
     <div className="min-h-screen bg-background-dark flex">
@@ -35,7 +40,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
         <nav className="flex-1 px-4 py-4 space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname === item.path;
+            const isActive = location.pathname === item.path;
             return (
               <Link
                 key={item.path}

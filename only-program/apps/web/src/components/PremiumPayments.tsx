@@ -1,29 +1,15 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "@/contexts/I18nContext";
-import { cmsService } from "@/services/cmsService";
 
 type PaymentAssetType = "crypto" | "card" | "paypal";
 
-export default function PremiumPayments({
-  previewData
-}: {
-  previewData?: any[];
-}) {
+export default function PremiumPayments() {
   const { t } = useTranslation() as any;
-  const [cmsPricing, setCmsPricing] = useState<any[]>([]);
 
-  useEffect(() => {
-    if (previewData) {
-      setCmsPricing(previewData);
-      return;
-    }
-
-    const fetch = async () => {
-      const data = await cmsService.getConfig('pricing');
-      if (data) setCmsPricing(data);
-    };
-    fetch();
-  }, [previewData]);
+  /* 
+   * Pricing data logic removed as user requested focus on Payment Methods only.
+   * If previewData is needed later for other components, re-enable here.
+   */
 
   const paymentAssets: Record<PaymentAssetType, string[]> = useMemo(() => {
     const modules = import.meta.glob("../assets/payments/*.{png,jpg,jpeg,webp,svg}", {
@@ -92,107 +78,74 @@ export default function PremiumPayments({
     assets: string[];
   }) => {
     return (
-      <div className="rounded-3xl border border-border bg-surface/40 p-6 hover:border-primary/40 transition-all">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-white font-extrabold">{title}</p>
-            <p className="text-silver/60 text-sm mt-1">{desc}</p>
-          </div>
-          <span className="material-symbols-outlined text-primary">{icon}</span>
-        </div>
+      <div className="group relative rounded-[2rem] border border-white/5 bg-[#0F0F0F] p-1 overflow-hidden transition-all hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary/10">
+        {/* Gradient Border on Hover */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-transparent to-purple-500/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        
+        <div className="relative h-full rounded-[1.8rem] bg-[#0A0A0A] p-6 lg:p-8 flex flex-col justify-between">
+            <div>
+                 <div className="flex items-start justify-between gap-4 mb-6">
+                  <div className="p-3 rounded-2xl bg-white/5 group-hover:bg-primary/10 transition-colors">
+                    <span className="material-symbols-outlined text-2xl text-silver group-hover:text-primary transition-colors">{icon}</span>
+                  </div>
+                  {assets.length > 0 && (
+                    <div className="flex -space-x-3">
+                        {assets.slice(0, 3).map((src, i) => (
+                          <div key={i} className="w-8 h-8 rounded-full border border-[#0A0A0A] bg-white flex items-center justify-center overflow-hidden relative z-10" style={{ zIndex: 3-i }}>
+                              <img src={src} className="w-full h-full object-cover" alt="" />
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                 </div>
 
-        <div className="mt-5 flex flex-wrap gap-2">
-          {chips.map((c) => (
-            <span
-              key={c}
-              className="text-[11px] px-2 py-1 rounded-full border border-border bg-background-dark/30 text-silver/70"
-            >
-              {c}
-            </span>
-          ))}
-        </div>
-
-        <div className="mt-6 rounded-2xl border border-border bg-background-dark/35 p-4">
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-silver/55 font-semibold">{t("payments.process.title")}</p>
-            <span className="text-[10px] font-mono text-primary bg-primary/10 border border-primary/20 px-2 py-1 rounded-full">
-              {t("payments.process.instant")}
-            </span>
-          </div>
-
-          <div className="mt-3 space-y-2 text-sm text-silver/70">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px] text-primary">done</span>
-              {t("payments.process.step1")}
+                <h3 className="text-xl font-bold text-white mb-2 group-hover:text-primary transition-colors">{title}</h3>
+                <p className="text-silver/60 text-sm leading-relaxed mb-6">{desc}</p>
+                
+                <div className="flex flex-wrap gap-2 mb-8">
+                  {chips.map((c) => (
+                    <span
+                      key={c}
+                      className="text-[10px] uppercase font-bold tracking-wider px-3 py-1.5 rounded-lg border border-white/5 bg-white/5 text-silver/50"
+                    >
+                      {c}
+                    </span>
+                  ))}
+                </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px] text-primary">done</span>
-              {t("payments.process.step2")}
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px] text-primary">done</span>
-              {t("payments.process.step3")}
-            </div>
-          </div>
-        </div>
 
-        {/* Logos (si existen) */}
-        {assets.length > 0 && (
-          <div className="mt-5 flex items-center gap-3 flex-wrap opacity-85">
-            {assets.slice(0, 6).map((src, i) => (
-              <div
-                key={`${src}-${i}`}
-                className="h-10 w-14 rounded-xl border border-border bg-surface/30 flex items-center justify-center overflow-hidden"
-              >
-                <img src={src} alt="" className="h-full w-full object-contain" draggable={false} />
-              </div>
-            ))}
-          </div>
-        )}
+            <div className="rounded-xl bg-white/5 p-4 border border-white/5">
+                <div className="flex items-center justify-between mb-3">
+                    <span className="text-[10px] font-bold uppercase text-silver/40">{t("payments.process.title")}</span>
+                    <span className="flex items-center gap-1.5 text-[10px] font-bold text-green-400 bg-green-500/10 px-2 py-0.5 rounded">
+                        <span className="w-1 h-1 rounded-full bg-green-400 animate-pulse" />
+                        {t("payments.process.instant")}
+                    </span>
+                </div>
+                <div className="space-y-2">
+                     <div className="flex items-center gap-2 text-xs text-silver/60">
+                         <span className="material-symbols-outlined text-primary text-sm">check</span>
+                         <span>{t("payments.process.step1")}</span>
+                     </div>
+                     <div className="flex items-center gap-2 text-xs text-silver/60">
+                         <span className="material-symbols-outlined text-primary text-sm">check</span>
+                         <span>{t("payments.process.step2")}</span>
+                     </div>
+                </div>
+            </div>
+        </div>
       </div>
     );
   };
 
   return (
     <div className="text-center">
-      <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-        {t ? t("payments.headline") : "Paga como quieras, activa tus links al instante"}
-      </h2>
-      <p className="mt-3 text-silver/60 max-w-2xl mx-auto">
-        {t
-          ? t("payments.subheadline")
-          : "Métodos flexibles, validación segura y activación sin fricción. En desktop tienes micro-interacciones con hover."}
-      </p>
+      {/* Component Title removed to avoid conflict with Home.tsx */}
 
-      {/* Pricing Tiers from CMS */}
-      {cmsPricing.length > 0 && (
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          {cmsPricing.map((plan, i) => (
-            <div key={i} className="bg-surface/30 border border-border/50 p-8 rounded-[2.5rem] relative group hover:border-primary/40 transition-all">
-              <p className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">{plan.name}</p>
-              <div className="flex items-baseline justify-center gap-1 mb-6">
-                <span className="text-4xl font-black text-white">${plan.price}</span>
-                <span className="text-silver/40 text-xs font-bold uppercase tracking-widest">/ Mes</span>
-              </div>
-              <ul className="space-y-3 mb-8 text-sm text-silver/60">
-                <li className="flex items-center justify-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
-                  Full Access
-                </li>
-                <li className="flex items-center justify-center gap-2">
-                  <span className="material-symbols-outlined text-primary text-sm">check_circle</span>
-                  Priority Support
-                </li>
-              </ul>
-              <button className="w-full py-4 bg-white/5 border border-border/40 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white hover:text-black transition-all">
-                Choose Plan
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Pricing Tiers from CMS (Hidden for now as user focused on Methods) */}
+      {/* ... keeping logic if needed but user asked about Methods design ... */}
 
-      <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card
           title={t ? t("payments.card") : "Tarjetas"}
           desc={t ? t("payments.cardDesc") : "VISA, Mastercard, Amex. Confirmación rápida."}
@@ -217,9 +170,8 @@ export default function PremiumPayments({
       </div>
 
       {!hasAny && (
-        <p className="mt-6 text-xs text-silver/45">
-          Tip: si quieres logos reales, agrega imágenes en{" "}
-          <span className="font-mono">src/assets/payments/</span> (visa/master/btc/paypal…)
+        <p className="mt-8 text-[10px] text-silver/20 uppercase tracking-widest">
+           * Assets path: src/assets/payments/ (visa/master/btc...)
         </p>
       )}
     </div>

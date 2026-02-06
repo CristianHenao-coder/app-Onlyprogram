@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AuthShell from '@/components/AuthShell';
 import { supabase } from '@/services/supabase';
+import PasswordInput from '@/components/PasswordInput';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -16,8 +17,9 @@ export default function ResetPassword() {
     setError(null);
     setMessage(null);
 
-    if (password.length < 8) {
-      setError('La contraseña debe tener mínimo 8 caracteres.');
+    // Basic validation (Checklist handles visual feedback, this is final guard)
+    if (password.length < 6) {
+      setError('La contraseña debe tener mínimo 6 caracteres.');
       return;
     }
     if (password !== confirm) {
@@ -56,35 +58,24 @@ export default function ResetPassword() {
         )}
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-          <div>
-            <label className="block text-xs font-semibold text-silver/70 uppercase tracking-wider mb-2" htmlFor="password">
-              Nueva contraseña
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-background-dark/50 border border-border rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-silver/20"
-              placeholder="Mínimo 8 caracteres"
-            />
-          </div>
+          <PasswordInput
+            id="password"
+            label="Nueva contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            showStrength={true}
+            placeholder="Mínimo 6 caracteres"
+          />
 
-          <div>
-            <label className="block text-xs font-semibold text-silver/70 uppercase tracking-wider mb-2" htmlFor="confirm">
-              Confirmar contraseña
-            </label>
-            <input
-              id="confirm"
-              type="password"
-              required
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              className="w-full bg-background-dark/50 border border-border rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-silver/20"
-              placeholder="••••••••"
-            />
-          </div>
+          <PasswordInput
+            id="confirm"
+            label="Confirmar contraseña"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            required
+            placeholder="••••••••"
+          />
 
           <button
             type="submit"

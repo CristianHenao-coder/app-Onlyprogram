@@ -54,10 +54,17 @@ export function useAuth() {
     }
   };
 
-  const signInWithEmail = async (email: string, password: string) => {
+  const signInWithEmail = async (
+    email: string,
+    password: string,
+    captchaToken?: string,
+  ) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
+      options: {
+        captchaToken,
+      },
     });
     return { data, error };
   };
@@ -70,6 +77,7 @@ export function useAuth() {
       phone?: string;
       country?: string;
     },
+    captchaToken?: string,
   ) => {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -80,6 +88,7 @@ export function useAuth() {
           phone: metadata?.phone,
           country: metadata?.country,
         },
+        captchaToken,
       },
     });
 

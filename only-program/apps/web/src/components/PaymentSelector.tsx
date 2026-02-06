@@ -1,35 +1,82 @@
 import { useState } from 'react';
+import WompiCreditCardForm from './WompiCreditCardForm';
+import { paymentsService } from '@/services/payments.service';
+import toast from 'react-hot-toast';
+import { QRCodeSVG } from 'qrcode.react';
 
 interface PaymentSelectorProps {
   onSelect?: (method: 'card' | 'paypal' | 'crypto') => void;
   initialMethod?: 'card' | 'paypal' | 'crypto';
+  amount?: number; // Add amount prop
 }
 
-export default function PaymentSelector({ onSelect, initialMethod = 'card' }: PaymentSelectorProps) {
+export default function PaymentSelector({ onSelect, initialMethod = 'card', amount = 10 }: PaymentSelectorProps) {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'crypto'>(initialMethod);
+
+  // Crypto State
+  const [txHash, setTxHash] = useState("");
+  const [isSubmittingCrypto, setIsSubmittingCrypto] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const walletAddress = import.meta.env.VITE_CRYPTO_WALLET_ADDRESS || "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t"; // Default placeholder if env not set
 
   const handleSelect = (method: 'card' | 'paypal' | 'crypto') => {
     setPaymentMethod(method);
     if (onSelect) onSelect(method);
   };
 
+  const handleCopyAddress = () => {
+    navigator.clipboard.writeText(walletAddress);
+    setCopied(true);
+    toast.success("Dirección copiada al portapapeles");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCryptoSubmit = async () => {
+    if (!txHash) return toast.error("Por favor ingresa el hash de la transacción");
+    // if (!senderWallet) return toast.error("Por favor ingresa tu dirección de billetera"); // Optional validation
+
+    setIsSubmittingCrypto(true);
+    try {
+      await paymentsService.submitManualCryptoPayment({
+        amount,
+        currency: "USDT",
+        transactionHash: txHash,
+        walletUsed: senderWallet // Passing the sender wallet
+      });
+      toast.success("Pago registrado correctamente. Verificaremos tu transacción pronto.", { duration: 5000 });
+      setTxHash("");
+      setSenderWallet("");
+      if (onSelect) onSelect('crypto'); // Refresh or something
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsSubmittingCrypto(false);
+    }
+  };
+
+  const [senderWallet, setSenderWallet] = useState("");
+
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in relative">
+      {/* Version Indicator for Debugging */}
+      <div className="absolute -top-4 right-0 text-[9px] text-silver/20 font-mono">v2.1-LIVE</div>
+
+      {/* Selector Tabs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           { id: 'card', label: 'Tarjeta de Crédito', icon: 'credit_card', color: 'bg-blue-500' },
-          { id: 'paypal', label: 'PayPal Account', icon: 'account_balance_wallet', color: 'bg-yellow-500' },
-          { id: 'crypto', label: 'Crypto Wallet', icon: 'currency_bitcoin', color: 'bg-orange-500' }
+          { id: 'paypal', label: 'PayPal', icon: 'account_balance_wallet', color: 'bg-yellow-500' },
+          { id: 'crypto', label: 'Crypto Manual', icon: 'currency_bitcoin', color: 'bg-orange-500' }
         ].map((method) => (
           <button
             key={method.id}
             type="button"
             onClick={() => handleSelect(method.id as any)}
-            className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-4 group ${
-              paymentMethod === method.id 
-                ? 'bg-primary/5 border-primary shadow-xl shadow-primary/10' 
-                : 'bg-background-dark/20 border-border/50 hover:border-silver/30'
-            }`}
+            className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-4 group ${paymentMethod === method.id
+              ? 'bg-primary/5 border-primary shadow-xl shadow-primary/10'
+              : 'bg-background-dark/20 border-border/50 hover:border-silver/30'
+              }`}
           >
             <div className={`h-14 w-14 rounded-2xl ${method.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
               <span className="material-symbols-outlined text-white text-3xl">{method.icon}</span>
@@ -41,75 +88,162 @@ export default function PaymentSelector({ onSelect, initialMethod = 'card' }: Pa
         ))}
       </div>
 
-      <div className="mt-8 p-8 bg-background-dark/30 border border-border/50 rounded-3xl">
+      {/* Payment Content */}
+      <div className="mt-8 p-8 bg-background-dark/30 border border-border/50 rounded-3xl min-h-[300px]">
+
+        {/* WOMPI */}
         {paymentMethod === 'card' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h4 className="text-lg font-black text-white px-1">Datos de Tarjeta</h4>
-              <div className="flex gap-2">
-                <div className="h-6 w-10 bg-white/10 rounded border border-white/5"></div>
-                <div className="h-6 w-10 bg-white/10 rounded border border-white/5"></div>
-              </div>
+          <div className="animate-fade-in w-full">
+            <div className="flex items-center justify-between w-full mb-6">
+              <h4 className="text-lg font-black text-white px-1">Pagar con Tarjeta</h4>
+              <span className="text-[10px] font-black bg-purple-500/20 text-purple-400 border border-purple-500/20 px-3 py-1 rounded-full uppercase">Seguro</span>
             </div>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-silver/40 uppercase tracking-widest pl-1">Número de Tarjeta</label>
-                <div className="relative">
-                  <span className="absolute left-5 top-1/2 -translate-y-1/2 material-symbols-outlined text-silver/40">credit_card</span>
-                  <input type="text" placeholder="0000 0000 0000 0000" className="w-full bg-background-dark/50 border border-border/50 rounded-xl pl-12 pr-5 py-3.5 text-white focus:outline-none focus:border-primary transition-all font-mono" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-silver/40 uppercase tracking-widest pl-1">Vencimiento</label>
-                  <input type="text" placeholder="MM / YY" className="w-full bg-background-dark/50 border border-border/50 rounded-xl px-5 py-3.5 text-white focus:outline-none focus:border-primary transition-all font-mono" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-silver/40 uppercase tracking-widest pl-1">CVC</label>
-                  <input type="password" placeholder="***" className="w-full bg-background-dark/50 border border-border/50 rounded-xl px-5 py-3.5 text-white focus:outline-none focus:border-primary transition-all font-mono" />
-                </div>
-              </div>
-            </div>
+
+            <WompiCreditCardForm
+              amount={amount}
+              email="" // TODO: Get user email from context/props
+              onSuccess={() => {
+                // Handle success (maybe redirect or show modal)
+                console.log("Payment Success");
+              }}
+            />
           </div>
         )}
 
+        {/* PAYPAL */}
         {paymentMethod === 'paypal' && (
-          <div className="flex flex-col items-center text-center space-y-6 py-4">
-            <div className="h-20 w-20 rounded-full bg-[#0070ba]/20 flex items-center justify-center">
-              <span className="material-symbols-outlined text-5xl text-[#0070ba]">payments</span>
+          <div className="flex flex-col items-center space-y-6 animate-fade-in w-full">
+            <div className="flex items-center justify-between w-full mb-2">
+              <h4 className="text-lg font-black text-white px-1">Pagar con PayPal</h4>
+              <span className="text-[10px] font-black bg-[#0070ba]/20 text-[#0070ba] border border-[#0070ba]/20 px-3 py-1 rounded-full uppercase">Instantáneo</span>
             </div>
-            <div className="space-y-2">
-              <h4 className="text-xl font-bold text-white">Paga con una cuenta de PayPal</h4>
-              <p className="text-silver/60 text-sm max-w-xs mx-auto">Rapidez y seguridad en tu transacción digital.</p>
-            </div>
-            <button type="button" className="bg-[#0070ba] hover:bg-[#005ea6] text-white px-10 py-4 rounded-2xl font-black shadow-xl shadow-[#0070ba]/20 transition-all active:scale-95">
-              Conectar PayPal
-            </button>
-          </div>
-        )}
 
-        {paymentMethod === 'crypto' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h4 className="text-lg font-black text-white px-1">Pago Decentralizado</h4>
-              <span className="text-[10px] font-black bg-orange-500/20 text-orange-500 border border-orange-500/20 px-3 py-1 rounded-full uppercase">Soportado</span>
-            </div>
-            <div className="space-y-4">
-              <div className="p-4 bg-orange-500/5 border border-orange-500/10 rounded-2xl flex items-center gap-4">
-                <span className="material-symbols-outlined text-orange-500">warning</span>
-                <p className="text-[10px] text-silver/60 leading-relaxed font-bold">
-                  Solo ingresa tu <strong>Dirección Pública (Wallet Address)</strong>. <br />
-                  <span className="text-orange-500 font-black">NUNCA</span> compartas tu frase semilla.
+            <div className="w-full bg-black/20 p-8 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-6">
+              <div className="text-center space-y-2 mb-2">
+                <div className="h-16 w-16 mx-auto bg-[#0070ba]/10 rounded-full flex items-center justify-center mb-4">
+                  <span className="material-symbols-outlined text-[#0070ba] text-4xl">account_balance_wallet</span>
+                </div>
+                <p className="text-silver/60 text-sm font-medium max-w-xs mx-auto">
+                  Serás redirigido a PayPal para completar tu pago de forma segura.
                 </p>
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-silver/40 uppercase tracking-widest pl-1">Tu Billetera (Public ID)</label>
-                <input 
-                  type="text" 
-                  placeholder="0x..." 
-                  className="w-full bg-background-dark/50 border border-border/50 rounded-xl px-5 py-3.5 text-white focus:outline-none focus:border-primary transition-all font-mono text-xs" 
-                />
+
+              <div className="w-full max-w-sm">
+                <button
+                  onClick={async () => {
+                    const toastId = toast.loading("Conectando con PayPal...");
+                    try {
+                      const order = await paymentsService.createPayPalOrder(amount);
+                      // Find approval link
+                      const approvalLink = order.links?.find((link: any) => link.rel === 'approve')?.href;
+                      if (approvalLink) {
+                        window.location.href = approvalLink;
+                      } else {
+                        throw new Error("No se pudo obtener el enlace de pago");
+                      }
+                    } catch (error: any) {
+                      console.error("PayPal Error:", error);
+                      toast.error("Error al conectar con PayPal", { id: toastId });
+                    }
+                  }}
+                  className="w-full bg-[#0070ba] hover:bg-[#003087] text-white font-black py-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-3 uppercase tracking-wider text-sm"
+                >
+                  <span className="material-symbols-outlined">output</span>
+                  Pagar con PayPal
+                </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* CRYPTO MANUAL */}
+        {paymentMethod === 'crypto' && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <h4 className="text-lg font-black text-white px-1">Pago Manual (Cripto)</h4>
+              <span className="text-[10px] font-black bg-orange-500/20 text-orange-500 border border-orange-500/20 px-3 py-1 rounded-full uppercase">Verificación Manual</span>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* QR Code Column */}
+              <div className="flex flex-col items-center justify-center space-y-4 bg-black/20 p-6 rounded-2xl border border-white/5">
+                <div className="bg-white p-2 rounded-xl">
+                  <QRCodeSVG
+                    value={walletAddress}
+                    size={180}
+                    level="M"
+                    includeMargin={false}
+                  />
+                </div>
+                <span className="text-[10px] font-bold text-silver/40 uppercase tracking-widest text-center">
+                  Escanear para pagar
+                </span>
+              </div>
+
+              {/* Details Column */}
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-silver/40 uppercase tracking-widest pl-1">Red / Método</label>
+                  <div className="flex items-center gap-2 p-3 bg-background-dark/50 rounded-xl border border-border/50">
+                    <span className="material-symbols-outlined text-green-500">link</span>
+                    <span className="text-sm font-bold text-white">USDT (Tether) - <span className="text-orange-500 font-black">TRC20</span></span>
+                  </div>
+                  <p className="text-[10px] text-red-400 pl-1 font-bold">⚠️ Envía SOLO por la red TRC20 (Tron)</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-silver/40 uppercase tracking-widest pl-1">Dirección de Destino</label>
+                  <div className="flex gap-2">
+                    <div className="flex-1 p-3 bg-background-dark/50 rounded-xl border border-border/50 font-mono text-xs text-silver/80 break-all flex items-center">
+                      {walletAddress}
+                    </div>
+                    <button
+                      onClick={handleCopyAddress}
+                      className="bg-surface hover:bg-surface-light border border-white/10 text-white p-3 rounded-xl transition-all"
+                      title="Copiar dirección"
+                    >
+                      <span className="material-symbols-outlined text-lg">
+                        {copied ? 'check' : 'content_copy'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-white/5 pt-6 space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-silver/40 uppercase tracking-widest pl-1">Tu Billetera (Opcional)</label>
+                  <input
+                    type="text"
+                    value={senderWallet}
+                    onChange={(e) => setSenderWallet(e.target.value)}
+                    placeholder="Ej: TExxxxxxxxx..."
+                    className="w-full bg-background-dark/50 border border-border/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-all font-mono text-sm"
+                  />
+                  <p className="text-[10px] text-silver/40 pl-1">Para identificar tu pago más rápido.</p>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-silver/40 uppercase tracking-widest pl-1">Confirmar Hash (TXID)</label>
+                  <input
+                    type="text"
+                    value={txHash}
+                    onChange={(e) => setTxHash(e.target.value)}
+                    placeholder="Pegar TXID aquí..."
+                    className="w-full bg-background-dark/50 border border-border/50 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-all font-mono text-sm"
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={handleCryptoSubmit}
+                disabled={isSubmittingCrypto || !txHash}
+                className="w-full bg-orange-500 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-orange-600 text-white py-4 rounded-xl font-bold uppercase text-xs tracking-widest transition-all shadow-lg shadow-orange-500/20"
+              >
+                {isSubmittingCrypto ? 'Verificando...' : 'Confirmar Pago Enviado'}
+              </button>
             </div>
           </div>
         )}
@@ -119,10 +253,9 @@ export default function PaymentSelector({ onSelect, initialMethod = 'card' }: Pa
         <div className="text-silver/40 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
           <span className="material-symbols-outlined text-sm">enhanced_encryption</span> SSL 256-bit Secure Connection
         </div>
-        <button type="button" className="bg-white text-black font-black px-8 py-3.5 rounded-xl hover:bg-silver transition-all shadow-xl shadow-white/5 active:scale-95 text-xs lg:text-sm uppercase tracking-widest">
-          Confirmar y Pagar
-        </button>
       </div>
     </div>
   );
 }
+
+

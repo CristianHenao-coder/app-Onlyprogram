@@ -122,6 +122,51 @@ router.post(
 );
 
 /**
+ * DELETE /api/admin/users/:userId
+ * Elimina un usuario por ID (solo admin)
+ */
+router.delete("/users/:userId", async (req: AuthRequest, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const adminId = req.user?.id;
+
+    if (!userId) {
+      return res.status(400).json({ error: "ID de usuario requerido" });
+    }
+
+    if (userId === adminId) {
+      return res
+        .status(400)
+        .json({ error: "No puedes eliminar tu propia cuenta" });
+    }
+
+    // 1. Eliminar referencias en la base de datos
+    // Eliminamos los links del usuario para evitar huérfanos o restricciones
+    const { error: linksError } = await supabase
+      .from("smart_links")
+      .delete()
+      .eq("user_id", userId);
+
+    if (linksError) {
+      console.error("Error al eliminar links del usuario:", linksError);
+      // No lanzamos error para permitir intentar borrar el usuario de todas formas,
+      // o podrías decidir lanzar error si es crítico.
+      // throw linksError;
+    }
+
+    // 2. Eliminar de Supabase Auth
+    const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
+
+    if (deleteError) throw deleteError;
+
+    res.json({ message: "Usuario eliminado correctamente" });
+  } catch (err: any) {
+    console.error("Error al eliminar usuario:", err);
+    res.status(500).json({ error: "No se pudo eliminar el usuario" });
+  }
+});
+
+/**
  * GET /api/admin/users
  * Obtiene lista de usuarios (solo admin)
  */

@@ -15,7 +15,11 @@ export interface Payment {
 async function handleResponse(response: Response) {
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || errorData.message || `Error ${response.status}: ${response.statusText}`);
+    throw new Error(
+      errorData.error ||
+      errorData.message ||
+      `Error ${response.status}: ${response.statusText}`,
+    );
   }
   return response.json();
 }
@@ -25,7 +29,9 @@ async function getAuthHeaders() {
   const token = session.session?.access_token;
 
   if (!token) {
-    throw new Error("No hay sesión activa. Por favor inicia sesión nuevamente.");
+    throw new Error(
+      "No hay sesión activa. Por favor inicia sesión nuevamente.",
+    );
   }
 
   return {
@@ -35,6 +41,17 @@ async function getAuthHeaders() {
 }
 
 export const paymentsService = {
+  async createWompiTransaction(data: { amount: number, email: string, token: string, acceptanceToken: string, installments?: number }) {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_URL}/payments/wompi/transaction`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(data),
+    });
+
+    return handleResponse(response);
+  },
+
   async getHistory() {
     const headers = await getAuthHeaders();
     // getAuthHeaders devuelve Content-Type, pero para GET no es estrictamente necesario, aunque no daña.
@@ -43,7 +60,7 @@ export const paymentsService = {
 
     const response = await fetch(`${API_URL}/payments`, {
       headers: {
-        Authorization: headers.Authorization
+        Authorization: headers.Authorization,
       },
     });
 
@@ -72,14 +89,34 @@ export const paymentsService = {
     return handleResponse(response);
   },
 
-  async createCryptoOrder(amount: number, subscriptionId?: string) {
+
+
+  async getWompiSignature(amount: number, currency: string = "COP") {
     const headers = await getAuthHeaders();
-    const response = await fetch(`${API_URL}/payments/crypto/create-order`, {
+    const response = await fetch(`${API_URL}/payments/wompi/get-signature`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ amount, subscriptionId }),
+      body: JSON.stringify({ amount, currency }),
+    });
+
+    return handleResponse(response);
+  },
+
+  async submitManualCryptoPayment(data: {
+    amount: number;
+    currency: string;
+    transactionHash: string;
+    walletUsed?: string;
+    subscriptionId?: string;
+  }) {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_URL}/payments/crypto/manual`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(data),
     });
 
     return handleResponse(response);
   },
 };
+
