@@ -5,7 +5,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/contexts/I18nContext';
 import { supabase } from '@/services/supabase';
 import Logo from '@/components/Logo';
-import Turnstile from '@/components/Turnstile';
 import PasswordInput from '@/components/PasswordInput';
 
 export default function Login() {
@@ -17,14 +16,13 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    const { data, error } = await signInWithEmail(email, password, captchaToken || undefined);
+    const { data, error } = await signInWithEmail(email, password);
 
     if (error) {
       setError(error.message);
@@ -121,11 +119,9 @@ export default function Login() {
             />
           </div>
 
-          <Turnstile onVerify={setCaptchaToken} />
-
           <button
             type="submit"
-            disabled={loading || !captchaToken}
+            disabled={loading}
             data-magnetic="0.12"
             className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -154,7 +150,7 @@ export default function Login() {
           <button
             type="button"
             onClick={handleGoogleLogin}
-            disabled={loading || !captchaToken}
+            disabled={loading}
             className="w-full bg-background-dark/50 border border-border hover:border-white/15 text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
