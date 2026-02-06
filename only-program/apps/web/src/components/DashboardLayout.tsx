@@ -20,12 +20,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   const menuItems = [
-    { path: '/dashboard/overview', icon: 'dashboard', label: t('dashboard.overview') },
-    { path: '/dashboard/links', icon: 'link', label: t('dashboard.links') },
-    { path: '/dashboard/analytics', icon: 'bar_chart', label: t('dashboard.analytics') },
+    { path: '/dashboard/overview', icon: 'dashboard', label: 'Dashboard' },
+    { path: '/dashboard/links', icon: 'link', label: 'Links' },
+    { path: '/dashboard/analytics', icon: 'bar_chart', label: 'Analíticas' },
     { path: '/dashboard/telegram', icon: 'telegram', label: 'Telegram' },
-    { path: '/dashboard/payments', icon: 'credit_card', label: t('dashboard.payments') },
-    { path: '/dashboard/profile', icon: 'person', label: t('dashboard.profile') },
+    { path: '/dashboard/payments', icon: 'credit_card', label: 'Pagos' },
+    { path: '/dashboard/profile', icon: 'person', label: 'Perfil' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -69,7 +69,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
             <div>
               <h1 className="text-xl font-black text-white">Only Program</h1>
-              <p className="text-xs text-silver/60">{t('dashboard.title')}</p>
+              <p className="text-xs text-silver/60">Panel de Control</p>
             </div>
           </Link>
         </div>
@@ -117,7 +117,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all border border-red-500/20 hover:border-red-500/40"
           >
             <span className="material-symbols-outlined text-lg">logout</span>
-            <span className="font-semibold text-sm">{t('dashboard.logout')}</span>
+            <span className="font-semibold text-sm">Cerrar Sesión</span>
           </button>
         </div>
       </aside>
