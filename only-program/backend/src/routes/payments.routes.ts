@@ -5,7 +5,6 @@ import { CryptoService } from "../services/crypto.service";
 import { sendPaymentConfirmationEmail } from "../services/brevo.service";
 import { supabase } from "../services/supabase.service";
 import { SubscriptionService } from "../services/subscription.service";
-import { v4 as uuidv4 } from "uuid";
 
 const router = Router();
 
