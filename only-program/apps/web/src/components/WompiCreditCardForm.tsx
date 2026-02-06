@@ -52,9 +52,13 @@ export default function WompiCreditCardForm({ amount, email, onSuccess }: WompiC
         setLoading(true);
         setError(null);
 
-        try {
-            const wompiPub = import.meta.env.VITE_WOMPI_PUB_KEY || "pub_test_Q5yWAz";
-            const wompiUrl = import.meta.env.VITE_WOMPI_API_URL || "https://sandbox.wompi.co/v1";
+            // Use production Wompi by default (sandbox only for explicit testing)
+            const wompiPub = import.meta.env.VITE_WOMPI_PUB_KEY || "";
+            const wompiUrl = import.meta.env.VITE_WOMPI_API_URL || "https://production.wompi.co/v1";
+
+            if (!wompiPub) {
+                throw new Error("Configuración de pago no disponible. Contacta a soporte.");
+            }
 
             // 1. Get Acceptance Token
             const merchantRes = await fetch(`${wompiUrl}/merchants/${wompiPub}`);
