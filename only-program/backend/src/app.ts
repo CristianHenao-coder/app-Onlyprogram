@@ -10,6 +10,7 @@ import analyticsRoutes from "./routes/analytics.routes";
 import adminRoutes from "./routes/admin.routes";
 import configRoutes from "./routes/config.routes";
 import wompiRoutes from "./routes/wompi.routes";
+import linkProfilesRoutes from "./routes/linkProfiles.routes";
 import { startBillingCron } from "./cron/billing.cron";
 
 const app = express();
@@ -55,6 +56,7 @@ app.use("/api/analytics", analyticsRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/config", configRoutes);
 app.use("/api/wompi", wompiRoutes);
+app.use("/api/link-profiles", linkProfilesRoutes);
 
 // Ruta 404
 app.use((req: Request, res: Response) => {
