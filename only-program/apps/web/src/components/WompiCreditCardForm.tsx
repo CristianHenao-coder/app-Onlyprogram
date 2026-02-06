@@ -52,6 +52,7 @@ export default function WompiCreditCardForm({ amount, email, onSuccess }: WompiC
         setLoading(true);
         setError(null);
 
+        try {
             // Use production Wompi by default (sandbox only for explicit testing)
             const wompiPub = import.meta.env.VITE_WOMPI_PUB_KEY || "";
             const wompiUrl = import.meta.env.VITE_WOMPI_API_URL || "https://production.wompi.co/v1";
