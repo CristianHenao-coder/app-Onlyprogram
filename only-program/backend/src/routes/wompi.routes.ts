@@ -61,14 +61,15 @@ router.post(
       const perLink = BASE_PRICE_USD * (1 - discount);
       const totalUSD = perLink * qty;
 
-      // Wompi requires amount in CENTS.
-      // Ensure currency is USD or convert to COP. Wompi supports USD.
-      const currency = "USD";
-      const amountInCents = Math.round(totalUSD * 100);
+      // Wompi Colombia requires COP (Colombian Pesos), not USD
+      // Convert USD to COP
+      const currency = "COP";
+      const totalCOP = await WompiService.calculateAmountInCents(totalUSD);
+      const amountInCents = totalCOP; // Already in cents from calculateAmountInCents
 
       const reference = uuidv4(); // Unique transaction reference
 
-      // 3. Generate Signature
+      // 3. Generate Signature (must use COP for Wompi Colombia)
       const signature = WompiService.generateSignature(
         reference,
         amountInCents,
@@ -80,7 +81,7 @@ router.post(
         id: reference, // Using reference as ID
         user_id: userId,
         amount: totalUSD,
-        currency: currency,
+        currency: "USD", // Store original USD amount
         provider: "wompi",
         status: "pending",
         tx_reference: null, // Will fill with Wompi Transaction ID later
@@ -90,7 +91,7 @@ router.post(
       res.json({
         reference,
         amountInCents,
-        currency,
+        currency, // Send COP to frontend
         signature,
         publicKey: config.wompi.pubKey,
         redirectUrl: `${config.urls.frontend}/dashboard/billing?status=success`, // Redirect after pay

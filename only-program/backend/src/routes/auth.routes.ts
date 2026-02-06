@@ -36,7 +36,7 @@ router.post(
       const { data, error } = await supabase.auth.admin.createUser({
         email,
         password,
-        email_confirm: false,
+        email_confirm: true, // Auto-confirmar email en desarrollo
       });
 
       if (error || !data.user) {
