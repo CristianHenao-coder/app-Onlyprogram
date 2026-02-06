@@ -74,5 +74,4 @@ export const config = {
 };
 
 console.log("Variables de entorno cargadas correctamente");
-console.log("Variables de entorno cargadas correctamente");
 // Logs de URL eliminados por seguridad (Info Disclosure)
