@@ -243,7 +243,7 @@ export default function WompiCreditCardForm({ amount, email, onSuccess }: WompiC
                     ) : (
                         <>
                             <span className="material-symbols-outlined text-lg">lock_open</span>
-                            Pagar ${amount} USD
+                            Pagar {amount ? `$${amount} USD` : ""}
                         </>
                     )}
                 </button>

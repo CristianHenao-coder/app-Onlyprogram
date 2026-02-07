@@ -12,7 +12,7 @@ interface PaymentSelectorProps {
 
 import { useAuth } from '@/hooks/useAuth';
 
-export default function PaymentSelector({ onSelect, initialMethod = 'card', amount = 10 }: PaymentSelectorProps) {
+export default function PaymentSelector({ onSelect, initialMethod = 'card', amount }: PaymentSelectorProps) {
   const { user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'crypto'>(initialMethod);
 
@@ -42,7 +42,7 @@ export default function PaymentSelector({ onSelect, initialMethod = 'card', amou
     setIsSubmittingCrypto(true);
     try {
       await paymentsService.submitManualCryptoPayment({
-        amount,
+        amount: amount || 0,
         currency: "USDT",
         transactionHash: txHash,
         walletUsed: senderWallet // Passing the sender wallet
@@ -103,7 +103,7 @@ export default function PaymentSelector({ onSelect, initialMethod = 'card', amou
             </div>
 
             <WompiCreditCardForm
-              amount={amount}
+              amount={amount || 0}
               email={user?.email || ""}
               onSuccess={() => {
                 // Handle success (maybe redirect or show modal)
@@ -136,7 +136,7 @@ export default function PaymentSelector({ onSelect, initialMethod = 'card', amou
                   onClick={async () => {
                     const toastId = toast.loading("Conectando con PayPal...");
                     try {
-                      const order = await paymentsService.createPayPalOrder(amount);
+                      const order = await paymentsService.createPayPalOrder(amount || 0);
                       // Find approval link
                       const approvalLink = order.links?.find((link: any) => link.rel === 'approve')?.href;
                       if (approvalLink) {
