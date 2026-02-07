@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+// Force rebuild timestamp: 2026-02-07
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, Outlet } from 'react-router-dom';
 import { I18nProvider } from '@/contexts/I18nContext';
 import { ModalProvider } from '@/contexts/ModalContext';

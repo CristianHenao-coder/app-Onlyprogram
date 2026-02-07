@@ -202,6 +202,19 @@ export default function Links() {
 
   // Persistence
   useEffect(() => { localStorage.setItem('my_links_data', JSON.stringify(pages)); }, [pages]);
+  
+  // Animation State
+  const [animateBuyButton, setAnimateBuyButton] = useState(false);
+  const prevDraftCountRef = useRef(draftPages.length);
+
+  useEffect(() => {
+    if (draftPages.length > prevDraftCountRef.current) {
+        setAnimateBuyButton(true);
+        const timer = setTimeout(() => setAnimateBuyButton(false), 1000); // 1s animation
+        return () => clearTimeout(timer);
+    }
+    prevDraftCountRef.current = draftPages.length;
+  }, [draftPages.length]);
 
   // --- HANDLERS ---
   const handleAddPage = () => {
@@ -281,7 +294,7 @@ export default function Links() {
     };
     setPages(prev => prev.map(p => p.id === selectedPageId ? { ...p, buttons: [...p.buttons, newButton] } : p));
     setSelectedButtonId(newButton.id);
-    setShowButtonCreator(false);
+    // Removed auto-close: setShowButtonCreator(false);
     toast.success('Botón añadido');
   };
 
@@ -471,13 +484,13 @@ export default function Links() {
              
              {/* LEFT PANEL: BUTTONS LIST & ADDER */}
              <div className="w-full lg:w-80 border-r border-white/5 flex flex-col bg-[#070707] shrink-0">
-                <div className="p-4 border-b border-white/5">
+                <div className="p-4 border-b border-white/5 relative z-10 bg-[#070707]">
                    <button onClick={() => setShowButtonCreator(true)} className="w-full py-3 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
                       <span className="material-symbols-outlined">add_circle</span> {t('dashboard.links.addButton')}
                    </button>
                 </div>
                 
-                <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-3 relative z-0">
                   <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                     <SortableContext items={currentPage.buttons} strategy={verticalListSortingStrategy}>
                       <div className="space-y-2">
@@ -666,7 +679,7 @@ export default function Links() {
                            
                            <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6 space-y-6">
                               <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-white/5 pb-4">
-                                 <span className="material-symbols-outlined text-silver/40">id_card</span> {t('dashboard.links.profileDetails')}
+                                 <span className="material-symbols-outlined text-silver/40">id_card</span> Detalles del Perfil (Debug)
                               </h3>
                               
                               <div className="flex gap-6 items-start">
@@ -718,21 +731,30 @@ export default function Links() {
                            </div>
                         </div>
                       )}
-                   </div>
-                </div>
-
-                {/* STICKY BUY BUTTON - CONDITIONAL */}
-                {draftPages.length > 0 && currentPage.status === 'draft' && (
-                  <div className="p-4 bg-gradient-to-t from-black via-[#050505] to-[#050505] z-30 shrink-0 border-t border-white/5">
-                     <button onClick={() => setShowPaymentModal(true)} className="w-full py-4 bg-gradient-to-r from-yellow-500 to-amber-600 rounded-xl text-black font-black uppercase tracking-widest shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:shadow-[0_0_50px_rgba(245,158,11,0.5)] hover:scale-[1.01] transition-all flex items-center justify-center gap-3">
-                        <span className="material-symbols-outlined">shopping_cart</span>
-                        <span>{t('dashboard.links.buyLinks')}</span>
-                        <span className="bg-black/20 px-2 py-0.5 rounded text-xs ml-2">${paymentDetails.total}</span>
-                     </button>
+                     </div>
                   </div>
-                )}
-             </div>
-          </div>
+
+                  {/* FIXED OVERLAY BUY BUTTON */}
+                  {draftPages.length > 0 && currentPage.status === 'draft' && (
+                    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-30">
+                       <button
+                          onClick={() => setShowPaymentModal(true)}
+                          className={`w-full py-4 bg-gradient-to-r from-[#FFB700] to-[#FF8A00] rounded-2xl text-black font-black uppercase tracking-widest shadow-[0_10px_40px_rgba(0,0,0,0.5)] border border-[#FFD700]/30 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 relative overflow-hidden group ${animateBuyButton ? 'animate-bounce' : ''}`}
+                       >
+                          <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                          <div className={`p-2 bg-black/10 rounded-full ${animateBuyButton ? 'animate-spin-slow' : ''}`}>
+                             <span className="material-symbols-outlined relative z-10 text-xl">shopping_cart</span>
+                          </div>
+                          <div className="flex flex-col items-start leading-none">
+                             <span className="relative z-10 text-xs">Desbloquear Más Links</span>
+                             <span className="text-[10px] opacity-60 font-bold">Compra única • Acceso inmediato</span>
+                          </div>
+                          <span className="bg-black/80 text-[#FFB700] px-3 py-1 rounded-lg text-sm ml-auto relative z-10 font-bold border border-[#FFB700]/20 shadow-inner">${paymentDetails.total}</span>
+                       </button>
+                    </div>
+                  )}
+              </div>
+           </div>
         </div>
 
         {/* COL 2: PREVIEW (Desktop Only) */}
