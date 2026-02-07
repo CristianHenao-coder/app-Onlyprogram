@@ -11,15 +11,17 @@ export default function LinkEditor() {
   const {
     data,
     updateData,
-    addButton,
-    updateButton,
-    deleteButton,
+    addBlock,
+    updateBlock,
+    deleteBlock,
   } = useLinkEditor();
 
   const [selectedButtonId, setSelectedButtonId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const selectedButton = data.buttons.find(b => b.id === selectedButtonId);
+  // Derive buttons from blocks for backward compatibility in this view
+  const buttons = data.blocks.filter(b => b.type === 'button');
+  const selectedButton = buttons.find(b => b.id === selectedButtonId);
 
   const handleSave = () => {
     toast.success('Cambios guardados localmente');
@@ -65,7 +67,7 @@ export default function LinkEditor() {
 
           {/* Buttons List */}
           <div className="space-y-3">
-            {data.buttons.map((button) => (
+            {buttons.map((button) => (
               <div
                 key={button.id}
                 onClick={() => setSelectedButtonId(button.id)}
@@ -94,7 +96,7 @@ export default function LinkEditor() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteButton(button.id);
+                        deleteBlock(button.id);
                       }}
                       className="p-1 hover:text-red-400"
                     >
@@ -106,7 +108,7 @@ export default function LinkEditor() {
             ))}
 
             <button
-              onClick={addButton}
+              onClick={() => addBlock('button')}
               className="w-full py-3 border border-dashed border-border rounded-xl text-silver/40 hover:text-primary hover:border-primary/50 transition-all flex items-center justify-center gap-2"
             >
               <span className="material-symbols-outlined text-sm">add_circle</span>
@@ -353,7 +355,7 @@ export default function LinkEditor() {
                           <input
                             type="text"
                             value={selectedButton.title}
-                            onChange={(e) => updateButton(selectedButton.id, { title: e.target.value })}
+                            onChange={(e) => updateBlock(selectedButton.id, { title: e.target.value })}
                             className="w-full bg-[#0B0B0B] border border-border rounded-xl px-4 py-3 text-white text-sm focus:ring-1 focus:ring-primary outline-none"
                           />
                         </div>
@@ -364,7 +366,7 @@ export default function LinkEditor() {
                             <input
                               type="url"
                               value={selectedButton.url}
-                              onChange={(e) => updateButton(selectedButton.id, { url: e.target.value })}
+                              onChange={(e) => updateBlock(selectedButton.id, { url: e.target.value })}
                               className="flex-1 bg-[#0B0B0B] border border-border rounded-xl px-4 py-3 text-white text-sm font-mono focus:ring-1 focus:ring-primary outline-none"
                               placeholder="https://"
                             />
@@ -384,7 +386,7 @@ export default function LinkEditor() {
                             {(['rounded', 'square', 'soft'] as const).map((shape) => (
                               <button
                                 key={shape}
-                                onClick={() => updateButton(selectedButton.id, { buttonShape: shape })}
+                                onClick={() => updateBlock(selectedButton.id, { buttonShape: shape })}
                                 className={`p-2 rounded-lg flex flex-col items-center gap-1 transition-all ${
                                   selectedButton.buttonShape === shape
                                     ? 'border-2 border-primary bg-primary/5 text-white'
@@ -406,7 +408,7 @@ export default function LinkEditor() {
                             <label className="text-[10px] font-bold text-silver/40 uppercase tracking-widest">Grosor Borde</label>
                             <select
                               value={selectedButton.borderWidth}
-                              onChange={(e) => updateButton(selectedButton.id, { borderWidth: parseInt(e.target.value) })}
+                              onChange={(e) => updateBlock(selectedButton.id, { borderWidth: parseInt(e.target.value) })}
                               className="w-full bg-[#0B0B0B] border border-border rounded-xl text-white text-xs px-3 py-2 outline-none"
                             >
                               <option value="0">0px</option>
@@ -421,7 +423,7 @@ export default function LinkEditor() {
                               min="0"
                               max="100"
                               value={selectedButton.shadowIntensity}
-                              onChange={(e) => updateButton(selectedButton.id, { shadowIntensity: parseInt(e.target.value) })}
+                              onChange={(e) => updateBlock(selectedButton.id, { shadowIntensity: parseInt(e.target.value) })}
                               className="w-full h-1 bg-border rounded-lg appearance-none cursor-pointer accent-primary mt-3"
                             />
                           </div>
@@ -446,7 +448,7 @@ export default function LinkEditor() {
                           <span className="material-symbols-outlined">content_copy</span>
                         </button>
                         <button
-                          onClick={() => deleteButton(selectedButton.id)}
+                          onClick={() => deleteBlock(selectedButton.id)}
                           className="p-2 text-red-400/60 hover:text-red-400 transition-colors"
                           title="Eliminar"
                         >

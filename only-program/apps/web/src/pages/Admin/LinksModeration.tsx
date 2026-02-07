@@ -18,7 +18,7 @@ interface PendingLink {
 }
 
 const LinksModeration = () => {
-  const { t } = useTranslation();
+  // const { t } = useTranslation();
   const [links, setLinks] = useState<PendingLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLink, setSelectedLink] = useState<PendingLink | null>(null);
