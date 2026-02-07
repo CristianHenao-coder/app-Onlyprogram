@@ -1,8 +1,11 @@
 import { Router, Request, Response } from "express";
 import multer from "multer";
 import sharp from "sharp";
-import { supabase } from "../config/supabase";
-import { authMiddleware } from "../middlewares/auth.middleware";
+import { supabase } from "../services/supabase.service";
+import {
+  authenticateToken as authMiddleware,
+  AuthRequest,
+} from "../middlewares/auth.middleware";
 import { linkProfilesService } from "../services/linkProfiles.service";
 
 const router = Router();
@@ -64,7 +67,7 @@ async function optimizeAndUploadImage(
  * GET /api/link-profiles
  * Get current user's link profile
  */
-router.get("/", authMiddleware, async (req: Request, res: Response) => {
+router.get("/", authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
     const profile = await linkProfilesService.getProfile(userId);
@@ -80,7 +83,7 @@ router.get("/", authMiddleware, async (req: Request, res: Response) => {
  * POST /api/link-profiles
  * Create or update link profile
  */
-router.post("/", authMiddleware, async (req: Request, res: Response) => {
+router.post("/", authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
     const profileData = { ...req.body, user_id: userId };
@@ -101,7 +104,7 @@ router.post("/", authMiddleware, async (req: Request, res: Response) => {
 router.get(
   "/smart-link",
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       const userId = req.user!.id;
       const linkId = req.query.linkId as string | undefined;
@@ -123,7 +126,7 @@ router.get(
 router.post(
   "/buttons/:linkId",
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       const { linkId } = req.params;
       const { buttons } = req.body;
@@ -145,7 +148,7 @@ router.post(
 router.post(
   "/branding/:linkId",
   authMiddleware,
-  async (req: Request, res: Response) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       const { linkId } = req.params;
       const branding = req.body;
@@ -168,7 +171,7 @@ router.post(
   "/upload/profile-photo",
   authMiddleware,
   upload.single("photo"),
-  async (req: Request, res: Response) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -197,7 +200,7 @@ router.post(
   "/upload/background",
   authMiddleware,
   upload.single("background"),
-  async (req: Request, res: Response) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -226,7 +229,7 @@ router.post(
   "/upload/icon",
   authMiddleware,
   upload.single("icon"),
-  async (req: Request, res: Response) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -251,21 +254,25 @@ router.post(
  * DELETE /api/link-profiles/image
  * Delete an image from storage
  */
-router.delete("/image", authMiddleware, async (req: Request, res: Response) => {
-  try {
-    const { path } = req.body;
+router.delete(
+  "/image",
+  authMiddleware,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { path } = req.body;
 
-    if (!path) {
-      return res.status(400).json({ error: "Path is required" });
+      if (!path) {
+        return res.status(400).json({ error: "Path is required" });
+      }
+
+      await linkProfilesService.deleteImage(path);
+
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error("Error deleting image:", error);
+      res.status(500).json({ error: error.message });
     }
-
-    await linkProfilesService.deleteImage(path);
-
-    res.json({ success: true });
-  } catch (error: any) {
-    console.error("Error deleting image:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
+  },
+);
 
 export default router;

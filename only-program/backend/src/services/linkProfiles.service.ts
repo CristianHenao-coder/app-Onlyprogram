@@ -1,4 +1,4 @@
-import { supabase } from "../config/supabase";
+import { supabase } from "./supabase.service";
 
 export interface LinkProfile {
   id?: string;

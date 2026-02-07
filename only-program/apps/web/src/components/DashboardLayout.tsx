@@ -20,7 +20,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const menuItems = [
     { path: '/dashboard/links', icon: 'link', label: 'Links' },
     { path: '/dashboard/analytics', icon: 'bar_chart', label: 'Analíticas' },
-    { path: '/dashboard/telegram', icon: 'telegram', label: 'Telegram' },
+    { path: '/dashboard/telegram', icon: 'send', label: 'Telegram' },
     { path: '/dashboard/payments', icon: 'credit_card', label: 'Pagos' },
     { path: '/dashboard/settings', icon: 'settings', label: 'Configuración' },
   ];
