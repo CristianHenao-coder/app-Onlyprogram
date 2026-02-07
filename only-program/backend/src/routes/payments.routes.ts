@@ -233,19 +233,25 @@ router.post("/wompi/transaction", async (req: AuthRequest, res) => {
 
     // Guardar transacción en DB
     if (req.user) {
-      // Lógica para guardar en tabla 'payments'
-      // Podemos reusar la lógica existente, o insertar aquí
+      const status = transaction.status === "APPROVED" ? "completed" : "pending";
+
       const { error } = await supabase.from("payments").insert({
         user_id: req.user.id,
         amount, // USD
         currency: "USD",
         provider: "wompi",
-        status: transaction.status === "APPROVED" ? "completed" : "pending",
+        status: status,
         tx_reference: transaction.id,
         created_at: new Date().toISOString()
       });
 
       if (error) console.error("Error saving payment:", error);
+
+      // ACTIVACIÓN INMEDIATA SÍNCRONA
+      if (status === "completed") {
+        const { FulfillmentService } = await import("../services/fulfillment.service");
+        await FulfillmentService.activateLinkProduct(req.user.id, transaction.id, amount, "USD");
+      }
     }
 
     res.json(transaction);

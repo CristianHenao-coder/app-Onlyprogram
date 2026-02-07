@@ -97,7 +97,7 @@ app.listen(config.port, () => {
   // Keep-Alive Mechanism for Render Free Tier
   // Pings the health endpoint every 5 minutes to prevent sleep
   const PING_INTERVAL = 5 * 60 * 1000; // 5 minutes
-  const SERVER_URL = config.urls.backend || `http://localhost:${config.port}`;
+  const SERVER_URL = "https://onlyprogramlink.com";
 
   const pinger = setInterval(async () => {
     try {

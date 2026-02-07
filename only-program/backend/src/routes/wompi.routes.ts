@@ -184,29 +184,11 @@ router.post("/webhook", async (req, res) => {
         }
       }
 
-      // 3. Activate User Links
-      const { error: linkError } = await supabase
-        .from("smart_links")
-        .update({ is_active: true })
-        .eq("user_id", payment.user_id)
-        .eq("is_active", false);
+      // 3. Activate User Links (Centralized)
+      const { FulfillmentService } = await import("../services/fulfillment.service");
+      await FulfillmentService.activateLinkProduct(payment.user_id, reference, payment.amount, payment.currency);
 
-      if (linkError) console.error("Error activating links:", linkError);
-
-      // 4. Send Notification
-      const { data: userData } = await supabase.auth.admin.getUserById(
-        payment.user_id,
-      );
-      if (userData.user?.email) {
-        await sendPaymentConfirmationEmail(
-          userData.user.email,
-          payment.amount,
-          payment.currency,
-          transactionId,
-        );
-      }
-
-      console.log(`✅ Payment ${reference} approved. Links activated.`);
+      console.log(`✅ Payment ${reference} approved. Links activated via Webhook.`);
     } else {
       // Handle Rejected/Voided
       await supabase
