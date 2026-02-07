@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security Check | OnlyProgram</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .loader {
+            border: 4px solid #333;
+            border-top: 4px solid #00aff0;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="loader"></div>
+    <div id="status">Verifying your browser...</div>
+    <div id="debug" style="color: #444; font-size: 10px; margin-top: 10px;"></div>
+
+    <script>
+        (async function () {
+            const statusParams = new URLSearchParams(window.location.search);
+            const prefix = statusParams.get('prefix');
+            const difficulty = parseInt(statusParams.get('difficulty') || '3');
+            const back = statusParams.get('back') || '/';
+
+            document.getElementById('debug').innerText = `Challenge: ${prefix} (Diff: ${difficulty})`;
+
+            if (!prefix) {
+                document.getElementById('status').innerText = 'Error: Missing challenge.';
+                return;
+            }
+
+            // Proof of Work Solver (SHA-256)
+            async function solvePoW(prefix, difficulty) {
+                const target = '0'.repeat(difficulty);
+                let nonce = 0;
+
+                while (true) {
+                    const input = prefix + nonce;
+                    const msgBuffer = new TextEncoder().encode(input);
+                    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+                    const hashArray = Array.from(new Uint8Array(hashBuffer));
+                    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+                    if (hashHex.startsWith(target)) {
+                        return { nonce, hashHex };
+                    }
+                    nonce++;
+
+                    if (nonce % 5000 === 0) await new Promise(r => setTimeout(r, 0)); // Evitar bloqueo de UI
+                }
+            }
+
+            try {
+                const solution = await solvePoW(prefix, difficulty);
+
+                // Redirigir con la solución
+                const verifyUrl = `/challenge/verify?prefix=${prefix}&nonce=${solution.nonce}&back=${encodeURIComponent(back)}`;
+                window.location.href = verifyUrl;
+
+            } catch (e) {
+                document.getElementById('status').innerText = 'Verification failed. Please reload.';
+                console.error(e);
+            }
+        })();
+    </script>
+</body>
+
+</html>

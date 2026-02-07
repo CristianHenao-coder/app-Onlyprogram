@@ -16,6 +16,7 @@ import CompleteProfile from './pages/CompleteProfile';
 import Analytics from '@/pages/Dashboard/Analytics';
 import Links from '@/pages/Dashboard/Links';
 import Telegram from '@/pages/Dashboard/Telegram';
+import Domains from '@/pages/Dashboard/Domains';
 import Settings from '@/pages/Dashboard/Settings';
 import CreateLink from '@/pages/Dashboard/CreateLink';
 import LinkConfigurator from '@/pages/Dashboard/LinkConfigurator';
@@ -45,6 +46,12 @@ import MotionManager from '@/components/MotionManager';
 import LoadingScreen from '@/components/LoadingScreen';
 import '@/styles/index.css';
 
+// Anti-Ban Pages
+import SmartLinkLanding from '@/pages/SmartLinkLanding';
+import LoadingPage from '@/pages/LoadingPage';
+import SafePage from '@/pages/SafePage';
+
+
 function ScrollToTop() {
   const { pathname } = useLocation();
 
@@ -55,71 +62,82 @@ function ScrollToTop() {
   return null;
 }
 
+import DomainResolver from '@/components/DomainResolver';
+
 function App() {
   return (
     <I18nProvider>
       <LoadingScreen />
       <ModalProvider>
-        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <ScrollToTop />
-          <MotionManager />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/features" element={<Features />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/pricing" element={<Pricing />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/welcome" element={<Welcome />} />
-            <Route path="/complete-profile" element={<CompleteProfile />} />
+        <DomainResolver>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <ScrollToTop />
+            <MotionManager />
+            <Routes>
+              {/* Anti-Ban & Smart Links Routes */}
+              <Route path="/s/:slug" element={<SmartLinkLanding />} />
+              <Route path="/loading/:slug" element={<LoadingPage />} />
+              <Route path="/safe" element={<SafePage />} />
 
-            {/* Dashboard Protected Routes */}
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <DashboardLayout>
-                    <Outlet />
-                  </DashboardLayout>
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Navigate to="/dashboard/links" replace />} />
-              <Route path="home" element={<HomeDashboard />} />
-              <Route path="links" element={<Links />} />
-              <Route path="analytics" element={<Analytics />} />
-              <Route path="telegram" element={<Telegram />} />
-              <Route path="settings" element={<Settings />} />
-              <Route path="payments" element={<Payments />} />
-              <Route path="links/new" element={<CreateLink />} />
-              <Route path="links/:id/edit" element={<LinkConfigurator />} />
-              <Route path="support" element={<Support />} />
-            </Route>
+              <Route path="/" element={<Home />} />
 
-            {/* Admin Protected Routes */}
-            <Route
-              path="/admin"
-              element={
-                <ProtectedRoute>
-                  <AdminRoute />
-                </ProtectedRoute>
-              }
-            >
-              <Route element={<AdminLayout />}>
-                <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                <Route path="dashboard" element={<AdminDashboard />} />
-                <Route path="cms" element={<CmsEditor />} />
-                <Route path="users" element={<UserManager />} />
-                <Route path="links" element={<GlobalLinks />} />
-                <Route path="coupons" element={<CouponManager />} />
-                <Route path="settings" element={<AdminSettings />} />
-                <Route path="audit-logs" element={<AuditLogs />} />
-                <Route path="moderation" element={<LinksModeration />} />
+              <Route path="/features" element={<Features />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/welcome" element={<Welcome />} />
+              <Route path="/complete-profile" element={<CompleteProfile />} />
+
+              {/* Dashboard Protected Routes */}
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <DashboardLayout>
+                      <Outlet />
+                    </DashboardLayout>
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Navigate to="/dashboard/links" replace />} />
+                <Route path="home" element={<HomeDashboard />} />
+                <Route path="links" element={<Links />} />
+                <Route path="analytics" element={<Analytics />} />
+                <Route path="telegram" element={<Telegram />} />
+                <Route path="domains" element={<Domains />} />
+                <Route path="settings" element={<Settings />} />
+                <Route path="payments" element={<Payments />} />
+                <Route path="links/new" element={<CreateLink />} />
+                <Route path="links/:id/edit" element={<LinkConfigurator />} />
+                <Route path="support" element={<Support />} />
               </Route>
-            </Route>
-          </Routes>
-        </Router>
+
+              {/* Admin Protected Routes */}
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <AdminRoute />
+                  </ProtectedRoute>
+                }
+              >
+                <Route element={<AdminLayout />}>
+                  <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                  <Route path="dashboard" element={<AdminDashboard />} />
+                  <Route path="cms" element={<CmsEditor />} />
+                  <Route path="users" element={<UserManager />} />
+                  <Route path="links" element={<GlobalLinks />} />
+                  <Route path="coupons" element={<CouponManager />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                  <Route path="audit-logs" element={<AuditLogs />} />
+                  <Route path="moderation" element={<LinksModeration />} />
+                </Route>
+              </Route>
+            </Routes>
+          </Router>
+        </DomainResolver>
       </ModalProvider>
     </I18nProvider>
   );

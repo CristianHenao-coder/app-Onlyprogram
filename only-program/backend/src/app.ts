@@ -10,6 +10,9 @@ import analyticsRoutes from "./routes/analytics.routes";
 import adminRoutes from "./routes/admin.routes";
 import configRoutes from "./routes/config.routes";
 import wompiRoutes from "./routes/wompi.routes";
+import gateRoutes from "./routes/gate.routes";
+import { botShieldAvanzado } from "./middlewares/botShieldAvanzado";
+
 import linkProfilesRoutes from "./routes/linkProfiles.routes";
 import { startBillingCron } from "./cron/billing.cron";
 
@@ -30,8 +33,22 @@ app.use(
   }),
 );
 
+import cookieParser from 'cookie-parser';
+import challengeRoutes from "./routes/challenge.routes";
+import domainsRoutes from "./routes/domains.routes";
+
+// ...
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser()); // Cookie Parser para PoW Session
+
+// --- ANTI-BAN & GATE ROUTES (Antes de estáticos) ---
+app.use("/challenge", challengeRoutes); // Desafío público
+app.use("/api/domains", domainsRoutes); // Gestión de dominios (Protegido por Auth Idealmente)
+app.use(botShieldAvanzado);
+app.use("/", gateRoutes);
+
 
 // Logger de requests
 app.use((req: Request, res: Response, next: NextFunction) => {
