@@ -176,4 +176,52 @@ router.get("/users", async (req: AuthRequest, res) => {
   });
 });
 
+/**
+ * POST /api/admin/approve-link
+ * Aprueba un enlace y le asigna un slug final
+ */
+router.post("/approve-link", async (req: AuthRequest, res: Response) => {
+  try {
+    const { linkId, slug } = req.body;
+
+    if (!linkId || !slug) {
+      return res
+        .status(400)
+        .json({ error: "ID de enlace y slug son requeridos" });
+    }
+
+    // Verificar si el slug ya existe
+    const { data: existingLink } = await supabase
+      .from("smart_links")
+      .select("id")
+      .eq("slug", slug)
+      .neq("id", linkId) // Excluir el mismo link si ya tenía ese slug
+      .single();
+
+    if (existingLink) {
+      return res.status(409).json({ error: "El slug ya está en uso" });
+    }
+
+    // Actualizar el link
+    const { data: link, error } = await supabase
+      .from("smart_links")
+      .update({
+        slug: slug,
+        status: "active",
+        is_active: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", linkId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({ message: "Enlace aprobado exitosamente", link });
+  } catch (error: any) {
+    console.error("Error al aprobar enlace:", error);
+    res.status(500).json({ error: "Error al aprobar enlace" });
+  }
+});
+
 export default router;

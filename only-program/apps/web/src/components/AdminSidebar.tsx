@@ -97,6 +97,7 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
         <NavItem to="/admin/links" icon="link" label={t('admin.menu.links')} isCollapsed={isCollapsed} />
         <NavItem to="/admin/coupons" icon="confirmation_number" label={t('admin.menu.coupons')} isCollapsed={isCollapsed} />
         <NavItem to="/admin/audit-logs" icon="history" label={t('admin.menu.auditLogs')} isCollapsed={isCollapsed} />
+        <NavItem to="/admin/moderation" icon="verified_user" label="Moderación" isCollapsed={isCollapsed} />
       </nav>
 
       {/* User Footer */}
