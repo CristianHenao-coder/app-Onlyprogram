@@ -10,6 +10,10 @@ import { supabase } from '@/services/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 
+// Import Social Media Logos
+import instagramLogo from '@/assets/animations/instagram.png';
+import tiktokLogo from '@/assets/animations/tik-tok.png';
+
 // Types
 type TemplateType = 'minimal' | 'split' | 'full';
 type SocialType = 'instagram' | 'tiktok' | 'telegram' | 'onlyfans' | 'custom';
@@ -52,8 +56,8 @@ interface LinkPage {
 
 // Icons Components
 const Icons = {
-  Instagram: () => <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" /></svg>,
-  TikTok: () => <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.65-1.58-1.09v8.32c.55 2.85-.27 6.37-2.6 7.9-2.33 1.53-6.04.88-7.51-1.38-1.47-2.26-1.39-4.8 1.09-6.66.56-.42 1.2-.7 1.86-.88.08-.02.1-.15.08-.23v-4c-2.5 1.24-5.26 3.65-5.26 7.04 0 3.06 2.05 5.59 5.09 5.92 3.04.33 6.01-1.47 6.89-4.32V5.33c1.46.22 2.75.95 3.73 2.02V1.16c-1.52.23-2.71.91-3.66 1.98-.16-.62-.33-1.22-.5-1.83-1.11-.02-2.21-.02-3.32-.02.04-.66-.46-.38-.01.73z" /></svg>,
+  Instagram: () => <img src={instagramLogo} alt="Instagram" className="w-full h-full object-contain" />,
+  TikTok: () => <img src={tiktokLogo} alt="TikTok" className="w-full h-full object-contain" />,
   Telegram: () => <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full"><path d="M20.665 3.717l-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.579.192l-8.533 7.701h-.002l.002.001-.314 4.692c.46 0 .663-.211.921-.46l2.211-2.15 4.599 3.397c.848.467 1.457.227 1.668-.785l3.019-14.228c.309-1.239-.473-1.8-1.282-1.441z" /></svg>,
   OnlyFans: () => <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full"><path d="M16.48 2.02c-4.14 0-7.5 3.36-7.5 7.5s3.36 7.5 7.5 7.5 7.5-3.36 7.5-7.5-3.36-7.5-7.5-7.5zm0 12.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm-11.5 5.5c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0-7.5c1.38 0 2.5 1.12 2.5 2.5s-1.12 2.5-2.5 2.5-2.5-1.12-2.5-2.5 1.12-2.5 2.5-2.5z" /></svg>,
   Custom: () => <span className="material-symbols-outlined text-xl">link</span>
@@ -61,7 +65,7 @@ const Icons = {
 
 // Social Configs
 const SOCIAL_PRESETS = {
-  instagram: { title: 'Instagram', color: '#E1306C', icon: <Icons.Instagram /> },
+  instagram: { title: 'Instagram', color: '#FFFFFF', icon: <Icons.Instagram /> },
   tiktok: { title: 'TikTok', color: '#000000', icon: <Icons.TikTok /> },
   telegram: { title: 'Telegram', color: '#0088cc', icon: <Icons.Telegram /> },
   onlyfans: { title: 'OnlyFans', color: '#00AFF0', icon: <Icons.OnlyFans /> },
@@ -87,9 +91,9 @@ const DEFAULT_PAGE: LinkPage = {
   buttons: []
 };
 
-const LINK_PRICE_STANDARD = 60;
-const ROTATOR_SURCHARGE = 30;
-const LINK_PRICE_ROTATOR = LINK_PRICE_STANDARD + ROTATOR_SURCHARGE;
+const LINK_PRICE_STANDARD = 60; // Base price for link without Telegram Rotativo
+const ROTATOR_SURCHARGE = 20; // Additional charge for Telegram Rotativo feature
+const LINK_PRICE_ROTATOR = LINK_PRICE_STANDARD + ROTATOR_SURCHARGE; // Total: $80
 
 const MOCK_USER_HAS_CARD = false;
 
@@ -105,11 +109,13 @@ const FONT_MAP: Record<FontType, string> = {
 function SortableButton({
   btn,
   isSelected,
-  onClick
+  onClick,
+  collapsed = false
 }: {
   btn: ButtonLink,
   isSelected: boolean,
-  onClick: () => void
+  onClick: () => void,
+  collapsed?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: btn.id });
   const style = { transform: CSS.Transform.toString(transform), transition };
@@ -118,24 +124,35 @@ function SortableButton({
     <div
       ref={setNodeRef} style={style} {...attributes} {...listeners}
       onClick={onClick}
-      className={`w-full p-3 rounded-xl border cursor-grab active:cursor-grabbing transition-all relative group flex items-center gap-3 touch-none ${isSelected ? 'bg-white/5 border-primary shadow-lg' : 'bg-transparent border-transparent hover:bg-white/[0.02]'
-        }`}
+      className={`w-full p-3 rounded-xl border cursor-grab active:cursor-grabbing transition-all relative group touch-none ${collapsed ? 'flex items-center justify-center' : 'flex items-center gap-3'
+        } ${isSelected ? 'bg-white/5 border-primary shadow-lg' : 'bg-transparent border-transparent hover:bg-white/[0.02]'}`}
+      title={collapsed ? btn.title : undefined} // Show title on hover only when collapsed
     >
-      <div className="h-8 w-8 rounded flex items-center justify-center shrink-0" style={{ backgroundColor: btn.color }}>
-        <div className="w-4 h-4 text-white">
+      <div className={`rounded-lg flex items-center justify-center shrink-0 ${collapsed ? 'h-10 w-10' : 'h-8 w-8'}`} style={{ backgroundColor: btn.color }}>
+        <div className={`text-white ${collapsed ? 'w-6 h-6' : 'w-4 h-4'}`}>
           {SOCIAL_PRESETS[btn.type].icon}
         </div>
       </div>
-      <div className="min-w-0 flex-1">
-        <p className={`text-xs font-bold truncate ${isSelected ? 'text-white' : 'text-silver/60'}`}>
-          {btn.title}
-        </p>
-        {btn.type === 'telegram' && btn.rotatorActive && (
-          <p className="text-[9px] text-green-500 font-bold uppercase tracking-wide mt-0.5 flex items-center gap-1">
-            <span className="material-symbols-outlined text-[10px]">sync</span> Rotativo Activo (+${ROTATOR_SURCHARGE})
+
+      {!collapsed && (
+        <div className="min-w-0 flex-1">
+          <p className={`text-xs font-bold truncate ${isSelected ? 'text-white' : 'text-silver/60'}`}>
+            {btn.title}
           </p>
-        )}
-      </div>
+          {btn.type === 'telegram' && btn.rotatorActive && (
+            <p className="text-[9px] text-green-500 font-bold uppercase tracking-wide mt-0.5 flex items-center gap-1">
+              <span className="material-symbols-outlined text-[10px]">sync</span> Rotativo Activo (+${ROTATOR_SURCHARGE})
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Rotator indicator badge (only when collapsed) */}
+      {collapsed && btn.type === 'telegram' && btn.rotatorActive && (
+        <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-[#050505] flex items-center justify-center">
+          <span className="material-symbols-outlined text-[10px] text-black">sync</span>
+        </div>
+      )}
     </div>
   );
 }
@@ -209,6 +226,25 @@ export default function Links() {
   const [isSaving, setIsSaving] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
 
+  // Animation State
+  const [animateBuyButton, setAnimateBuyButton] = useState(false);
+  const prevDraftCountRef = useRef(draftPages.length);
+
+  // Sidebar Collapse State
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Delete Confirmation State
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'page' | 'button', id?: string, name?: string } | null>(null);
+
+  // Telegram Rotator Suggestion Modal
+  const [showRotatorSuggestion, setShowRotatorSuggestion] = useState(false);
+
+  // Horizontal Scroll State for Link Navigation
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
+
   // --- SUPABASE INTEGRATION ---
 
   // 1. Fetch Links from DB
@@ -226,11 +262,10 @@ export default function Links() {
         if (error) throw error;
 
         if (data && data.length > 0) {
-          // Map DB to LinkPage
           const dbPages: LinkPage[] = data.map(link => ({
             id: link.id,
             status: link.status as PageStatus,
-            name: link.config?.name || link.slug, // Internal name from config or slug
+            name: link.config?.name || link.slug,
             profileName: link.title || '',
             profileImage: link.photo || DEFAULT_PROFILE_IMAGE,
             template: link.config?.template || 'minimal',
@@ -251,7 +286,6 @@ export default function Links() {
             }))
           }));
           setPages(dbPages);
-          // Set selected to first
           if (dbPages.length > 0) setSelectedPageId(dbPages[0].id);
         }
       } catch (error) {
@@ -263,7 +297,7 @@ export default function Links() {
     };
 
     fetchLinks();
-  }, [user?.id]); // FIX: Only re-fetch if USER ID changes, not reference
+  }, [user?.id]);
 
   // 2. Sync to DB (Debounced + Visibility Change)
   useEffect(() => {
@@ -276,28 +310,57 @@ export default function Links() {
         const currentPageToSave = pages.find(p => p.id === selectedPageId);
         if (!currentPageToSave) return;
 
-        // Only update if it has a real UUID (exists in DB)
-        // If it's a temp ID (starts with 'page'), we skip auto-save for now until "Create" is handled
-        if (currentPageToSave.id.includes('page') && !currentPageToSave.id.includes('-')) return;
+        const isNewPage = currentPageToSave.id.includes('page') && !currentPageToSave.id.includes('-');
 
-        const updates = {
-          title: currentPageToSave.profileName,
-          photo: currentPageToSave.profileImage,
-          buttons: currentPageToSave.buttons,
-          config: {
-            ...currentPageToSave.theme, // We might want to nest this properly
-            template: currentPageToSave.template,
-            theme: currentPageToSave.theme,
-            name: currentPageToSave.name
+        if (isNewPage) {
+          const randomSlug = Math.random().toString(36).substring(2, 8);
+          const slugToUse = currentPageToSave.name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + randomSlug;
+
+          const { data: newLink, error: insertError } = await supabase
+            .from('smart_links')
+            .insert({
+              user_id: user.id,
+              slug: slugToUse,
+              title: currentPageToSave.profileName,
+              photo: currentPageToSave.profileImage,
+              buttons: currentPageToSave.buttons,
+              status: 'draft',
+              config: {
+                template: currentPageToSave.template,
+                theme: currentPageToSave.theme,
+                name: currentPageToSave.name
+              }
+            })
+            .select()
+            .single();
+
+          if (insertError) throw insertError;
+
+          if (newLink) {
+            setPages(prev => prev.map(p => p.id === currentPageToSave.id ? { ...p, id: newLink.id } : p));
+            setSelectedPageId(newLink.id);
+            toast.success("Link creado y guardado");
           }
-        };
+        } else {
+          const updates = {
+            title: currentPageToSave.profileName,
+            photo: currentPageToSave.profileImage,
+            buttons: currentPageToSave.buttons,
+            config: {
+              ...currentPageToSave.theme,
+              template: currentPageToSave.template,
+              theme: currentPageToSave.theme,
+              name: currentPageToSave.name
+            }
+          };
 
-        const { error } = await supabase
-          .from('smart_links')
-          .update(updates)
-          .eq('id', currentPageToSave.id);
+          const { error } = await supabase
+            .from('smart_links')
+            .update(updates)
+            .eq('id', currentPageToSave.id);
 
-        if (error) throw error;
+          if (error) throw error;
+        }
       } catch (err) {
         console.error("Error saving link:", err);
       } finally {
@@ -305,9 +368,8 @@ export default function Links() {
       }
     };
 
-    const timer = setTimeout(syncToDb, 500); // 500ms debounce
+    const timer = setTimeout(syncToDb, 500);
 
-    // Force save on tab switch
     const handleVisibilityChange = () => {
       if (document.hidden) {
         syncToDb();
@@ -320,6 +382,78 @@ export default function Links() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [pages, user, selectedPageId, initialLoad]);
+
+  // Migration: Update old Instagram button colors to white
+  useEffect(() => {
+    const needsMigration = pages.some(page =>
+      page.buttons.some(btn => btn.type === 'instagram' && (btn.color === '#E1306C' || btn.color === '#8B5CF6'))
+    );
+
+    if (needsMigration) {
+      setPages(prevPages => prevPages.map(page => ({
+        ...page,
+        buttons: page.buttons.map(btn =>
+          btn.type === 'instagram' && (btn.color === '#E1306C' || btn.color === '#8B5CF6')
+            ? { ...btn, color: '#FFFFFF' }
+            : btn
+        )
+      })));
+    }
+  }, []);
+
+  useEffect(() => {
+    if (draftPages.length > prevDraftCountRef.current) {
+      setAnimateBuyButton(true);
+      const timer = setTimeout(() => setAnimateBuyButton(false), 1000);
+      return () => clearTimeout(timer);
+    }
+    prevDraftCountRef.current = draftPages.length;
+  }, [draftPages.length]);
+
+  // Keyboard support for confirmation modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (showDeleteConfirm && e.key === 'Escape') {
+        setShowDeleteConfirm(false);
+        setDeleteTarget(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showDeleteConfirm]);
+
+  // Check scroll position to show/hide arrows
+  const checkScrollPosition = () => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    setShowLeftArrow(container.scrollLeft > 0);
+    setShowRightArrow(
+      container.scrollLeft < container.scrollWidth - container.clientWidth - 10
+    );
+  };
+
+  useEffect(() => {
+    checkScrollPosition();
+    const container = scrollContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', checkScrollPosition);
+      window.addEventListener('resize', checkScrollPosition);
+      return () => {
+        container.removeEventListener('scroll', checkScrollPosition);
+        window.removeEventListener('resize', checkScrollPosition);
+      };
+    }
+  }, [pages]);
+
+  const scrollLeft = () => {
+    scrollContainerRef.current?.scrollBy({ left: -200, behavior: 'smooth' });
+  };
+
+  const scrollRight = () => {
+    scrollContainerRef.current?.scrollBy({ left: 200, behavior: 'smooth' });
+  };
 
   // --- HANDLERS ---
   const handleAddPage = () => {
@@ -342,12 +476,12 @@ export default function Links() {
     });
 
     if (confirmed) {
-      const newPages = pages.filter(p => p.id !== currentPage.id);
-      setPages(newPages);
-      setSelectedPageId(newPages[0].id);
-      toast.success('Página eliminada');
+      setPages(prev => prev.filter(p => p.id !== selectedPageId));
+      setSelectedPageId(pages.find(p => p.id !== selectedPageId)?.id || pages[0].id);
+      toast.success('Link eliminado correctamente');
     }
   };
+
 
   const handleUpdatePage = (field: string, value: any) => {
     setPages(prev => prev.map(p => {
@@ -390,6 +524,21 @@ export default function Links() {
 
   // Button CRUD
   const handleCreateButton = (type: SocialType) => {
+    // Check if button type already exists
+    const existingButton = currentPage.buttons.find(btn => btn.type === type);
+
+    if (existingButton) {
+      if (type === 'telegram') {
+        // Show modal suggesting Telegram Rotativo
+        setShowRotatorSuggestion(true);
+        return;
+      } else {
+        // Silently prevent for other types
+        toast.error(`Ya tienes un botón de ${SOCIAL_PRESETS[type].title}. Solo puedes agregar uno de cada tipo.`);
+        return;
+      }
+    }
+
     const config = SOCIAL_PRESETS[type];
     const newButton: ButtonLink = {
       id: Math.random().toString(36).substring(2, 9),
@@ -399,7 +548,7 @@ export default function Links() {
     };
     setPages(prev => prev.map(p => p.id === selectedPageId ? { ...p, buttons: [...p.buttons, newButton] } : p));
     setSelectedButtonId(newButton.id);
-    setShowButtonCreator(false);
+    // Removed auto-close: setShowButtonCreator(false);
     toast.success('Botón añadido');
   };
 
@@ -534,68 +683,106 @@ export default function Links() {
 
         {/* COL 1: Editor & Config (Main Area) */}
         <div className="flex-1 flex flex-col bg-[#050505] relative overflow-hidden order-2 lg:order-first transition-all">
-
-          {/* TOP BAR: Page Switcher (Horizontal) */}
-          <div className="w-full h-20 border-b border-white/5 bg-[#080808] flex items-center px-4 gap-4 overflow-x-auto custom-scrollbar shrink-0 z-20">
-            {/* Create New */}
-            <button onClick={handleAddPage} className="w-12 h-12 rounded-xl border border-dashed border-white/20 flex items-center justify-center text-silver/40 hover:text-white hover:border-primary shrink-0 transition-colors group" title={t('dashboard.links.newLinkTitle')}>
-              <span className="material-symbols-outlined group-hover:scale-110 transition-transform">add</span>
-            </button>
-            <div className="h-8 w-px bg-white/10 shrink-0 mx-2"></div>
-
-            {/* Active Links */}
-            {activePages.map(page => (
+          {/* TOP BAR: Page Switcher (Horizontal) with Scroll Arrows */}
+          <div className="h-20 border-b border-white/5 bg-[#080808] flex items-center relative z-20 shrink-0">
+            {/* Left Arrow */}
+            {showLeftArrow && (
               <button
-                key={page.id}
-                onClick={() => { setSelectedPageId(page.id); setSelectedButtonId(null); }}
-                className={`relative group flex items-center gap-3 pr-4 pl-1 py-1 rounded-full transition-all border ${selectedPageId === page.id ? 'bg-white/10 border-primary/50' : 'bg-transparent border-transparent hover:bg-white/5 hover:border-white/10'}`}
+                onClick={scrollLeft}
+                className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-[#080808] via-[#080808]/90 to-transparent z-30 flex items-center justify-start pl-2 hover:pl-1 transition-all group"
               >
-                <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 shrink-0">
-                  {page.profileImage && page.profileImage !== DEFAULT_PROFILE_IMAGE ? (
-                    <img src={page.profileImage} className="w-full h-full object-cover" />
-                  ) : <div className="w-full h-full bg-white/5 flex items-center justify-center"><span className="material-symbols-outlined text-sm">person</span></div>}
+                <div className="w-8 h-8 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center group-hover:bg-primary/20 group-hover:border-primary/30 transition-all">
+                  <span className="material-symbols-outlined text-white text-lg group-hover:text-primary">chevron_left</span>
                 </div>
-                <div className="text-left min-w-[60px]">
-                  <p className={`text-xs font-bold leading-tight ${selectedPageId === page.id ? 'text-white' : 'text-silver/60'}`}>{page.name}</p>
-                  <p className="text-[9px] text-green-500 font-bold uppercase tracking-wider">{t('dashboard.links.active')}</p>
-                </div>
-                {selectedPageId === page.id && <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-[#080808]"></div>}
               </button>
-            ))}
+            )}
 
-            {/* Drafts */}
-            {draftPages.length > 0 && <div className="h-8 w-px bg-white/10 shrink-0 mx-2"></div>}
-            {draftPages.map(page => (
+            <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar scroll-smooth px-4 h-full" ref={scrollContainerRef}>
               <button
-                key={page.id}
-                onClick={() => { setSelectedPageId(page.id); setSelectedButtonId(null); }}
-                className={`relative group flex items-center gap-3 pr-4 pl-1 py-1 rounded-full transition-all border ${selectedPageId === page.id ? 'bg-white/10 border-yellow-500/50' : 'bg-transparent border-transparent hover:bg-white/5 hover:border-white/10'}`}
+                onClick={handleAddPage}
+                className="flex flex-col items-center justify-center w-12 h-12 rounded-full border border-dashed border-white/10 hover:border-primary/50 hover:bg-white/5 transition-all text-silver/40 hover:text-primary shrink-0 group"
               >
-                <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 shrink-0">
-                  {page.profileImage && page.profileImage !== DEFAULT_PROFILE_IMAGE ? (
-                    <img src={page.profileImage} className="w-full h-full object-cover" />
-                  ) : <div className="w-full h-full bg-white/5 flex items-center justify-center"><span className="material-symbols-outlined text-sm">edit</span></div>}
-                </div>
-                <div className="text-left min-w-[60px]">
-                  <p className={`text-xs font-bold leading-tight ${selectedPageId === page.id ? 'text-white' : 'text-silver/60'}`}>{page.name}</p>
-                  <p className="text-[9px] text-yellow-500 font-bold uppercase tracking-wider">{t('dashboard.links.creatingDraft')}</p>
-                </div>
-                {hasRotatorActive(page) && <div className="absolute -top-1 -left-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-[#080808] flex items-center justify-center"><span className="material-symbols-outlined text-[8px] text-white">sync</span></div>}
+                <span className="material-symbols-outlined text-xl group-active:scale-90 transition-transform">add</span>
+                <span className="text-[7px] font-bold uppercase tracking-tighter">Crear</span>
               </button>
-            ))}
+
+              <div className="h-8 w-px bg-white/10 shrink-0 mx-2"></div>
+
+              {activePages.map(page => (
+                <button
+                  key={page.id}
+                  onClick={() => { setSelectedPageId(page.id); setSelectedButtonId(null); }}
+                  className={`relative group flex items-center gap-3 pr-4 pl-1 py-1 rounded-full transition-all border ${selectedPageId === page.id ? 'bg-white/10 border-primary/50' : 'bg-transparent border-transparent hover:bg-white/5 hover:border-white/10'}`}
+                >
+                  <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 shrink-0">
+                    {page.profileImage && page.profileImage !== DEFAULT_PROFILE_IMAGE ? (
+                      <img src={page.profileImage} className="w-full h-full object-cover" />
+                    ) : <div className="w-full h-full bg-white/5 flex items-center justify-center"><span className="material-symbols-outlined text-sm">person</span></div>}
+                  </div>
+                  <div className="text-left min-w-[60px]">
+                    <p className={`text-xs font-bold leading-tight ${selectedPageId === page.id ? 'text-white' : 'text-silver/60'}`}>{page.name}</p>
+                    <p className="text-[9px] text-green-500 font-bold uppercase tracking-wider">{t('dashboard.links.active')}</p>
+                  </div>
+                  {selectedPageId === page.id && <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-[#080808]"></div>}
+                </button>
+              ))}
+
+              {/* Drafts */}
+              {draftPages.length > 0 && <div className="h-8 w-px bg-white/10 shrink-0 mx-2"></div>}
+              {draftPages.map(page => (
+                <button
+                  key={page.id}
+                  onClick={() => { setSelectedPageId(page.id); setSelectedButtonId(null); }}
+                  className={`relative group flex items-center gap-3 pr-4 pl-1 py-1 rounded-full transition-all border ${selectedPageId === page.id ? 'bg-white/10 border-yellow-500/50' : 'bg-transparent border-transparent hover:bg-white/5 hover:border-white/10'}`}
+                >
+                  <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 shrink-0">
+                    {page.profileImage && page.profileImage !== DEFAULT_PROFILE_IMAGE ? (
+                      <img src={page.profileImage} className="w-full h-full object-cover" />
+                    ) : <div className="w-full h-full bg-white/5 flex items-center justify-center"><span className="material-symbols-outlined text-sm">edit</span></div>}
+                  </div>
+                  <div className="text-left min-w-[60px]">
+                    <p className={`text-xs font-bold leading-tight ${selectedPageId === page.id ? 'text-white' : 'text-silver/60'}`}>{page.name}</p>
+                    <p className="text-[9px] text-yellow-500 font-bold uppercase tracking-wider">{t('dashboard.links.creatingDraft')}</p>
+                  </div>
+                  {hasRotatorActive(page) && <div className="absolute -top-1 -left-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-[#080808] flex items-center justify-center"><span className="material-symbols-outlined text-[8px] text-white">sync</span></div>}
+                </button>
+              ))}
+            </div>
+
+            {/* Right Arrow */}
+            {showRightArrow && (
+              <button
+                onClick={scrollRight}
+                className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-[#080808] via-[#080808]/90 to-transparent z-30 flex items-center justify-end pr-2 hover:pr-1 transition-all group"
+              >
+                <div className="w-8 h-8 rounded-full bg-white/5 backdrop-blur-sm border border-white/10 flex items-center justify-center group-hover:bg-primary/20 group-hover:border-primary/30 transition-all">
+                  <span className="material-symbols-outlined text-white text-lg group-hover:text-primary">chevron_right</span>
+                </div>
+              </button>
+            )}
           </div>
 
           <div className="flex-1 flex overflow-hidden">
-
             {/* LEFT PANEL: BUTTONS LIST & ADDER */}
-            <div className="w-full lg:w-80 border-r border-white/5 flex flex-col bg-[#070707] shrink-0">
-              <div className="p-4 border-b border-white/5">
-                <button onClick={() => setShowButtonCreator(true)} className="w-full py-3 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
-                  <span className="material-symbols-outlined">add_circle</span> {t('dashboard.links.addButton')}
+            <div className={`border-r border-white/5 flex flex-col bg-[#070707] shrink-0 transition-all duration-300 ${sidebarCollapsed ? 'w-16 md:w-20' : 'w-full sm:w-64 lg:w-80'}`}>
+              <div className="p-3 md:p-4 border-b border-white/5 relative z-10 bg-[#070707] flex items-center gap-2">
+                <button
+                  onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                  className="p-2 hover:bg-white/5 rounded-lg transition-all shrink-0 touch-manipulation"
+                  title={sidebarCollapsed ? "Expandir menú" : "Colapsar menú"}
+                >
+                  <span className="material-symbols-outlined text-white text-xl">menu</span>
                 </button>
+                {!sidebarCollapsed && (
+                  <button onClick={() => setShowButtonCreator(true)} className="flex-1 py-2.5 md:py-3 rounded-xl bg-primary text-white font-bold text-xs md:text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 touch-manipulation">
+                    <span className="material-symbols-outlined text-lg md:text-xl">add_circle</span>
+                    <span className="hidden sm:inline">{t('dashboard.links.addButton')}</span>
+                    <span className="sm:hidden">Añadir</span>
+                  </button>
+                )}
               </div>
 
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-3 relative z-0">
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                   <SortableContext items={currentPage.buttons} strategy={verticalListSortingStrategy}>
                     <div className="space-y-2">
@@ -605,9 +792,14 @@ export default function Links() {
                             btn={btn}
                             isSelected={selectedButtonId === btn.id}
                             onClick={() => { setSelectedButtonId(btn.id); setShowButtonCreator(false); }}
+                            collapsed={sidebarCollapsed}
                           />
                           <button
-                            onClick={(e) => { e.stopPropagation(); handleDeleteButton(btn.id); }}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteTarget({ type: 'button', id: btn.id, name: btn.title });
+                              setShowDeleteConfirm(true);
+                            }}
                             className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-silver/20 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all z-10"
                           >
                             <span className="material-symbols-outlined text-sm">delete</span>
@@ -628,11 +820,24 @@ export default function Links() {
               {/* STICKY BOTTOM ACTIONS */}
               <div className="p-4 border-t border-white/5 bg-[#050505]">
                 <div className="grid grid-cols-2 gap-2">
-                  <button onClick={handleDeletePage} className="py-2 px-3 rounded-lg flex items-center justify-center gap-2 text-xs font-bold text-red-500/60 hover:text-red-500 hover:bg-red-500/10 bg-white/5 transition-all">
-                    <span className="material-symbols-outlined text-sm">delete</span> {t('dashboard.links.delete')}
+                  <button
+                    onClick={() => {
+                      setDeleteTarget({ type: 'page', name: currentPage.name });
+                      setShowDeleteConfirm(true);
+                    }}
+                    className={`py-2 px-3 rounded-lg flex items-center justify-center gap-2 text-xs font-bold text-red-500/60 hover:text-red-500 hover:bg-red-500/10 bg-white/5 transition-all ${sidebarCollapsed ? 'flex-col' : ''}`}
+                    title={sidebarCollapsed ? "Borrar Link" : undefined}
+                  >
+                    <span className={`material-symbols-outlined ${sidebarCollapsed ? 'text-lg' : 'text-sm'}`}>delete</span>
+                    {!sidebarCollapsed && "Borrar Link"}
                   </button>
-                  <button onClick={() => setSelectedButtonId(null)} className="py-2 px-3 rounded-lg flex items-center justify-center gap-2 text-xs font-bold text-silver/40 hover:text-white hover:bg-white/5 bg-white/5 transition-all">
-                    <span className="material-symbols-outlined text-sm">settings</span> {t('dashboard.links.config')}
+                  <button
+                    onClick={() => setSelectedButtonId(null)}
+                    className={`py-2 px-3 rounded-lg flex items-center justify-center gap-2 text-xs font-bold text-silver/40 hover:text-white hover:bg-white/5 bg-white/5 transition-all ${sidebarCollapsed ? 'flex-col' : ''}`}
+                    title={sidebarCollapsed ? "Configuración del Link" : undefined}
+                  >
+                    <span className={`material-symbols-outlined ${sidebarCollapsed ? 'text-lg' : 'text-sm'}`}>settings</span>
+                    {!sidebarCollapsed && "Config. Link"}
                   </button>
                 </div>
               </div>
@@ -640,7 +845,7 @@ export default function Links() {
 
             {/* MAIN EDITOR AREA */}
             <div className="flex-1 flex flex-col relative bg-[#050505] overflow-hidden">
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-8">
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-8 pb-32">
                 <div className="max-w-2xl mx-auto">
 
                   {/* BUTTON CREATOR */}
@@ -702,7 +907,38 @@ export default function Links() {
                                 <p className="text-[10px] text-silver/50 max-w-[250px]">{t('dashboard.links.rotatorDesc')}</p>
                               </div>
                               <label className="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" checked={selectedButton.rotatorActive || false} onChange={(e) => handleUpdateButton('rotatorActive', e.target.checked)} className="sr-only peer" />
+                                <input
+                                  type="checkbox"
+                                  checked={selectedButton.rotatorActive || false}
+                                  onChange={async (e) => {
+                                    const isActivating = e.target.checked;
+
+                                    if (!isActivating && selectedButton.rotatorActive) {
+                                      // Deactivating rotator - show confirmation
+                                      const confirmed = await showConfirm({
+                                        title: '¿Desactivar Telegram Rotativo?',
+                                        message: 'Al desactivar el rotador, se eliminarán las URLs 2-5. Solo se mantendrá la primera URL.',
+                                        confirmText: 'Sí, Desactivar',
+                                        cancelText: 'Cancelar',
+                                      });
+
+                                      if (confirmed) {
+                                        // Keep only first URL, clear the rest
+                                        const firstUrl = selectedButton.rotatorLinks?.[0] || '';
+                                        handleUpdateButton('rotatorLinks', [firstUrl, '', '', '', '']);
+                                        handleUpdateButton('rotatorActive', false);
+                                        toast.success('Rotador desactivado. URLs 2-5 eliminadas.');
+                                      }
+                                    } else {
+                                      // Activating rotator
+                                      handleUpdateButton('rotatorActive', isActivating);
+                                      if (isActivating) {
+                                        toast.success('Telegram Rotativo activado. Ahora puedes agregar hasta 5 URLs.');
+                                      }
+                                    }
+                                  }}
+                                  className="sr-only peer"
+                                />
                                 <div className="w-11 h-6 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
                               </label>
                             </div>
@@ -725,132 +961,109 @@ export default function Links() {
                             )}
                           </div>
                         )}
-
-                        {/* STYLES */}
-                        <div className="p-5 bg-white/5 rounded-2xl space-y-6">
-                          <h3 className="text-xs font-bold text-white flex items-center gap-2">
-                            <span className="material-symbols-outlined text-primary">palette</span> Estilo & Diseño
-                          </h3>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-black uppercase tracking-widest text-silver/40">Fondo</label>
-                              <div className="flex items-center gap-3 bg-black/20 p-2 rounded-xl border border-white/5">
-                                <input type="color" value={selectedButton.color} onChange={(e) => handleUpdateButton('color', e.target.value)} className="h-8 w-8 rounded-lg cursor-pointer border-none bg-transparent" />
-                                <span className="text-[10px] font-mono text-silver/50 uppercase">{selectedButton.color}</span>
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-[10px] font-black uppercase tracking-widest text-silver/40">Texto</label>
-                              <div className="flex items-center gap-3 bg-black/20 p-2 rounded-xl border border-white/5">
-                                <input type="color" value={selectedButton.textColor} onChange={(e) => handleUpdateButton('textColor', e.target.value)} className="h-8 w-8 rounded-lg cursor-pointer border-none bg-transparent" />
-                                <span className="text-[10px] font-mono text-silver/50 uppercase">{selectedButton.textColor}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="space-y-4 pt-2 border-t border-white/5">
-                            <div className="space-y-2">
-                              <div className="flex justify-between">
-                                <label className="text-[10px] font-black uppercase tracking-widest text-silver/40">Redondez</label>
-                                <span className="text-[10px] font-mono text-primary">{selectedButton.borderRadius}px</span>
-                              </div>
-                              <input type="range" min="0" max="30" value={selectedButton.borderRadius} onChange={(e) => handleUpdateButton('borderRadius', Number(e.target.value))} className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer accent-primary" />
-                            </div>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   )}
 
-                  {/* PAGE CONFIG EDITOR */}
-                  {!selectedButton && !showButtonCreator && (
+                  {/* PAGE CONFIGURATION (When no button is selected) */}
+                  {!selectedButtonId && !showButtonCreator && (
                     <div className="animate-fade-in space-y-8">
-                      {/* TEMPLATE PICKER */}
-                      <div className="space-y-4">
-                        <h3 className="text-xs font-bold text-silver/40 uppercase tracking-widest pl-1">Plantilla de Diseño</h3>
-                        <div className="grid grid-cols-3 gap-3">
-                          {[{ id: 'minimal', label: 'Minimal', icon: 'crop_portrait' }, { id: 'split', label: 'Split', icon: 'vertical_split' }, { id: 'full', label: 'Full', icon: 'wallpaper' }].map((t) => (
-                            <button key={t.id} onClick={() => handleUpdatePage('template', t.id as TemplateType)} className={`group relative p-4 rounded-2xl border flex flex-col items-center gap-3 transition-all ${currentPage.template === t.id ? 'bg-primary/10 border-primary text-primary shadow-[0_0_20px_rgba(59,130,246,0.15)]' : 'bg-[#0A0A0A] border-white/5 text-silver/40 hover:bg-white/5 hover:border-white/10'}`}>
-                              <div className={`p-3 rounded-xl transition-colors ${currentPage.template === t.id ? 'bg-primary/20 text-white' : 'bg-black/40 group-hover:bg-black/60'}`}>
-                                <span className="material-symbols-outlined text-2xl">{t.icon}</span>
-                              </div>
-                              <span className="text-[9px] font-bold uppercase tracking-wider">{t.label}</span>
-                              {currentPage.template === t.id && <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary animate-pulse"></div>}
-                            </button>
-                          ))}
-                        </div>
+                      <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                        <h2 className="text-xl font-bold">Configuración de la Página</h2>
                       </div>
-
-                      <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6 space-y-6">
-                        <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-white/5 pb-4">
-                          <span className="material-symbols-outlined text-silver/40">id_card</span> {t('dashboard.links.profileDetails')}
-                        </h3>
-
-                        <div className="flex gap-6 items-start">
-                          <div className="group relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-white/20 hover:border-primary transition-colors bg-black/20 shrink-0">
-                            <img src={currentPage.profileImage} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                              <span className="material-symbols-outlined text-white mb-1">cloud_upload</span>
-                              <span className="text-[8px] font-bold text-white uppercase">Cambiar</span>
-                            </div>
-                            <input type="file" ref={fileInputRef} accept="image/*" onChange={handleImageUpload} className="hidden" />
-                          </div>
-                          <div className="flex-1 space-y-4">
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-bold text-silver/40 uppercase pl-1">Nombre Visible</label>
-                              <input type="text" value={currentPage.profileName} onChange={(e) => handleUpdatePage('profileName', e.target.value)} className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-primary" />
-                            </div>
-                            <div className="space-y-1">
-                              <label className="text-[10px] font-bold text-silver/40 uppercase pl-1">Nombre Interno (Dashboard)</label>
-                              <input type="text" value={currentPage.name} onChange={(e) => handleUpdatePage('name', e.target.value)} className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-silver focus:outline-none focus:border-primary" />
-                            </div>
-                          </div>
+                      <section className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+                        <div className="p-4 border-b border-white/5 bg-white/[0.02]">
+                          <h3 className="text-sm font-bold flex items-center gap-2">
+                            <span className="material-symbols-outlined text-silver/40">person</span>
+                            Perfil & Identidad
+                          </h3>
                         </div>
-
-                        <div className="pt-2">
-                          <label className="text-[10px] font-bold text-silver/40 uppercase pl-1 mb-2 block">{t('dashboard.links.pageBackground')}</label>
-                          <div className="grid grid-cols-2 gap-3 mb-4">
-                            <button onClick={() => handleUpdatePage('theme.backgroundType', 'solid')} className={`py-2 px-3 rounded-lg border text-xs font-bold transition-all ${currentPage.theme.backgroundType === 'solid' ? 'bg-white/10 border-white text-white' : 'bg-transparent border-white/10 text-silver/40'}`}>Sólido</button>
-                            <button onClick={() => handleUpdatePage('theme.backgroundType', 'gradient')} className={`py-2 px-3 rounded-lg border text-xs font-bold transition-all ${currentPage.theme.backgroundType === 'gradient' ? 'bg-white/10 border-white text-white' : 'bg-transparent border-white/10 text-silver/40'}`}>Gradiente</button>
-                          </div>
-
-                          {currentPage.theme.backgroundType === 'solid' ? (
-                            <div className="flex items-center gap-3 bg-black/20 p-3 rounded-xl border border-white/5">
-                              <input type="color" value={currentPage.theme.backgroundStart} onChange={(e) => handleUpdatePage('theme.backgroundStart', e.target.value)} className="h-10 w-10 rounded-lg cursor-pointer border-none bg-transparent" />
-                              <span className="text-xs font-mono text-silver/50 uppercase">{currentPage.theme.backgroundStart}</span>
-                            </div>
-                          ) : (
-                            <div className="grid grid-cols-2 gap-3">
-                              <div className="bg-black/20 p-3 rounded-xl border border-white/5">
-                                <p className="text-[9px] text-silver/30 font-bold uppercase mb-2">Inicio</p>
-                                <input type="color" value={currentPage.theme.backgroundStart} onChange={(e) => handleUpdatePage('theme.backgroundStart', e.target.value)} className="h-10 w-full rounded-lg cursor-pointer border-none bg-transparent" />
+                        <div className="p-6">
+                          <div className="flex gap-6 items-start">
+                            <div className="group relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-white/20 hover:border-primary transition-colors bg-black/20 shrink-0">
+                              <img src={currentPage.profileImage} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                                <span className="material-symbols-outlined text-white mb-1">cloud_upload</span>
+                                <span className="text-[8px] font-bold text-white uppercase">Cambiar</span>
                               </div>
-                              <div className="bg-black/20 p-3 rounded-xl border border-white/5">
-                                <p className="text-[9px] text-silver/30 font-bold uppercase mb-2">Fin</p>
-                                <input type="color" value={currentPage.theme.backgroundEnd} onChange={(e) => handleUpdatePage('theme.backgroundEnd', e.target.value)} className="h-10 w-full rounded-lg cursor-pointer border-none bg-transparent" />
+                              <input type="file" ref={fileInputRef} accept="image/*" onChange={handleImageUpload} className="hidden" />
+                            </div>
+                            <div className="flex-1 space-y-4">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-silver/40 uppercase pl-1">Nombre Visible</label>
+                                <input type="text" value={currentPage.profileName} onChange={(e) => handleUpdatePage('profileName', e.target.value)} className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-primary" />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-silver/40 uppercase pl-1">Nombre Interno (Dashboard)</label>
+                                <input type="text" value={currentPage.name} onChange={(e) => handleUpdatePage('name', e.target.value)} className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-silver focus:outline-none focus:border-primary" />
                               </div>
                             </div>
-                          )}
+                          </div>
+
+                          <div className="pt-6 mt-6 border-t border-white/5">
+                            <label className="text-[10px] font-bold text-silver/40 uppercase mb-3 block">{t('dashboard.links.pageBackground')}</label>
+                            <div className="flex gap-4 mb-4">
+                              <div className="flex bg-[#0B0B0B] border border-border p-1 rounded-xl w-fit">
+                                <button onClick={() => handleUpdatePage('theme.backgroundType', 'solid')} className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === 'solid' ? 'bg-white/10 border border-white/10 text-white' : 'text-silver/40 hover:text-white'}`}>Sólido</button>
+                                <button onClick={() => handleUpdatePage('theme.backgroundType', 'gradient')} className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === 'gradient' ? 'bg-white/10 border border-white/10 text-white' : 'text-silver/40 hover:text-white'}`}>Gradiente</button>
+                              </div>
+                            </div>
+
+                            {currentPage.theme.backgroundType === 'solid' ? (
+                              <div className="flex items-center gap-3 bg-black/20 p-3 rounded-xl border border-white/5">
+                                <input type="color" value={currentPage.theme.backgroundStart} onChange={(e) => handleUpdatePage('theme.backgroundStart', e.target.value)} className="h-10 w-10 rounded-lg cursor-pointer border-none bg-transparent" />
+                                <span className="text-xs font-mono text-silver/50 uppercase">{currentPage.theme.backgroundStart}</span>
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-2 gap-3">
+                                <div className="bg-black/20 p-3 rounded-xl border border-white/5">
+                                  <p className="text-[9px] text-silver/30 font-bold uppercase mb-2">Inicio</p>
+                                  <input type="color" value={currentPage.theme.backgroundStart} onChange={(e) => handleUpdatePage('theme.backgroundStart', e.target.value)} className="h-10 w-full rounded-lg cursor-pointer border-none bg-transparent" />
+                                </div>
+                                <div className="bg-black/20 p-3 rounded-xl border border-white/5">
+                                  <p className="text-[9px] text-silver/30 font-bold uppercase mb-2">Fin</p>
+                                  <input type="color" value={currentPage.theme.backgroundEnd} onChange={(e) => handleUpdatePage('theme.backgroundEnd', e.target.value)} className="h-10 w-full rounded-lg cursor-pointer border-none bg-transparent" />
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      </section>
                     </div>
                   )}
                 </div>
               </div>
-
-              {/* STICKY BUY BUTTON - CONDITIONAL */}
-              {draftPages.length > 0 && currentPage.status === 'draft' && (
-                <div className="p-4 bg-gradient-to-t from-black via-[#050505] to-[#050505] z-30 shrink-0 border-t border-white/5">
-                  <button onClick={() => setShowPaymentModal(true)} className="w-full py-4 bg-gradient-to-r from-yellow-500 to-amber-600 rounded-xl text-black font-black uppercase tracking-widest shadow-[0_0_30px_rgba(245,158,11,0.3)] hover:shadow-[0_0_50px_rgba(245,158,11,0.5)] hover:scale-[1.01] transition-all flex items-center justify-center gap-3">
-                    <span className="material-symbols-outlined">shopping_cart</span>
-                    <span>{t('dashboard.links.buyLinks')}</span>
-                    <span className="bg-black/20 px-2 py-0.5 rounded text-xs ml-2">${paymentDetails.total}</span>
-                  </button>
-                </div>
-              )}
             </div>
           </div>
+
+          {/* STRUCTURAL FOOTER BUY BUTTON (Only for unpaid draft links) */}
+          {currentPage.status === 'draft' && draftPages.length > 0 && (
+            <div className="p-6 border-t border-white/10 bg-gradient-to-t from-[#0a0a0a] to-[#050505] z-20 shrink-0 flex justify-center">
+              <button
+                onClick={() => setShowPaymentModal(true)}
+                className={`w-full max-w-md py-4 px-6 bg-gradient-to-r from-[#FFB700] via-[#FFC700] to-[#FF8A00] rounded-2xl text-black font-black uppercase tracking-wider shadow-[0_0_30px_rgba(255,183,0,0.3)] hover:shadow-[0_0_50px_rgba(255,183,0,0.5)] hover:scale-[1.02] transition-all flex items-center justify-between gap-4 relative overflow-hidden group ${animateBuyButton ? 'animate-bounce' : ''}`}
+              >
+                {/* Shine effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
+
+                {/* Icon */}
+                <div className="w-12 h-12 rounded-xl bg-black/10 backdrop-blur-sm flex items-center justify-center shrink-0 relative z-10">
+                  <span className="material-symbols-outlined text-black text-2xl">shopping_cart</span>
+                </div>
+
+                {/* Text Content */}
+                <div className="flex-1 flex flex-col items-start gap-1 relative z-10">
+                  <span className="text-sm font-black uppercase tracking-wider leading-none">Continuar con el pago</span>
+                  <span className="text-[10px] opacity-80 font-bold uppercase tracking-wide leading-none">Acceso Ilimitado • Hasta 100 links</span>
+                </div>
+
+                {/* Price Badge */}
+                <div className="bg-black/20 backdrop-blur-sm px-4 py-2.5 rounded-xl border border-black/10 shrink-0 relative z-10">
+                  <span className="text-black font-black text-base">${paymentDetails.total}</span>
+                </div>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* COL 2: PREVIEW (Desktop Only) */}
@@ -862,7 +1075,7 @@ export default function Links() {
             >
               {currentPage.template === 'full' && (<div className="absolute inset-0 z-0"><img src={currentPage.profileImage} className="w-full h-full object-cover" /><div className="absolute inset-0 bg-black transition-all" style={{ opacity: currentPage.theme.overlayOpacity / 100 }}></div></div>)}
               {currentPage.template === 'split' && (<div className="h-1/2 w-full relative z-0 shrink-0"><img src={currentPage.profileImage} className="w-full h-full object-cover" /></div>)}
-              <div className={`min-h-full p-6 flex flex-col relative z-20 ${currentPage.template === 'split' ? '' : 'items-center'} ${currentPage.template === 'minimal' ? 'justify-center' : ''} ${currentPage.template === 'full' ? 'justify-end pb-12' : ''}`}>
+              <div className={`min-h-full p-6 pt-12 flex flex-col relative z-20 ${currentPage.template === 'split' ? '' : 'items-center'} ${currentPage.template === 'minimal' ? 'justify-center' : ''} ${currentPage.template === 'full' ? 'justify-end pb-12' : ''}`}>
                 {currentPage.template !== 'full' && (
                   <div className={`mb-8 relative z-10 ${currentPage.template === 'split' ? 'mt-4 text-left' : 'text-center'}`}>
                     {currentPage.template === 'minimal' && (
@@ -873,11 +1086,11 @@ export default function Links() {
                         <img src={currentPage.profileImage} alt="Avatar" className="w-full h-full object-cover" />
                       </div>
                     )}
-                    <h2 className="text-white font-bold text-xl leading-tight drop-shadow-lg">{currentPage.profileName}</h2>
+                    <h2 className="text-white font-bold text-xl leading-tight drop-shadow-lg px-4">{currentPage.profileName}</h2>
                     <p className="text-white/70 text-xs mt-1 drop-shadow-md">@{currentPage.name.toLowerCase().replace(/\s/g, '')}</p>
                   </div>
                 )}
-                {currentPage.template === 'full' && (<div className="text-center mb-6"><h2 className="text-white font-bold text-2xl leading-tight drop-shadow-lg">{currentPage.profileName}</h2></div>)}
+                {currentPage.template === 'full' && (<div className="text-center mb-6"><h2 className="text-white font-bold text-2xl leading-tight drop-shadow-lg px-4">{currentPage.profileName}</h2></div>)}
                 <div className={`w-full space-y-3 relative z-10 ${currentPage.template === 'minimal' ? 'max-w-[260px]' : ''}`}>
                   {currentPage.buttons.map(btn => (
                     <a key={btn.id} href="#" className={`block w-full py-3.5 px-6 font-bold text-sm transition-transform active:scale-95 shadow-lg flex items-center justify-center gap-2 group backdrop-blur-sm ${FONT_MAP[btn.font || 'sans']}`} style={{ backgroundColor: currentPage.template === 'full' ? `${btn.color}CC` : btn.color, color: btn.textColor, borderRadius: `${btn.borderRadius}px`, opacity: btn.opacity / 100 }}>
@@ -916,11 +1129,8 @@ export default function Links() {
                     <span className="text-blue-400 font-bold">${(paymentDetails.countRotator * LINK_PRICE_ROTATOR).toFixed(2)}</span>
                   </div>
                 )}
-
                 <div className="border-t border-white/10 pt-3">
                   <div className="flex justify-between items-center font-semibold text-silver/60 text-sm mb-1"><span>Subtotal</span><span>${paymentDetails.subtotal.toFixed(2)}</span></div>
-
-                  {/* COUPON INPUT */}
                   <div className="flex gap-2 mb-3 mt-3">
                     <div className="relative flex-1">
                       <input
@@ -944,14 +1154,12 @@ export default function Links() {
                     )}
                   </div>
                   {discountError && <p className="text-red-500 text-[10px] mb-2">{discountError}</p>}
-
                   {appliedDiscount && (
                     <div className="flex justify-between items-center text-green-500 text-sm font-bold animate-fade-in mb-1">
                       <span>Descuento ({appliedDiscount.percent}%)</span>
                       <span>-${paymentDetails.discountAmount.toFixed(2)}</span>
                     </div>
                   )}
-
                   <div className="flex justify-between items-center font-bold text-xl text-white mt-2 pt-2 border-t border-white/5">
                     <span>Total a Pagar</span>
                     <span>${paymentDetails.total.toFixed(2)}</span>
@@ -963,6 +1171,85 @@ export default function Links() {
           </div>
         </div>
       )}
+
+      {/* TELEGRAM ROTATOR SUGGESTION MODAL */}
+      {showRotatorSuggestion && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setShowRotatorSuggestion(false)}>
+          <div className="w-full max-w-lg bg-[#0A0A0A] border border-blue-500/20 rounded-2xl overflow-hidden shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
+            <div className="p-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-500">
+                  <span className="material-symbols-outlined text-3xl">sync</span>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">¿Necesitas más Telegrams?</h2>
+                <p className="text-silver/60 text-sm mb-4">Ya tienes un botón de Telegram. Para agregar más URLs de Telegram, activa el <span className="text-blue-400 font-bold">Telegram Rotativo</span>.</p>
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-4">
+                  <div className="flex items-start gap-3 text-left">
+                    <span className="material-symbols-outlined text-blue-400 text-xl mt-0.5">info</span>
+                    <div>
+                      <p className="text-white font-bold text-sm mb-1">Telegram Rotativo</p>
+                      <p className="text-silver/60 text-xs mb-2">Permite agregar hasta <span className="text-blue-400 font-bold">5 URLs de Telegram</span> que rotarán automáticamente para distribuir el tráfico.</p>
+                      <p className="text-xs text-silver/50"><span className="text-primary font-bold">Precio:</span> $80 por link (+$20 de recargo)</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => setShowRotatorSuggestion(false)} className="flex-1 py-3 bg-white/5 text-white font-bold rounded-xl hover:bg-white/10 transition-all uppercase tracking-wider">Cancelar</button>
+                <button onClick={() => {
+                  const telegramButton = currentPage.buttons.find(btn => btn.type === 'telegram');
+                  if (telegramButton) {
+                    setSelectedButtonId(telegramButton.id);
+                    handleUpdateButton('rotatorActive', true);
+                    toast.success('Telegram Rotativo activado. Ahora puedes agregar hasta 5 URLs.');
+                  }
+                  setShowRotatorSuggestion(false);
+                  setShowButtonCreator(false);
+                }} className="flex-1 py-3 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600 transition-all uppercase tracking-wider shadow-lg shadow-blue-500/20">Activar Rotativo</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE CONFIRMATION MODAL */}
+      {showDeleteConfirm && deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in" onClick={() => { setShowDeleteConfirm(false); setDeleteTarget(null); }}>
+          <div className="w-full max-w-md bg-[#0A0A0A] border border-red-500/20 rounded-2xl overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div className="p-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-red-500">
+                  <span className="material-symbols-outlined text-3xl">warning</span>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">{deleteTarget.type === 'page' ? '¿Eliminar este Link?' : '¿Eliminar este Botón?'}</h2>
+                <p className="text-silver/60 text-sm mb-1">{deleteTarget.type === 'page' ? 'Esta acción no se puede deshacer. Se perderá toda la configuración de este link.' : 'Esta acción eliminará permanentemente este botón.'}</p>
+                {deleteTarget.name && (<p className="text-white font-bold text-sm mt-3 bg-white/5 py-2 px-4 rounded-lg">"{deleteTarget.name}"</p>)}
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button onClick={() => { setShowDeleteConfirm(false); setDeleteTarget(null); }} className="flex-1 py-3 bg-white/5 text-white font-bold rounded-xl hover:bg-white/10 transition-all uppercase tracking-wider">Cancelar</button>
+                <button onClick={() => {
+                  if (deleteTarget.type === 'page') {
+                    if (pages.length <= 1) {
+                      toast.error("Debes tener al menos una página.");
+                      setShowDeleteConfirm(false);
+                      setDeleteTarget(null);
+                      return;
+                    }
+                    setPages(prev => prev.filter(p => p.id !== selectedPageId));
+                    setSelectedPageId(pages.find(p => p.id !== selectedPageId)?.id || pages[0].id);
+                    toast.success('Link eliminado correctamente');
+                  } else if (deleteTarget.type === 'button' && deleteTarget.id) {
+                    handleDeleteButton(deleteTarget.id);
+                  }
+                  setShowDeleteConfirm(false);
+                  setDeleteTarget(null);
+                }} className="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-all uppercase tracking-wider shadow-lg shadow-red-500/20">Sí, Eliminar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  );
+  </div >
+);
 }

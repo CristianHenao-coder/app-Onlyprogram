@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/contexts/I18nContext";
 import { cmsService } from "@/services/cmsService";
+import ManagerReviews from "./ManagerReviews";
 import errorImage from "../assets/error/error.png";
 
 type Testimonial = {
@@ -28,7 +29,7 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
   const activeIndexRef = useRef(0);
 
   const [cmsTestimonials, setCmsTestimonials] = useState<any[]>([]);
-  
+
   useEffect(() => {
     if (previewData) {
       setCmsTestimonials(previewData);
@@ -52,7 +53,7 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
         quote: t('testimonials.items.t1.quote'),
         badge: t('testimonials.items.t1.badge'),
         image: errorImage,
-        tint: "rgba(168,85,247,.22)",
+        tint: "rgba(29,161,242,.08)",
         videoSrc: "https://cdn.coverr.co/videos/coverr-young-woman-working-on-laptop-1570/1080p.mp4",
       },
       {
@@ -63,7 +64,7 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
         quote: t('testimonials.items.t2.quote'),
         badge: t('testimonials.items.t2.badge'),
         image: errorImage,
-        tint: "rgba(34,211,238,.18)",
+        tint: "rgba(29,161,242,.08)",
         videoSrc: "https://cdn.coverr.co/videos/coverr-businesswoman-typing-on-a-laptop-9714/1080p.mp4",
       },
       {
@@ -74,7 +75,40 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
         quote: t('testimonials.items.t3.quote'),
         badge: t('testimonials.items.t3.badge'),
         image: errorImage,
-        tint: "rgba(249,115,22,.16)",
+        tint: "rgba(29,161,242,.08)",
+        videoSrc: "https://cdn.coverr.co/videos/coverr-freelancer-working-at-home-5697/1080p.mp4",
+      },
+      {
+        id: "t4",
+        label: t('testimonials.items.t4.label'),
+        name: t('testimonials.items.t4.name'),
+        role: t('testimonials.items.t4.role'),
+        quote: t('testimonials.items.t4.quote'),
+        badge: t('testimonials.items.t4.badge'),
+        image: errorImage,
+        tint: "rgba(29,161,242,.08)",
+        videoSrc: "https://cdn.coverr.co/videos/coverr-young-woman-working-on-laptop-1570/1080p.mp4",
+      },
+      {
+        id: "t5",
+        label: t('testimonials.items.t5.label'),
+        name: t('testimonials.items.t5.name'),
+        role: t('testimonials.items.t5.role'),
+        quote: t('testimonials.items.t5.quote'),
+        badge: t('testimonials.items.t5.badge'),
+        image: errorImage,
+        tint: "rgba(29,161,242,.08)",
+        videoSrc: "https://cdn.coverr.co/videos/coverr-businesswoman-typing-on-a-laptop-9714/1080p.mp4",
+      },
+      {
+        id: "t6",
+        label: t('testimonials.items.t6.label'),
+        name: t('testimonials.items.t6.name'),
+        role: t('testimonials.items.t6.role'),
+        quote: t('testimonials.items.t6.quote'),
+        badge: t('testimonials.items.t6.badge'),
+        image: errorImage,
+        tint: "rgba(29,161,242,.08)",
         videoSrc: "https://cdn.coverr.co/videos/coverr-freelancer-working-at-home-5697/1080p.mp4",
       }
     ],
@@ -82,8 +116,9 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
   );
 
   const testimonials = useMemo(() => {
+    let base = staticTestimonials;
     if (cmsTestimonials && cmsTestimonials.length > 0) {
-      return cmsTestimonials.map((ct, i) => ({
+      base = cmsTestimonials.map((ct, i) => ({
         id: `cms-${i}`,
         label: "Creator",
         name: ct.name,
@@ -95,10 +130,21 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
         videoSrc: ct.videoSrc || staticTestimonials[i % staticTestimonials.length].videoSrc
       }));
     }
-    return staticTestimonials;
+    // Repeat the base list 50 times to simulate infinite scrolling
+    const repeated = [];
+    for (let i = 0; i < 50; i++) {
+      repeated.push(...base.map((t, idx) => ({ ...t, id: `${t.id}-loop-${i}` })));
+    }
+    return repeated;
   }, [cmsTestimonials, staticTestimonials]);
 
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(() => {
+    // Start at the beginning of the middle loop (index 25)
+    // If base length is 6, len is 300.
+    // Middle start index: 25 * 6 = 150.
+    const baseLen = (cmsTestimonials && cmsTestimonials.length > 0) ? cmsTestimonials.length : 6;
+    return baseLen * 25;
+  });
 
   const [bgA, setBgA] = useState(testimonials[0]?.image);
   const [bgB, setBgB] = useState<string | null>(null);
@@ -134,7 +180,7 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
     const container = carouselRef.current;
     if (!card || !container) return;
     lockAutoScroll(800);
-    const left = card.offsetLeft;
+    const left = card.offsetLeft - (container.clientWidth - card.clientWidth) / 2;
     container.scrollTo({ left, behavior: "smooth" });
   };
 
@@ -142,10 +188,12 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
     const container = carouselRef.current;
     if (!container) return 0;
     const rect = container.getBoundingClientRect();
-    const focusX = rect.left + rect.width * 0.35;
+    const focusX = rect.left + rect.width * 0.5;
     let bestIdx = 0;
     let bestDist = Number.POSITIVE_INFINITY;
     cardRefs.current.forEach((card, idx) => {
+      // Safety check if repeating list changed
+      if (!card || idx >= testimonials.length) return;
       if (!card) return;
       const r = card.getBoundingClientRect();
       const cardCenter = r.left + r.width / 2;
@@ -188,7 +236,7 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
       if (!card) return;
       const video = card.querySelector("video") as HTMLVideoElement | null;
       if (!video) return;
-      if (idx === activeIndex) video.play().catch(() => {});
+      if (idx === activeIndex) video.play().catch(() => { });
       else video.pause();
     });
   }, [activeIndex, testimonials]);
@@ -227,8 +275,8 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
           className={["absolute inset-0 bg-cover bg-center transition-opacity duration-[1200ms]", !useA ? "opacity-100" : "opacity-0"].join(" ")}
           style={{ backgroundImage: bgB ? `url(${bgB})` : "none", filter: "blur(28px) saturate(1.1)", transform: "scale(1.12)", opacity: !useA ? 0.22 : 0 }}
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0B0B0B]/70 via-[#0B0B0B]/78 to-[#0B0B0B]" />
-        <div className="absolute -inset-24 blur-3xl transition-all duration-[1200ms] opacity-40" style={{ background: `radial-gradient(circle at 50% 30%, ${tint}, transparent 60%)` }} />
+        <div className="absolute inset-0 bg-[#000000]" />
+        <div className="absolute -inset-24 blur-3xl transition-all duration-[1200ms] opacity-30" style={{ background: `radial-gradient(circle at 50% 30%, ${tint}, transparent 60%)` }} />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -249,7 +297,7 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
             {testimonials.map((t, idx) => {
               const isActive = idx === activeIndex;
               return (
-                <div key={t.id} ref={(el) => (cardRefs.current[idx] = el)} className={["snap-start flex-none w-[280px] sm:w-[320px] md:w-[360px] lg:w-[calc((100%-2*24px)/3)] transition-all duration-700", isActive ? "opacity-100 scale-[1]" : "opacity-[0.50] scale-[0.985]"].join(" ")}>
+                <div key={t.id} ref={(el) => (cardRefs.current[idx] = el)} className={["snap-center flex-none w-[280px] sm:w-[320px] md:w-[360px] lg:w-[calc((100%-2*24px)/3)] transition-all duration-700", isActive ? "opacity-100 scale-[1]" : "opacity-[0.50] scale-[0.95]"].join(" ")}>
                   <button type="button" onClick={() => { setActiveIndex(idx); scrollToIndex(idx); }} className={["group text-left w-full relative rounded-3xl overflow-hidden border bg-surface/40", isActive ? "border-primary/40" : "border-border", "hover:border-primary/40 transition-all duration-500"].join(" ")} style={{ transform: "translateZ(0)" }}>
                     {t.videoSrc ? (
                       <video className={["w-full h-[520px] object-cover transition-transform duration-[900ms]", isActive ? "scale-[1.02]" : "scale-[1.06]"].join(" ")} poster={t.image} muted loop playsInline preload="none" src={t.videoSrc} />
@@ -278,6 +326,10 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
             ))}
           </div>
         </div>
+      </div>
+
+      <div className="mt-20">
+        <ManagerReviews />
       </div>
     </section>
   );
