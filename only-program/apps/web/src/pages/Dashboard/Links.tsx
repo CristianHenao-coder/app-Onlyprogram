@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { useModal } from '@/contexts/ModalContext';
@@ -252,8 +252,11 @@ export default function Links() {
     prevDraftCountRef.current = draftPages.length;
   }, [draftPages.length]);
 
-  // Sidebar Collapse State
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Sidebar Collapse State - Auto-collapse on mobile
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    // Auto-collapse on mobile/tablet screens
+    return window.innerWidth < 1024;
+  });
 
   // Delete Confirmation State
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -609,7 +612,7 @@ export default function Links() {
           <div className="flex-1 flex overflow-hidden">
              
              {/* LEFT PANEL: BUTTONS LIST & ADDER */}
-             <div className={`border-r border-white/5 flex flex-col bg-[#070707] shrink-0 transition-all duration-300 ${sidebarCollapsed ? 'w-16 md:w-20' : 'w-full sm:w-64 lg:w-80'}`}>
+             <div className={`border-r border-white/5 flex flex-col bg-[#070707] shrink-0 transition-all duration-300 ${sidebarCollapsed ? 'w-16 md:w-20' : 'w-full sm:w-64 lg:w-72'}`}>
                 <div className="p-3 md:p-4 border-b border-white/5 relative z-10 bg-[#070707] flex items-center gap-2">
                    <button 
                       onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
@@ -975,8 +978,8 @@ export default function Links() {
         </div>
 
         {/* COL 2: PREVIEW (Desktop Only) */}
-        <div className="hidden lg:flex w-[420px] bg-[#020202] border-l border-white/5 items-center justify-center relative p-8 shadow-[-20px_0_40px_rgba(0,0,0,0.5)] shrink-0 lg:order-last">
-          <div className="relative w-[320px] aspect-[9/19] bg-black rounded-[3rem] border-8 border-[#333] shadow-2xl overflow-hidden flex flex-col z-10">
+        <div className="hidden lg:flex w-[400px] bg-[#020202] border-l border-white/5 items-center justify-center relative p-4 shadow-[-20px_0_40px_rgba(0,0,0,0.5)] shrink-0 lg:order-last">
+          <div className="relative w-[320px] aspect-[9/19] bg-black rounded-[3rem] border-[6px] border-[#333] shadow-2xl overflow-hidden flex flex-col z-10">
             <div
               className={`flex-1 overflow-y-auto custom-scrollbar relative flex flex-col ${currentPage.template === 'full' ? '' : 'transition-all duration-500'}`}
               style={{ background: currentPage.template === 'full' ? '#111' : (getBackgroundStyle(currentPage).background) }}
