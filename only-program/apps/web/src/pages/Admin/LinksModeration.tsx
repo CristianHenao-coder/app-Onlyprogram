@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/services/supabase';
-import { useTranslation } from '@/contexts/I18nContext';
+
 import LinkPreviewModal from '@/components/LinkPreviewModal';
 
 interface PendingLink {
