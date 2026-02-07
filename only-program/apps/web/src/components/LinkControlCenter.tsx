@@ -1,0 +1,130 @@
+import { useState } from "react";
+import { useTranslation } from "@/contexts/I18nContext";
+import { motion, AnimatePresence } from "framer-motion";
+
+type FeatureKey = 'quickLinks' | 'brandDomain' | 'linkShield' | 'trafficControl' | 'segmentation' | 'analytics' | 'warnings';
+
+export default function LinkControlCenter() {
+    const { t } = useTranslation() as any;
+    const [activeFeature, setActiveFeature] = useState<FeatureKey>('quickLinks');
+
+    const features: { key: FeatureKey; icon: string }[] = [
+        { key: 'quickLinks', icon: 'bolt' },
+        { key: 'brandDomain', icon: 'dns' },
+        { key: 'linkShield', icon: 'shield_lock' },
+        { key: 'trafficControl', icon: 'traffic' },
+        { key: 'segmentation', icon: 'public' },
+        { key: 'analytics', icon: 'monitoring' },
+        { key: 'warnings', icon: 'warning' },
+    ];
+
+    return (
+        <section className="py-24 bg-black relative overflow-hidden" id="features">
+            {/* Ambient Background */}
+            <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-900/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3" />
+                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] opacity-20" />
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div className="text-center mb-16">
+                    <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight mb-6">
+                        {t("linkControlCenter.title")}
+                    </h2>
+                    <p className="text-silver/60 max-w-2xl mx-auto text-lg leading-relaxed">
+                        {t("linkControlCenter.subtitle")}
+                    </p>
+                </div>
+
+                <div className="grid lg:grid-cols-12 gap-8 lg:gap-12">
+                    {/* Left Column: Navigation Tabs */}
+                    <div className="lg:col-span-4 flex flex-col gap-2">
+                        {features.map((feature) => {
+                            const isActive = activeFeature === feature.key;
+                            return (
+                                <button
+                                    key={feature.key}
+                                    onClick={() => setActiveFeature(feature.key)}
+                                    className={`group relative p-4 rounded-xl text-left transition-all duration-300 border ${isActive
+                                            ? "bg-white/5 border-primary/30 shadow-[0_0_20px_rgba(29,161,242,0.15)]"
+                                            : "bg-surface/10 border-transparent hover:bg-white/5 hover:border-white/5"
+                                        }`}
+                                >
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="activeTab"
+                                            className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/10 to-transparent pointer-events-none"
+                                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                        />
+                                    )}
+                                    <div className="relative flex items-center gap-4">
+                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-300 ${isActive ? "bg-primary text-white shadow-lg shadow-primary/30" : "bg-white/5 text-silver/50 group-hover:text-white"
+                                            }`}>
+                                            <span className="material-symbols-outlined">{feature.icon}</span>
+                                        </div>
+                                        <span className={`font-bold text-lg transition-colors ${isActive ? "text-white" : "text-silver/60 group-hover:text-silver"}`}>
+                                            {t(`linkControlCenter.features.${feature.key}.title`)}
+                                        </span>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Right Column: Content Display */}
+                    <div className="lg:col-span-8">
+                        <div className="relative h-full min-h-[400px] sm:min-h-[500px] rounded-3xl border border-white/10 bg-surface/20 backdrop-blur-sm overflow-hidden p-8 sm:p-12 flex flex-col justify-center items-start shadow-2xl">
+                            {/* Background Grid inside Panel */}
+                            <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
+
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={activeFeature}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    transition={{ duration: 0.3 }}
+                                    className="relative z-10 w-full"
+                                >
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-wider">
+                                            System Active
+                                        </span>
+                                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                                    </div>
+
+                                    <h3 className="text-4xl sm:text-5xl font-bold text-white mb-6 leading-tight">
+                                        {t(`linkControlCenter.features.${activeFeature}.title`)}
+                                    </h3>
+
+                                    <p className="text-xl text-blue-100/70 leading-relaxed max-w-3xl">
+                                        {t(`linkControlCenter.features.${activeFeature}.desc`)}
+                                    </p>
+
+                                    {/* Visual Decoration based on feature can go here */}
+                                    <div className="mt-12 h-px w-full bg-gradient-to-r from-primary/50 to-transparent" />
+
+                                    <div className="mt-8 flex gap-4">
+                                        <button className="px-6 py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium transition-all flex items-center gap-2">
+                                            <span>Leer documentación</span>
+                                            <span className="material-symbols-outlined text-sm">arrow_outward</span>
+                                        </button>
+                                    </div>
+
+                                </motion.div>
+                            </AnimatePresence>
+
+                            {/* Decorative Elements */}
+                            <div className="absolute top-0 right-0 p-8 opacity-20 pointer-events-none">
+                                <span className="material-symbols-outlined text-9xl text-white">
+                                    {features.find(f => f.key === activeFeature)?.icon}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+}
