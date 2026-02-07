@@ -10,8 +10,12 @@ interface PaymentSelectorProps {
   amount?: number; // Add amount prop
 }
 
-export default function PaymentSelector({ onSelect, initialMethod = 'card', amount = 10 }: PaymentSelectorProps) {
+import { useAuth } from '@/hooks/useAuth';
+
+export default function PaymentSelector({ onSelect, initialMethod = 'card', amount }: PaymentSelectorProps) {
+  const { user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'crypto'>(initialMethod);
+  const [paymentSuccess, setPaymentSuccess] = useState(false); // Estado para feedback visual
 
   // Crypto State
   const [txHash, setTxHash] = useState("");
@@ -39,7 +43,7 @@ export default function PaymentSelector({ onSelect, initialMethod = 'card', amou
     setIsSubmittingCrypto(true);
     try {
       await paymentsService.submitManualCryptoPayment({
-        amount,
+        amount: amount || 0,
         currency: "USDT",
         transactionHash: txHash,
         walletUsed: senderWallet // Passing the sender wallet
@@ -56,6 +60,27 @@ export default function PaymentSelector({ onSelect, initialMethod = 'card', amou
   };
 
   const [senderWallet, setSenderWallet] = useState("");
+
+  // Renderizado de Éxito
+  if (paymentSuccess) {
+    return (
+      <div className="bg-background-dark/50 backdrop-blur-xl border border-white/10 rounded-2xl p-8 text-center animate-fade-in">
+        <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+          <span className="material-symbols-outlined text-4xl text-green-400">check_circle</span>
+        </div>
+        <h3 className="text-2xl font-bold text-white mb-2">¡Pago Exitoso!</h3>
+        <p className="text-silver mb-8">
+          Tus links han sido activados correctamente. Ya puedes comenzar a compartir tu perfil.
+        </p>
+        <button
+          onClick={() => window.location.href = '/dashboard/home'}
+          className="px-8 py-3 bg-white text-black font-bold rounded-xl hover:bg-silver transition-all"
+        >
+          Ir al Dashboard
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fade-in relative">
@@ -100,11 +125,12 @@ export default function PaymentSelector({ onSelect, initialMethod = 'card', amou
             </div>
 
             <WompiCreditCardForm
-              amount={amount}
-              email="" // TODO: Get user email from context/props
+              amount={amount || 0}
+              email={user?.email || ""}
               onSuccess={() => {
-                // Handle success (maybe redirect or show modal)
-                console.log("Payment Success");
+                setPaymentSuccess(true);
+                toast.success("Pago procesado correctamente");
+                if (onSelect) onSelect('card');
               }}
             />
           </div>
@@ -133,7 +159,7 @@ export default function PaymentSelector({ onSelect, initialMethod = 'card', amou
                   onClick={async () => {
                     const toastId = toast.loading("Conectando con PayPal...");
                     try {
-                      const order = await paymentsService.createPayPalOrder(amount);
+                      const order = await paymentsService.createPayPalOrder(amount || 0);
                       // Find approval link
                       const approvalLink = order.links?.find((link: any) => link.rel === 'approve')?.href;
                       if (approvalLink) {

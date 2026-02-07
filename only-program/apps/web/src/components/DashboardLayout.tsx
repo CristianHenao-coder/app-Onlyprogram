@@ -18,6 +18,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   const menuItems = [
+    { path: '/dashboard/home', icon: 'dashboard', label: 'Dashboard' },
     { path: '/dashboard/links', icon: 'link', label: 'Links' },
     { path: '/dashboard/analytics', icon: 'bar_chart', label: 'Analíticas' },
     { path: '/dashboard/telegram', icon: 'send', label: 'Telegram' },
@@ -94,10 +95,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               onClick={() => setSidebarOpen(false)}
               className={`
                 flex items-center gap-3 px-4 py-3 rounded-xl transition-all group
-                ${
-                  isActive(item.path)
-                    ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                    : 'text-silver/70 hover:bg-white/5 hover:text-white border border-transparent'
+                ${isActive(item.path)
+                  ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                  : 'text-silver/70 hover:bg-white/5 hover:text-white border border-transparent'
                 }
               `}
             >
@@ -122,7 +122,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               <p className="text-silver/60 text-xs truncate">{user?.email}</p>
             </div>
           </div>
-          
+
           <button
             onClick={handleSignOut}
             className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all border border-red-500/20 hover:border-red-500/40"

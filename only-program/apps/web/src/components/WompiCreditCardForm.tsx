@@ -63,6 +63,14 @@ export default function WompiCreditCardForm({ amount, email, onSuccess }: WompiC
 
             // 1. Get Acceptance Token
             const merchantRes = await fetch(`${wompiUrl}/merchants/${wompiPub}`);
+
+            if (!merchantRes.ok) {
+                if (merchantRes.status === 404 || merchantRes.status === 422) {
+                    throw new Error(`Clave pública de Wompi inválida (${wompiPub}). Verifica tu configuración.`);
+                }
+                throw new Error("Error conectando con Wompi. Intenta más tarde.");
+            }
+
             const merchantData = await merchantRes.json();
 
             if (!merchantData.data?.presigned_acceptance?.acceptance_token) {
@@ -96,7 +104,7 @@ export default function WompiCreditCardForm({ amount, email, onSuccess }: WompiC
             const cardToken = tokenData.data.id;
 
             // 3. Backend Transaction
-            await paymentsService.createWompiTransaction({
+            const transaction = await paymentsService.createWompiTransaction({
                 amount,
                 email,
                 token: cardToken,
@@ -104,8 +112,14 @@ export default function WompiCreditCardForm({ amount, email, onSuccess }: WompiC
                 installments: 1
             });
 
-            toast.success("¡Pago procesado exitosamente!", { icon: "🎉" });
-            onSuccess();
+            if (transaction.status === "APPROVED") {
+                toast.success("¡Pago procesado exitosamente!", { icon: "🎉" });
+                onSuccess();
+            } else if (transaction.status === "DECLINED") {
+                throw new Error("El pago fue rechazado. Verifica los fondos o contacta a tu banco.");
+            } else {
+                throw new Error("Ocurrió un error con el procesador de pagos. Intenta nuevamente.");
+            }
 
         } catch (err: any) {
             console.error("Payment Error:", err);
@@ -235,7 +249,7 @@ export default function WompiCreditCardForm({ amount, email, onSuccess }: WompiC
                     ) : (
                         <>
                             <span className="material-symbols-outlined text-lg">lock_open</span>
-                            Pagar ${amount} USD
+                            Pagar {amount ? `$${amount} USD` : ""}
                         </>
                     )}
                 </button>

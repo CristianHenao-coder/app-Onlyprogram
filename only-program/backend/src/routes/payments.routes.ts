@@ -214,9 +214,12 @@ router.post("/wompi/transaction", async (req: AuthRequest, res) => {
   try {
     const { amount, email, token, installments, acceptanceToken } = req.body;
 
-    if (!amount || !token || !email || !acceptanceToken) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
+    console.log("💰 Wompi Transaction Initiated. Body:", JSON.stringify(req.body, null, 2));
+
+    if (!amount) return res.status(400).json({ error: "Missing required field: amount" });
+    if (!token) return res.status(400).json({ error: "Missing required field: token" });
+    if (!email) return res.status(400).json({ error: "Missing required field: email" });
+    if (!acceptanceToken) return res.status(400).json({ error: "Missing required field: acceptanceToken" });
 
     const { WompiService } = await import("../services/wompi.service");
 
@@ -230,19 +233,25 @@ router.post("/wompi/transaction", async (req: AuthRequest, res) => {
 
     // Guardar transacción en DB
     if (req.user) {
-      // Lógica para guardar en tabla 'payments'
-      // Podemos reusar la lógica existente, o insertar aquí
+      const status = transaction.status === "APPROVED" ? "completed" : "pending";
+
       const { error } = await supabase.from("payments").insert({
         user_id: req.user.id,
         amount, // USD
         currency: "USD",
         provider: "wompi",
-        status: transaction.status === "APPROVED" ? "completed" : "pending",
+        status: status,
         tx_reference: transaction.id,
         created_at: new Date().toISOString()
       });
 
       if (error) console.error("Error saving payment:", error);
+
+      // ACTIVACIÓN INMEDIATA SÍNCRONA
+      if (status === "completed") {
+        const { FulfillmentService } = await import("../services/fulfillment.service");
+        await FulfillmentService.activateLinkProduct(req.user.id, transaction.id, amount, "USD");
+      }
     }
 
     res.json(transaction);
