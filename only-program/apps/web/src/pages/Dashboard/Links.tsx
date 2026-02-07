@@ -322,24 +322,7 @@ export default function Links() {
     toast.success('Empieza a diseñar tu nuevo link');
   };
 
-  const handleDeletePage = async () => {
-    if (pages.length <= 1) return toast.error("Debes tener al menos una página.");
-    
-    const confirmed = await showConfirm({
-      title: '¿Eliminar esta Landing Page?',
-      message: 'Esta acción no se puede deshacer. Se perderá toda la configuración de este link.',
-      confirmText: 'Sí, eliminar',
-      cancelText: 'Cancelar',
-      type: 'error'
-    });
 
-    if (confirmed) {
-      const newPages = pages.filter(p => p.id !== currentPage.id);
-      setPages(newPages);
-      setSelectedPageId(newPages[0].id);
-      toast.success('Página eliminada');
-    }
-  };
 
   const handleUpdatePage = (field: string, value: any) => {
     setPages(prev => prev.map(p => {
@@ -1152,8 +1135,8 @@ export default function Links() {
                     // Find the telegram button and activate rotator
                     const telegramButton = currentPage.buttons.find(btn => btn.type === 'telegram');
                     if (telegramButton) {
-                      handleUpdateButton('rotatorActive', true, telegramButton.id);
                       setSelectedButtonId(telegramButton.id);
+                      handleUpdateButton('rotatorActive', true);
                       toast.success('Telegram Rotativo activado. Ahora puedes agregar hasta 5 URLs.');
                     }
                     setShowRotatorSuggestion(false);
