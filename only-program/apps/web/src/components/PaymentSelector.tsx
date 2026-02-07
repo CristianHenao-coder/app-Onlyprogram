@@ -73,7 +73,7 @@ export default function PaymentSelector({ onSelect, initialMethod = 'card', amou
           Tus links han sido activados correctamente. Ya puedes comenzar a compartir tu perfil.
         </p>
         <button
-          onClick={() => window.location.href = '/dashboard/overview'}
+          onClick={() => window.location.href = '/dashboard/home'}
           className="px-8 py-3 bg-white text-black font-bold rounded-xl hover:bg-silver transition-all"
         >
           Ir al Dashboard

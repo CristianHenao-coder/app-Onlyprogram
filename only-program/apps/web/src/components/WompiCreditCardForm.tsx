@@ -104,7 +104,7 @@ export default function WompiCreditCardForm({ amount, email, onSuccess }: WompiC
             const cardToken = tokenData.data.id;
 
             // 3. Backend Transaction
-            await paymentsService.createWompiTransaction({
+            const transaction = await paymentsService.createWompiTransaction({
                 amount,
                 email,
                 token: cardToken,
@@ -112,8 +112,14 @@ export default function WompiCreditCardForm({ amount, email, onSuccess }: WompiC
                 installments: 1
             });
 
-            toast.success("¡Pago procesado exitosamente!", { icon: "🎉" });
-            onSuccess();
+            if (transaction.status === "APPROVED") {
+                toast.success("¡Pago procesado exitosamente!", { icon: "🎉" });
+                onSuccess();
+            } else if (transaction.status === "DECLINED") {
+                throw new Error("El pago fue rechazado. Verifica los fondos o contacta a tu banco.");
+            } else {
+                throw new Error("Ocurrió un error con el procesador de pagos. Intenta nuevamente.");
+            }
 
         } catch (err: any) {
             console.error("Payment Error:", err);
