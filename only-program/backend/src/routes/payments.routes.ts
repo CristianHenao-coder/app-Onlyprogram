@@ -214,9 +214,12 @@ router.post("/wompi/transaction", async (req: AuthRequest, res) => {
   try {
     const { amount, email, token, installments, acceptanceToken } = req.body;
 
-    if (!amount || !token || !email || !acceptanceToken) {
-      return res.status(400).json({ error: "Missing required fields" });
-    }
+    console.log("💰 Wompi Transaction Initiated. Body:", JSON.stringify(req.body, null, 2));
+
+    if (!amount) return res.status(400).json({ error: "Missing required field: amount" });
+    if (!token) return res.status(400).json({ error: "Missing required field: token" });
+    if (!email) return res.status(400).json({ error: "Missing required field: email" });
+    if (!acceptanceToken) return res.status(400).json({ error: "Missing required field: acceptanceToken" });
 
     const { WompiService } = await import("../services/wompi.service");
 

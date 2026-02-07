@@ -63,6 +63,14 @@ export default function WompiCreditCardForm({ amount, email, onSuccess }: WompiC
 
             // 1. Get Acceptance Token
             const merchantRes = await fetch(`${wompiUrl}/merchants/${wompiPub}`);
+
+            if (!merchantRes.ok) {
+                if (merchantRes.status === 404 || merchantRes.status === 422) {
+                    throw new Error(`Clave pública de Wompi inválida (${wompiPub}). Verifica tu configuración.`);
+                }
+                throw new Error("Error conectando con Wompi. Intenta más tarde.");
+            }
+
             const merchantData = await merchantRes.json();
 
             if (!merchantData.data?.presigned_acceptance?.acceptance_token) {

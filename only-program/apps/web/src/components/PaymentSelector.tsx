@@ -10,7 +10,10 @@ interface PaymentSelectorProps {
   amount?: number; // Add amount prop
 }
 
+import { useAuth } from '@/hooks/useAuth';
+
 export default function PaymentSelector({ onSelect, initialMethod = 'card', amount = 10 }: PaymentSelectorProps) {
+  const { user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'crypto'>(initialMethod);
 
   // Crypto State
@@ -101,7 +104,7 @@ export default function PaymentSelector({ onSelect, initialMethod = 'card', amou
 
             <WompiCreditCardForm
               amount={amount}
-              email="" // TODO: Get user email from context/props
+              email={user?.email || ""}
               onSuccess={() => {
                 // Handle success (maybe redirect or show modal)
                 console.log("Payment Success");

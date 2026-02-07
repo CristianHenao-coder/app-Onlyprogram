@@ -59,7 +59,7 @@ function App() {
     <I18nProvider>
       <LoadingScreen />
       <ModalProvider>
-        <Router>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <ScrollToTop />
           <MotionManager />
           <Routes>
