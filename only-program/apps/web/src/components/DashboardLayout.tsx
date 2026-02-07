@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
-
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
@@ -11,7 +10,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleSignOut = async () => {
     await signOut();
@@ -22,9 +21,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { path: '/dashboard/home', icon: 'dashboard', label: 'Dashboard' },
     { path: '/dashboard/links', icon: 'link', label: 'Links' },
     { path: '/dashboard/analytics', icon: 'bar_chart', label: 'Analíticas' },
-    { path: '/dashboard/telegram', icon: 'telegram', label: 'Telegram' },
+    { path: '/dashboard/telegram', icon: 'send', label: 'Telegram' },
     { path: '/dashboard/payments', icon: 'credit_card', label: 'Pagos' },
-    { path: '/dashboard/settings', icon: 'person', label: 'Perfil' },
+    { path: '/dashboard/settings', icon: 'settings', label: 'Configuración' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -42,6 +41,21 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </span>
       </button>
 
+      {/* Desktop Toggle Button - Inside sidebar area when open */}
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className={`
+          hidden lg:block fixed top-4 z-50 p-2.5 bg-background-dark/90 backdrop-blur-lg border border-white/10 rounded-xl text-white hover:bg-purple-500/20 hover:border-purple-500/40 transition-all shadow-lg
+          ${sidebarOpen ? 'left-[260px]' : 'left-4'}
+        `}
+        aria-label="Toggle sidebar"
+        title={sidebarOpen ? 'Ocultar menú' : 'Mostrar menú'}
+      >
+        <span className="material-symbols-outlined text-xl">
+          {sidebarOpen ? 'menu_open' : 'menu'}
+        </span>
+      </button>
+
       {/* Overlay for mobile when sidebar is open */}
       {sidebarOpen && (
         <div
@@ -50,13 +64,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         />
       )}
 
-      {/* Sidebar - Fixed positioning */}
+      {/* Sidebar - Fixed positioning, collapsible on all screen sizes */}
       <aside
         className={`
           fixed top-0 left-0 h-screen w-72 bg-background-dark/40 backdrop-blur-xl border-r border-white/10 
           transform transition-transform duration-300 ease-in-out z-40
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:translate-x-0
           flex flex-col
         `}
       >
@@ -121,7 +134,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       </aside>
 
       {/* Main Content Area - Adjusted for sidebar */}
-      <main className="lg:ml-72 min-h-screen">
+      <main className={`min-h-screen transition-all duration-300 ${sidebarOpen ? 'lg:ml-72' : 'lg:ml-0'}`}>
         <div className="p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8">
           {children}
         </div>

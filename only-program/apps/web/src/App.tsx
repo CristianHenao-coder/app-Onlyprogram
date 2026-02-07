@@ -32,6 +32,7 @@ import GlobalLinks from '@/pages/Admin/GlobalLinks';
 import CouponManager from '@/pages/Admin/CouponManager';
 import AdminSettings from '@/pages/Admin/Settings';
 import AuditLogs from './pages/Admin/AuditLogs';
+import LinksModeration from '@/pages/Admin/LinksModeration';
 
 // Components
 import DashboardLayout from '@/components/DashboardLayout';
@@ -114,6 +115,7 @@ function App() {
                 <Route path="coupons" element={<CouponManager />} />
                 <Route path="settings" element={<AdminSettings />} />
                 <Route path="audit-logs" element={<AuditLogs />} />
+                <Route path="moderation" element={<LinksModeration />} />
               </Route>
             </Route>
           </Routes>

@@ -62,8 +62,8 @@ router.post("/", authenticateToken, async (req: AuthRequest, res) => {
         expires_at:
           expires_at ||
           new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 días por defecto
-        status: "active",
-        is_active: true,
+        status: "pending",
+        is_active: false,
       })
       .select()
       .single();
