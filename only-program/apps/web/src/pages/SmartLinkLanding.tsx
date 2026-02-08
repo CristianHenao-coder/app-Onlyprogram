@@ -4,7 +4,43 @@ import { supabase } from '../services/supabase';
 
 // --- SUB-COMPONENTES UI ---
 
-// 1. SAFETY GATE OVERLAY - Removed (unused)
+// 1. SAFETY GATE OVERLAY (El Escudo Social)
+const SafetyGateOverlay = () => (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-6">
+        <div className="bg-gradient-to-br from-[#2a0515] to-[#1a000d] border border-pink-500/30 rounded-3xl p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(255,0,100,0.3)] relative overflow-hidden">
+
+            {/* Flecha Animada */}
+            <div className="absolute -top-2 right-4 text-4xl text-pink-500 animate-bounce rotate-[-30deg]">
+                ➚
+            </div>
+
+            <div className="text-5xl mb-4 animate-pulse">💋</div>
+
+            <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-rose-200 mb-2 uppercase tracking-wide">
+                Acceso Privado
+            </h2>
+
+            <p className="text-pink-100/80 mb-6 text-sm leading-relaxed">
+                El contenido está oculto por seguridad en esta aplicación.
+            </p>
+
+            <div className="bg-white/10 rounded-xl p-4 text-left border border-white/10 mb-6">
+                <div className="flex items-center gap-3 mb-3 text-pink-50">
+                    <div className="w-6 h-6 rounded-full bg-pink-600 flex items-center justify-center font-bold text-xs">1</div>
+                    <span>Toca los <b className="text-white">3 puntos</b> arriba</span>
+                </div>
+                <div className="flex items-center gap-3 text-pink-50">
+                    <div className="w-6 h-6 rounded-full bg-pink-600 flex items-center justify-center font-bold text-xs">2</div>
+                    <span>Elige <b className="text-white">"Abrir en Navegador"</b></span>
+                </div>
+            </div>
+
+            <div className="text-xs text-pink-500/50 uppercase tracking-widest">
+                Secure Gateway v2.0
+            </div>
+        </div>
+    </div>
+);
 
 // 2. SOCIAL BUTTON (Botón Genérico)
 interface SocialButtonProps {
@@ -72,16 +108,16 @@ const SmartLinkLanding: React.FC<SmartLinkLandingProps> = ({ slug: propSlug }) =
     const slug = propSlug || params.slug;
     const [linkData, setLinkData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    // const [isSocialApp, setIsSocialApp] = useState(false);  // Unused
+    const [isSocialApp, setIsSocialApp] = useState(false);
 
     useEffect(() => {
         console.log("SmartLinkLanding Mounted. Slug:", slug);
 
         // 1. Detectar Social App (Client Side Check)
-        // Social app detection - unused currently
-        // const ua = navigator.userAgent.toLowerCase();
-        // const social = /tiktok|instagram|fb_iab|threads|fban|fbav|musically/.test(ua);
-        // setIsSocialApp(social);
+        const ua = navigator.userAgent.toLowerCase();
+        const social = /tiktok|instagram|fb_iab|threads|fban|fbav|musically/.test(ua);
+        setIsSocialApp(social);
+        console.log("Is Social App:", social, "User Agent:", ua);
 
         // 2. Fetch Data
         const fetchData = async () => {
@@ -191,6 +227,7 @@ const SmartLinkLanding: React.FC<SmartLinkLandingProps> = ({ slug: propSlug }) =
                         {renderButtons(linkData.buttons)}
                     </div>
                 </div>
+                {isSocialApp && <SafetyGateOverlay />}
             </div>
         );
     }
@@ -215,6 +252,7 @@ const SmartLinkLanding: React.FC<SmartLinkLandingProps> = ({ slug: propSlug }) =
                         {renderButtons(linkData.buttons)}
                     </div>
                 </div>
+                {isSocialApp && <SafetyGateOverlay />}
             </div>
         );
     }
@@ -249,6 +287,7 @@ const SmartLinkLanding: React.FC<SmartLinkLandingProps> = ({ slug: propSlug }) =
                     {renderButtons(linkData.buttons)}
                 </div>
             </div>
+            {isSocialApp && <SafetyGateOverlay />}
         </div>
     );
 };
