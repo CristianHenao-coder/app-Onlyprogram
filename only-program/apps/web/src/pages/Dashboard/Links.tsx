@@ -464,24 +464,6 @@ export default function Links() {
     toast.success('Empieza a diseñar tu nuevo link');
   };
 
-  const handleDeletePage = async () => {
-    if (pages.length <= 1) return toast.error("Debes tener al menos una página.");
-
-    const confirmed = await showConfirm({
-      title: '¿Eliminar esta Landing Page?',
-      message: 'Esta acción no se puede deshacer. Se perderá toda la configuración de este link.',
-      confirmText: 'Sí, eliminar',
-      cancelText: 'Cancelar',
-      type: 'error'
-    });
-
-    if (confirmed) {
-      setPages(prev => prev.filter(p => p.id !== selectedPageId));
-      setSelectedPageId(pages.find(p => p.id !== selectedPageId)?.id || pages[0].id);
-      toast.success('Link eliminado correctamente');
-    }
-  };
-
 
   const handleUpdatePage = (field: string, value: any) => {
     setPages(prev => prev.map(p => {
@@ -1249,6 +1231,6 @@ export default function Links() {
           </div>
         </div>
       )}
-  </div>
+    </div>
   );
 }
