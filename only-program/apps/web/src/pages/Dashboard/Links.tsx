@@ -1249,7 +1249,6 @@ export default function Links() {
           </div>
         </div>
       )}
-    </div>
-  </div >
-);
+  </div>
+  );
 }
