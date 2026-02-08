@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { useModal } from '@/contexts/ModalContext';
@@ -230,8 +230,20 @@ export default function Links() {
   const [animateBuyButton, setAnimateBuyButton] = useState(false);
   const prevDraftCountRef = useRef(draftPages.length);
 
-  // Sidebar Collapse State
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  useEffect(() => {
+    if (draftPages.length > prevDraftCountRef.current) {
+        setAnimateBuyButton(true);
+        const timer = setTimeout(() => setAnimateBuyButton(false), 1000); // 1s animation
+        return () => clearTimeout(timer);
+    }
+    prevDraftCountRef.current = draftPages.length;
+  }, [draftPages.length]);
+
+  // Sidebar Collapse State - Auto-collapse on mobile
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    // Auto-collapse on mobile/tablet screens
+    return window.innerWidth < 1024;
+  });
 
   // Delete Confirmation State
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -1049,8 +1061,8 @@ export default function Links() {
         </div>
 
         {/* COL 2: PREVIEW (Desktop Only) */}
-        <div className="hidden lg:flex w-[420px] bg-[#020202] border-l border-white/5 items-center justify-center relative p-8 shadow-[-20px_0_40px_rgba(0,0,0,0.5)] shrink-0 lg:order-last">
-          <div className="relative w-[320px] aspect-[9/19] bg-black rounded-[3rem] border-8 border-[#333] shadow-2xl overflow-hidden flex flex-col z-10">
+        <div className="hidden lg:flex w-[400px] bg-[#020202] border-l border-white/5 items-center justify-center relative p-4 shadow-[-20px_0_40px_rgba(0,0,0,0.5)] shrink-0 lg:order-last">
+          <div className="relative w-[320px] aspect-[9/19] bg-black rounded-[3rem] border-[6px] border-[#333] shadow-2xl overflow-hidden flex flex-col z-10">
             <div
               className={`flex-1 overflow-y-auto custom-scrollbar relative flex flex-col ${currentPage.template === 'full' ? '' : 'transition-all duration-500'}`}
               style={{ background: currentPage.template === 'full' ? '#111' : (getBackgroundStyle(currentPage).background) }}
