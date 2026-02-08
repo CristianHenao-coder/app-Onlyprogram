@@ -60,7 +60,17 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   }, [language]);
 
   const t = (key: string, values?: InterpolateValues): any => {
+    if (!translations) {
+      console.warn("I18nContext: Translations object is undefined");
+      return key;
+    }
+
     const dict = translations[language] ?? translations.es;
+
+    if (!dict) {
+      console.warn(`I18nContext: No translations found for language ${language}`);
+      return key;
+    }
 
     const raw = getByPath(dict, key);
     if (raw !== undefined) {

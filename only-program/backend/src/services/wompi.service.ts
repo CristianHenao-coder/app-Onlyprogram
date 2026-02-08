@@ -143,10 +143,14 @@ export class WompiService {
       body: JSON.stringify(payload),
     });
 
+
+
     const responseData = (await response.json()) as any;
 
-    if (!response.ok) {
-      throw new Error(responseData.error?.type || "Wompi Transaction Failed");
+    if (!response.ok || responseData.error) {
+      const errorMessage = responseData.error?.reason || responseData.error?.type || "Wompi Transaction Failed";
+      console.error("❌ Wompi Transaction Failed:", JSON.stringify(responseData.error, null, 2));
+      throw new Error(`Wompi Error: ${errorMessage}`);
     }
 
     return responseData.data;

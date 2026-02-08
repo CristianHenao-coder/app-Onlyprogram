@@ -6,13 +6,22 @@ import toast from "react-hot-toast";
 import visaLogo from "@/assets/payments/visa.png";
 import cardGeneric from "@/assets/payments/tarjeta-de-credito (1).png";
 
+// Nueva interfaz exportada para uso externo
+export interface WompiPaymentData {
+    token: string;
+    acceptanceToken: string;
+    email: string;
+    amount: number;
+}
+
 interface WompiCreditCardFormProps {
     amount: number;
     email: string;
     onSuccess: () => void;
+    onProcessPayment?: (data: WompiPaymentData) => Promise<any>;
 }
 
-export default function WompiCreditCardForm({ amount, email, onSuccess }: WompiCreditCardFormProps) {
+export default function WompiCreditCardForm({ amount, email, onSuccess, onProcessPayment }: WompiCreditCardFormProps) {
     const [loading, setLoading] = useState(false);
     const [cardType, setCardType] = useState<"visa" | "mastercard" | "amex" | "unknown">("unknown");
     const [formData, setFormData] = useState({
@@ -24,7 +33,7 @@ export default function WompiCreditCardForm({ amount, email, onSuccess }: WompiC
     });
     const [error, setError] = useState<string | null>(null);
 
-    // Detect card type
+    // Detect card type (useEffect stays the same)
     useEffect(() => {
         const number = formData.cardNumber.replace(/\s/g, "");
         if (number.startsWith("4")) setCardType("visa");
@@ -103,7 +112,21 @@ export default function WompiCreditCardForm({ amount, email, onSuccess }: WompiC
 
             const cardToken = tokenData.data.id;
 
-            // 3. Backend Transaction
+            // 3. Backend Transaction (Custom or Default)
+            if (onProcessPayment) {
+                await onProcessPayment({
+                    token: cardToken,
+                    acceptanceToken,
+                    email,
+                    amount
+                });
+                // If no error thrown, success
+                toast.success("¡Operación exitosa!", { icon: "🎉" });
+                onSuccess();
+                return;
+            }
+
+            // Default Behavior (Generic Transaction)
             const transaction = await paymentsService.createWompiTransaction({
                 amount,
                 email,
@@ -123,7 +146,6 @@ export default function WompiCreditCardForm({ amount, email, onSuccess }: WompiC
 
         } catch (err: any) {
             console.error("Payment Error:", err);
-            // Friendly error message
             const msg = err.message || "No se pudo procesar el pago.";
             setError(msg);
             toast.error(msg);

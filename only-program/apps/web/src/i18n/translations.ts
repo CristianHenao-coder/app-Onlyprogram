@@ -623,6 +623,40 @@ export const translations = {
           "Mis modelos están encantadas con el diseño de sus perfiles. Y yo con los datos que recibo.",
       },
     },
+    linkControlCenter: {
+      title: "Centro de Control de Enlaces",
+      subtitle: "Un panel interactivo de diseño oscuro premium, enfocado en control, seguridad y rendimiento.",
+      features: {
+        quickLinks: {
+          title: "Links Rápidos",
+          desc: "Genera y gestiona enlaces instantáneos para compartir contenido de forma ágil y segura."
+        },
+        brandDomain: {
+          title: "Marca & Dominio",
+          desc: "Personaliza tus URLs con tu propia identidad. Olvídate de links genéricos, usa tu dominio."
+        },
+        linkShield: {
+          title: "Escudo de Enlaces",
+          desc: "Protección avanzada que oculta destinos reales y bloquea bots, scrapers y 'toms peepers'."
+        },
+        trafficControl: {
+          title: "Control de Tráfico",
+          desc: "Dirige el flujo de visitas mediante reglas dinámicas y rotación inteligente de destinos."
+        },
+        segmentation: {
+          title: "Segmentación",
+          desc: "Redirige visitantes automáticamente según su país, dispositivo o el horario de acceso."
+        },
+        analytics: {
+          title: "Centro de Analítica",
+          desc: "Métricas claras y en tiempo real. Visualiza clicks, fuentes y conversiones en un dashboard futurista."
+        },
+        warnings: {
+          title: "Avisos Previos",
+          desc: "Muestra advertencias personalizadas o gates de edad antes de redirigir al usuario final."
+        }
+      }
+    },
   },
 
   en: {
