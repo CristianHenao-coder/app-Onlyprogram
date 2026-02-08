@@ -72,7 +72,7 @@ const Domains = () => {
                                 onClick={async () => {
                                     if (!user) return;
                                     const slug = `demo-${Date.now()}`;
-                                    const { data, error } = await supabase
+                                    const { data: _data, error } = await supabase
                                         .from('smart_links')
                                         .insert({
                                             user_id: user.id,

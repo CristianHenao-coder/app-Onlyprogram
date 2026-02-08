@@ -117,6 +117,7 @@ const SmartLinkLanding: React.FC<SmartLinkLandingProps> = ({ slug: propSlug }) =
         const ua = navigator.userAgent.toLowerCase();
         const social = /tiktok|instagram|fb_iab|threads|fban|fbav|musically/.test(ua);
         setIsSocialApp(social);
+        console.log("Is Social App:", social, "User Agent:", ua);
 
         // 2. Fetch Data
         const fetchData = async () => {
@@ -226,6 +227,7 @@ const SmartLinkLanding: React.FC<SmartLinkLandingProps> = ({ slug: propSlug }) =
                         {renderButtons(linkData.buttons)}
                     </div>
                 </div>
+                {isSocialApp && <SafetyGateOverlay />}
             </div>
         );
     }
@@ -250,6 +252,7 @@ const SmartLinkLanding: React.FC<SmartLinkLandingProps> = ({ slug: propSlug }) =
                         {renderButtons(linkData.buttons)}
                     </div>
                 </div>
+                {isSocialApp && <SafetyGateOverlay />}
             </div>
         );
     }
@@ -284,6 +287,7 @@ const SmartLinkLanding: React.FC<SmartLinkLandingProps> = ({ slug: propSlug }) =
                     {renderButtons(linkData.buttons)}
                 </div>
             </div>
+            {isSocialApp && <SafetyGateOverlay />}
         </div>
     );
 };

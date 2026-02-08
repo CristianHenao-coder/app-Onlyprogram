@@ -133,7 +133,7 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
     // Repeat the base list 50 times to simulate infinite scrolling
     const repeated = [];
     for (let i = 0; i < 50; i++) {
-      repeated.push(...base.map((t, idx) => ({ ...t, id: `${t.id}-loop-${i}` })));
+      repeated.push(...base.map((t, _idx) => ({ ...t, id: `${t.id}-loop-${i}` })));
     }
     return repeated;
   }, [cmsTestimonials, staticTestimonials]);
