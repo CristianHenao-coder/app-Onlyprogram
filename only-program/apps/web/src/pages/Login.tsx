@@ -239,7 +239,7 @@ export default function Login() {
                   <label className="block text-[10px] font-black text-silver/40 uppercase tracking-[0.2em] mb-6">
                     Enter the code sent to {email}
                   </label>
-                  <div className="flex justify-center mb-4">
+                  <div className="flex justify-center mb-6">
                     <input
                       type="text"
                       required
@@ -249,6 +249,11 @@ export default function Login() {
                       className="w-full max-w-[200px] bg-white/5 border border-primary/30 rounded-2xl px-6 py-5 text-center text-4xl font-black text-primary tracking-[0.5em] focus:outline-none focus:border-primary transition-all"
                       placeholder="000000"
                     />
+                  </div>
+                  <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl mb-6 text-left">
+                    <p className="text-[10px] text-primary/70 font-medium text-center uppercase tracking-widest leading-relaxed">
+                      ⚠️ {t("auth.spamWarning")}
+                    </p>
                   </div>
                   <button 
                     type="button" 

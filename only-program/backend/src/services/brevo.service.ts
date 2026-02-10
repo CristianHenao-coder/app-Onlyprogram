@@ -31,6 +31,10 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     ];
     sendSmtpEmail.subject = options.subject;
     sendSmtpEmail.htmlContent = options.htmlContent;
+    sendSmtpEmail.replyTo = {
+      email: "support@onlyprogramlink.com",
+      name: "Only Program Support",
+    };
 
     if (options.textContent) {
       sendSmtpEmail.textContent = options.textContent;
@@ -325,6 +329,8 @@ export async function sendOTPEmail(
       subtitle:
         "Usa el siguiente código para completar tu acción en Only Program:",
       warning: "Este código expirará en 10 minutos por seguridad.",
+      spamNote:
+        "Si no recibes el código, por favor revisa tu carpeta de SPAM o correo no deseado.",
       footer: "Si no solicitaste este código, puedes ignorar este mensaje.",
     },
     en: {
@@ -333,6 +339,8 @@ export async function sendOTPEmail(
       subtitle:
         "Use the following code to complete your action on Only Program:",
       warning: "This code will expire in 10 minutes for security reasons.",
+      spamNote:
+        "If you don't receive the code, please check your SPAM or junk folder.",
       footer:
         "If you did not request this code, you can safely ignore this message.",
     },
@@ -342,6 +350,8 @@ export async function sendOTPEmail(
       subtitle:
         "Utilisez le code suivant pour terminer votre action sur Only Program :",
       warning: "Ce code expirera dans 10 minutes par mesure de sécurité.",
+      spamNote:
+        "Si vous ne recevez pas le code, veuillez vérifier votre dossier SPAM o courrier indésirable.",
       footer:
         "Si vous n'avez pas demandé ce code, vous pouvez ignorer ce message.",
     },
@@ -378,7 +388,11 @@ export async function sendOTPEmail(
             <div class="code">${code}</div>
           </div>
           
+          
           <p style="font-size: 13px; color: #1DA1F2;">${t.warning}</p>
+          <div style="margin-top: 20px; padding: 15px; background: rgba(255,165,0,0.1); border-radius: 12px; font-size: 12px; color: #FFA500;">
+            ⚠️ ${t.spamNote}
+          </div>
         </div>
         <div class="footer">
           <p>${t.footer}</p>

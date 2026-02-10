@@ -208,6 +208,8 @@ export const translations = {
       joinCreators: "Únete a miles de creadores protegiendo su contenido",
       registering: "Creando cuenta...",
       continueWithGoogle: "Continuar con Google",
+      spamWarning:
+        "Si no recibes el código, por favor revisa tu carpeta de SPAM o correo no deseado.",
     },
 
     pricing: {
@@ -865,6 +867,8 @@ export const translations = {
       joinCreators: "Join thousands of creators protecting their content",
       registering: "Creating account...",
       continueWithGoogle: "Continue with Google",
+      spamWarning:
+        "If you don't receive the code, please check your SPAM folder.",
     },
 
     pricing: {
@@ -1470,6 +1474,8 @@ export const translations = {
         "Rejoignez des milliers de créateurs protégeant leur contenu",
       registering: "Création du compte...",
       continueWithGoogle: "Continuer avec Google",
+      spamWarning:
+        "Si vous ne recevez pas le code, veuillez vérifier votre dossier SPAM.",
     },
 
     pricing: {

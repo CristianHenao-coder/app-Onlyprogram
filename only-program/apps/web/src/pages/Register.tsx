@@ -267,6 +267,11 @@ export default function Register() {
                       placeholder="000000"
                     />
                   </div>
+                  <div className="mt-6 p-4 bg-primary/5 border border-primary/10 rounded-2xl">
+                    <p className="text-[10px] text-primary/70 font-medium text-center uppercase tracking-widest leading-relaxed">
+                      ⚠️ {t("auth.spamWarning")}
+                    </p>
+                  </div>
                 </div>
 
                 <button
