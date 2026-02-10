@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 
 // Social Network Logos (inline SVG for white versions)
 const SocialLogos = {
@@ -71,7 +73,6 @@ export default function Analytics() {
   const [pages, setPages] = useState<LinkPage[]>([]);
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [timeFilter, setTimeFilter] = useState<'7d' | '30d' | '90d'>('7d');
-  const [compareMode, setCompareMode] = useState(false);
 
   useEffect(() => {
     // Load pages from localStorage
@@ -201,11 +202,42 @@ export default function Analytics() {
   if (!displayMetrics) return null;
 
   return (
-    <div className="h-full flex flex-col bg-[#050505] text-white font-sans overflow-hidden">
+    <div className="h-full flex flex-col bg-[#050505] text-white font-sans overflow-hidden relative">
+      {/* Zero State Silhouette Overlay */}
+      {isDemo && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-black/40 backdrop-blur-[2px]">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-md w-full bg-background-dark/80 backdrop-blur-2xl border border-primary/20 p-8 rounded-[2.5rem] shadow-[0_0_100px_rgba(168,85,247,0.15)] text-center relative overflow-hidden"
+          >
+            {/* Animated Background Glow */}
+            <div className="absolute -top-24 -left-24 w-48 h-48 bg-primary/20 blur-[80px] rounded-full" />
+            
+            <div className="w-20 h-20 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto mb-6 relative z-10">
+              <span className="material-symbols-outlined text-4xl text-primary animate-pulse">monitoring</span>
+            </div>
+            
+            <h2 className="text-2xl font-black text-white mb-3 uppercase tracking-tighter">Sin datos de tráfico aún</h2>
+            <p className="text-silver/50 text-sm leading-relaxed mb-8">
+              Tus analíticas cobrarán vida cuando tus links empiecen a recibir visitas. Crea tu primer smart link para comenzar el rastreo.
+            </p>
+            
+            <Link 
+              to="/dashboard/links" 
+              className="inline-flex items-center gap-2 bg-primary hover:bg-primary-light text-black font-black px-8 py-4 rounded-2xl transition-all shadow-lg shadow-primary/20 uppercase tracking-widest text-xs"
+            >
+              Crear mi primer Link
+              <span className="material-symbols-outlined text-sm">add_circle</span>
+            </Link>
+          </motion.div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="h-16 px-6 flex items-center justify-between border-b border-white/5 bg-[#050505] z-30 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
+          <div id="analytics-title" className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
             <span className="material-symbols-outlined text-lg">analytics</span>
           </div>
           <h1 className="text-sm font-bold uppercase tracking-wider">Analytics</h1>
@@ -226,19 +258,11 @@ export default function Analytics() {
               </select>
             </div>
           )}
-
-          {/* Demo Badge */}
-          {isDemo && (
-            <div className="ml-4 px-3 py-1 bg-yellow-500/20 border border-yellow-500/30 rounded-lg flex items-center gap-2">
-              <span className="material-symbols-outlined text-yellow-500 text-sm">visibility</span>
-              <span className="text-xs font-bold text-yellow-500 uppercase tracking-wider">Vista de Demostración</span>
-            </div>
-          )}
         </div>
 
         {/* Time Filters */}
         <div className="flex items-center gap-3">
-          <div className="flex gap-1 bg-white/5 rounded-lg p-1">
+          <div id="analytics-filters" className="flex gap-1 bg-white/5 rounded-lg p-1">
             {(['7d', '30d', '90d'] as const).map((filter) => (
               <button
                 key={filter}
@@ -252,22 +276,11 @@ export default function Analytics() {
               </button>
             ))}
           </div>
-
-          <button
-            onClick={() => setCompareMode(!compareMode)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${compareMode
-              ? 'bg-primary/20 text-primary border border-primary/30'
-              : 'bg-white/5 text-silver/60 hover:text-white border border-transparent'
-              }`}
-          >
-            <span className="material-symbols-outlined text-sm">compare_arrows</span>
-            Comparar
-          </button>
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+      {/* Main Content - Blurred if isDemo */}
+      <div className={`flex-1 overflow-y-auto custom-scrollbar p-6 transition-all duration-700 ${isDemo ? 'blur-md opacity-30 grayscale pointer-events-none' : ''}`}>
         <div className="max-w-7xl mx-auto space-y-6">
 
           {/* Main Grid */}
@@ -277,7 +290,7 @@ export default function Analytics() {
             <div className="lg:col-span-2 space-y-6">
 
               {/* Weekly Traffic Chart */}
-              <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
+              <div id="analytics-traffic" className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-bold text-white">Tráfico Semanal</h2>
                   <span className="text-xs text-silver/40 font-mono">Últimos 7 días</span>
@@ -307,7 +320,7 @@ export default function Analytics() {
               </div>
 
               {/* Button Rankings */}
-              <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
+              <div id="analytics-ranking" className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
                 <h2 className="text-lg font-bold text-white mb-6">Ranking de Botones</h2>
                 <div className="space-y-3">
                   {displayMetrics.sortedButtons.map((btn, idx) => (
@@ -343,7 +356,7 @@ export default function Analytics() {
             <div className="space-y-6">
 
               {/* Total Clicks Card */}
-              <div className="bg-gradient-to-br from-primary/20 to-blue-500/20 border border-primary/30 rounded-2xl p-6">
+              <div id="analytics-total" className="bg-gradient-to-br from-primary/20 to-blue-500/20 border border-primary/30 rounded-2xl p-6">
                 <div className="flex items-center gap-3 mb-2">
                   <span className="material-symbols-outlined text-primary">touch_app</span>
                   <h3 className="text-xs font-black text-silver/60 uppercase tracking-widest">Total Clicks</h3>
@@ -356,21 +369,21 @@ export default function Analytics() {
               </div>
 
               {/* Mobile Heatmap */}
-              <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
+              <div id="analytics-heatmap" className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
                 <h2 className="text-lg font-bold text-white mb-6">Mapa de Calor</h2>
                 <div className="flex justify-center">
-                  <div className="relative w-[180px] aspect-[9/19] bg-black rounded-[2rem] border-4 border-[#333] shadow-2xl overflow-hidden">
+                  <div className="relative w-[140px] aspect-[9/19] bg-black rounded-[2rem] border-4 border-[#333] shadow-2xl overflow-hidden">
                     {/* Phone Screen */}
                     <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a1a] to-[#0a0a0a] p-4 flex flex-col">
                       {/* Profile Area - Low heat */}
-                      <div className="h-16 rounded-xl bg-white/5 mb-3 relative">
+                      <div className="h-12 rounded-xl bg-white/5 mb-3 relative">
                         <div className="absolute inset-0 bg-yellow-500/10 rounded-xl blur-sm"></div>
                       </div>
 
                       {/* Buttons Area - High heat */}
                       <div className="flex-1 space-y-2">
                         {displayMetrics.sortedButtons.slice(0, 4).map((_btn, i) => (
-                          <div key={i} className="h-8 rounded-lg bg-white/5 relative">
+                          <div key={i} className="h-6 rounded-lg bg-white/5 relative">
                             <div
                               className="absolute inset-0 rounded-lg blur-md"
                               style={{
@@ -384,29 +397,15 @@ export default function Analytics() {
                     </div>
                   </div>
                 </div>
-                <div className="mt-4 flex items-center justify-center gap-4 text-[10px] font-bold">
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full bg-red-500/40"></div>
-                    <span className="text-silver/60">Alto</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full bg-orange-500/40"></div>
-                    <span className="text-silver/60">Medio</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/40"></div>
-                    <span className="text-silver/60">Bajo</span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
 
           {/* Bottom Row - Compact Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6">
 
             {/* Top Origins */}
-            <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
+            <div id="analytics-origins" className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
               <h2 className="text-lg font-bold text-white mb-6">Top Orígenes</h2>
               <div className="space-y-4">
                 {displayMetrics.topOrigins.map((origin, idx) => (
@@ -430,7 +429,7 @@ export default function Analytics() {
             </div>
 
             {/* Social Traffic */}
-            <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
+            <div id="analytics-platforms" className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
               <h2 className="text-lg font-bold text-white mb-6">Tráfico por Plataforma</h2>
               <div className="grid grid-cols-2 gap-4">
                 {displayMetrics.socialTraffic.map((social) => (

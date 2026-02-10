@@ -68,6 +68,10 @@ export default function CompleteProfile() {
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
+          full_name: fullName,
+          phone,
+          country,
+          profile_completed: true,
           is_suspended: false,
         })
         .eq('id', user?.id);

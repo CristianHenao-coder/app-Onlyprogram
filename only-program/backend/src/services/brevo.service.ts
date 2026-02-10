@@ -309,3 +309,90 @@ export async function sendPaymentConfirmationEmail(
     textContent: `Pago exitoso de ${amount} ${currency}. ID: ${orderId}.`,
   });
 }
+
+/**
+ * Envía un código OTP multilingüe (ES, EN, FR)
+ */
+export async function sendOTPEmail(
+  email: string,
+  code: string,
+  lang: string = "es",
+): Promise<boolean> {
+  const translations = {
+    es: {
+      subject: `🔐 Tu código de verificación: ${code}`,
+      title: "Verificación de Seguridad",
+      subtitle:
+        "Usa el siguiente código para completar tu acción en Only Program:",
+      warning: "Este código expirará en 10 minutos por seguridad.",
+      footer: "Si no solicitaste este código, puedes ignorar este mensaje.",
+    },
+    en: {
+      subject: `🔐 Your verification code: ${code}`,
+      title: "Security Verification",
+      subtitle:
+        "Use the following code to complete your action on Only Program:",
+      warning: "This code will expire in 10 minutes for security reasons.",
+      footer:
+        "If you did not request this code, you can safely ignore this message.",
+    },
+    fr: {
+      subject: `🔐 Votre code de vérification : ${code}`,
+      title: "Vérification de Sécurité",
+      subtitle:
+        "Utilisez le code suivant pour terminer votre action sur Only Program :",
+      warning: "Ce code expirera dans 10 minutes par mesure de sécurité.",
+      footer:
+        "Si vous n'avez pas demandé ce code, vous pouvez ignorer ce message.",
+    },
+  };
+
+  const t = (translations as any)[lang] || translations.es;
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Inter', Arial, sans-serif; background-color: #0B0B0B; color: #C9CCD1; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background: #161616; border: 1px solid #2A2A2A; border-radius: 24px; padding: 48px; text-align: center; }
+        .logo { margin-bottom: 32px; }
+        .logo h1 { color: #1DA1F2; font-size: 24px; margin: 0; font-weight: 900; letter-spacing: -0.05em; }
+        .content { margin-bottom: 32px; }
+        .code-container { background: #000; border: 1px solid #1DA1F240; padding: 24px; border-radius: 16px; margin: 24px 0; }
+        .code { font-size: 42px; font-weight: 900; color: #1DA1F2; letter-spacing: 0.25em; font-family: 'Courier New', monospace; }
+        .footer { font-size: 12px; color: #555; margin-top: 48px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="logo">
+          <h1>🛡️ ONLY PROGRAM</h1>
+        </div>
+        <div class="content">
+          <h2 style="color: white; font-size: 20px;">${t.title}</h2>
+          <p>${t.subtitle}</p>
+          
+          <div class="code-container">
+            <div class="code">${code}</div>
+          </div>
+          
+          <p style="font-size: 13px; color: #1DA1F2;">${t.warning}</p>
+        </div>
+        <div class="footer">
+          <p>${t.footer}</p>
+          <p>© ${new Date().getFullYear()} Only Program. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return await sendEmail({
+    to: email,
+    subject: t.subject,
+    htmlContent,
+    textContent: `${t.subtitle} ${code}. ${t.warning}`,
+  });
+}

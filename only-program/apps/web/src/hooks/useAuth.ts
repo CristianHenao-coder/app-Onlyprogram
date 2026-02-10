@@ -110,6 +110,53 @@ export function useAuth() {
     return { error };
   };
 
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4005/api";
+
+  const requestOTP = async (
+    email: string,
+    usage: "register" | "login" | "reset",
+    lang: string = "es",
+  ) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/request-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, usage, lang }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Error requesting OTP");
+      return { data, error: null };
+    } catch (error: any) {
+      return { data: null, error };
+    }
+  };
+
+  const verifyOTP = async (params: {
+    email: string;
+    code: string;
+    usage: "register" | "login" | "reset";
+    password?: string;
+    name?: string;
+  }) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Error verifying OTP");
+
+      // If it returns a user/session (like in register), we might need to set it
+      // However, usually register with admin.createUser doesn't log the user in automatically
+      // We might need to call signInWithPassword immediately after if verified
+
+      return { data, error: null };
+    } catch (error: any) {
+      return { data: null, error };
+    }
+  };
+
   return {
     user,
     session,
@@ -120,5 +167,7 @@ export function useAuth() {
     signUpWithEmail,
     signInWithGoogle,
     signOut,
+    requestOTP,
+    verifyOTP,
   };
 }

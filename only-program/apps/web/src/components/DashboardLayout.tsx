@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import FloatingTutorial from './FloatingTutorial';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -11,6 +12,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  useEffect(() => {
+    // Show tutorial if first time
+    const storageKey = `onlyprogram_tour_seen_${user?.id}`;
+    const seen = localStorage.getItem(storageKey);
+    if (!seen && user) {
+      const timer = setTimeout(() => setShowTutorial(true), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
+
+  const handleTutorialComplete = () => {
+    const storageKey = `onlyprogram_tour_seen_${user?.id}`;
+    localStorage.setItem(storageKey, 'true');
+    setShowTutorial(false);
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -18,19 +36,34 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   const menuItems = [
-    { path: '/dashboard/home', icon: 'dashboard', label: 'Dashboard' },
-    { path: '/dashboard/links', icon: 'link', label: 'Links' },
-    { path: '/dashboard/analytics', icon: 'bar_chart', label: 'Analíticas' },
-    { path: '/dashboard/telegram', icon: 'send', label: 'Telegram' },
-    { path: '/dashboard/domains', icon: 'globe', label: 'Dominios' },
-    { path: '/dashboard/payments', icon: 'credit_card', label: 'Pagos' },
-    { path: '/dashboard/settings', icon: 'settings', label: 'Configuración' },
+    { path: '/dashboard/home', icon: 'dashboard', label: 'Dashboard', id: 'nav-home' },
+    { path: '/dashboard/links', icon: 'link', label: 'Links', id: 'nav-links' },
+    { path: '/dashboard/analytics', icon: 'bar_chart', label: 'Analíticas', id: 'nav-analytics' },
+    { path: '/dashboard/telegram', icon: 'send', label: 'Telegram', id: 'nav-telegram' },
+    { path: '/dashboard/domains', icon: 'globe', label: 'Dominios', id: 'nav-domains' },
+    { path: '/dashboard/payments', icon: 'credit_card', label: 'Pagos', id: 'nav-payments' },
+    { path: '/dashboard/settings', icon: 'settings', label: 'Configuración', id: 'nav-settings' },
+  ];
+
+  const tutorialSteps = [
+    { target: '#nav-home', titleKey: 'tutorial.welcome', descriptionKey: 'tutorial.welcome' },
+    { target: '#nav-links', titleKey: 'nav.links', descriptionKey: 'tutorial.links' },
+    { target: '#nav-analytics', titleKey: 'nav.analytics', descriptionKey: 'tutorial.analytics' },
+    { target: '#nav-telegram', titleKey: 'nav.telegram', descriptionKey: 'tutorial.rotation' },
+    { target: '#nav-settings', titleKey: 'nav.settings', descriptionKey: 'tutorial.settings' },
   ];
 
   const isActive = (path: string) => location.pathname === path;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background-dark to-black">
+      <FloatingTutorial 
+        active={showTutorial} 
+        steps={tutorialSteps} 
+        onComplete={handleTutorialComplete}
+        onSkip={handleTutorialComplete}
+      />
+      
       {/* Mobile Menu Button - Fixed Top Left */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -67,6 +100,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Sidebar - Fixed positioning, collapsible on all screen sizes */}
       <aside
+        id="sidebar"
         className={`
           fixed top-0 left-0 h-screen w-72 bg-background-dark/40 backdrop-blur-xl border-r border-white/10 
           transform transition-transform duration-300 ease-in-out z-40
@@ -93,6 +127,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <Link
               key={item.path}
               to={item.path}
+              id={item.id}
               onClick={() => setSidebarOpen(false)}
               className={`
                 flex items-center gap-3 px-4 py-3 rounded-xl transition-all group

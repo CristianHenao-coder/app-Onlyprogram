@@ -123,11 +123,25 @@ export default function Home({
             filter: blur(8px);
           }
 
-          /* iOS/Android dynamic viewport helpers */
-          .min-dvh{ min-height: 100dvh; }
+          /*  FIX: asegura que botones sean clicables aunque haya overlays internos */
+          .testimonials-wrap button,
+          .testimonials-wrap [role="button"]{
+            pointer-events: auto;
+          }
 
-          /*  FIX: evita el scroll horizontal que “empuja” testimonios y deja barra rara */
-          html, body, #root { overflow-x: hidden !important; }
+          /*  FIX double scrollbar: Prevent overflow on root elements while allowing main scroll */
+          html, body { 
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden !important; 
+          }
+          #root {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+          }
 
           /*  FIX: wrapper para testimonios (no deja ver “columnas” al mover carrusel) */
           .testimonials-wrap{
@@ -363,9 +377,29 @@ export default function Home({
 
 
 function FloatingScrollButton() {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show button when scrolled down more than 400px
+      if (window.scrollY > 400) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const scrollToNextSection = () => {
     const sections = document.querySelectorAll('section');
-    const scrollPosition = window.scrollY + window.innerHeight / 3; // Tolerance
+    const scrollPosition = window.scrollY + window.innerHeight / 3;
 
     for (const section of sections) {
       if (section.offsetTop > scrollPosition) {
@@ -373,18 +407,31 @@ function FloatingScrollButton() {
         return;
       }
     }
-    // If no more sections, scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTop();
   };
 
   return (
-    <button
-      onClick={scrollToNextSection}
-      className="fixed bottom-6 right-6 z-50 bg-primary hover:bg-primary-dark text-white p-4 rounded-full shadow-2xl shadow-primary/40 transition-all hover:scale-110 active:scale-95 animate-bounce"
-      aria-label="Next Section"
-    >
-      <span className="material-symbols-outlined text-2xl">arrow_downward</span>
-    </button>
+    <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3">
+      {/* Scroll to Top */}
+      <button
+        onClick={scrollToTop}
+        className={`scroll-to-top bg-white/10 hover:bg-white/20 text-white p-4 rounded-full shadow-2xl backdrop-blur-md border border-white/20 transition-all hover:scale-110 active:scale-95 ${
+          isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none translate-y-4'
+        }`}
+        aria-label="Scroll to Top"
+      >
+        <span className="material-symbols-outlined text-2xl">arrow_upward</span>
+      </button>
+
+      {/* Next Section Button */}
+      <button
+        onClick={scrollToNextSection}
+        className="bg-primary hover:bg-primary-dark text-white p-4 rounded-full shadow-2xl shadow-primary/40 transition-all hover:scale-110 active:scale-95 animate-bounce"
+        aria-label="Next Section"
+      >
+        <span className="material-symbols-outlined text-2xl">arrow_downward</span>
+      </button>
+    </div>
   );
 }
 

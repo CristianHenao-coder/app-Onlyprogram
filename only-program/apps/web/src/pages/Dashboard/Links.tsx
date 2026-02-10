@@ -336,7 +336,10 @@ export default function Links() {
               title: currentPageToSave.profileName,
               photo: currentPageToSave.profileImage,
               buttons: currentPageToSave.buttons,
-              status: 'draft',
+              status: 'inactive', // 'draft' is not a valid DB status based on SmartLink interface
+              is_active: false,
+              mode: 'landing',
+              expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
               config: {
                 template: currentPageToSave.template,
                 theme: currentPageToSave.theme,
@@ -358,6 +361,7 @@ export default function Links() {
             title: currentPageToSave.profileName,
             photo: currentPageToSave.profileImage,
             buttons: currentPageToSave.buttons,
+            is_active: currentPageToSave.status === 'active',
             config: {
               ...currentPageToSave.theme,
               template: currentPageToSave.template,
