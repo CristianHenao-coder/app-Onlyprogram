@@ -11,8 +11,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function Login() {
   const navigate = useNavigate();
   const { signInWithEmail, signInWithGoogle, requestOTP, verifyOTP } = useAuth() as any;
-  const { t, i18n } = useTranslation() as any;
-  const lang = i18n.language;
+  const { t, language } = useTranslation() as any;
+  const lang = language;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

@@ -9,8 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 export default function Register() {
   const navigate = useNavigate();
   const { signInWithGoogle, requestOTP, verifyOTP, signInWithEmail } = useAuth() as any;
-  const { t, i18n } = useTranslation() as any;
-  const lang = i18n.language;
+  const { t, language } = useTranslation() as any;
+  const lang = language;
 
   const [step, setStep] = useState<'info' | 'otp'>('info');
   const [name, setName] = useState('');
