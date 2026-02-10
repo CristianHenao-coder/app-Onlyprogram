@@ -21,7 +21,7 @@ export default function Home({
 }) {
 
   const { t } = useTranslation();
-  const { user } = useAuth();
+  const {  } = useAuth();
 
   // ✅ Velada-like reveal: aparece en foco y se atenúa si sale (sin borrar nada, solo agrega)
   useEffect(() => {
@@ -258,15 +258,15 @@ export default function Home({
             </p>
 
             <div data-reveal data-delay="4" className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4">
-              <a
-                href="#features"
+              <Link
+                to="/features"
                 data-magnetic="0.12"
                 className="group relative bg-gradient-to-r from-primary via-blue-500 to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white px-8 sm:px-10 py-4 sm:py-5 rounded-2xl font-black text-lg sm:text-xl transition-all shadow-[0_0_30px_rgba(29,161,242,0.4)] hover:shadow-[0_0_50px_rgba(147,51,234,0.6)] flex items-center justify-center gap-3 hover:-translate-y-1 overflow-hidden"
               >
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-500 rounded-2xl" />
-                <span className="relative z-10 uppercase tracking-wide">Explora Tu Potencial</span>
+                <span className="relative z-10 uppercase tracking-wide">Explorar Características</span>
                 <span className="material-symbols-outlined relative z-10 group-hover:rotate-12 transition-transform">rocket_launch</span>
-              </a>
+              </Link>
             </div>
 
             <div data-reveal data-delay="4" className="mt-16 flex flex-wrap justify-center gap-4 text-xs text-silver/45">
@@ -313,58 +313,6 @@ export default function Home({
           </div>
         </section>
 
-        <section className="py-16">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div
-              data-reveal
-              className="relative rounded-[3rem] overflow-hidden p-10 sm:p-20 text-center group"
-            >
-              {/* Hypnotic Background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-[#0f0c29] via-[#302b63] to-[#24243e]" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(76,29,149,0.4),transparent_70%)] animate-pulse" />
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-
-              {/* Floating Orbs */}
-              <div className="absolute top-10 left-10 w-32 h-32 bg-primary/20 rounded-full blur-[80px] animate-bounce duration-[5000ms]" />
-              <div className="absolute bottom-10 right-10 w-40 h-40 bg-purple-500/20 rounded-full blur-[80px] animate-bounce duration-[7000ms]" />
-
-              <div className="relative z-10 max-w-3xl mx-auto space-y-8">
-                <h3 className="text-4xl sm:text-5xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-white drop-shadow-2xl tracking-tight">
-                  {t('home.finalCta.title')}
-                </h3>
-                <p className="text-lg sm:text-xl text-blue-200/80 leading-relaxed font-medium">
-                  {t('home.finalCta.desc')}
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-5 justify-center mt-10">
-                  {user ? (
-                    <Link
-                      to="/dashboard/links"
-                      className="px-10 py-5 rounded-2xl bg-white text-black font-black text-lg hover:bg-blue-50 transition-all shadow-[0_0_40px_rgba(255,255,255,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] transform hover:-translate-y-1"
-                    >
-                      Ir al Dashboard
-                    </Link>
-                  ) : (
-                    <Link
-                      to="/register"
-                      className="px-10 py-5 rounded-2xl bg-gradient-to-r from-primary to-blue-600 text-white font-black text-lg hover:brightness-110 transition-all shadow-[0_0_40px_rgba(29,161,242,0.4)] hover:shadow-[0_0_60px_rgba(29,161,242,0.6)] transform hover:-translate-y-1"
-                    >
-                      {t('home.finalCta.btn')}
-                    </Link>
-                  )}
-                  <Link
-                    to="/pricing"
-                    className="px-10 py-5 rounded-2xl border border-white/10 bg-white/5 text-white font-bold backdrop-blur-md hover:bg-white/10 transition-all flex items-center justify-center gap-2 group-hover:border-white/20"
-                  >
-                    <span>Ver Planes y Precios</span>
-                    <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
 
         <FloatingScrollButton />
 

@@ -130,21 +130,10 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
         videoSrc: ct.videoSrc || staticTestimonials[i % staticTestimonials.length].videoSrc
       }));
     }
-    // Repeat the base list 50 times to simulate infinite scrolling
-    const repeated = [];
-    for (let i = 0; i < 50; i++) {
-      repeated.push(...base.map((t, _idx) => ({ ...t, id: `${t.id}-loop-${i}` })));
-    }
-    return repeated;
+    return base;
   }, [cmsTestimonials, staticTestimonials]);
 
-  const [activeIndex, setActiveIndex] = useState(() => {
-    // Start at the beginning of the middle loop (index 25)
-    // If base length is 6, len is 300.
-    // Middle start index: 25 * 6 = 150.
-    const baseLen = (cmsTestimonials && cmsTestimonials.length > 0) ? cmsTestimonials.length : 6;
-    return baseLen * 25;
-  });
+  const [activeIndex, setActiveIndex] = useState(0);
 
   const [bgA, setBgA] = useState(testimonials[0]?.image);
   const [bgB, setBgB] = useState<string | null>(null);
@@ -300,9 +289,9 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
                 <div key={t.id} ref={(el) => (cardRefs.current[idx] = el)} className={["snap-center flex-none w-[280px] sm:w-[320px] md:w-[360px] lg:w-[calc((100%-2*24px)/3)] transition-all duration-700", isActive ? "opacity-100 scale-[1]" : "opacity-[0.50] scale-[0.95]"].join(" ")}>
                   <button type="button" onClick={() => { setActiveIndex(idx); scrollToIndex(idx); }} className={["group text-left w-full relative rounded-3xl overflow-hidden border bg-surface/40", isActive ? "border-primary/40" : "border-border", "hover:border-primary/40 transition-all duration-500"].join(" ")} style={{ transform: "translateZ(0)" }}>
                     {t.videoSrc ? (
-                      <video className={["w-full h-[520px] object-cover transition-transform duration-[900ms]", isActive ? "scale-[1.02]" : "scale-[1.06]"].join(" ")} poster={t.image} muted loop playsInline preload="none" src={t.videoSrc} />
+                      <video className={["w-full h-[400px] sm:h-[450px] object-cover transition-transform duration-[900ms]", isActive ? "scale-[1.02]" : "scale-[1.06]"].join(" ")} poster={t.image} muted loop playsInline preload="none" src={t.videoSrc} />
                     ) : (
-                      <img className={["w-full h-[520px] object-cover transition-transform duration-[900ms]", isActive ? "scale-[1.02]" : "scale-[1.06]"].join(" ")} src={t.image} alt={t.name} draggable={false} />
+                      <img className={["w-full h-[400px] sm:h-[450px] object-cover transition-transform duration-[900ms]", isActive ? "scale-[1.02]" : "scale-[1.06]"].join(" ")} src={t.image} alt={t.name} draggable={false} />
                     )}
                     <div className="absolute inset-0 pointer-events-none"><div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" /></div>
                     <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
