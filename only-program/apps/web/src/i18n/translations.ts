@@ -178,34 +178,6 @@ export const translations = {
       },
     },
 
-    footer: {
-      description:
-        "Protección profesional de enlaces para creadores de contenido. Tecnología de punta contra bots y filtraciones.",
-
-      rights: "Todos los derechos reservados",
-      developedBy: "Desarrollado por",
-      brandDesc:
-        "La solución definitiva en ciberseguridad para creadores de contenido modernos que valoran su privacidad e ingresos.",
-      platform: {
-        title: "Plataforma",
-        items: [
-          "Cómo funciona",
-          "Generador de Links",
-          "Guía de Seguridad",
-          "Docs de API",
-        ],
-      },
-      company: {
-        title: "Compañía",
-        items: ["Sobre Nosotros", "Carreras", "Privacidad", "Términos"],
-      },
-      newsletter: {
-        title: "Mantente al día",
-        placeholder: "Email",
-        button: "Enviar",
-      },
-    },
-
     auth: {
       welcomeBack: "Bienvenido de nuevo",
       loginSubtitle: "Ingresa a tu panel de control",
@@ -624,38 +596,67 @@ export const translations = {
       },
     },
     linkControlCenter: {
-      title: "Centro de Control de Enlaces",
-      subtitle: "Un panel interactivo de diseño oscuro premium, enfocado en control, seguridad y rendimiento.",
+      title: "Beneficios y evolución tecnológica",
+      subtitle:
+        "Un panel interactivo diseñado para el control total, seguridad máxima y rendimiento de nivel profesional.",
       features: {
         quickLinks: {
-          title: "Links Rápidos",
-          desc: "Genera y gestiona enlaces instantáneos para compartir contenido de forma ágil y segura."
+          title: "Generación Instantánea",
+          desc: "Crea y gestiona enlaces protegidos en segundos. Diseñado para la agilidad en la distribución de contenido.",
         },
         brandDomain: {
-          title: "Marca & Dominio",
-          desc: "Personaliza tus URLs con tu propia identidad. Olvídate de links genéricos, usa tu dominio."
+          title: "Identidad & Dominios",
+          desc: "Usa tus propios dominios para mantener la coherencia de tu marca. El usuario nunca verá URLs genéricas.",
         },
         linkShield: {
-          title: "Escudo de Enlaces",
-          desc: "Protección avanzada que oculta destinos reales y bloquea bots, scrapers y 'toms peepers'."
+          title: "Blindaje de Enlaces",
+          desc: "Oculta tus destinos finales tras una capa de seguridad que filtra bots, scrapers y accesos no autorizados.",
         },
         trafficControl: {
-          title: "Control de Tráfico",
-          desc: "Dirige el flujo de visitas mediante reglas dinámicas y rotación inteligente de destinos."
+          title: "Gestión de Tráfico",
+          desc: "Control absoluto sobre el destino de tus visitas mediante reglas dinámicas que tú mismo configuras.",
         },
         segmentation: {
-          title: "Segmentación",
-          desc: "Redirige visitantes automáticamente según su país, dispositivo o el horario de acceso."
+          title: "Segmentación Avanzada",
+          desc: "Redirige automáticamente según país, dispositivo o incluso la hora del día para maximizar conversiones.",
         },
         analytics: {
-          title: "Centro de Analítica",
-          desc: "Métricas claras y en tiempo real. Visualiza clicks, fuentes y conversiones en un dashboard futurista."
+          title: "Analíticas Profundas",
+          desc: "Visualiza el comportamiento de tu tráfico en tiempo real con dashboards futuristas y datos accionables.",
         },
         warnings: {
-          title: "Avisos Previos",
-          desc: "Muestra advertencias personalizadas o gates de edad antes de redirigir al usuario final."
-        }
-      }
+          title: "Barreras de Seguridad",
+          desc: "Implementa avisos personalizados, verificaciones táctiles o gates de edad antes de la redirección final.",
+        },
+      },
+    },
+    tutorial: {
+      welcome:
+        "¡Bienvenido a tu panel! Vamos a mostrarte cómo dominar tus enlaces en pocos pasos.",
+      links:
+        "Aquí gestionas todos tus links activos. Puedes crear nuevos, editarlos o pausarlos al instante.",
+      analytics:
+        "Esta sección te muestra quién entra a tus links, desde dónde y qué dispositivo usan.",
+      rotation:
+        "¿Quieres evitar baneos? Aquí configuras la rotación automática de tus canales de Telegram.",
+      settings:
+        "Personaliza tu perfil, vincula tus dominios y ajusta las preferencias de tu cuenta.",
+      gotIt: "¡Entendido!",
+      next: "Siguiente",
+      skip: "Saltar tour",
+    },
+    footer: {
+      contactTitle: "¿Tienes preguntas?",
+      contactSubtitle: "Escríbenos directamente o usa el formulario.",
+      labelName: "Nombre",
+      labelEmail: "Email",
+      labelMessage: "Mensaje",
+      btnSend: "Enviar mensaje",
+      success: "¡Mensaje enviado con éxito!",
+      developedBy: "Desarrollado por",
+      description:
+        "Protección profesional de enlaces para creadores de contenido.",
+      rights: "Todos los derechos reservados",
     },
   },
 
@@ -831,26 +832,6 @@ export const translations = {
         card: ["VISA", "Mastercard", "Amex", "Optional 3DS"],
         crypto: ["BTC", "ETH", "USDT", "SOL"],
         paypal: ["PayPal", "Fast Checkout", "Trusted"],
-      },
-    },
-
-    footer: {
-      rights: "All rights reserved",
-      developedBy: "Developed by",
-      brandDesc:
-        "The ultimate cybersecurity solution for modern content creators who value their privacy and income.",
-      platform: {
-        title: "Platform",
-        items: ["How it works", "Link Generator", "Security Guide", "API Docs"],
-      },
-      company: {
-        title: "Company",
-        items: ["About Us", "Careers", "Privacy", "Terms"],
-      },
-      newsletter: {
-        title: "Stay updated",
-        placeholder: "Email",
-        button: "Send",
       },
     },
 
@@ -1220,6 +1201,68 @@ export const translations = {
           "My models are delighted with their profile designs. And I am with the data I receive.",
       },
     },
+    linkControlCenter: {
+      title: "Benefits & Technological Evolution",
+      subtitle:
+        "An interactive dashboard designed for total control, maximum security, and professional-grade performance.",
+      features: {
+        quickLinks: {
+          title: "Instant Generation",
+          desc: "Create and manage protected links in seconds. Designed for agility in content distribution.",
+        },
+        brandDomain: {
+          title: "Identity & Domains",
+          desc: "Use your own domains to maintain brand consistency. Users will never see generic URLs.",
+        },
+        linkShield: {
+          title: "Link Armoring",
+          desc: "Hide your final destinations behind a security layer that filters bots, scrapers, and unauthorized access.",
+        },
+        trafficControl: {
+          title: "Traffic Management",
+          desc: "Absolute control over your visitors' destination through dynamic rules that you configure.",
+        },
+        segmentation: {
+          title: "Advanced Segmentation",
+          desc: "Automatically redirect based on country, device, or even time of day to maximize conversions.",
+        },
+        analytics: {
+          title: "Deep Analytics",
+          desc: "Visualize your traffic behavior in real-time with futuristic dashboards and actionable data.",
+        },
+        warnings: {
+          title: "Security Barriers",
+          desc: "Implement custom warnings, tactile verifications, or age gates before the final redirection.",
+        },
+      },
+    },
+    tutorial: {
+      welcome:
+        "Welcome to your dashboard! Let's show you how to master your links in a few steps.",
+      links:
+        "Here you manage all your active links. You can create new ones, edit them, or pause them instantly.",
+      analytics:
+        "This section shows you who enters your links, from where, and what device they use.",
+      rotation:
+        "Want to avoid bans? Here you configure the automatic rotation of your Telegram channels.",
+      settings:
+        "Customize your profile, link your domains, and adjust your account preferences.",
+      gotIt: "Got it!",
+      next: "Next",
+      skip: "Skip tour",
+    },
+    footer: {
+      contactTitle: "Have questions?",
+      contactSubtitle: "Write to us directly or use the form.",
+      labelName: "Name",
+      labelEmail: "Email",
+      labelMessage: "Message",
+      btnSend: "Send Message",
+      success: "Message sent successfully!",
+      developedBy: "Developed by",
+      description: "Professional link protection for content creators.",
+      rights: "All rights reserved",
+    },
   },
 
   fr: {
@@ -1392,31 +1435,6 @@ export const translations = {
         card: ["VISA", "Mastercard", "Amex", "3DS optionnel"],
         crypto: ["BTC", "ETH", "USDT", "SOL"],
         paypal: ["PayPal", "Paiement rapide", "Confiance"],
-      },
-    },
-
-    footer: {
-      rights: "Tous droits réservés",
-      developedBy: "Développé par",
-      brandDesc:
-        "La solution de cybersécurité ultime pour les créateurs de contenu modernes qui valorisent leur vie privée et leurs revenus.",
-      platform: {
-        title: "Plateforme",
-        items: [
-          "Comment ça marche",
-          "Générateur de liens",
-          "Guide de sécurité",
-          "Docs API",
-        ],
-      },
-      company: {
-        title: "Entreprise",
-        items: ["À propos", "Carrières", "Confidentialité", "Termes"],
-      },
-      newsletter: {
-        title: "Restez à jour",
-        placeholder: "Email",
-        button: "Envoyer",
       },
     },
 
@@ -1789,6 +1807,68 @@ export const translations = {
         comment:
           "Mes modèles sont ravies du design de leurs profils. Et moi des données que je reçois.",
       },
+    },
+    linkControlCenter: {
+      title: "Bénéfices et Évolution Technologique",
+      subtitle:
+        "Un tableau de bord interactif conçu pour un contrôle total, une sécurité maximale et des performances de niveau professionnel.",
+      features: {
+        quickLinks: {
+          title: "Génération Instantanée",
+          desc: "Créez et gérez des liens protégés en quelques secondes. Conçu pour l'agilité dans la distribution de contenu.",
+        },
+        brandDomain: {
+          title: "Identité & Domaines",
+          desc: "Utilisez vos propres domaines pour maintenir la cohérence de votre marque. L'utilisateur ne verra jamais d'URLs génériques.",
+        },
+        linkShield: {
+          title: "Blindage de Liens",
+          desc: "Masquez vos destinations finales derrière une couche de sécurité qui filtre les bots, les scrapers et les accès non autorisés.",
+        },
+        trafficControl: {
+          title: "Gestion du Trafic",
+          desc: "Contrôle absolu sur la destination de vos visiteurs grâce à des règles dynamiques que vous configurez vous-même.",
+        },
+        segmentation: {
+          title: "Segmentation Avancée",
+          desc: "Redirigez automatiquement selon le pays, l'appareil ou même l'heure de la journée pour maximiser les conversions.",
+        },
+        analytics: {
+          title: "Analytiques Profondes",
+          desc: "Visualisez le comportement de votre trafic en tiempo réel avec des tableaux de bord futuristes et des données exploitables.",
+        },
+        warnings: {
+          title: "Barrières de Sécurité",
+          desc: "Implémentez des avertissements personnalisés, des vérifications tactiles ou des barrières d'âge avant la redirection finale.",
+        },
+      },
+    },
+    tutorial: {
+      welcome:
+        "Bienvenue sur votre tableau de bord ! Nous allons vous montrer comment maîtriser vos liens en quelques étapes.",
+      links:
+        "Ici, vous gérez tous vos liens actifs. Vous pouvez en créer de nouveaux, les modifier ou les suspendre instantanément.",
+      analytics:
+        "Cette section vous montre qui accède à vos liens, d'où et quel appareil ils utilisent.",
+      rotation:
+        "Vous voulez éviter les bannissements ? Ici, vous configurez la rotation automatique de vos canaux Telegram.",
+      settings:
+        "Personnalisez votre profil, liez vos domaines et ajustez les préférences de votre compte.",
+      gotIt: "Compris !",
+      next: "Suivant",
+      skip: "Passer le tour",
+    },
+    footer: {
+      contactTitle: "Des questions ?",
+      contactSubtitle: "Écrivez-nous directement ou utilisez le formulaire.",
+      labelName: "Nom",
+      labelEmail: "E-mail",
+      labelMessage: "Message",
+      btnSend: "Envoyer le message",
+      success: "Message envoyé avec succès !",
+      developedBy: "Développé par",
+      description: "Protection professionnelle des liens pour les créateurs.",
+      rights: "Tous droits réservés",
     },
   },
 };
