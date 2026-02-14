@@ -1,5 +1,7 @@
 import { useMemo, useState } from "react";
-import { Outlet, NavLink, useLocation } from "react-router-dom";
+import { Outlet, NavLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/contexts/I18nContext";
 
 type NavItem = {
@@ -10,13 +12,15 @@ type NavItem = {
 
 export default function DashboardLayout() {
   const { t } = useTranslation();
+  const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false); // mobile drawer
   const [collapsed, setCollapsed] = useState(false); // desktop collapse
-  const location = useLocation();
+
 
   const navItems: NavItem[] = useMemo(
     () => [
-      { to: "/dashboard", label: t("nav.dashboard"), icon: "space_dashboard" },
+      { to: "/dashboard/analytics", label: "Analytics", icon: "analytics" },
       { to: "/dashboard/links", label: t("nav.links"), icon: "link" },
       { to: "/dashboard/payments", label: t("nav.payments"), icon: "payments" },
       { to: "/dashboard/settings", label: t("nav.settings"), icon: "settings" },
@@ -24,13 +28,7 @@ export default function DashboardLayout() {
     [t]
   );
 
-  const pageTitle = useMemo(() => {
-    // título simple según ruta
-    if (location.pathname.startsWith("/dashboard/links")) return "Links";
-    if (location.pathname.startsWith("/dashboard/payments")) return "Payments";
-    if (location.pathname.startsWith("/dashboard/settings")) return "Settings";
-    return "Dashboard";
-  }, [location.pathname]);
+
 
   const sidebarWidth = collapsed ? "w-[76px]" : "w-[280px]";
 
@@ -115,16 +113,31 @@ export default function DashboardLayout() {
         </nav>
 
         {/* Bottom user card */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border">
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border bg-[#0B0B0B]">
+
+          {/* Logout Button */}
+          <button
+            onClick={() => { signOut(); navigate('/login'); }}
+            className={`w-full mb-3 flex items-center gap-3 rounded-xl px-3 py-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all ${collapsed ? 'justify-center' : ''}`}
+            title="Cerrar Sesión"
+          >
+            <span className="material-symbols-outlined text-[20px]">logout</span>
+            {!collapsed && <span className="text-xs font-bold uppercase tracking-wide">Cerrar Sesión</span>}
+          </button>
+
           <div className={["rounded-2xl border border-white/10 bg-surface/20 p-3", collapsed ? "flex justify-center" : ""].join(" ")}>
             <div className={["flex items-center gap-3", collapsed ? "justify-center" : ""].join(" ")}>
-              <div className="h-10 w-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-silver/70">person</span>
+              <div className="h-10 w-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="material-symbols-outlined text-silver/70">person</span>
+                )}
               </div>
               {!collapsed && (
                 <div className="min-w-0">
-                  <p className="text-white font-bold text-sm truncate">User</p>
-                  <p className="text-[11px] text-silver/45 truncate">Plan Premium</p>
+                  <p className="text-white font-bold text-sm truncate">{profile?.full_name || user?.email?.split('@')[0] || "Usuario"}</p>
+                  <p className="text-[11px] text-silver/45 truncate">{profile?.plan || "Plan Gratuito"}</p>
                 </div>
               )}
             </div>
@@ -135,47 +148,19 @@ export default function DashboardLayout() {
       {/* MAIN AREA (reserve sidebar width on desktop only) */}
       <div className={["min-h-[100dvh] transition-[padding] duration-300", "md:pl-[280px]", collapsed ? "md:pl-[76px]" : ""].join(" ")}>
         {/* TOPBAR */}
-        <header className="sticky top-0 z-[50] border-b border-border bg-[#0B0B0B]/65 backdrop-blur-xl">
-          <div className="h-16 px-4 sm:px-6 flex items-center gap-3">
-            {/* RESERVED VERTICAL SLOT for menu icon (fix overlay issue) */}
-            <div className="w-14 flex items-center justify-start">
-              <button
-                type="button"
-                className="md:hidden inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-surface/40 text-silver/70 hover:text-white hover:border-primary/40 transition-all"
-                onClick={() => setSidebarOpen(true)}
-                aria-label="Open menu"
-              >
-                <span className="material-symbols-outlined">menu</span>
-              </button>
-            </div>
 
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-mono uppercase tracking-widest text-silver/40">Only Program</p>
-              <h1 className="text-white font-extrabold text-lg truncate">{pageTitle}</h1>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="hidden sm:inline-flex items-center gap-2 rounded-2xl border border-border bg-surface/40 px-3 py-2 text-sm text-silver/70 hover:text-white hover:border-primary/40 transition-all"
-              >
-                <span className="material-symbols-outlined text-[18px]">support_agent</span>
-                Support
-              </button>
-
-              <button
-                type="button"
-                className="inline-flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-primary hover:border-primary/50 transition-all"
-              >
-                <span className="material-symbols-outlined text-[18px]">lock</span>
-                Live
-              </button>
-            </div>
-          </div>
-        </header>
 
         {/* CONTENT */}
-        <main className="px-4 sm:px-6 py-6">
+        <main className="px-4 sm:px-6 py-6 relative">
+          {/* Mobile Menu Trigger (restored since header is gone) */}
+          <button
+            type="button"
+            className="md:hidden absolute top-6 left-4 z-40 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-surface/40 text-silver/70 hover:text-white hover:border-primary/40 transition-all"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open menu"
+          >
+            <span className="material-symbols-outlined">menu</span>
+          </button>
           <Outlet />
         </main>
       </div>

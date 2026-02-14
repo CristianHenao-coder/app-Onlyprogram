@@ -47,6 +47,9 @@ export const translations = {
       login: "Iniciar Sesión",
       signup: "Crear Cuenta",
       dashboard: "Dashboard",
+      links: "Links",
+      payments: "Pagos",
+      settings: "Ajustes",
       tagline: "Protección & Analíticas • Anti-bot",
     },
 
@@ -708,6 +711,9 @@ export const translations = {
       login: "Log In",
       signup: "Sign Up",
       dashboard: "Dashboard",
+      links: "Links",
+      payments: "Payments",
+      settings: "Settings",
       tagline: "Protection & Analytics • Anti-bot",
     },
 
