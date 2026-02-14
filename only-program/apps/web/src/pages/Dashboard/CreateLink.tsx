@@ -370,9 +370,9 @@ export default function CreateLink() {
                   if (!profileData.name || !profileData.slug) return toast.error("Nombre y URL son obligatorios");
                   setStep(2);
                 }}
-                className="bg-primary text-white font-black px-8 py-4 rounded-xl hover:bg-primary/90 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+                className="bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest px-8 py-4 rounded-xl shadow-[0_0_30px_rgba(37,99,235,0.3)] hover:shadow-[0_0_50px_rgba(37,99,235,0.5)] hover:scale-105 transition-all flex items-center gap-3"
               >
-                Siguiente Paso <span className="material-symbols-outlined">arrow_forward</span>
+                SIGUIENTE PASO <span className="material-symbols-outlined">arrow_forward</span>
               </button>
             </div>
           </div>
@@ -484,10 +484,10 @@ export default function CreateLink() {
                 <button onClick={() => setStep(2)} className="text-silver/60 hover:text-white font-bold flex items-center gap-2"><span className="material-symbols-outlined">arrow_back</span> Atrás</button>
                 <button
                   onClick={handleFinish}
-                  className="bg-gradient-to-r from-primary to-blue-600 text-white font-black px-12 py-4 rounded-2xl shadow-2xl shadow-primary/20 hover:scale-105 transition-transform flex items-center gap-3"
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest px-8 py-4 rounded-xl shadow-[0_0_30px_rgba(37,99,235,0.3)] hover:shadow-[0_0_50px_rgba(37,99,235,0.5)] hover:scale-105 transition-all flex items-center gap-3"
                 >
                   <span className="material-symbols-outlined">rocket_launch</span>
-                  Crear Perfil
+                  CREAR PERFIL
                 </button>
               </div>
             </div>

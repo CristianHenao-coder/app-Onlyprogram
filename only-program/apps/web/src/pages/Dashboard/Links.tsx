@@ -393,21 +393,10 @@ export default function Links() {
         const isDraft = currentPageToSave.status === 'draft';
 
         if (isDraft) {
-          // DRAFT: Save to localStorage only
+          // DRAFT: Save ALL drafts from state to localStorage (single source of truth)
           try {
-            const saved = localStorage.getItem('my_links_data');
-            const existing = saved ? JSON.parse(saved) : [];
-            const existingArray = Array.isArray(existing) ? existing : [];
-
-            // Update or add current page
-            const pageIndex = existingArray.findIndex((p: any) => p.id === currentPageToSave.id);
-            if (pageIndex >= 0) {
-              existingArray[pageIndex] = currentPageToSave;
-            } else {
-              existingArray.push(currentPageToSave);
-            }
-
-            localStorage.setItem('my_links_data', JSON.stringify(existingArray));
+            const allDrafts = pages.filter(p => p.status === 'draft');
+            localStorage.setItem('my_links_data', JSON.stringify(allDrafts));
           } catch (e) {
             console.error('Error saving draft to localStorage:', e);
           }
@@ -1465,6 +1454,16 @@ export default function Links() {
               </div>
             </div>
           </div>
+
+          {/* SIGUIENTE PASO BUTTON */}
+          <button
+            onClick={() => navigate('/dashboard/domains')}
+            className="w-[320px] py-3.5 px-6 bg-black border-2 border-blue-500 text-blue-500 font-bold text-sm rounded-xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2 group animate-pulse"
+            style={{ animationDuration: '2s' }}
+          >
+            <span>Siguiente paso</span>
+            <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">arrow_forward</span>
+          </button>
         </div>
       </div >
 
@@ -1601,20 +1600,26 @@ export default function Links() {
                       return;
                     }
 
-                    // DELETE FROM DB
+                    // DELETE FROM DB (for active/paid links)
                     const pageId = selectedPageId;
                     if (pageId && user) {
                       const { error } = await supabase.from('smart_links').delete().eq('id', pageId).eq('user_id', user.id);
                       if (error) {
                         console.error('Error deleting page:', error);
-                        toast.error('Error al eliminar de la base de datos');
-                        // Still update local state optimistically? Maybe not if fail.
-                        // But let's assume it deleted or wasn't there.
                       }
                     }
 
                     const newPages = pages.filter(p => p.id !== selectedPageId);
                     setPages(newPages);
+
+                    // SYNC localStorage: save only remaining drafts
+                    try {
+                      const remainingDrafts = newPages.filter(p => p.status === 'draft');
+                      localStorage.setItem('my_links_data', JSON.stringify(remainingDrafts));
+                    } catch (e) {
+                      console.error('Error syncing localStorage after delete:', e);
+                    }
+
                     // Select next available page
                     setSelectedPageId(newPages[0]?.id || '');
                     toast.success('Link eliminado correctamente');
