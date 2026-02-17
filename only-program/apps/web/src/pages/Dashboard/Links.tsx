@@ -240,7 +240,17 @@ export default function Links() {
 
   // Derived
   const currentPage = pages.find(p => p.id === selectedPageId) || pages[0];
-  const selectedButton = currentPage.buttons.find(b => b.id === selectedButtonId);
+
+  // GUARD: Prevents crash if pages is empty
+  if (!currentPage) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  const selectedButton = currentPage.buttons?.find(b => b.id === selectedButtonId);
 
   // Split Pages logic moved to derived state below
 
@@ -365,9 +375,20 @@ export default function Links() {
         })();
 
         // Merge: DB active links + localStorage drafts
-        const allPages = [...dbPages, ...localDrafts];
+        let allPages = [...dbPages, ...localDrafts];
+
+        // FORCE DEFAULT: If user has NO links (active or draft), create one default draft
+        if (allPages.length === 0) {
+          const newId = `page${Date.now()}`;
+          allPages = [{ ...DEFAULT_PAGE, id: newId, status: 'draft', name: 'Link 1' }];
+        }
+
         setPages(allPages);
-        if (allPages.length > 0) setSelectedPageId(allPages[0].id);
+        if (allPages.length > 0) {
+          // If we have a selectedPageId but it's not in the new list, select the first one
+          const exists = allPages.find(p => p.id === selectedPageId);
+          if (!exists) setSelectedPageId(allPages[0].id);
+        }
       } catch (error) {
         console.error('Error fetching links:', error);
         toast.error('Error cargando tus links');
