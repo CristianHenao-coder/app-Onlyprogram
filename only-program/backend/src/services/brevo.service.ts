@@ -1,4 +1,4 @@
-import * as brevo from "@getbrevo/brevo";
+import { TransactionalEmailsApi, SendSmtpEmail } from "@getbrevo/brevo";
 import { config } from "../config/env";
 
 const apiKey = config.brevo.apiKey;
@@ -6,9 +6,9 @@ const senderEmail = config.brevo.senderEmail;
 const senderName = config.brevo.senderName;
 const frontendUrl = config.urls.frontend;
 
-// Configurar cliente de Brevo
-const apiInstance = new brevo.TransactionalEmailsApi();
-apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, apiKey);
+// Configurar cliente de Brevo (TS-compatible: sin TransactionalEmailsApiApiKeys)
+const apiInstance = new TransactionalEmailsApi();
+(apiInstance as any).authentications.apiKey.apiKey = apiKey;
 
 export interface EmailOptions {
   to: string;
@@ -23,7 +23,7 @@ export interface EmailOptions {
  */
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
   try {
-    const sendSmtpEmail = new brevo.SendSmtpEmail();
+    const sendSmtpEmail = new SendSmtpEmail();
 
     sendSmtpEmail.sender = { name: senderName, email: senderEmail };
     sendSmtpEmail.to = [
