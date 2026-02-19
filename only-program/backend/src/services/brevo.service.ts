@@ -6,8 +6,9 @@ const senderEmail = config.brevo.senderEmail;
 const senderName = config.brevo.senderName;
 const frontendUrl = config.urls.frontend;
 
-// Configurar cliente de Brevo (TS-compatible: sin TransactionalEmailsApiApiKeys)
+// Configurar cliente de Brevo
 const apiInstance = new TransactionalEmailsApi();
+// TS-friendly auth assignment (evita TransactionalEmailsApiApiKeys)
 (apiInstance as any).authentications.apiKey.apiKey = apiKey;
 
 export interface EmailOptions {
