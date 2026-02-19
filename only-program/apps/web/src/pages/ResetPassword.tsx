@@ -1,133 +1,102 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/services/supabase';
+import PasswordInput from '@/components/PasswordInput';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
   // const [searchParams] = useSearchParams();
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Verificar que hay un hash de recuperación en la URL
-  useEffect(() => {
-    // Supabase automáticamente maneja el hash de recuperación
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    if (!hashParams.get('access_token')) {
-      setError('Link de recuperación inválido o expirado');
-    }
-  }, []);
+  const [message, setMessage] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setMessage(null);
 
-    if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden');
+    // Basic validation (Checklist handles visual feedback, this is final guard)
+    if (password.length < 6) {
+      setError('La contraseña debe tener mínimo 6 caracteres.');
       return;
     }
-
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
+    if (password !== confirm) {
+      setError('Las contraseñas no coinciden.');
       return;
     }
 
     setLoading(true);
-
-    try {
-      const { error } = await supabase.auth.updateUser({
-        password: password,
-      });
-
-      if (error) throw error;
-
-      // Redirigir al login
-      navigate('/login', {
-        state: { message: 'Contraseña actualizada exitosamente. Inicia sesión con tu nueva contraseña.' },
-      });
-    } catch (err: any) {
-      setError(err.message || 'Error al actualizar la contraseña');
-    } finally {
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      setError(error.message);
       setLoading(false);
+      return;
     }
+
+    setMessage('Contraseña actualizada. Ahora puedes iniciar sesión.');
+    setLoading(false);
+    setTimeout(() => navigate('/login'), 700);
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden bg-background-dark">
-      {/* Background Glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-glow pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-glow pointer-events-none"></div>
-      <div className="absolute inset-0 bg-glow opacity-50 pointer-events-none"></div>
+    <AuthShell>
+      <div data-reveal className="bg-surface/50 border border-border rounded-3xl p-8 md:p-10 shadow-2xl">
+        <h1 className="text-2xl font-extrabold text-white">Restablecer contraseña</h1>
+        <p className="mt-2 text-silver/65 text-sm">Define una nueva contraseña segura.</p>
 
-      <main className="w-full max-w-md px-4 z-10">
-        {/* Card */}
-        <div className="bg-surface border border-border rounded-2xl p-8 md:p-10 shadow-2xl backdrop-blur-sm">
-          {/* Header */}
-          <div className="text-center mb-10">
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <div className="h-10 w-10 overflow-hidden rounded-lg">
-                <img src="/src/assets/logo.png" alt="Only Program" className="h-full w-full object-contain" />
-              </div>
-              <span className="text-xl font-bold tracking-tight text-white uppercase">
-                Only <span className="text-primary text-sm">Program</span>
-              </span>
-            </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Nueva Contraseña</h1>
-            <p className="text-silver text-sm">Ingresa tu nueva contraseña</p>
+        {error && (
+          <div className="mt-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+            <p className="text-sm text-red-400">{error}</p>
           </div>
+        )}
+        {message && (
+          <div className="mt-6 p-4 bg-green-500/10 border border-green-500/30 rounded-xl">
+            <p className="text-sm text-green-300">{message}</p>
+          </div>
+        )}
 
-          {/* Error Message */}
-          {error && (
-            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-              <p className="text-sm text-red-400">{error}</p>
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+          <PasswordInput
+            id="password"
+            label="Nueva contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            showStrength={true}
+            placeholder="Mínimo 6 caracteres"
+          />
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="password" className="block text-xs font-semibold text-silver/70 uppercase tracking-wider mb-2">
-                Nueva Contraseña
-              </label>
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-background-dark border border-border rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-0 input-glow transition-all placeholder:text-silver/20"
-                placeholder="••••••••"
-                minLength={6}
-              />
-            </div>
+          <PasswordInput
+            id="confirm"
+            label="Confirmar contraseña"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            required
+            placeholder="••••••••"
+          />
 
-            <div>
-              <label htmlFor="confirmPassword" className="block text-xs font-semibold text-silver/70 uppercase tracking-wider mb-2">
-                Confirmar Contraseña
-              </label>
-              <input
-                id="confirmPassword"
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-background-dark border border-border rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-0 input-glow transition-all placeholder:text-silver/20"
-                placeholder="••••••••"
-                minLength={6}
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-primary to-primary-dark hover:from-primary-dark hover:to-primary text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Actualizando...' : 'Actualizar Contraseña'}
-            </button>
-          </form>
-        </div>
-      </main>
-    </div>
+          <button
+            type="submit"
+            disabled={loading}
+            data-magnetic="0.12"
+            className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? (
+              <>
+                <span className="animate-spin material-symbols-outlined">progress_activity</span>
+                Guardando...
+              </>
+            ) : (
+              <>
+                Actualizar
+                <span className="material-symbols-outlined">lock</span>
+              </>
+            )}
+          </button>
+        </form>
+      </div>
+    </AuthShell>
   );
 }

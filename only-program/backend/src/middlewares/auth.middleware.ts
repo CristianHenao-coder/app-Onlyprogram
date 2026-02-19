@@ -48,17 +48,47 @@ export async function authenticateToken(
       });
     }
 
-    // Obtener el perfil del usuario
+    // Intentar obtener el perfil del usuario
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role, is_suspended")
       .eq("id", user.id)
       .single();
 
-    if (profileError) {
+    // Si no existe el perfil, lo creamos al vuelo (Self-healing)
+    // Esto pasa a veces si el trigger de creación de perfil falló o no existe
+    if (profileError && profileError.code === 'PGRST116') {
+      console.log(`⚠️ Perfil no encontrado para usuario ${user.id}. Creando perfil por defecto...`);
+
+      const { error: createError } = await supabase.from("profiles").insert({
+        id: user.id,
+        role: "user",
+        is_suspended: false,
+        created_at: new Date().toISOString()
+      });
+
+      if (createError) {
+        console.error("❌ Error creando perfil automático:", createError);
+        return res.status(500).json({
+          error: "Error al crear perfil de usuario",
+          code: "PROFILE_CREATION_ERROR",
+        });
+      }
+
+      // Asignamos valores por defecto para continuar
+      req.user = {
+        id: user.id,
+        email: user.email,
+        role: "user",
+      };
+      return next();
+    } else if (profileError) {
+      // Otro tipo de error de base de datos
+      console.error("❌ Error DB al obtener perfil:", profileError);
       return res.status(500).json({
         error: "Error al obtener datos del usuario",
         code: "PROFILE_ERROR",
+        details: profileError.message
       });
     }
 

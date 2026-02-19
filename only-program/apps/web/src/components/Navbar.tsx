@@ -1,77 +1,223 @@
-import { Link } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "@/contexts/I18nContext";
+import { useAuth } from "@/hooks/useAuth";
 
-export default function Navbar() {
+import Logo from "./Logo";
+
+
+
+type NavItem = { label: string; href: string };
+
+export default function Navbar({ previewData }: { previewData?: any }) {
+  const { pathname } = useLocation();
+  const { t, language, setLanguage } = useTranslation() as any;
+  const { user } = useAuth();
+
+  const items: NavItem[] = useMemo(
+    () => [
+      { label: previewData?.general?.menuHome || (t ? t("nav.home") : "Inicio"), href: "/#home" },
+      { label: previewData?.general?.menuFeatures || (t ? t("nav.features") : "Características"), href: "/features" },
+      { label: previewData?.general?.menuPricing || (t ? t("nav.pricing") : "Precios"), href: "/pricing" },
+      { label: previewData?.general?.menuTestimonials || (t ? t("nav.testimonials") : "Testimonios"), href: "/#testimonials" },
+    ],
+    [t, previewData]
+  );
+
+  const [scrolled, setScrolled] = useState(false);
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll as any);
+  }, []);
+
+  // cerrar dropdown al click afuera
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (!langRef.current) return;
+      if (!langRef.current.contains(e.target as any)) setLangOpen(false);
+    };
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown as any);
+  }, []);
+
+  const currentLang = (language || "es").toLowerCase();
+
+  const setLang = (lng: "es" | "en" | "fr") => {
+    try {
+      if (setLanguage) setLanguage(lng);
+    } catch {
+      // si por algo tu hook cambia, no rompemos la UI
+    }
+    setLangOpen(false);
+  };
+
   return (
-    <header className="fixed top-0 w-full z-50 border-b border-border glass-effect">
+    <header
+      className={[
+        "fixed top-0 w-full z-50",
+        "transition-all duration-300",
+        scrolled ? "bg-[#0B0B0B]/70 backdrop-blur-xl border-b border-border" : "bg-transparent",
+      ].join(" ")}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
-            <div className="h-10 w-10 overflow-hidden rounded-lg">
-              <img 
-                src="/src/assets/logo.png" 
-                alt="Only Program Logo" 
-                className="h-full w-full object-contain"
-              />
-            </div>
-            <span className="text-xl font-bold tracking-tight text-white uppercase">
-              Only <span className="text-primary text-sm">Program</span>
-            </span>
-          </Link>
+        <div className="h-20 flex items-center justify-between gap-4">
+          {/* BRAND */}
+          <a href="#home" className="group flex items-center gap-3 min-w-0" aria-label="Only Program">
+            <Logo customSrc={previewData?.general?.logoUrl} />
 
-          {/* Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            <a className="text-sm font-medium hover:text-primary transition-colors text-silver/80" href="#home">
-              Inicio
-            </a>
-            <a className="text-sm font-medium hover:text-primary transition-colors text-silver/80" href="#features">
-              Funciones
-            </a>
-            <a className="text-sm font-medium hover:text-primary transition-colors text-silver/80" href="#testimonials">
-              Testimonios
-            </a>
+            <div className="leading-tight min-w-0">
+              <div className="flex items-baseline gap-1.5 uppercase">
+                <span className="text-white font-black tracking-tight text-lg sm:text-xl">
+                  {previewData?.general?.logoText?.split(' ')[0] || "ONLY"}
+                </span>
+                <span className="text-primary font-black tracking-tight text-lg sm:text-xl">
+                  {previewData?.general?.logoText?.split(' ').slice(1).join(' ') || previewData?.general?.logoSub || "PROGRAM"}
+                </span>
+              </div>
+              <div className="text-[10px] sm:text-[11px] text-silver/50 font-black tracking-[0.2em] uppercase opacity-70">
+                {previewData?.general?.tagline || (t ? t("nav.tagline") : "Security & Ethics")}
+              </div>
+            </div>
+          </a>
+
+          {/* NAV */}
+          <nav className="hidden md:flex items-center gap-8">
+            {items.map((it) => {
+              const isHash = it.href.startsWith("/#") || it.href.startsWith("#");
+              // If we are on home ("/" or "") and it's a hash link, treat it as local anchor
+              const isLocal = isHash && (pathname === "/" || pathname === "");
+
+              const targetHref = isHash ? (it.href.includes("#") ? `#${it.href.split("#")[1]}` : it.href) : it.href;
+
+              if (isLocal) {
+                return (
+                  <a
+                    key={it.href}
+                    href={targetHref}
+                    className="text-sm font-semibold text-silver/70 hover:text-white transition-colors"
+                  >
+                    {it.label}
+                  </a>
+                );
+              }
+
+              return (
+                <Link
+                  key={it.href}
+                  to={it.href}
+                  className="text-sm font-semibold text-silver/70 hover:text-white transition-colors"
+                >
+                  {it.label}
+                </Link>
+              );
+            })}
           </nav>
 
-          {/* Actions */}
-          <div className="flex items-center gap-4">
-            {/* Language Selector */}
-            <div className="relative group">
-              <button className="flex items-center gap-1 text-xs font-semibold text-silver/70 border border-border px-3 py-2 rounded-lg hover:border-primary/50 transition-all">
-                <span className="material-symbols-outlined text-sm">language</span>
-                Español
-                <span className="material-symbols-outlined text-xs">expand_more</span>
+          {/* ACTIONS */}
+          <div className="flex items-center gap-3">
+            {/* Language selector (desktop) */}
+            <div className="hidden sm:block relative" ref={langRef}>
+              <button
+                type="button"
+                onClick={() => setLangOpen((v) => !v)}
+                className={[
+                  "inline-flex items-center gap-2",
+                  "border border-border rounded-xl px-3 py-2",
+                  "bg-surface/40 hover:bg-surface/55 transition-all",
+                  "text-[11px] font-semibold",
+                ].join(" ")}
+              >
+                <span className="material-symbols-outlined text-sm text-silver/70">language</span>
+                <span className="text-silver/70">{currentLang.toUpperCase()}</span>
+                <span className="material-symbols-outlined text-xs text-silver/60">expand_more</span>
               </button>
-              <div className="absolute right-0 mt-2 w-32 bg-surface border border-border rounded-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                <div className="p-1">
-                  <button className="w-full text-left px-3 py-2 text-xs hover:bg-primary/10 rounded-lg transition-colors">
-                    Español
-                  </button>
-                  <button className="w-full text-left px-3 py-2 text-xs hover:bg-primary/10 rounded-lg transition-colors text-silver/60">
-                    English
-                  </button>
-                  <button className="w-full text-left px-3 py-2 text-xs hover:bg-primary/10 rounded-lg transition-colors text-silver/60">
-                    Français
-                  </button>
-                </div>
+
+              <div
+                className={[
+                  "absolute right-0 mt-2 w-36 rounded-2xl border border-border bg-[#0B0B0B]/95 backdrop-blur-xl overflow-hidden",
+                  "transition-all duration-200",
+                  langOpen ? "opacity-100 translate-y-0 visible" : "opacity-0 -translate-y-1 invisible",
+                ].join(" ")}
+              >
+                <button
+                  type="button"
+                  onClick={() => setLang("es")}
+                  className={[
+                    "w-full text-left px-3 py-2 text-xs",
+                    "hover:bg-primary/10 transition-colors",
+                    currentLang === "es" ? "text-white" : "text-silver/70",
+                  ].join(" ")}
+                >
+                  Español
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLang("en")}
+                  className={[
+                    "w-full text-left px-3 py-2 text-xs",
+                    "hover:bg-primary/10 transition-colors",
+                    currentLang === "en" ? "text-white" : "text-silver/70",
+                  ].join(" ")}
+                >
+                  English
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLang("fr")}
+                  className={[
+                    "w-full text-left px-3 py-2 text-xs",
+                    "hover:bg-primary/10 transition-colors",
+                    currentLang === "fr" ? "text-white" : "text-silver/70",
+                  ].join(" ")}
+                >
+                  Français
+                </button>
               </div>
             </div>
 
-            {/* Login Button */}
-            <Link
-              to="/login"
-              className="text-sm font-semibold text-silver/70 hover:text-primary transition-colors"
-            >
-              Iniciar Sesión
-            </Link>
+            {/* Check if user is logged in */}
+            {user ? (
+              <Link
+                to="/dashboard/links"
+                className={[
+                  "inline-flex items-center justify-center gap-2",
+                  "h-10 px-4 rounded-xl",
+                  "bg-primary text-white font-bold text-sm",
+                  "hover:bg-primary-dark transition-all",
+                  "shadow-lg shadow-primary/20",
+                ].join(" ")}
+              >
+                <span className="material-symbols-outlined text-[18px]">dashboard</span>
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link
+                  to="/login"
+                  className="hidden sm:inline-flex text-sm font-semibold text-silver/70 hover:text-white transition-colors"
+                >
+                  {t ? t("nav.login") : "Iniciar Sesión"}
+                </Link>
 
-            {/* Sign Up Button */}
-            <Link
-              to="/login"
-              className="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-full font-semibold transition-all shadow-lg shadow-primary/25 text-sm flex items-center gap-2"
-            >
-              <span className="material-symbols-outlined text-sm">person_add</span>
-              Crear Cuenta
-            </Link>
+                <Link
+                  to="/register"
+                  className={[
+                    "inline-flex items-center justify-center",
+                    "h-10 px-4 rounded-xl",
+                    "bg-primary text-white font-bold text-sm",
+                    "hover:bg-primary-dark transition-all",
+                    "shadow-lg shadow-primary/20",
+                  ].join(" ")}
+                >
+                  {t ? t("nav.signup") : "Crear Cuenta"}
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>

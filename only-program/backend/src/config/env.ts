@@ -41,9 +41,40 @@ export const config = {
     senderName: process.env.BREVO_SENDER_NAME || "Only Program",
   },
 
+  paypal: {
+    clientId: process.env.PAYPAL_CLIENT_ID || "",
+    clientSecret: process.env.PAYPAL_CLIENT_SECRET || "",
+    apiUrl: process.env.PAYPAL_API_URL || "https://api-m.paypal.com",
+  },
+
+  redotpay: {
+    apiKey: process.env.REDOTPAY_API_KEY || "",
+    appId: process.env.REDOTPAY_APP_ID || "",
+    apiUrl: process.env.REDOTPAY_API_URL || "https://api.redotpay.com",
+  },
+
   urls: {
     frontend: process.env.FRONTEND_URL || "http://localhost:3000",
     backend: process.env.BACKEND_URL || "http://localhost:4005",
+  },
+
+  godaddy: {
+    apiKey: process.env.GODADDY_API_KEY || "",
+    apiSecret: process.env.GODADDY_API_SECRET || "",
+    env: process.env.GODADDY_ENV || "OTE",
+  },
+
+  wompi: {
+    pubKey: process.env.WOMPI_PUB_KEY || "",
+    prvKey: process.env.WOMPI_PRV_KEY || "",
+    eventsSecret: process.env.WOMPI_EVENTS_SECRET || "",
+    integritySecret: process.env.WOMPI_INTEGRITY_SECRET || "",
+    url: process.env.WOMPI_API_URL || "https://production.wompi.co/v1", // Default to production
+  },
+
+  turnstile: {
+    siteKey: process.env.TURNSTILE_SITE_KEY || "",
+    secretKey: process.env.TURNSTILE_SECRET_KEY || "",
   },
 };
 

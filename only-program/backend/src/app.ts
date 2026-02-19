@@ -8,19 +8,57 @@ import linksRoutes from "./routes/links.routes";
 import paymentsRoutes from "./routes/payments.routes";
 import analyticsRoutes from "./routes/analytics.routes";
 import adminRoutes from "./routes/admin.routes";
+import configRoutes from "./routes/config.routes";
+import wompiRoutes from "./routes/wompi.routes";
+import gateRoutes from "./routes/gate.routes";
+import { botShieldAvanzado } from "./middlewares/botShieldAvanzado";
+
+import linkProfilesRoutes from "./routes/linkProfiles.routes";
+import { startBillingCron } from "./cron/billing.cron";
 
 const app = express();
 
 // Middlewares globales
+const allowedOrigins = [
+  config.urls.frontend,
+  "https://onlyprogramlink.com",
+  "https://www.onlyprogramlink.com",
+  "http://localhost:3000",
+  "http://misitio.com:3000", // Legacy test
+  "http://pruebafinal.com:3000" // Simulated Custom Domain
+];
+
 app.use(
   cors({
-    origin: config.urls.frontend,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   }),
 );
 
+import cookieParser from 'cookie-parser';
+import challengeRoutes from "./routes/challenge.routes";
+import domainsRoutes from "./routes/domains.routes";
+
+// ...
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser()); // Cookie Parser para PoW Session
+
+// --- ANTI-BAN & GATE ROUTES (Antes de estáticos) ---
+app.use("/challenge", challengeRoutes); // Desafío público
+app.use("/api/domains", domainsRoutes); // Gestión de dominios (Protegido por Auth Idealmente)
+app.use(botShieldAvanzado);
+app.use("/", gateRoutes);
+
 
 // Logger de requests
 app.use((req: Request, res: Response, next: NextFunction) => {
@@ -43,6 +81,9 @@ app.use("/api/links", linksRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/config", configRoutes);
+app.use("/api/wompi", wompiRoutes);
+app.use("/api/link-profiles", linkProfilesRoutes);
 
 // Ruta 404
 app.use((req: Request, res: Response) => {
@@ -77,6 +118,32 @@ app.listen(config.port, () => {
 ║   🔐 Supabase Auth activo             ║
 ╚════════════════════════════════════════╝
   `);
+
+  // Start subscription billing cron job
+  startBillingCron();
+  // Keep-Alive Mechanism for Render Free Tier
+  // Pings the health endpoint every 5 minutes to prevent sleep
+  const PING_INTERVAL = 5 * 60 * 1000; // 5 minutes
+  const SERVER_URL = "https://onlyprogramlink.com";
+
+  const pinger = setInterval(async () => {
+    try {
+      const response = await fetch(`${SERVER_URL}/health`);
+      if (response.ok) {
+        console.log(
+          `[Keep-Alive] Ping successful to ${SERVER_URL}/health at ${new Date().toISOString()}`,
+        );
+      } else {
+        console.warn(`[Keep-Alive] Ping failed with status ${response.status}`);
+      }
+    } catch (error: any) {
+      console.error(`[Keep-Alive] Ping error: ${error.message}`);
+    }
+  }, PING_INTERVAL);
+
+  // Ensure interval is cleared on shutdown (optional but good practice)
+  process.on("SIGTERM", () => clearInterval(pinger));
+  process.on("SIGINT", () => clearInterval(pinger));
 });
 
 export default app;
