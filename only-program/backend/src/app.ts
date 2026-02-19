@@ -27,11 +27,21 @@ const allowedOrigins = [
   "https://onlyprogramlink.com",
   "https://www.onlyprogramlink.com",
   "http://localhost:3000",
+  "http://misitio.com:3000", // Legacy test
+  "http://pruebafinal.com:3000" // Simulated Custom Domain
 ];
 
 app.use(
   cors({
-    origin: config.urls.frontend,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   }),
 );

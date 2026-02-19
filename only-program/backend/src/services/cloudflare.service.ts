@@ -45,29 +45,29 @@ export const cloudflareService = {
      */
     async searchDomains(query: string) {
         if (!ACCOUNT_ID) throw new Error("CLOUDFLARE_ACCOUNT_ID not configured");
-        // Endpoint real de Cloudflare Registrar (requiere permisos de Registrar)
-        // Nota: Este endpoint puede variar según el plan. Usaremos el de "check" si existe o search integrador.
-        // Documentación: GET /accounts/{account_identifier}/registrar/domains/search
         try {
+            // Note: Using POST /search often yields better results for availability check than GET in some CF API versions
+            // But standard Registrar API is GET /accounts/{id}/registrar/domains/search
+            // Returning to POST as GET returned 404.
+            // "You are not authorized" usually means missing Payment Method in Cloudflare account.
             const response = await cfClient.post(`/accounts/${ACCOUNT_ID}/registrar/domains/search`, {
                 query: query
             });
             return response.data;
         } catch (error: any) {
-            const cfErrors = error.response?.data?.errors || [];
-            const isAuthError = cfErrors.some((e: any) => e.code === 10000);
-
             console.error("CF Search Error:", error.response?.data || error.message);
 
+            // Check for Code 10000 (Unauthorized/Billing) - THROW IT so Controller handles it
+            const isAuthError = error.response?.data?.errors?.some((e: any) => e.code === 10000);
             if (isAuthError) {
-                // No lanzar error fatal para que el frontend pueda mostrar un mensaje amigable
-                return {
-                    success: false,
-                    error_code: 'AUTH_ERROR',
-                    message: "Cloudflare Authorization Failed. Check Payment Method or API Token Permissions."
+                throw {
+                    code: 10000,
+                    message: "Cloudflare Unauthorized: Billing/Payment method required or API permissions missing.",
+                    details: error.response?.data
                 };
             }
-            throw error;
+
+            return { result: [] }; // Keep fallback for other random network errors
         }
     },
 
@@ -156,6 +156,23 @@ export const cloudflareService = {
         // Usamos /user/billing/profile si es posible, o /user para testear auth general.
         const res = await cfClient.get('/user');
         console.log(`[CF Debug] Auth Successful! Logged in as: ${res.data.result.email} (${res.data.result.id})`);
+
+        // VERIFY BILLING PROFILE
+        console.log("[CF Debug] Verifying Billing Profile...");
+        try {
+            const billingRes = await cfClient.get(`/accounts/${ACCOUNT_ID}/billing/profile`);
+            const billing = billingRes.data.result;
+            if (billing) {
+                console.log(`✅ [CF Debug] Billing Profile Access OK.`);
+                // Some APIs return payment_gateway or similar fields
+                console.log(`   - Payment Gateway: ${billing.payment_gateway || 'Unknown'}`);
+                console.log(`   - Card Details: ${billing.card_details ? 'Present' : 'Not visible via API'}`);
+            }
+        } catch (billingError: any) {
+            console.warn(`⚠️ [CF Debug] Could not access Billing Profile: ${billingError.response?.data?.errors?.[0]?.message || billingError.message}`);
+            console.warn(`   (This confirms that the API Key lacks 'Billing' permissions or the account has no billing set up)`);
+        }
+
     } catch (error: any) {
         console.error(`[CF Debug] Auth FAILED:`, error.response?.data || error.message);
     }

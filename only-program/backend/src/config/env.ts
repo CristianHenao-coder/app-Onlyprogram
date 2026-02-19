@@ -58,6 +58,12 @@ export const config = {
     backend: process.env.BACKEND_URL || "http://localhost:4005",
   },
 
+  godaddy: {
+    apiKey: process.env.GODADDY_API_KEY || "",
+    apiSecret: process.env.GODADDY_API_SECRET || "",
+    env: process.env.GODADDY_ENV || "OTE",
+  },
+
   wompi: {
     pubKey: process.env.WOMPI_PUB_KEY || "",
     prvKey: process.env.WOMPI_PRV_KEY || "",

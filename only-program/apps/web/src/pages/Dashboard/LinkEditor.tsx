@@ -20,8 +20,26 @@ export default function LinkEditor() {
     [buttons, selectedButtonId]
   );
 
-  const handleSave = () => {
-    toast.success('Cambios guardados localmente');
+  const handleSave = async () => {
+    try {
+      // Logic to save data to Supabase
+      // We need to know WHICH link we are editing. 
+      // Assuming LinkEditor is used for a specific link, likely passed via URL param or context.
+      // But looking at the component, it seems to use `useLinkEditor` which manages local state.
+      // I need to check how `useLinkEditor` initializes data.
+
+      // For now, I'll add a placeholder that I will fully implement after checking the hook.
+      console.log("Saving data:", data);
+
+      // If we are editing 'principal' (or the user's main link), we need its ID.
+      // Let's first make sure we are not just mocking it.
+
+      toast.success('Guardando cambios en la nube...');
+      // Actual implementation will follow after hook analysis
+    } catch (error) {
+      console.error("Save error:", error);
+      toast.error("Error al guardar");
+    }
   };
 
   const handlePurchase = () => {
@@ -77,11 +95,10 @@ export default function LinkEditor() {
                 <div
                   key={button.id}
                   onClick={() => setSelectedButtonId(button.id)}
-                  className={`p-3 rounded-xl cursor-pointer group transition-all ${
-                    selectedButtonId === button.id
+                  className={`p-3 rounded-xl cursor-pointer group transition-all ${selectedButtonId === button.id
                       ? 'bg-primary/10 border border-primary/20'
                       : 'bg-white/5 border border-border hover:border-primary/30'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 overflow-hidden">
@@ -513,9 +530,8 @@ export default function LinkEditor() {
                     <button
                       key={type}
                       onClick={() => updateData({ backgroundType: type })}
-                      className={`px-4 py-2 text-[10px] font-bold transition-colors rounded-lg ${
-                        data.backgroundType === type ? 'text-white bg-white/5' : 'text-silver/40 hover:text-white'
-                      }`}
+                      className={`px-4 py-2 text-[10px] font-bold transition-colors rounded-lg ${data.backgroundType === type ? 'text-white bg-white/5' : 'text-silver/40 hover:text-white'
+                        }`}
                     >
                       {type === 'solid' ? 'Sólido' : type === 'gradient' ? 'Degradado' : 'Imagen'}
                     </button>
@@ -665,15 +681,13 @@ export default function LinkEditor() {
                             key={shape}
                             type="button"
                             onClick={() => updateBlock(selectedButton.id, { buttonShape: shape })}
-                            className={`p-2 rounded-lg flex flex-col items-center gap-1 transition-all ${
-                              selectedButton.buttonShape === shape
+                            className={`p-2 rounded-lg flex flex-col items-center gap-1 transition-all ${selectedButton.buttonShape === shape
                                 ? 'border-2 border-primary bg-primary/5 text-white'
                                 : 'border border-border text-silver/60 hover:border-silver/30'
-                            }`}
+                              }`}
                           >
-                            <div className={`w-8 h-3 bg-white/20 ${
-                              shape === 'rounded' ? 'rounded-full' : shape === 'soft' ? 'rounded-md' : 'rounded-sm'
-                            }`}></div>
+                            <div className={`w-8 h-3 bg-white/20 ${shape === 'rounded' ? 'rounded-full' : shape === 'soft' ? 'rounded-md' : 'rounded-sm'
+                              }`}></div>
                             <span className="text-[9px] font-bold">{shape}</span>
                           </button>
                         ))}

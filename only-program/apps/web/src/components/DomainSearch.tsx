@@ -53,13 +53,7 @@ const DomainSearch = ({ linkId }: DomainSearchProps) => {
                     currency: res.data.result.currency
                 });
             } else {
-                // Fallback para demo/test si la API de CF no responde bien en dev sin credenciales
-                setResult({
-                    available: true,
-                    domain: domain,
-                    price: 12.99, // Precio simulado
-                    currency: 'USD'
-                });
+                setError('No se pudo obtener información del dominio. Intenta de nuevo.');
             }
 
         } catch (err: any) {

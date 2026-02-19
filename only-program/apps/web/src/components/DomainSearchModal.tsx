@@ -23,23 +23,29 @@ const DomainSearchModal = ({ isOpen, onClose, onDomainSelected, initialValue = '
     }, [isOpen, initialValue]);
 
     const handleSearch = async () => {
-        const domain = query.toLowerCase().trim();
+        let domain = query.toLowerCase().trim();
 
-        // --- STRICT VALIDATION ---
+        // --- STRICT VALIDATION & AUTO-FIX ---
 
-        // 1. Must be .com
+        // 1. Auto-append .com if missing extension
+        if (!domain.includes('.')) {
+            domain += '.com';
+            setQuery(domain); // Update input to show user
+        }
+
+        // 2. Must be .com
         if (!domain.endsWith('.com')) {
-            setResult({ available: false, domain, error: 'Solo se permiten dominios .com' });
+            setResult({ available: false, domain, error: 'Solo se permiten dominios .com por razones de seguridad y SEO.' });
             return;
         }
 
-        // 2. No numbers allowed
+        // 3. No numbers allowed (Optional rule from user preference in UI, kept here)
         if (/\d/.test(domain)) {
             setResult({ available: false, domain, error: 'El dominio no puede contener números para mejor posicionamiento.' });
             return;
         }
 
-        // 3. Length check
+        // 4. Length check
         if (domain.length < 5) { // x.com is minimum but practically we want real names
             setResult({ available: false, domain, error: 'El nombre es muy corto.' });
             return;
@@ -52,22 +58,33 @@ const DomainSearchModal = ({ isOpen, onClose, onDomainSelected, initialValue = '
             const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4005';
             const res = await axios.get(`${BACKEND_URL}/api/domains/search?q=${domain}`);
 
-            if (res.data && res.data.result) {
+            if (res.data && res.data.result && Array.isArray(res.data.result) && res.data.result.length > 0) {
+                const match = res.data.result[0];
                 setResult({
-                    available: res.data.result.available,
-                    domain: domain
+                    available: match.available,
+                    domain: match.name || domain,
+                    error: match.available ? undefined : 'Este dominio no está disponible.'
                 });
             } else {
-                // Fallback mock
+                // If array is empty, it means no exact match was returned by Cloudflare as "registerable"
                 setResult({
-                    available: Math.random() > 0.3,
-                    domain: domain
+                    available: false,
+                    domain: domain,
+                    error: 'Este dominio no está disponible para registro.'
                 });
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            setResult({ available: false, domain, error: 'Error de conexión. Intenta de nuevo.' });
+            if (error.response && error.response.status === 403) {
+                setResult({
+                    available: false,
+                    domain,
+                    error: error.response.data?.details || 'Error de configuración en Cloudflare. Verifica tu cuenta.'
+                });
+            } else {
+                setResult({ available: false, domain, error: 'Error de conexión. Intenta de nuevo.' });
+            }
         } finally {
             setLoading(false);
         }
@@ -125,8 +142,8 @@ const DomainSearchModal = ({ isOpen, onClose, onDomainSelected, initialValue = '
                     {/* Results */}
                     {result && (
                         <div className={`mt-6 p-4 rounded-xl border flex items-center justify-between animate-fade-in ${result.available
-                                ? 'bg-green-500/10 border-green-500/20'
-                                : 'bg-red-500/10 border-red-500/20'
+                            ? 'bg-green-500/10 border-green-500/20'
+                            : 'bg-red-500/10 border-red-500/20'
                             }`}>
                             <div className="flex items-center gap-3">
                                 <div className={`p-2 rounded-full ${result.available ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'

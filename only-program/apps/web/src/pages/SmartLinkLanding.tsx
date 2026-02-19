@@ -2,63 +2,89 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../services/supabase';
 
-// --- SUB-COMPONENTES UI ---
+// --- SUB-COMPONENTES UI (PORTADOS DEL SISTEMA ANTERIOR) ---
 
-// 1. SAFETY GATE OVERLAY (El Escudo Social)
-const SafetyGateOverlay = () => (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-6">
-        <div className="bg-gradient-to-br from-[#2a0515] to-[#1a000d] border border-pink-500/30 rounded-3xl p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(255,0,100,0.3)] relative overflow-hidden">
-
-            {/* Flecha Animada */}
-            <div className="absolute -top-2 right-4 text-4xl text-pink-500 animate-bounce rotate-[-30deg]">
-                ➚
-            </div>
-
-            <div className="text-5xl mb-4 animate-pulse">💋</div>
-
-            <h2 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-rose-200 mb-2 uppercase tracking-wide">
-                Acceso Privado
-            </h2>
-
-            <p className="text-pink-100/80 mb-6 text-sm leading-relaxed">
-                El contenido está oculto por seguridad en esta aplicación.
-            </p>
-
-            <div className="bg-white/10 rounded-xl p-4 text-left border border-white/10 mb-6">
-                <div className="flex items-center gap-3 mb-3 text-pink-50">
-                    <div className="w-6 h-6 rounded-full bg-pink-600 flex items-center justify-center font-bold text-xs">1</div>
-                    <span>Toca los <b className="text-white">3 puntos</b> arriba</span>
+// 1. LEGACY LOADING SCREEN (Basado en loading.ejs)
+const LegacyLoadingScreen = () => {
+    return (
+        <div className="fixed inset-0 z-[10001] flex flex-col justify-center items-center p-10 overflow-hidden text-white"
+            style={{ background: 'radial-gradient(circle at top, #ff2a8a, #3a002a, #150013)' }}>
+            <div className="w-full max-w-7xl flex flex-col md:flex-row items-center justify-between gap-10">
+                <div className="flex justify-center items-center shrink-0">
+                    <div className="w-40 h-40 rounded-full relative flex justify-center items-center shadow-[0_0_35px_rgba(255,42,138,0.8)] bg-white">
+                        <div className="absolute inset-[-4px] rounded-full border-[6px] border-white/20 border-t-[#ff2a8a] border-r-[#ff2a8a] animate-spin"></div>
+                        <img src="https://fptwztporosusnwcwvny.supabase.co/storage/v1/object/public/public-fotos/logoOnly.png"
+                            alt="Logo" className="w-[65%] h-[65%] object-contain relative" />
+                    </div>
                 </div>
-                <div className="flex items-center gap-3 text-pink-50">
-                    <div className="w-6 h-6 rounded-full bg-pink-600 flex items-center justify-center font-bold text-xs">2</div>
-                    <span>Elige <b className="text-white">"Abrir en Navegador"</b></span>
+                <div className="flex-1 text-center md:text-right">
+                    <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-wide">VERIFICANDO...</h1>
+                    <p className="text-lg md:text-xl opacity-90">Por favor espera un momento mientras establecemos una conexión segura.</p>
                 </div>
-            </div>
-
-            <div className="text-xs text-pink-500/50 uppercase tracking-widest">
-                Secure Gateway v2.0
             </div>
         </div>
-    </div>
-);
+    );
+};
 
-// 2. SOCIAL BUTTON (Botón Genérico)
+// 2. LEGACY SAFETY GATE (Basado en #safety-gate de searchEngine.ejs)
+const LegacySafetyGate = () => {
+    return (
+        <div className="fixed inset-0 z-[10000] bg-[rgba(20,5,15,0.65)] backdrop-blur-[25px] flex items-center justify-center p-5 overflow-y-auto">
+            <div className="bg-gradient-to-br from-[rgba(60,10,40,0.85)] to-[rgba(30,5,20,0.9)] border border-[rgba(255,100,180,0.3)] p-10 rounded-[28px] max-w-[360px] w-full text-center text-white shadow-[0_20px_60px_rgba(255,0,128,0.25)] relative">
+
+                {/* Flecha Animada */}
+                <div className="absolute -top-2 right-4 text-[2.8rem] text-[#ff3399] rotate-[-30deg] animate-bounce drop-shadow-[0_0_15px_#ff3399] cursor-default pointer-events-none">
+                    ➚
+                </div>
+
+                <span className="text-6xl mb-4 block drop-shadow-[0_0_20px_rgba(255,50,150,0.6)] animate-pulse">💋</span>
+
+                <div className="text-2xl font-extrabold bg-gradient-to-r from-[#ff66b2] to-[#ffccdd] bg-clip-text text-transparent uppercase mb-2 tracking-wide">
+                    ACCESO PRIVADO
+                </div>
+
+                <p className="text-[#ffd9e6] mb-8 leading-relaxed font-medium">
+                    El contenido está oculto por seguridad en esta aplicación. Sigue las instrucciones para entrar:
+                </p>
+
+                <div className="bg-white/10 rounded-[18px] p-5 text-left mb-6 border border-white/15">
+                    <div className="flex gap-3 mb-4 items-center text-sm">
+                        <div className="min-w-[28px] h-7 rounded-full bg-[#ff3399] flex items-center justify-center font-extrabold shadow-[0_0_15px_rgba(255,51,153,0.6)]">1</div>
+                        <div>Toca los <b className="text-white">3 puntos</b> en la esquina superior derecha.</div>
+                    </div>
+                    <div className="flex gap-3 items-center text-sm">
+                        <div className="min-w-[28px] h-7 rounded-full bg-[#ff3399] flex items-center justify-center font-extrabold shadow-[0_0_15px_rgba(255,51,153,0.6)]">2</div>
+                        <div>Selecciona <b className="text-white">"Abrir en navegador"</b>.</div>
+                    </div>
+                </div>
+
+                <img src="https://fptwztporosusnwcwvny.supabase.co/storage/v1/object/public/public-fotos/gitonly.png"
+                    className="w-full rounded-xl border border-white/10 mb-5 animate-pulse" alt="Tutorial" />
+
+                <div className="text-[0.75rem] text-[#ff99cc] uppercase tracking-[1.5px] opacity-80">
+                    SECURE GATEWAY v2.0
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// 3. SOCIAL BUTTON (Botón Genérico)
 interface SocialButtonProps {
     type: string;
     url: string;
     label: string;
     sub?: string;
     onClick?: (e: React.MouseEvent) => void;
-    style?: React.CSSProperties; // Add style prop
+    style?: React.CSSProperties;
 }
 
 const SocialButton: React.FC<SocialButtonProps> = ({ type, url, label, sub, onClick, style }) => {
-    // Default styles as fallback
     const defaultStyles: Record<string, string> = {
         telegram: "bg-[#0088cc] border border-white/20 text-white shadow-[0_0_20px_rgba(0,136,204,0.3)]",
         instagram: "bg-gradient-to-r from-[#833ab4] via-[#fd1d1d] to-[#fcb045] text-white border border-white/20 shadow-[0_0_20px_rgba(253,29,29,0.3)]",
         tiktok: "bg-black/60 border border-white/20 text-white shadow-[0_0_20px_rgba(255,255,255,0.1)]",
-        onlyfans: "bg-[#00aff0]/10 border border-[#00aff0]/50 text-white shadow-[0_0_20px_rgba(0,175,240,0.2)] animate-pulse"
+        onlyfans: "bg-[#00aff0]/15 border border-[#00aff0]/50 text-white shadow-[0_0_20px_rgba(0,175,240,0.2)]"
     };
 
     const icon: Record<string, JSX.Element | null> = {
@@ -75,20 +101,33 @@ const SocialButton: React.FC<SocialButtonProps> = ({ type, url, label, sub, onCl
         custom: <span className="material-symbols-outlined text-xl">link</span>
     };
 
+    const handleClick = (e: React.MouseEvent) => {
+        if (onClick) {
+            e.preventDefault();
+            onClick(e);
+        }
+    };
+
     return (
         <a
             href={onClick ? '#' : url}
-            onClick={onClick}
+            onClick={handleClick}
             target={onClick ? undefined : "_blank"}
             rel="noreferrer"
-            className={`relative w-full p-4 rounded-full flex items-center justify-center gap-3 transition-transform active:scale-95 ${!style ? defaultStyles[type] : ''}`}
-            style={style} // Apply custom styles here (bg, color, radius)
+            className={`group relative w-full p-4 rounded-full flex items-center justify-center gap-3 transition-all active:scale-95 ${!style ? defaultStyles[type] : ''}`}
+            style={style}
         >
-            {/* Icons positioning */}
+            {/* Shimmer effect for OF */}
+            {type === 'onlyfans' && (
+                <div className="absolute inset-0 rounded-full overflow-hidden">
+                    <div className="absolute top-[-50%] left-[-100%] w-1/2 h-[200%] bg-gradient-to-r from-transparent via-white/20 to-transparent rotate-25 animate-[buttonShine_4s_infinite]"></div>
+                </div>
+            )}
+
             {(type === 'telegram' || type === 'instagram' || type === 'tiktok') && <span className="absolute left-6">{icon[type]}</span>}
             {type === 'custom' && <span className="absolute left-6">{icon['custom']}</span>}
 
-            <div className="text-center leading-tight">
+            <div className="text-center leading-tight relative z-10">
                 <div className="font-bold uppercase tracking-wider text-sm">{label}</div>
                 {sub && <div className="text-[10px] opacity-80 font-normal">{sub}</div>}
             </div>
@@ -96,96 +135,128 @@ const SocialButton: React.FC<SocialButtonProps> = ({ type, url, label, sub, onCl
     );
 };
 
-
 // --- COMPONENTE PRINCIPAL ---
 
-interface SmartLinkLandingProps {
-    slug?: string;
-}
-
-const SmartLinkLanding: React.FC<SmartLinkLandingProps> = ({ slug: propSlug }) => {
+const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
     const params = useParams<{ slug: string }>();
     const slug = propSlug || params.slug;
     const [linkData, setLinkData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [isSocialApp, setIsSocialApp] = useState(false);
+    const [isRedirecting, setIsRedirecting] = useState(false);
 
     useEffect(() => {
-        console.log("SmartLinkLanding Mounted. Slug:", slug);
-
-        // 1. Detectar Social App (Client Side Check)
-        const ua = navigator.userAgent.toLowerCase();
-        const social = /tiktok|instagram|fb_iab|threads|fban|fbav|musically/.test(ua);
-        setIsSocialApp(social);
-        console.log("Is Social App:", social, "User Agent:", ua);
-
-        // 2. Fetch Data
         const fetchData = async () => {
             if (!slug) {
-                console.warn("No slug provided");
                 setLoading(false);
                 return;
             }
 
-            console.log("Fetching data for slug:", slug);
-            const { data, error } = await supabase
-                .from('smart_links')
-                .select('*')
-                .eq('slug', slug)
-                .single();
+            try {
+                // Consultamos nuestro Backend Gate para obtener data + decisión de tráfico
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/gate/${slug}`);
+                const json = await response.json();
 
-            if (error) {
-                console.error("Error fetching link data:", error);
+                if (json.data) {
+                    const payload = JSON.parse(atob(json.data));
+                    if (payload.traffic?.action === 'show_overlay') {
+                        setIsSocialApp(true);
+                    }
+                }
+            } catch (err) {
+                console.error("Traffic check error:", err);
             }
 
-            if (data) {
-                console.log("Link Data loaded:", data);
-                setLinkData(data);
+            // Cargar data visual
+            let query = supabase.from('smart_links').select('*');
+            if (slug.length > 20 && slug.includes('-')) {
+                query = query.or(`slug.eq.${slug},id.eq.${slug}`);
             } else {
-                console.warn("No data found for slug:", slug);
+                query = query.eq('slug', slug);
             }
+
+            const { data } = await query.single();
+            if (data) setLinkData(data);
             setLoading(false);
         };
 
         fetchData();
 
-        // 3. Realtime Subscription
-        const channel = supabase
-            .channel(`realtime-link-${slug}`)
-            .on(
-                'postgres_changes',
-                {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'smart_links',
-                    filter: `slug=eq.${slug}`
-                },
-                (payload) => {
-                    console.log("Realtime update received:", payload);
-                    if (payload.new) {
-                        setLinkData(payload.new as any);
-                    }
-                }
-            )
+        const channel = supabase.channel(`realtime-${slug}`)
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'smart_links', filter: `slug=eq.${slug}` }, (p) => setLinkData(p.new))
             .subscribe();
 
-        return () => {
-            supabase.removeChannel(channel);
-        };
+        return () => { supabase.removeChannel(channel); };
     }, [slug]);
 
+    const handleUnlockPremium = () => {
+        setIsRedirecting(true);
+        // Lógica portada de legacy loading.ejs
+        setTimeout(async () => {
+            try {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/gate/${slug}`);
+                const json = await response.json();
+                if (json.data) {
+                    const payload = JSON.parse(atob(json.data));
 
+                    if (payload.u) {
+                        // Tráfico PERMITIDO -> Redirigir
+                        window.location.href = payload.u;
+                    } else if (payload.traffic?.action === 'show_overlay') {
+                        // Tráfico SOSPECHOSO -> Mostrar instrucciones (detener carga)
+                        setIsRedirecting(false);
+                        setIsSocialApp(true);
+                    } else {
+                        // Bot o Bloqueado -> Redirigir de nuevo a la landing (bucle seguro)
+                        setIsRedirecting(false);
+                        window.location.href = `/${slug}`;
+                    }
+                }
+            } catch (e) {
+                console.error("Redirect error:", e);
+                setIsRedirecting(false);
+            }
+        }, 2000);
+    };
 
-    // Helper to render buttons
+    if (loading) return null; // El loader legacy se encarga de OF, para el perfil general usamos nada o un mini spinner
+    if (!linkData) return <div className="bg-black text-white h-screen flex items-center justify-center">Link not found</div>;
+
+    const config = typeof linkData.config === 'string' ? JSON.parse(linkData.config) : linkData.config;
+    const theme = config?.theme;
+    const bgType = theme?.backgroundType || 'solid';
+    const bgStart = theme?.backgroundStart || '#000000';
+    const bgEnd = theme?.backgroundEnd || '#1a1a1a';
+
     const renderButtons = (buttons: any[]) => {
         if (!buttons) return null;
         return buttons.map((btn: any) => {
             if (!btn.isActive) return null;
+
+            // Especial OnlyFans -> Redirect Flow
+            if (btn.type === 'onlyfans') {
+                return (
+                    <SocialButton
+                        key={btn.id}
+                        type="onlyfans"
+                        url="#"
+                        label="VER CONTENIDO EXCLUSIVO"
+                        sub="Acceso Directo a Galería"
+                        onClick={handleUnlockPremium}
+                    />
+                );
+            }
+
+            // Botón estándar (incluyendo Telegram con Rotación)
+            const finalUrl = (btn.type === 'telegram' && btn.rotatorActive)
+                ? `${import.meta.env.VITE_API_URL}/t/${slug}`
+                : btn.url;
+
             return (
                 <SocialButton
                     key={btn.id}
                     type={btn.type}
-                    url={btn.url}
+                    url={finalUrl}
                     label={btn.title}
                     sub={btn.sub || (btn.type === 'telegram' ? 'Join Channel' : 'Follow Me')}
                     style={{
@@ -199,95 +270,43 @@ const SmartLinkLanding: React.FC<SmartLinkLandingProps> = ({ slug: propSlug }) =
         });
     };
 
-    if (loading) return <div className="bg-black text-white h-screen flex items-center justify-center">Loading...</div>;
-    if (!linkData) return <div className="bg-black text-white h-screen flex items-center justify-center">Link not found</div>;
-
-    const template = linkData.config?.template || 'minimal';
-    const theme = linkData.config?.theme;
-    const bgType = theme?.backgroundType || 'solid';
-    const bgStart = theme?.backgroundStart || '#000000';
-    const bgEnd = theme?.backgroundEnd || '#1a1a1a';
-    const overlayOpacity = theme?.overlayOpacity ?? 40;
-
-    // 1. FULL TEMPLATE
-    if (template === 'full') {
-        return (
-            <div className="min-h-screen relative bg-black text-white flex flex-col">
-                {linkData.photo && (
-                    <div className="absolute inset-0 z-0">
-                        <img src={linkData.photo} className="w-full h-full object-cover" />
-                        <div className="absolute inset-0 bg-black transition-all" style={{ opacity: overlayOpacity / 100 }}></div>
-                    </div>
-                )}
-                <div className="relative z-10 flex-1 flex flex-col justify-end pb-12 px-6 text-center">
-                    <h1 className="text-4xl font-black mb-6 drop-shadow-lg tracking-tight">
-                        {linkData.display_name || linkData.name || linkData.title}
-                    </h1>
-                    <div className="flex flex-col gap-3">
-                        {renderButtons(linkData.buttons)}
-                    </div>
-                </div>
-                {isSocialApp && <SafetyGateOverlay />}
-            </div>
-        );
-    }
-
-    // 2. SPLIT TEMPLATE
-    if (template === 'split') {
-        return (
-            <div className="flex flex-col h-screen text-white" style={{ background: bgType === 'gradient' ? `linear-gradient(to bottom, ${bgStart}, ${bgEnd})` : bgStart }}>
-                <div className="h-1/2 w-full relative z-0 shrink-0">
-                    {linkData.photo ? (
-                        <img src={linkData.photo} className="w-full h-full object-cover" />
-                    ) : (
-                        <div className="w-full h-full bg-white/10 flex items-center justify-center"><span className="material-symbols-outlined text-6xl opacity-20">person</span></div>
-                    )}
-                </div>
-                <div className="flex-1 overflow-y-auto p-6 relative z-10 flex flex-col">
-                    <div className="mb-6 text-left">
-                        <h1 className="text-3xl font-bold leading-tight">{linkData.display_name || linkData.name || linkData.title}</h1>
-                        <p className="text-white/70 text-sm mt-1">@{linkData.slug?.replace(/-/g, '')}</p>
-                    </div>
-                    <div className="flex flex-col gap-3">
-                        {renderButtons(linkData.buttons)}
-                    </div>
-                </div>
-                {isSocialApp && <SafetyGateOverlay />}
-            </div>
-        );
-    }
-
-    // 3. MINIMAL / DEFAULT TEMPLATE
     return (
-        <div className="min-h-screen flex flex-col relative overflow-hidden text-white" style={{ background: bgType === 'gradient' ? `linear-gradient(to bottom, ${bgStart}, ${bgEnd})` : bgStart }}>
+        <div className="min-h-screen flex flex-col relative overflow-hidden text-white"
+            style={{ background: bgType === 'gradient' ? `linear-gradient(to bottom, ${bgStart}, ${bgEnd})` : bgStart }}>
 
-            {/* Profile Content */}
             <div className="relative z-10 px-6 max-w-md mx-auto w-full text-center py-12 flex flex-col justify-center min-h-screen">
-
-                {/* Avatar */}
                 {linkData.photo && (
-                    <div
-                        className="w-24 h-24 rounded-full bg-gray-800 mb-6 overflow-hidden border-4 shadow-xl mx-auto"
-                        style={{ borderColor: theme?.pageBorderColor || '#333333' }}
-                    >
+                    <div className="w-24 h-24 rounded-full bg-gray-800 mb-6 overflow-hidden border-4 shadow-xl mx-auto"
+                        style={{ borderColor: theme?.pageBorderColor || '#333333' }}>
                         <img src={linkData.photo} alt="Profile" className="w-full h-full object-cover" />
                     </div>
                 )}
 
-                <h1 className="text-3xl font-black mb-1 drop-shadow-lg tracking-tight">
-                    {linkData.display_name || linkData.name || linkData.title}
+                <h1 className="text-3xl font-black mb-1 drop-shadow-lg tracking-tight uppercase">
+                    {linkData.display_name || linkData.name || 'Verified Profile'}
                 </h1>
 
-                <p className="text-[#00aff0] font-medium mb-8 text-sm drop-shadow-md">
-                    {linkData.subtitle || 'Verified Profile'}
+                <p className="text-[#00aff0] font-bold mb-8 text-sm drop-shadow-md">
+                    {linkData.subtitle || 'MODELO PROFESIONAL'}
                 </p>
 
-                {/* Buttons */}
-                <div className="flex flex-col gap-3 w-full max-w-[280px] mx-auto">
+                <div className="flex flex-col gap-3 w-full max-w-[300px] mx-auto">
                     {renderButtons(linkData.buttons)}
                 </div>
             </div>
-            {isSocialApp && <SafetyGateOverlay />}
+
+            {/* Overlays */}
+            {isRedirecting && <LegacyLoadingScreen />}
+            {isSocialApp && <LegacySafetyGate />}
+
+            <style>{`
+                @keyframes buttonShine {
+                    0% { left: -120%; }
+                    30% { left: 150%; }
+                    100% { left: 150%; }
+                }
+                .rotate-25 { transform: rotate(25deg); }
+            `}</style>
         </div>
     );
 };

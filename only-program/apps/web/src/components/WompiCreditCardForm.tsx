@@ -281,6 +281,8 @@ export default function WompiCreditCardForm({ amount, email, onSuccess, onProces
                     <span className="text-[9px] text-white font-bold uppercase tracking-widest">SSL Secure Payment</span>
                 </div>
             </form>
+
+
         </div>
     );
 }

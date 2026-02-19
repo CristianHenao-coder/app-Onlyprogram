@@ -8,11 +8,12 @@ interface PaymentSelectorProps {
   onSelect?: (method: 'card' | 'paypal' | 'crypto') => void;
   initialMethod?: 'card' | 'paypal' | 'crypto';
   amount?: number; // Add amount prop
+  onSuccess?: () => void; // Finalize callback
 }
 
 import { useAuth } from '@/hooks/useAuth';
 
-export default function PaymentSelector({ onSelect, initialMethod = 'card', amount }: PaymentSelectorProps) {
+export default function PaymentSelector({ onSelect, initialMethod = 'card', amount, onSuccess }: PaymentSelectorProps) {
   const { user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'crypto'>(initialMethod);
   const [paymentSuccess, setPaymentSuccess] = useState(false); // Estado para feedback visual
@@ -129,7 +130,7 @@ export default function PaymentSelector({ onSelect, initialMethod = 'card', amou
               email={user?.email || ""}
               onSuccess={() => {
                 setPaymentSuccess(true);
-                toast.success("Pago procesado correctamente");
+                if (onSuccess) onSuccess();
                 if (onSelect) onSelect('card');
               }}
             />
