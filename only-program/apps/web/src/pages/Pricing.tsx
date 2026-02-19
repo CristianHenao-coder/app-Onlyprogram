@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useTranslation } from '@/contexts/I18nContext';
+import { productPricingService, type ProductPricingConfig, DEFAULT_PRODUCT_PRICING } from '@/services/productPricing.service';
 
 function formatUSD(value: number) {
   return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -10,6 +11,18 @@ function formatUSD(value: number) {
 
 export default function Pricing() {
   const { t } = useTranslation();
+
+  const [pricingCfg, setPricingCfg] = useState<ProductPricingConfig>(DEFAULT_PRODUCT_PRICING);
+
+  useEffect(() => {
+    let mounted = true;
+    productPricingService.get().then((cfg) => {
+      if (mounted) setPricingCfg(cfg);
+    }).catch(() => {});
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const [qty, setQty] = useState(1);
   const [withTelegram, setWithTelegram] = useState(false);
@@ -96,7 +109,7 @@ export default function Pricing() {
       }
   };
 
-  const basePrice = withTelegram ? 94.99 : 74.99;
+  const basePrice = pricingCfg.link.standard + (withTelegram ? pricingCfg.link.telegramAddon : 0);
 
   const discount = useMemo(() => {
     if (qty >= 20) return 0.25;
