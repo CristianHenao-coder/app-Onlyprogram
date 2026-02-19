@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 // ✅ IMPORTS DESDE src/assets (tu caso)
 import zara from "../assets/testimonials/zara.jpeg";
