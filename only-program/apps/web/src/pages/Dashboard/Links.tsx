@@ -56,6 +56,7 @@ interface LinkPage {
   };
   buttons: ButtonLink[];
   folder?: string;
+  custom_domain?: string | null;
 }
 
 // Icons Components
@@ -94,14 +95,14 @@ const DEFAULT_PAGE: LinkPage = {
     backgroundStart: '#000000',
     backgroundEnd: '#1a1a1a'
   },
-  buttons: []
+  buttons: [],
+  custom_domain: null
 };
 
 const LINK_PRICE_STANDARD = 60; // Base price for link without Telegram Rotativo
 const ROTATOR_SURCHARGE = 20; // Additional charge for Telegram Rotativo feature
 const LINK_PRICE_ROTATOR = LINK_PRICE_STANDARD + ROTATOR_SURCHARGE; // Total: $80
 
-const MOCK_USER_HAS_CARD = false;
 
 // Font Classes Mapping
 const FONT_MAP: Record<FontType, string> = {
@@ -312,30 +313,31 @@ export default function Links() {
   // --- SUPABASE INTEGRATION ---
 
   // 1. Fetch Links from DB
+  // 1. Fetch Links from DB
   useEffect(() => {
     if (!user?.id) return;
 
     const fetchLinks = async () => {
       try {
-        // ONLY fetch ACTIVE (paid) links from DB
+        // Fetch ALL links (active AND drafts)
         const { data, error } = await supabase
           .from('smart_links')
           .select('*')
           .eq('user_id', user.id)
-          .eq('is_active', true) // Solo links activos/pagados
           .order('created_at', { ascending: true });
 
         if (error) throw error;
 
-        // Map DB active links
+        // Map DB links
         const dbPages: LinkPage[] = data && data.length > 0 ? data.map(link => ({
-          id: link.id,
-          status: 'active', // Todos son activos porque is_active=true
+          id: link.id, // Use UUID or Slug depending on what we saved. Ideally UUID.
+          status: link.status || (link.is_active ? 'active' : 'draft'),
           name: link.config?.name || link.slug,
           profileName: link.title || '',
           profileImage: link.photo || DEFAULT_PROFILE_IMAGE,
           profileImageSize: link.config?.profileImageSize || 50,
           folder: link.config?.folder || '',
+          custom_domain: link.custom_domain,
           template: link.config?.template || 'minimal',
           landingMode: link.config?.landingMode || 'circle',
           theme: {
@@ -355,37 +357,19 @@ export default function Links() {
           })) : []
         })) : [];
 
-        // Get drafts from localStorage
-        const localDrafts: LinkPage[] = (() => {
-          try {
-            const saved = localStorage.getItem('my_links_data');
-            if (saved) {
-              const parsed = JSON.parse(saved);
-              if (Array.isArray(parsed)) {
-                return parsed.map((p: any) => ({
-                  ...p,
-                  status: 'draft' // Todos los de localStorage son drafts
-                }));
-              }
-            }
-          } catch (e) {
-            console.error('Error reading localStorage drafts:', e);
-          }
-          return [];
-        })();
+        // No more localStorage drafts mixing. DB is source of truth.
+        let allPages = [...dbPages];
 
-        // Merge: DB active links + localStorage drafts
-        let allPages = [...dbPages, ...localDrafts];
-
-        // FORCE DEFAULT: If user has NO links (active or draft), create one default draft
+        // FORCE DEFAULT: If user has NO links, create one default draft in UI (will save to DB on edit)
         if (allPages.length === 0) {
           const newId = `page${Date.now()}`;
-          allPages = [{ ...DEFAULT_PAGE, id: newId, status: 'draft', name: 'Link 1' }];
+          allPages = [{ ...DEFAULT_PAGE, id: newId, status: 'draft', name: 'Nuevo Link' }];
         }
 
         setPages(allPages);
         if (allPages.length > 0) {
           // If we have a selectedPageId but it's not in the new list, select the first one
+          // (Unless we just created a new one, handle that separately)
           const exists = allPages.find(p => p.id === selectedPageId);
           if (!exists) setSelectedPageId(allPages[0].id);
         }
@@ -411,42 +395,85 @@ export default function Links() {
         const currentPageToSave = pages.find(p => p.id === selectedPageId);
         if (!currentPageToSave) return;
 
-        const isDraft = currentPageToSave.status === 'draft';
+        // SKIP autosave if it's the default empty ID or user not loaded
+        if (!user || !user.id) return;
 
-        if (isDraft) {
-          // DRAFT: Save ALL drafts from state to localStorage (single source of truth)
-          try {
-            const allDrafts = pages.filter(p => p.status === 'draft');
-            localStorage.setItem('my_links_data', JSON.stringify(allDrafts));
-          } catch (e) {
-            console.error('Error saving draft to localStorage:', e);
+        // Prepare data for Supabase
+        const upsertData = {
+          user_id: user.id,
+          slug: currentPageToSave.id, // Use ID as slug for now, or name if available
+          title: currentPageToSave.profileName,
+          photo: currentPageToSave.profileImage,
+          buttons: currentPageToSave.buttons,
+          status: currentPageToSave.status, // 'draft' or 'active'
+          is_active: currentPageToSave.status === 'active', // Only active if explicitly active
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // Default 30 days expiry for new links
+          config: {
+            template: currentPageToSave.template,
+            theme: currentPageToSave.theme,
+            name: currentPageToSave.name,
+            folder: currentPageToSave.folder,
+            landingMode: currentPageToSave.landingMode,
+            profileImageSize: currentPageToSave.profileImageSize
           }
-        } else {
-          // ACTIVE LINK: Save to Supabase
-          const updates = {
-            title: currentPageToSave.profileName,
-            photo: currentPageToSave.profileImage,
-            buttons: currentPageToSave.buttons,
-            is_active: true, // Links activos siempre son is_active=true
-            config: {
-              template: currentPageToSave.template,
-              theme: currentPageToSave.theme,
-              name: currentPageToSave.name,
-              folder: currentPageToSave.folder,
-              landingMode: currentPageToSave.landingMode,
-              profileImageSize: currentPageToSave.profileImageSize
-            }
-          };
+        };
 
-          const { error } = await supabase
-            .from('smart_links')
-            .update(updates)
-            .eq('id', currentPageToSave.id);
+        // If it's a new link (not in DB), we might need to insert. 
+        // But upsert on ID is better.
+        // Wait, currentPageToSave.id might be a random string 'page...' for new drafts.
+        // If it's 'page...', we should probably allow upserting it as slug.
 
-          if (error) throw error;
+        // CHECK if it exists to decide INSERT vs UPDATE (or just Upsert if we have a stable ID)
+        // For simplicity, let's try UPSERT matching on 'slug' (since ID might not be a UUID from DB yet)
+        // Actually, let's treat 'slug' as the unique key for these drafts for now. 
+
+        // NOTE: In production, we'd want a proper UUID. 
+        // But to unblock the user, let's use the 'slug' field which seems to be the main identifier in this apps architecture.
+
+        let matchQuery = supabase.from('smart_links').select('id').eq('slug', currentPageToSave.id);
+
+        // If the ID looks like a UUID, we can match on ID
+        if (currentPageToSave.id.length > 20 && !currentPageToSave.id.startsWith('page')) {
+          // It's likely a UUID
+          matchQuery = supabase.from('smart_links').select('id').eq('id', currentPageToSave.id);
         }
-      } catch (err) {
+
+        const { data: existing } = await matchQuery.single();
+
+        let error;
+        if (existing) {
+          const { error: updateError } = await supabase
+            .from('smart_links')
+            .update(upsertData)
+            .eq('id', existing.id);
+          error = updateError;
+        } else {
+          // INSERT
+          const { error: insertError } = await supabase
+            .from('smart_links')
+            .insert({
+              ...upsertData,
+              // Ensure slug is unique if it clashes? 
+              // schema "slug" is likely unique.
+              slug: currentPageToSave.id // Force slug to be the local ID
+            });
+          error = insertError;
+        }
+
+        if (error) {
+          console.error("Supabase Save Error:", error);
+          throw error;
+        } else {
+          // SUCCESS
+          // If we just inserted a new draft with a temporary ID (page...), 
+          // we should arguably update the local ID to the real UUID from DB.
+          // But for now, let's just ensure it saves.
+          if (!isSaving) toast.success("Guardado en nube", { id: 'cloud-save' });
+        }
+
+      } catch (err: any) {
         console.error("Error saving link:", err);
+        toast.error(`Error guardando: ${err.message || err}`, { duration: 5000 });
       } finally {
         setIsSaving(false);
       }
@@ -692,136 +719,23 @@ export default function Links() {
 
     const { total, countRotator, countStandard, discountAmount, subtotal } = getPaymentDetails();
 
-    if (MOCK_USER_HAS_CARD) {
-      try {
-        // PAYMENT VERIFIED - Create DB records for each draft
-        const activatedLinks: any[] = [];
-
-        for (const draft of draftPages) {
-          const randomSlug = Math.random().toString(36).substring(2, 8);
-          const slugToUse = draft.name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + randomSlug;
-
-          const { data: newLink, error: insertError } = await supabase
-            .from('smart_links')
-            .insert({
-              user_id: user!.id,
-              slug: slugToUse,
-              title: draft.profileName,
-              photo: draft.profileImage,
-              buttons: draft.buttons,
-              status: 'active',
-              is_active: true, // PAGADO = ACTIVO
-              mode: 'landing',
-              expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 año
-              config: {
-                template: draft.template,
-                theme: draft.theme,
-                name: draft.name,
-                folder: draft.folder,
-                landingMode: draft.landingMode,
-                profileImageSize: draft.profileImageSize
-              }
-            })
-            .select()
-            .single();
-
-          if (insertError) {
-            console.error('Error creating link in DB:', insertError);
-            throw insertError;
-          }
-
-          if (newLink) {
-            activatedLinks.push(newLink);
+    toast.loading('Redirigiendo a pagos...');
+    setTimeout(() => {
+      navigate('/dashboard/payments', {
+        state: {
+          pendingPurchase: {
+            type: 'extra_links',
+            quantity: draftPages.length,
+            amount: total,
+            discountApplied: appliedDiscount ? { ...appliedDiscount, amount: discountAmount } : null,
+            details: { countStandard, countRotator, subtotal }
           }
         }
-
-        // Remove drafts from localStorage
-        const saved = localStorage.getItem('my_links_data');
-        const existing = saved ? JSON.parse(saved) : [];
-        const draftIdsToRemove = draftPages.map(d => d.id);
-        const remainingDrafts = existing.filter((p: any) => !draftIdsToRemove.includes(p.id));
-        localStorage.setItem('my_links_data', JSON.stringify(remainingDrafts));
-
-        // Refresh links (will fetch new active ones from DB + remaining drafts)
-        const { data: freshActiveLinks } = await supabase
-          .from('smart_links')
-          .select('*')
-          .eq('user_id', user!.id)
-          .eq('is_active', true)
-          .order('created_at', { ascending: true });
-
-        const dbPages: LinkPage[] = freshActiveLinks ? freshActiveLinks.map(link => ({
-          id: link.id,
-          status: 'active',
-          name: link.config?.name || link.slug,
-          profileName: link.title || '',
-          profileImage: link.photo || DEFAULT_PROFILE_IMAGE,
-          profileImageSize: link.config?.profileImageSize || 50,
-          folder: link.config?.folder || '',
-          template: link.config?.template || 'minimal',
-          landingMode: link.config?.landingMode || 'circle',
-          theme: {
-            pageBorderColor: link.config?.theme?.pageBorderColor || '#333333',
-            overlayOpacity: link.config?.theme?.overlayOpacity || 40,
-            backgroundType: link.config?.theme?.backgroundType || 'solid',
-            backgroundStart: link.config?.theme?.backgroundStart || '#000000',
-            backgroundEnd: link.config?.theme?.backgroundEnd || '#1a1a1a'
-          },
-          buttons: Array.isArray(link.buttons) ? link.buttons.map((b: any) => ({
-            ...b,
-            opacity: b.opacity ?? 100,
-            borderRadius: b.borderRadius ?? 12,
-            isActive: b.isActive ?? true,
-            rotatorActive: b.rotatorActive ?? false,
-            rotatorLinks: b.rotatorLinks || ['', '', '', '', '']
-          })) : []
-        })) : [];
-
-        const localDrafts: LinkPage[] = (() => {
-          try {
-            const saved = localStorage.getItem('my_links_data');
-            if (saved) {
-              const parsed = JSON.parse(saved);
-              if (Array.isArray(parsed)) {
-                return parsed.map((p: any) => ({ ...p, status: 'draft' }));
-              }
-            }
-          } catch (e) {
-            console.error('Error reading localStorage drafts:', e);
-          }
-          return [];
-        })();
-
-        const allPages = [...dbPages, ...localDrafts];
-        setPages(allPages);
-        if (allPages.length > 0 && dbPages.length > 0) {
-          setSelectedPageId(dbPages[0].id); // Select first active link
-        }
-
-        toast.success(`¡${activatedLinks.length} link(s) activado(s) correctamente!`);
-        setShowPaymentModal(false);
-      } catch (error) {
-        console.error('Error processing payment:', error);
-        toast.error('Error al activar los links. Intenta de nuevo.');
-      }
-    } else {
-      toast.loading('Redirigiendo a pagos...');
-      setTimeout(() => {
-        navigate('/dashboard/payments', {
-          state: {
-            pendingPurchase: {
-              type: 'extra_links',
-              quantity: draftPages.length,
-              amount: total,
-              discountApplied: appliedDiscount ? { ...appliedDiscount, amount: discountAmount } : null,
-              details: { countStandard, countRotator, subtotal }
-            }
-          }
-        });
-        toast.dismiss();
-      }, 1000);
-    }
+      });
+      toast.dismiss();
+    }, 1000);
   };
+
 
   const paymentDetails = getPaymentDetails();
 
@@ -889,10 +803,18 @@ export default function Links() {
                   </div>
                   <div className="text-left min-w-[60px]">
                     <p className={`text-xs font-bold leading-tight ${selectedPageId === page.id ? 'text-white' : 'text-silver/60'}`}>{page.name}</p>
-                    <span className="inline-flex items-center gap-1 mt-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                      <span className="text-[9px] text-green-500 font-black uppercase tracking-wider">Link Activo</span>
-                    </span>
+                    <div className="flex flex-col gap-0.5 mt-0.5">
+                      <span className="inline-flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                        <span className="text-[9px] text-green-500 font-black uppercase tracking-wider">Link Activo</span>
+                      </span>
+                      {page.custom_domain && (
+                        <span className="inline-flex items-center gap-1 text-[8px] text-blue-400 font-bold bg-blue-500/10 px-1.5 py-0.5 rounded-md border border-blue-500/20 w-fit">
+                          <span className="material-symbols-outlined text-[10px]">language</span>
+                          {page.custom_domain}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   {selectedPageId === page.id && <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-[#080808]"></div>}
                 </button>
@@ -1394,6 +1316,73 @@ export default function Links() {
                             <div className="bg-black/20 p-3 rounded-xl border border-white/5 flex items-center gap-3">
                               <span className="material-symbols-outlined text-silver/40">blur_on</span>
                               <p className="text-[10px] text-silver/50">Se usará tu foto de perfil con un efecto borroso como fondo.</p>
+                            </div>
+                          )}
+                        </div>
+                      </section>
+
+                      {/* CUSTOM DOMAIN SECTION */}
+                      <section className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+                        <div className="p-4 border-b border-white/5 bg-white/[0.02]">
+                          <h3 className="text-sm font-bold flex items-center gap-2">
+                            <span className="material-symbols-outlined text-silver/40">language</span>
+                            Dominio Personalizado
+                          </h3>
+                        </div>
+                        <div className="p-6">
+                          {currentPage.custom_domain ? (
+                            <div className="flex items-center justify-between p-4 bg-blue-500/5 rounded-xl border border-blue-500/20 animate-fade-in">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+                                  <span className="material-symbols-outlined">public</span>
+                                </div>
+                                <div>
+                                  <span className="text-xs font-bold text-white block">{currentPage.custom_domain}</span>
+                                  <span className="text-[10px] text-blue-400/60 font-bold uppercase">Dominio Vinculado</span>
+                                </div>
+                              </div>
+                              <button
+                                onClick={async () => {
+                                  const confirmed = await showConfirm({
+                                    title: '¿Desvincular Dominio?',
+                                    message: `¿Estás seguro de quitar ${currentPage.custom_domain} de este link? El dominio quedará libre para usarlo en otra página.`,
+                                    confirmText: 'Sí, Desvincular',
+                                    cancelText: 'Cancelar'
+                                  });
+                                  if (confirmed) {
+                                    try {
+                                      const { error } = await supabase
+                                        .from('smart_links')
+                                        .update({ custom_domain: null })
+                                        .eq('id', currentPage.id);
+                                      if (error) throw error;
+                                      handleUpdatePage('custom_domain', null);
+                                      toast.success('Dominio desvinculado correctamente');
+                                    } catch (err) {
+                                      console.error("Error unlinking domain:", err);
+                                      toast.error('Error al desvincular');
+                                    }
+                                  }
+                                }}
+                                className="bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 px-4 py-2 rounded-lg text-[10px] font-bold uppercase transition-all"
+                              >
+                                Desvincular
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="p-4 bg-white/5 rounded-xl border border-dashed border-white/10 flex flex-col items-center text-center gap-3">
+                              <span className="material-symbols-outlined text-silver/20 text-3xl">language</span>
+                              <div>
+                                <h4 className="text-xs font-bold text-silver/60">Sin Dominio Personalizado</h4>
+                                <p className="text-[10px] text-silver/30 mt-1 max-w-[280px]">Configura un dominio propio para que tu link se vea profesional como pruebafinal.com</p>
+                              </div>
+                              <button
+                                onClick={() => navigate('/dashboard/domains')}
+                                className="bg-white/5 hover:bg-white/10 text-white px-6 py-2 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center gap-2"
+                              >
+                                Configurar Dominio
+                                <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                              </button>
                             </div>
                           )}
                         </div>

@@ -15,7 +15,7 @@ interface DomainPurchaseModalProps {
     linkId?: string;
 }
 
-export default function DomainPurchaseModal({ isOpen, onClose, domain, price, currency = 'USD', linkId }: DomainPurchaseModalProps) {
+export default function DomainPurchaseModal({ isOpen, onClose, domain, price, currency = 'USD', linkId, onSuccess }: DomainPurchaseModalProps & { onSuccess?: () => void }) {
     const { user, session } = useAuth();
     const [step, setStep] = useState<'review' | 'payment' | 'success'>('review');
     const [error, setError] = useState<string | null>(null);
@@ -251,7 +251,10 @@ export default function DomainPurchaseModal({ isOpen, onClose, domain, price, cu
                                     </div>
 
                                     <button
-                                        onClick={onClose}
+                                        onClick={() => {
+                                            if (onSuccess) onSuccess();
+                                            onClose();
+                                        }}
                                         className="w-full py-4 bg-white hover:bg-gray-100 text-black font-black rounded-2xl transition-all shadow-xl"
                                     >
                                         Ir al Panel de Control

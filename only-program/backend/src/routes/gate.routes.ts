@@ -29,9 +29,11 @@ router.get('/t/:slug', async (req, res) => {
     }
 });
 
+import { TrafficService } from '../services/traffic.service';
+
+// ...
+
 // --- RUTA 2: API GATE SEGURA (/api/gate/:slug) ---
-// Esta ruta es consumida por la página de carga "LoadingPage".
-// Devuelve el destino final CIFRADO para evitar que los bots lo lean fácil.
 router.get('/api/gate/:slug', async (req, res) => {
     try {
         const { slug } = req.params;
@@ -47,26 +49,28 @@ router.get('/api/gate/:slug', async (req, res) => {
             return res.status(404).json({ error: 'Node Offline' });
         }
 
-        // 2. Determinar destino (Prioridad: OnlyFans > Telegram > Instagram)
-        // La lógica de negocio puede variar, aquí asumimos que el "Gate" principal es para contenido de pago (OF)
-        // Si el usuario pidió Telegram, debería haber usado /t/:slug
-        let targetUrl = link.onlyfans || link.telegram || link.instagram;
+        // 1.5 ANALIZAR TRÁFICO CON LEGACY SYSTEM
+        const userAgent = req.headers['user-agent'] || '';
+        // Pass all headers to help legacy system detect in-app browsers
+        const trafficAnalysis = await TrafficService.analyzeVisitor(userAgent, req.headers);
 
-        // Si es OnlyFans, aplicamos lógica de DeepLink si fuera necesario (opcional)
-        // Por ahora simplificamos devolviendo la URL directa.
+        // 2. Determinar destino (SOLO si está permitido)
+        let targetUrl = null;
+        if (trafficAnalysis.action === 'allow') {
+            targetUrl = link.onlyfans || link.telegram || link.instagram;
+        }
 
-        // 3. Cifrar la respuesta (Obfuscation simple)
-        // Esto evita que un curl simple vea la URL en texto plano
+        // 3. Cifrar la respuesta
         const payload = {
             u: targetUrl,
             ts: Date.now(),
-            // Firma simple para validar integridad en cliente si se desea
-            v: crypto.createHash('md5').update(slug + 'gate_secret').digest('hex')
+            v: crypto.createHash('md5').update(slug + 'gate_secret').digest('hex'),
+            // Incluir decisión de tráfico para que el frontend sepa qué hacer
+            traffic: trafficAnalysis
         };
 
         const secureData = Buffer.from(JSON.stringify(payload)).toString('base64');
 
-        // Devolvemos la data cifrada
         res.json({ data: secureData });
 
     } catch (error) {
@@ -76,12 +80,11 @@ router.get('/api/gate/:slug', async (req, res) => {
 });
 
 // --- RUTA 3: RESOLUCIÓN POR DOMINIO (/api/gate/domain/:domain) ---
-// Usada por el frontend para saber qué Link cargar cuando se entra por custom domain.
 router.get('/api/gate/domain/:domain', async (req, res) => {
     try {
         const { domain } = req.params;
 
-        // 1. Buscar Link por custom_domain
+        // 1. Buscar Link
         const { data: link, error } = await supabase
             .from('smart_links')
             .select('*')
@@ -92,11 +95,15 @@ router.get('/api/gate/domain/:domain', async (req, res) => {
             return res.status(404).json({ error: 'Domain not linked' });
         }
 
-        // 2. Devolver la info necesaria para renderizar el perfil (slug o data completa)
-        // Por seguridad, devolvemos el slug y dejamos que el frontend use las rutas existentes,
-        // o devolvemos la data cifrada igual que arriba si queremos consistencia.
-        // Para simplificar integración con SmartLinkLanding, devolvemos el slug.
-        res.json({ slug: link.slug });
+        // 1.5 ANALIZAR TRÁFICO
+        const userAgent = req.headers['user-agent'] || '';
+        const trafficAnalysis = await TrafficService.analyzeVisitor(userAgent, req.headers);
+
+        // 2. Devolver slug + decisión de tráfico
+        res.json({
+            slug: link.slug,
+            traffic: trafficAnalysis
+        });
 
     } catch (error) {
         console.error('Gate Domain Error:', error);

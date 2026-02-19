@@ -29,8 +29,9 @@ const DomainResolver = ({ children }: DomainResolverProps) => {
             // Es un dominio custom
             setIsCustomDomain(true);
             try {
-                // BACKEND_URL from env
-                const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4005';
+                // Try VITE_API_URL first as it's defined in .env
+                const BACKEND_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || 'http://localhost:4005';
+                console.log("Checking domain on:", BACKEND_URL);
                 const { data } = await axios.get(`${BACKEND_URL}/api/gate/domain/${host}`);
 
                 if (data && data.slug) {

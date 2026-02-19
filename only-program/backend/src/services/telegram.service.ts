@@ -21,10 +21,10 @@ export const telegramService = {
      */
     async rotateLink(slug: string): Promise<string | null> {
         try {
-            // 1. Obtener el Link y su configuración
+            // 1. Obtener el Link y su configuración de botones (JSON)
             const { data: link, error: linkError } = await supabase
                 .from('smart_links')
-                .select('id, current_bot_index')
+                .select('id, buttons, current_bot_index')
                 .eq('slug', slug)
                 .single();
 
@@ -33,47 +33,42 @@ export const telegramService = {
                 return null;
             }
 
-            // 2. Obtener los Bots asociados
-            const { data: bots, error: botsError } = await supabase
-                .from('telegram_bots')
-                .select('*')
-                .eq('smart_link_id', link.id)
-                .order('id', { ascending: true }); // Orden consistente es crucial para RR
+            // 2. Encontrar el botón de Telegram con rotador activo
+            const buttons = Array.isArray(link.buttons) ? link.buttons : [];
+            const telegramBtn = buttons.find((b: any) => b.type === 'telegram' && b.rotatorActive);
 
-            if (botsError || !bots || bots.length === 0) {
-                return null;
+            if (!telegramBtn) {
+                // Si no hay rotador, devolver el link principal del botón (si existe)
+                const mainTelegramBtn = buttons.find((b: any) => b.type === 'telegram');
+                return mainTelegramBtn?.url || null;
             }
 
-            // 3. Lógica ROUND ROBIN (Distribución 1 a 1)
-            // Seleccionamos el bot actual basado en el índice guardado
-            let currentIndex = link.current_bot_index;
+            // 3. Obtener los links del rotador
+            const rotatorLinks = Array.isArray(telegramBtn.rotatorLinks)
+                ? telegramBtn.rotatorLinks.filter((url: string) => url && url.trim() !== '')
+                : [];
 
-            // Validación de índice (por si borraron bots y el índice quedó fuera de rango)
-            if (currentIndex >= bots.length || currentIndex < 0) {
-                currentIndex = 0;
-            }
+            // Incluir el link principal como opción #1 si no está en la lista (o si se prefiere)
+            const allOptions = rotatorLinks.length > 0 ? rotatorLinks : (telegramBtn.url ? [telegramBtn.url] : []);
 
-            const selectedBot = bots[currentIndex];
+            if (allOptions.length === 0) return null;
 
-            // 4. Calcular el SIGUIENTE índice para la próxima vez
-            const nextIndex = (currentIndex + 1) % bots.length;
+            // 4. Lógica ROUND ROBIN (Distribución 1 a 1)
+            let currentIndex = link.current_bot_index || 0;
+            if (currentIndex >= allOptions.length) currentIndex = 0;
 
-            // 5. Actualizar contadores y el índice en la BD (Fuego y olvido para rapidez, o await si consistencia estricta)
-            await Promise.all([
-                // Aumentar clicks del bot seleccionado
-                supabase
-                    .from('telegram_bots')
-                    .update({ clicks_current: (selectedBot.clicks_current || 0) + 1 })
-                    .eq('id', selectedBot.id),
+            const selectedUrl = allOptions[currentIndex];
 
-                // Mover el puntero al siguiente bot
-                supabase
-                    .from('smart_links')
-                    .update({ current_bot_index: nextIndex })
-                    .eq('id', link.id)
-            ]);
+            // 5. Calcular el SIGUIENTE índice
+            const nextIndex = (currentIndex + 1) % allOptions.length;
 
-            return selectedBot.url;
+            // 6. Actualizar el índice en la BD
+            await supabase
+                .from('smart_links')
+                .update({ current_bot_index: nextIndex })
+                .eq('id', link.id);
+
+            return selectedUrl;
 
         } catch (error) {
             console.error('Telegram Rotation Error:', error);

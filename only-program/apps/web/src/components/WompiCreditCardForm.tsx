@@ -281,6 +281,43 @@ export default function WompiCreditCardForm({ amount, email, onSuccess, onProces
                     <span className="text-[9px] text-white font-bold uppercase tracking-widest">SSL Secure Payment</span>
                 </div>
             </form>
+
+            {/* --- MOCK BUTTON FOR LOCALHOST TESTING --- */}
+            {(window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') && (
+                <button
+                    type="button"
+                    onClick={async (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log("⚠️ Mock Button Clicked!");
+
+                        if (onProcessPayment) {
+                            try {
+                                setLoading(true); // Show loading state on main form if possible, or just toast
+                                await onProcessPayment({
+                                    token: 'tok_mock_bypass_' + Date.now(),
+                                    acceptanceToken: 'mock_acceptance_' + Date.now(),
+                                    email: email || 'mock@test.com',
+                                    amount: amount
+                                });
+                                toast.success("¡Pago validado (SIMULADO)!", { icon: "🧪" });
+                                onSuccess();
+                            } catch (err) {
+                                console.error("Mock Payment Error:", err);
+                                toast.error("Error en simulación");
+                            } finally {
+                                setLoading(false);
+                            }
+                        } else {
+                            console.warn("onProcessPayment is undefined");
+                            toast.error("Error: Función de pago no definida");
+                        }
+                    }}
+                    className="mt-4 w-full bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-500 font-bold py-3 rounded-xl transition-all border border-yellow-500/50 uppercase tracking-widest text-xs z-50 relative cursor-pointer active:scale-95 text-center"
+                >
+                    ⚠️ Simular Pago Exitoso (Solo Local)
+                </button>
+            )}
         </div>
     );
 }
