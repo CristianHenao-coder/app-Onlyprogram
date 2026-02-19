@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AuthShell from '@/components/AuthShell';
 import { supabase } from '@/services/supabase';
 import PasswordInput from '@/components/PasswordInput';
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  // const [searchParams] = useSearchParams();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
