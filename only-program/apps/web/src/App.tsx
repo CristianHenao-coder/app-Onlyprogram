@@ -47,6 +47,7 @@ import Support from '@/pages/Dashboard/Support';
 // Admin Pages
 import AdminDashboard from '@/pages/Admin/Dashboard';
 import CmsEditor from '@/pages/Admin/CmsEditor';
+import ProductPricing from '@/pages/Admin/ProductPricing';
 import UserManager from '@/pages/Admin/UserManager';
 import GlobalLinks from '@/pages/Admin/GlobalLinks';
 import CouponManager from '@/pages/Admin/CouponManager';
@@ -130,6 +131,7 @@ function App() {
                   <Route index element={<Navigate to="/admin/dashboard" replace />} />
                   <Route path="dashboard" element={<AdminDashboard />} />
                   <Route path="cms" element={<CmsEditor />} />
+                  <Route path="pricing" element={<ProductPricing />} />
                   <Route path="users" element={<UserManager />} />
                   <Route path="links" element={<GlobalLinks />} />
                   <Route path="coupons" element={<CouponManager />} />

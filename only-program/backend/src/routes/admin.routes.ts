@@ -224,4 +224,39 @@ router.post("/approve-link", async (req: AuthRequest, res: Response) => {
   }
 });
 
+/**
+ * POST /api/admin/site-config
+ * Saves a site_config key/value using the service role (bypasses RLS).
+ * Only accessible to admins (requireAdmin middleware is applied globally above).
+ */
+router.post("/site-config", async (req: AuthRequest, res: Response) => {
+  try {
+    const { key, value } = req.body;
+    const userId = req.user?.id;
+
+    if (!key || value === undefined) {
+      return res.status(400).json({ error: "Se requiere 'key' y 'value'" });
+    }
+
+    const { error } = await supabase.from("site_configs").upsert({
+      key,
+      value,
+      updated_at: new Date().toISOString(),
+      updated_by: userId,
+    });
+
+    if (error) {
+      console.error("Error saving site_config:", error);
+      return res.status(500).json({ error: error.message });
+    }
+
+    res.json({ success: true, key });
+  } catch (error: any) {
+    console.error("Error en site-config:", error);
+    res
+      .status(500)
+      .json({ error: error.message || "Error al guardar configuración" });
+  }
+});
+
 export default router;
