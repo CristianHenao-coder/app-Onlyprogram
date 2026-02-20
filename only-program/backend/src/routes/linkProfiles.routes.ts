@@ -1,5 +1,5 @@
-import { Router, Request, Response } from "express";
-import multer from "multer";
+import { Router, Response } from "express";
+import multer, { FileFilterCallback } from "multer";
 import sharp from "sharp";
 import { supabase } from "../services/supabase.service";
 import {
@@ -7,6 +7,9 @@ import {
   AuthRequest,
 } from "../middlewares/auth.middleware";
 import { linkProfilesService } from "../services/linkProfiles.service";
+
+// Extend AuthRequest to include multer's file field
+type MulterRequest = AuthRequest & { file?: Express.Multer.File };
 
 const router = Router();
 
@@ -16,7 +19,7 @@ const upload = multer({
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit
   },
-  fileFilter: (req, file, cb) => {
+  fileFilter: (req, file, cb: FileFilterCallback) => {
     if (!file.mimetype.startsWith("image/")) {
       return cb(new Error("Only image files are allowed"));
     }
@@ -171,7 +174,7 @@ router.post(
   "/upload/profile-photo",
   authMiddleware,
   upload.single("photo"),
-  async (req: AuthRequest, res: Response) => {
+  async (req: MulterRequest, res: Response) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -200,7 +203,7 @@ router.post(
   "/upload/background",
   authMiddleware,
   upload.single("background"),
-  async (req: AuthRequest, res: Response) => {
+  async (req: MulterRequest, res: Response) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -229,7 +232,7 @@ router.post(
   "/upload/icon",
   authMiddleware,
   upload.single("icon"),
-  async (req: AuthRequest, res: Response) => {
+  async (req: MulterRequest, res: Response) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
