@@ -62,7 +62,12 @@ export default function Pricing() {
                   'Content-Type': 'application/json',
                   'Authorization': `Bearer ${token}`
               },
-              body: JSON.stringify({ qty: qty }) 
+              body: JSON.stringify({
+                qty: qty,
+                hasRotator: withTelegram,
+                countRotator: withTelegram ? qty : 0,
+                countStandard: withTelegram ? 0 : qty,
+              })
           });
 
           if (!response.ok) {
@@ -262,7 +267,7 @@ export default function Pricing() {
                   </p>
                   <div className="mt-4 rounded-2xl border border-border bg-background-dark/40 p-4">
                     <p className="text-xs text-silver/50">{t('pricingPage.telegramOrb.priceLabel')}</p>
-                    <p className="text-xl font-extrabold text-white mt-1">{formatUSD(withTelegram ? 94.99 : 74.99)}</p>
+                    <p className="text-xl font-extrabold text-white mt-1">{formatUSD(withTelegram ? pricingCfg.domain.buy + pricingCfg.link.telegramAddon : pricingCfg.domain.buy)}</p>
                     <p className="text-xs text-silver/55 mt-2">{t('pricingPage.telegramOrb.billing')}</p>
                   </div>
                 </div>

@@ -827,6 +827,9 @@ export default function Links() {
               type: 'extra_links',
               quantity: draftPages.length,
               amount: total,
+              hasRotator: countRotator > 0,
+              countStandard,
+              countRotator,
               discountApplied: appliedDiscount ? { ...appliedDiscount, amount: discountAmount } : null,
               details: { countStandard, countRotator, subtotal }
             }
