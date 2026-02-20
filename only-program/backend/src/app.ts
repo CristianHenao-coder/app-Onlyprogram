@@ -12,6 +12,9 @@ import configRoutes from "./routes/config.routes";
 import wompiRoutes from "./routes/wompi.routes";
 import gateRoutes from "./routes/gate.routes";
 import { botShieldAvanzado } from "./middlewares/botShieldAvanzado";
+import cookieParser from "cookie-parser";
+import challengeRoutes from "./routes/challenge.routes";
+import domainsRoutes from "./routes/domains.routes";
 
 import linkProfilesRoutes from "./routes/linkProfiles.routes";
 import { startBillingCron } from "./cron/billing.cron";
@@ -43,10 +46,7 @@ app.use(
   }),
 );
 
-import cookieParser from 'cookie-parser';
-import challengeRoutes from "./routes/challenge.routes";
-import domainsRoutes from "./routes/domains.routes";
-
+// ...
 // ...
 
 app.use(express.json());
@@ -58,7 +58,6 @@ app.use("/challenge", challengeRoutes); // Desafío público
 app.use("/api/domains", domainsRoutes); // Gestión de dominios (Protegido por Auth Idealmente)
 app.use(botShieldAvanzado);
 app.use("/", gateRoutes);
-
 
 // Logger de requests
 app.use((req: Request, res: Response, next: NextFunction) => {

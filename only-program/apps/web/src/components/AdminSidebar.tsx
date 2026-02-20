@@ -93,6 +93,7 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
         
         <NavItem to="/admin/dashboard" icon="dashboard" label={t('admin.menu.overview')} isCollapsed={isCollapsed} />
         <NavItem to="/admin/cms" icon="edit_note" label={t('admin.menu.cms')} isCollapsed={isCollapsed} />
+        <NavItem to="/admin/pricing" icon="paid" label="Precios" isCollapsed={isCollapsed} />
         <NavItem to="/admin/users" icon="group" label={t('admin.menu.users')} isCollapsed={isCollapsed} />
         <NavItem to="/admin/links" icon="link" label={t('admin.menu.links')} isCollapsed={isCollapsed} />
         <NavItem to="/admin/coupons" icon="confirmation_number" label={t('admin.menu.coupons')} isCollapsed={isCollapsed} />
