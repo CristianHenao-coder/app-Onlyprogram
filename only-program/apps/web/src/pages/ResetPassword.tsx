@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import AuthShell from '@/components/AuthShell';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/services/supabase';
 import PasswordInput from '@/components/PasswordInput';
