@@ -1,5 +1,4 @@
 import { supabase } from "./supabase";
-import { retryWithBackoff } from "../utils/retryHelper";
 
 export interface SiteConfig {
   key: string;
@@ -16,13 +15,12 @@ export const cmsService = {
         .from("site_configs")
         .select("value")
         .eq("key", key)
-        .single();
+        .maybeSingle();
 
       if (error) {
-        if (error.code === "PGRST116") return null; // Not found
         throw error;
       }
-      return data.value;
+      return data?.value || null;
     } catch (err) {
       console.error(`Error fetching config ${key}:`, err);
       return null;
@@ -30,25 +28,32 @@ export const cmsService = {
   },
 
   /**
-   * Saves or updates a configuration.
+   * Saves or updates a configuration via backend (bypasses RLS using service role).
    */
   async saveConfig(key: string, value: any) {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user)
-      throw new Error("Authenticated user required to save config");
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    if (!token) throw new Error("Authenticated user required to save config");
 
-    const { error } = await retryWithBackoff(async () => {
-      const result = await supabase.from("site_configs").upsert({
-        key,
-        value,
-        updated_at: new Date().toISOString(),
-        updated_by: userData.user.id,
-      });
-      if (result.error) throw result.error;
-      return result;
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4005/api";
+
+    const response = await fetch(`${apiUrl}/admin/site-config`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ key, value }),
     });
 
-    if (error) throw error;
+    if (!response.ok) {
+      const err = await response
+        .json()
+        .catch(() => ({ error: response.statusText }));
+      throw new Error(err?.error || "Error al guardar la configuración");
+    }
+
+    return response.json();
   },
 
   /**

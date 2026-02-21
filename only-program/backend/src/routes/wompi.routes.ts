@@ -19,11 +19,42 @@ router.post(
   async (req: AuthRequest, res) => {
     try {
       const userId = req.user!.id;
-      const { email } = req.user!;
 
-      // 1. Count pending links (is_active = false)
-      // We assume 'smart_links' table has 'is_active' column.
-      // If the user is paying for NEW links, they should be in the DB as inactive/pending.
+      // 1. Read dynamic prices from site_configs
+      const DEFAULT_LINK_STANDARD = 2.99;
+      const DEFAULT_LINK_ROTATOR = 5.99;
+      const DEFAULT_TELEGRAM_ADDON = 5.0;
+
+      let linkPriceStandard = DEFAULT_LINK_STANDARD;
+      let linkPriceRotator = DEFAULT_LINK_ROTATOR;
+      let telegramAddon = DEFAULT_TELEGRAM_ADDON;
+
+      try {
+        const { data: cfgRow } = await supabase
+          .from("site_configs")
+          .select("value")
+          .eq("key", "product_pricing")
+          .maybeSingle();
+
+        if (cfgRow?.value) {
+          linkPriceStandard = Number(
+            cfgRow.value?.link?.standard ?? DEFAULT_LINK_STANDARD,
+          );
+          linkPriceRotator = Number(
+            cfgRow.value?.link?.rotator ?? DEFAULT_LINK_ROTATOR,
+          );
+          telegramAddon = Number(
+            cfgRow.value?.link?.telegramAddon ?? DEFAULT_TELEGRAM_ADDON,
+          );
+        }
+      } catch (priceErr) {
+        console.warn(
+          "Could not read pricing from DB, using defaults:",
+          priceErr,
+        );
+      }
+
+      // 2. Count pending links (is_active = false)
       const { data: links, error } = await supabase
         .from("smart_links")
         .select("id")
@@ -32,33 +63,33 @@ router.post(
 
       if (error) throw error;
 
-      // Logic: If user passes explicit qty (e.g. pre-paying), use that.
-      // Otherwise use found links count.
-      // For this "Smart Billing", we charge for the existing pending links.
-
       let qty = links?.length || 0;
-
-      // If qty is 0, maybe they want to buy credit?
-      // For now, if 0, error or allow passing qty manually in body.
       if (qty === 0 && req.body.qty) {
         qty = req.body.qty;
       }
-
       if (qty === 0) {
         return res.status(400).json({ error: "No pending links to pay for." });
       }
 
-      // 2. Pricing Logic (Sync with Frontend)
-      const BASE_PRICE_USD = 74.99; // Standard price
-      // Check if they want Telegram included?
-      // Simple logic: Base price.
+      // 3. Determine if rotator applies (sent from frontend)
+      const hasRotator = !!req.body.hasRotator;
+      const countRotator = req.body.countRotator
+        ? Number(req.body.countRotator)
+        : 0;
+      const countStandard = req.body.countStandard
+        ? Number(req.body.countStandard)
+        : qty;
+
+      // 4. Pricing Logic (uses DB prices)
+      const subtotal =
+        countStandard * linkPriceStandard + countRotator * linkPriceRotator;
 
       let discount = 0;
       if (qty >= 20) discount = 0.25;
       else if (qty >= 10) discount = 0.12;
       else if (qty >= 5) discount = 0.05;
 
-      const perLink = BASE_PRICE_USD * (1 - discount);
+      const perLink = (subtotal / qty) * (1 - discount);
       const totalUSD = perLink * qty;
 
       // Wompi Colombia requires COP (Colombian Pesos), not USD
@@ -185,10 +216,18 @@ router.post("/webhook", async (req, res) => {
       }
 
       // 3. Activate User Links (Centralized)
-      const { FulfillmentService } = await import("../services/fulfillment.service");
-      await FulfillmentService.activateLinkProduct(payment.user_id, reference, payment.amount, payment.currency);
+      const { FulfillmentService } =
+        await import("../services/fulfillment.service");
+      await FulfillmentService.activateLinkProduct(
+        payment.user_id,
+        reference,
+        payment.amount,
+        payment.currency,
+      );
 
-      console.log(`✅ Payment ${reference} approved. Links activated via Webhook.`);
+      console.log(
+        `✅ Payment ${reference} approved. Links activated via Webhook.`,
+      );
     } else {
       // Handle Rejected/Voided
       await supabase

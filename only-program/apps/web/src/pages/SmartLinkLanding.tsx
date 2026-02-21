@@ -155,9 +155,9 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
             try {
                 // Consultamos nuestro Backend Gate para obtener data + decisión de tráfico
                 const response = await fetch(`${import.meta.env.VITE_API_URL}/api/gate/${slug}`);
-                const json = await response.json();
+                const json = await response.json().catch(() => null);
 
-                if (json.data) {
+                if (json?.data) {
                     const payload = JSON.parse(atob(json.data));
                     if (payload.traffic?.action === 'show_overlay') {
                         setIsSocialApp(true);
@@ -195,8 +195,8 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
         setTimeout(async () => {
             try {
                 const response = await fetch(`${import.meta.env.VITE_API_URL}/api/gate/${slug}`);
-                const json = await response.json();
-                if (json.data) {
+                const json = await response.json().catch(() => null);
+                if (json?.data) {
                     const payload = JSON.parse(atob(json.data));
 
                     if (payload.u) {

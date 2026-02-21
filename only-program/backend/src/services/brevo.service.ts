@@ -1,4 +1,3 @@
-import { TransactionalEmailsApi, SendSmtpEmail } from "@getbrevo/brevo";
 import { config } from "../config/env";
 
 const apiKey = config.brevo.apiKey;
@@ -6,10 +5,8 @@ const senderEmail = config.brevo.senderEmail;
 const senderName = config.brevo.senderName;
 const frontendUrl = config.urls.frontend;
 
-// Configurar cliente de Brevo
-const apiInstance = new TransactionalEmailsApi();
-// TS-friendly auth assignment (evita TransactionalEmailsApiApiKeys)
-(apiInstance as any).authentications.apiKey.apiKey = apiKey;
+// Endpoint oficial Brevo para enviar email transaccional
+const BREVO_SEND_EMAIL_URL = "https://api.brevo.com/v3/smtp/email";
 
 export interface EmailOptions {
   to: string;
@@ -20,28 +17,52 @@ export interface EmailOptions {
 }
 
 /**
- * Envía un email usando Brevo
+ * Envía un email usando Brevo (API REST)
  */
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
   try {
-    const sendSmtpEmail = new SendSmtpEmail();
+    if (!apiKey) {
+      console.error("❌ BREVO API KEY no está configurada (config.brevo.apiKey)");
+      return false;
+    }
+    if (!senderEmail) {
+      console.error("❌ BREVO senderEmail no está configurado (config.brevo.senderEmail)");
+      return false;
+    }
 
-    sendSmtpEmail.sender = { name: senderName, email: senderEmail };
-    sendSmtpEmail.to = [
-      { email: options.to, name: options.toName || options.to },
-    ];
-    sendSmtpEmail.subject = options.subject;
-    sendSmtpEmail.htmlContent = options.htmlContent;
-    sendSmtpEmail.replyTo = {
-      email: "support@onlyprogramlink.com",
-      name: "Only Program Support",
+    const payload: any = {
+      sender: { name: senderName, email: senderEmail },
+      to: [{ email: options.to, name: options.toName || options.to }],
+      subject: options.subject,
+      htmlContent: options.htmlContent,
+      replyTo: {
+        email: "support@onlyprogramlink.com",
+        name: "Only Program Support",
+      },
     };
 
     if (options.textContent) {
-      sendSmtpEmail.textContent = options.textContent;
+      payload.textContent = options.textContent;
     }
 
-    await apiInstance.sendTransacEmail(sendSmtpEmail);
+    const res = await fetch(BREVO_SEND_EMAIL_URL, {
+      method: "POST",
+      headers: {
+        "api-key": apiKey,
+        "content-type": "application/json",
+        accept: "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const bodyText = await res.text().catch(() => "");
+      console.error(
+        `❌ Error al enviar email (Brevo). Status: ${res.status} ${res.statusText}. Body: ${bodyText}`,
+      );
+      return false;
+    }
+
     console.log(`✅ Email enviado a ${options.to}`);
     return true;
   } catch (error) {
@@ -388,7 +409,6 @@ export async function sendOTPEmail(
           <div class="code-container">
             <div class="code">${code}</div>
           </div>
-          
           
           <p style="font-size: 13px; color: #1DA1F2;">${t.warning}</p>
           <div style="margin-top: 20px; padding: 15px; background: rgba(255,165,0,0.1); border-radius: 12px; font-size: 12px; color: #FFA500;">
