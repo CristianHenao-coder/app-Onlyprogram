@@ -234,6 +234,9 @@ router.post("/site-config", async (req: AuthRequest, res: Response) => {
     const { key, value } = req.body;
     const userId = req.user?.id;
 
+    console.log(`[AdminConfig] Saving key: ${key} for user: ${userId}`);
+    // console.log(`[AdminConfig] Value:`, JSON.stringify(value));
+
     if (!key || value === undefined) {
       return res.status(400).json({ error: "Se requiere 'key' y 'value'" });
     }
@@ -250,6 +253,7 @@ router.post("/site-config", async (req: AuthRequest, res: Response) => {
       return res.status(500).json({ error: error.message });
     }
 
+    console.log(`[AdminConfig] Successfully saved key: ${key}`);
     res.json({ success: true, key });
   } catch (error: any) {
     console.error("Error en site-config:", error);

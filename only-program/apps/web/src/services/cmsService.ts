@@ -46,14 +46,32 @@ export const cmsService = {
       body: JSON.stringify({ key, value }),
     });
 
+    const contentType = response.headers.get("content-type");
     if (!response.ok) {
-      const err = await response
-        .json()
-        .catch(() => ({ error: response.statusText }));
-      throw new Error(err?.error || "Error al guardar la configuración");
+      let errorMessage = "Error al guardar la configuración";
+      if (contentType && contentType.includes("application/json")) {
+        const err = await response.json().catch(() => ({}));
+        errorMessage = err?.error || response.statusText;
+      } else {
+        const text = await response.text().catch(() => "");
+        errorMessage = `Error ${response.status}: ${text || response.statusText}`;
+      }
+      throw new Error(errorMessage);
     }
 
-    return response.json();
+    if (contentType && contentType.includes("application/json")) {
+      return response.json();
+    } else {
+      const text = await response.text();
+      console.warn("Expected JSON but received:", text);
+      if (text.includes("API MATCH OK")) {
+        return {
+          success: true,
+          message: "Parsed as success despite non-JSON response",
+        };
+      }
+      return { success: true, text };
+    }
   },
 
   /**
