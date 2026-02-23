@@ -65,9 +65,40 @@ const DomainResolver = ({ children }: DomainResolverProps) => {
     // podríamos mostrar un error o dejar pasar (aunque dejar pasar cargaría la landing de la app en un dominio ajeno)
     if (isCustomDomain && !customSlug) {
         return (
-            <div className="h-screen w-screen bg-black flex flex-col items-center justify-center text-white p-4 text-center">
-                <h1 className="text-3xl font-bold mb-4">Domain Not Configured</h1>
-                <p className="text-gray-400">This custom domain is not linked to any profile yet.</p>
+            <div className="h-screen w-screen bg-[#030303] flex flex-col items-center justify-center text-white p-6 text-center font-sans selection:bg-primary/30">
+                {/* Background Glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none" />
+                
+                <div className="relative space-y-8 max-w-md animate-in fade-in zoom-in duration-700">
+                    <div className="w-24 h-24 bg-white/5 border border-white/10 rounded-[2rem] flex items-center justify-center mx-auto shadow-2xl backdrop-blur-xl">
+                        <span className="material-symbols-outlined text-silver/20 text-5xl">language_off</span>
+                    </div>
+                    
+                    <div className="space-y-3">
+                        <h1 className="text-4xl font-black uppercase tracking-tighter text-white">
+                            Dominio No <span className="text-primary italic">Vinculado</span>
+                        </h1>
+                        <p className="text-silver/40 text-sm font-medium leading-relaxed">
+                            Este dominio personalizado aún no ha sido configurado en nuestra plataforma o se encuentra en proceso de propagación.
+                        </p>
+                    </div>
+
+                    <div className="pt-4">
+                        <a 
+                            href="https://onlyprogram.com" 
+                            className="inline-flex items-center gap-2 px-8 py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:scale-105 active:scale-95"
+                        >
+                            Ir a OnlyProgram
+                            <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div className="absolute bottom-12 left-0 right-0">
+                    <p className="text-[10px] text-silver/10 font-bold uppercase tracking-[0.3em]">
+                        Powered by OnlyProgram Link
+                    </p>
+                </div>
             </div>
         );
     }

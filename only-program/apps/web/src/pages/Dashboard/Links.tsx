@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 import { useModal } from '@/contexts/ModalContext';
 import { useTranslation } from '@/contexts/I18nContext';
@@ -1299,59 +1300,127 @@ export default function Links() {
                             <div className="p-6 space-y-8">
                               {/* URL & Custom Domain Section */}
                               <div className="space-y-4">
-                                <div className="p-4 bg-black/40 border border-white/5 rounded-2xl">
-                                  <p className="text-[10px] font-bold text-silver/40 uppercase tracking-widest mb-3">Link Oficial (Subdominio)</p>
-                                  <div className="flex items-center justify-between gap-4">
-                                    <span className="text-sm font-bold text-white tracking-wide truncate">
-                                      {currentPage.slug || 'pendiente'}.onlyprogram.com
-                                    </span>
-                                    <button 
-                                      onClick={() => {
-                                        const url = `https://${currentPage.slug}.onlyprogram.com`;
-                                        window.open(url, '_blank');
-                                      }}
-                                      className="shrink-0 flex items-center gap-2 px-4 py-2 bg-primary/20 text-primary hover:bg-primary hover:text-white rounded-xl text-xs font-bold transition-all"
-                                    >
-                                      <span className="material-symbols-outlined text-sm">launch</span>
-                                      Lanzar
-                                    </button>
-                                  </div>
-                                </div>
-
-                                <div className="p-5 bg-black/40 border border-white/5 rounded-2xl">
-                                  <div className="flex justify-between items-start mb-4">
+                                {/* Custom Domain Section */}
+                                <div className="p-5 bg-black/40 border border-white/5 rounded-2xl relative overflow-hidden group">
+                                  {/* Glass background effect */}
+                                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                                  
+                                  <div className="flex justify-between items-start mb-6 relative">
                                     <div>
-                                      <p className="text-[10px] font-bold text-silver/40 uppercase tracking-widest mb-1">Dominio Personalizado</p>
-                                      <p className="text-[10px] text-silver/30">Ej: misitio.com</p>
+                                      <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1.5 flex items-center gap-2">
+                                        <span className="material-symbols-outlined text-xs">verified</span>
+                                        Dominio Personalizado Pro
+                                      </h4>
+                                      <p className="text-[10px] text-silver/30 font-medium">Conecta tu propia marca (Ej: misitio.com)</p>
                                     </div>
-                                    {currentPage.customDomain && (
+                                    
+                                    <div className="flex gap-2">
+                                      {currentPage.customDomain && (
+                                        <button 
+                                          onClick={() => window.open(`http://${currentPage.customDomain}`, '_blank')}
+                                          className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white rounded-lg text-[10px] font-bold transition-all border border-white/5"
+                                        >
+                                          <span className="material-symbols-outlined text-xs">visibility</span>
+                                          Vista Previa
+                                        </button>
+                                      )}
+                                      
                                       <button 
-                                        onClick={() => window.open(`http://${currentPage.customDomain}`, '_blank')}
-                                        className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 text-purple-400 hover:bg-purple-500 hover:text-white rounded-lg text-[10px] font-bold transition-all"
+                                        onClick={async () => {
+                                          if (!currentPage.customDomain) {
+                                            toast.error('Debes vincular un dominio antes de publicar', {
+                                              icon: '🚫',
+                                              duration: 4000
+                                            });
+                                            return;
+                                          }
+                                          
+                                          const loadingToast = toast.loading('Verificando disponibilidad...');
+                                          
+                                          try {
+                                            const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
+                                            const { data: vData } = await axios.get(`${BACKEND_URL}/api/domains/verify`, {
+                                              params: { domain: currentPage.customDomain }
+                                            });
+
+                                            if (vData.exists) {
+                                              toast.dismiss(loadingToast);
+                                              toast.error(vData.message || 'El dominio ya está en uso.', {
+                                                icon: '⚠️',
+                                                duration: 5000
+                                              });
+                                              return;
+                                            }
+
+                                            toast.loading('Configurando SSL y BotShield...', { id: loadingToast });
+                                            
+                                            if (currentPage.status !== 'active') {
+                                              await handleUpdatePage('status', 'active');
+                                            }
+                                            
+                                            setTimeout(() => {
+                                              toast.dismiss(loadingToast);
+                                              toast.success('¡Dominio Activo y Protegido!', {
+                                                icon: '🛡️',
+                                                duration: 5000
+                                              });
+                                            }, 2000);
+                                          } catch (err) {
+                                            toast.dismiss(loadingToast);
+                                            toast.error('Error al activar el dominio');
+                                          }
+                                        }}
+                                        className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                                          currentPage.status === 'active' 
+                                          ? 'bg-green-500 text-black' 
+                                          : 'bg-primary text-black hover:scale-105 active:scale-95'
+                                        }`}
                                       >
-                                        <span className="material-symbols-outlined text-xs">rocket_launch</span>
-                                        Lanzar Pro
+                                        <span className="material-symbols-outlined text-xs">
+                                          {currentPage.status === 'active' ? 'check_circle' : 'publish'}
+                                        </span>
+                                        {currentPage.status === 'active' ? 'Publicado' : 'Publicar Ahora'}
                                       </button>
-                                    )}
+                                    </div>
                                   </div>
 
-                                  <div className="flex gap-2">
-                                    <input 
-                                      type="text" 
-                                      placeholder="pruebass.online"
-                                      value={currentPage.customDomain || ''}
-                                      onChange={(e) => handleUpdatePage('customDomain', e.target.value.toLowerCase().replace(/\s/g, ''))}
-                                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-silver/20 focus:outline-none focus:border-primary/50 transition-all font-mono"
-                                    />
+                                  <div className="flex gap-2 relative">
+                                    <div className="relative flex-1">
+                                      <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-silver/20 text-sm">link</span>
+                                      <input 
+                                        type="text" 
+                                        placeholder="ej: misitio.com"
+                                        value={currentPage.customDomain || ''}
+                                        onChange={(e) => handleUpdatePage('customDomain', e.target.value.toLowerCase().replace(/\s/g, '').replace(/https?:\/\//, ''))}
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-4 text-sm text-white placeholder:text-silver/20 focus:outline-none focus:border-primary/50 transition-all font-mono"
+                                      />
+                                    </div>
                                     <button 
-                                      onClick={() => {
+                                      onClick={async () => {
                                         if (!currentPage.customDomain) {
                                           toast.error('Ingresa un dominio primero');
                                           return;
                                         }
-                                        toast.success(`Dominio ${currentPage.customDomain} vinculado. El auto-guardado está activo.`);
+
+                                        const loadingToast = toast.loading('Validando dominio...');
+                                        try {
+                                          const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
+                                          const { data: vData } = await axios.get(`${BACKEND_URL}/api/domains/verify`, {
+                                            params: { domain: currentPage.customDomain }
+                                          });
+
+                                          toast.dismiss(loadingToast);
+                                          if (vData.exists) {
+                                            toast.error(vData.message || 'Dominio no disponible.', { icon: '🚫' });
+                                          } else {
+                                            toast.success(`Dominio disponible. Siguiente paso: Configura tus DNS.`);
+                                          }
+                                        } catch (err) {
+                                          toast.dismiss(loadingToast);
+                                          toast.error('Error al validar dominio');
+                                        }
                                       }}
-                                      className="px-6 bg-primary hover:bg-primary-dark text-black font-black rounded-xl text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+                                      className="px-6 bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold rounded-xl text-xs uppercase tracking-widest transition-all"
                                     >
                                       Vincular
                                     </button>
@@ -1444,14 +1513,16 @@ export default function Links() {
                                     </p>
                                     <button 
                                       onClick={() => {
-                                        const url = currentPage.customDomain 
-                                          ? `http://${currentPage.customDomain}` 
-                                          : `https://${currentPage.slug}.onlyprogram.com`;
+                                        if (!currentPage.customDomain) {
+                                          toast.error('Configura tu dominio primero');
+                                          return;
+                                        }
+                                        const url = `http://${currentPage.customDomain}`;
                                         window.open(url, '_blank');
                                       }}
                                       className="w-full bg-green-500 hover:bg-green-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-green-500/20 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
                                     >
-                                      Lanzar con BotShield
+                                      Abrir sitio protegido
                                       <span className="material-symbols-outlined">shield</span>
                                     </button>
                                   </div>
