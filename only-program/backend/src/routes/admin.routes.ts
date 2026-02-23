@@ -275,7 +275,7 @@ router.get("/domain-requests", async (req: AuthRequest, res: Response) => {
         `
         id, slug, title, custom_domain, domain_status,
         domain_requested_at, domain_activated_at, domain_notes,
-        profiles!smart_links_user_id_fkey (full_name)
+        profiles (full_name)
       `,
       )
       .in("domain_status", ["pending", "active", "failed"])

@@ -20,7 +20,7 @@ interface DnsTestResult {
   addresses?: string[];
 }
 
-const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
+const BACKEND_URL = import.meta.env.VITE_API_URL || '';
 
 async function getAuthHeader() {
   const session = (await supabase.auth.getSession()).data.session;

@@ -30,7 +30,7 @@ const DomainResolver = ({ children }: DomainResolverProps) => {
             setIsCustomDomain(true);
             try {
                 // Try VITE_API_URL first as it's defined in .env
-                const BACKEND_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || 'http://localhost:4005';
+                const BACKEND_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || '';
                 console.log("Checking domain on:", BACKEND_URL);
                 const { data } = await axios.get(`${BACKEND_URL}/api/gate/domain/${host}`);
 
