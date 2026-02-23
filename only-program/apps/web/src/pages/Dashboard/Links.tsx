@@ -247,7 +247,7 @@ export default function Links() {
           
           return Array.from(uniqueMap.values()).map((p: any) => ({
             ...p,
-            status: 'draft', // FORCE DRAFT FOR MIGRATION
+            status: 'draft' as PageStatus, // FORCE DRAFT FOR MIGRATION
             buttons: cleanButtons(p.buttons || []),
             theme: {
               ...p.theme,
@@ -394,14 +394,14 @@ export default function Links() {
         // Map DB active links
         const dbPages: LinkPage[] = data && data.length > 0 ? data.map(link => ({
           id: link.id,
-          status: 'active', // Todos son activos porque is_active=true
+          status: 'active' as PageStatus, // Todos son activos porque is_active=true
           name: link.config?.name || link.slug,
           profileName: link.title || '',
           profileImage: link.photo || DEFAULT_PROFILE_IMAGE,
           profileImageSize: link.config?.profileImageSize || 50,
           folder: link.config?.folder || '',
-          template: link.config?.template || 'minimal',
-          landingMode: link.config?.landingMode || 'circle',
+          template: (link.config?.template as TemplateType) || 'minimal',
+          landingMode: (link.config?.landingMode as 'circle' | 'full') || 'circle',
           theme: {
             pageBorderColor: link.config?.theme?.pageBorderColor || '#333333',
             overlayOpacity: link.config?.theme?.overlayOpacity || 40,
@@ -410,7 +410,7 @@ export default function Links() {
             backgroundEnd: link.config?.theme?.backgroundEnd || '#1a1a1a'
           },
           customDomain: link.custom_domain,
-          domainStatus: link.domain_status || 'none',
+          domainStatus: (link.domain_status as any) || 'none',
           domainNotes: link.domain_notes || '',
           slug: link.slug,
           buttons: (link.smart_link_buttons && link.smart_link_buttons.length > 0) 
@@ -442,7 +442,7 @@ export default function Links() {
                 return parsed.map((p: any) => ({
                   ...p,
                   buttons: cleanButtons(p.buttons || []),
-                  status: 'draft' // Todos los de localStorage son drafts
+                  status: 'draft' as PageStatus // Todos los de localStorage son drafts
                 }));
               }
             }
