@@ -220,8 +220,13 @@ export default function Links() {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // STRICT MIGRATION: Force status='draft' and ensure bg fields
-          return parsed.map((p: any) => ({
+          // Deduplicate by ID just in case
+          const uniqueMap = new Map();
+          parsed.forEach((p: any) => {
+            if (p.id) uniqueMap.set(p.id, p);
+          });
+          
+          return Array.from(uniqueMap.values()).map((p: any) => ({
             ...p,
             status: 'draft', // FORCE DRAFT FOR MIGRATION
             theme: {
@@ -235,14 +240,24 @@ export default function Links() {
       }
     } catch (e) {
       console.error("Error parsing local links", e);
-      // Remove bad data to prevent future crashes
       localStorage.removeItem('my_links_data');
     }
 
-    // DEFAULT EMPTY STATE if nothing local
     return [{
-      id: 'page1', status: 'draft', name: 'Nuevo Link', profileName: 'Mi Perfil', profileImage: DEFAULT_PROFILE_IMAGE, template: 'minimal', theme: { pageBorderColor: '#222222', overlayOpacity: 40, backgroundType: 'solid', backgroundStart: '#000000', backgroundEnd: '#1a1a1a' },
-      buttons: [] // Start empty
+      id: 'page1',
+      status: 'draft',
+      name: 'Nuevo Link',
+      profileName: 'Name',
+      profileImage: DEFAULT_PROFILE_IMAGE,
+      template: 'minimal',
+      theme: {
+        pageBorderColor: '#222222',
+        overlayOpacity: 40,
+        backgroundType: 'solid',
+        backgroundStart: '#000000',
+        backgroundEnd: '#1a1a1a'
+      },
+      buttons: []
     }];
   });
 
@@ -416,18 +431,49 @@ export default function Links() {
           return [];
         })();
 
-        // Merge: DB active links + localStorage drafts
-        let allPages = [...dbPages, ...localDrafts];
+        // Merge and Deduplicate: DB active links + localStorage drafts
+        const pagesMap = new Map<string, LinkPage>();
+        
+        // 1. Add DB links (priority)
+        dbPages.forEach(p => pagesMap.set(p.id, p));
+        
+        // 2. Add local drafts only if they don't exist in DB (check ID AND Name)
+        const staleDraftIds: string[] = [];
+        localDrafts.forEach(p => {
+          const isDuplicateById = pagesMap.has(p.id);
+          // Check if any DB page has the same name (case insensitive)
+          const isDuplicateByName = dbPages.some(dbp => 
+            dbp.name.toLowerCase().trim() === p.name.toLowerCase().trim()
+          );
+          
+          if (!isDuplicateById && !isDuplicateByName) {
+            pagesMap.set(p.id, p);
+          } else {
+            staleDraftIds.push(p.id);
+          }
+        });
 
-        // FORCE DEFAULT: If user has NO links (active or draft), create one default draft
+        // 3. Cleanup stale drafts from localStorage
+        if (staleDraftIds.length > 0) {
+          try {
+            const updatedLocalDrafts = localDrafts.filter(p => !staleDraftIds.includes(p.id));
+            localStorage.setItem('my_links_data', JSON.stringify(updatedLocalDrafts));
+            console.log(`Deduplicated ${staleDraftIds.length} stale drafts from localStorage`);
+          } catch (e) {
+            console.error('Error cleaning up stale drafts:', e);
+          }
+        }
+
+        const allPages = Array.from(pagesMap.values());
+
+        // FORCE DEFAULT: If user has NO links, create one
         if (allPages.length === 0) {
           const newId = `page${Date.now()}`;
-          allPages = [{ ...DEFAULT_PAGE, id: newId, status: 'draft', name: 'Link 1' }];
+          allPages.push({ ...DEFAULT_PAGE, id: newId, status: 'draft', name: 'Link 1' });
         }
 
         setPages(allPages);
         if (allPages.length > 0) {
-          // If we have a selectedPageId but it's not in the new list, select the first one
           const exists = allPages.find(p => p.id === selectedPageId);
           if (!exists) setSelectedPageId(allPages[0].id);
         }

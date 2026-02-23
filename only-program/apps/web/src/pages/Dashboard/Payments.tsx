@@ -63,7 +63,7 @@ export default function Payments() {
           }
         }
         toast.success("¡Configuración de dominios completada!", { id: toastId });
-      } else if (pendingPurchase.type === 'extra_links') {
+      } else if (['extra_links', 'links_bundle', 'link_with_domain'].includes(pendingPurchase.type)) {
         // Cleanup localStorage drafts
         localStorage.removeItem('my_links_data');
         toast.success("¡Links activados correctamente!", { id: toastId });
