@@ -26,8 +26,10 @@ async function handleResponse(response: Response) {
 }
 
 async function getAuthHeaders() {
-  const { data: session } = await supabase.auth.getSession();
-  const token = session.session?.access_token;
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const token = session?.access_token;
 
   if (!token) {
     throw new Error(
@@ -48,6 +50,8 @@ export const paymentsService = {
     token: string;
     acceptanceToken: string;
     installments?: number;
+    linksData?: any[];
+    customDomain?: string;
   }) {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_URL}/payments/wompi/transaction`, {
@@ -66,12 +70,17 @@ export const paymentsService = {
     return handleResponse(response);
   },
 
-  async createPayPalOrder(amount: number, subscriptionId?: string) {
+  async createPayPalOrder(
+    amount: number,
+    subscriptionId?: string,
+    linksData?: any[],
+    customDomain?: string,
+  ) {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_URL}/payments/paypal/create-order`, {
       method: "POST",
       headers,
-      body: JSON.stringify({ amount, subscriptionId }),
+      body: JSON.stringify({ amount, subscriptionId, linksData, customDomain }),
     });
     return handleResponse(response);
   },
@@ -109,14 +118,19 @@ export const paymentsService = {
   },
 
   /** Crea un pago en NOWPayments y recibe la dirección única de depósito */
-  async createNowPayment(amount: number, payCurrency: string) {
+  async createNowPayment(
+    amount: number,
+    payCurrency: string,
+    linksData?: any[],
+    customDomain?: string,
+  ) {
     const headers = await getAuthHeaders();
     const response = await fetch(
       `${API_URL}/payments/nowpayments/create-payment`,
       {
         method: "POST",
         headers,
-        body: JSON.stringify({ amount, payCurrency }),
+        body: JSON.stringify({ amount, payCurrency, linksData, customDomain }),
       },
     );
     return handleResponse(response);
@@ -135,7 +149,10 @@ export const paymentsService = {
   },
 
   /** Activa el plan gratuito de 3 días (uso único por cuenta) */
-  async activateFreeTrial(): Promise<{
+  async activateFreeTrial(
+    linksData?: any[],
+    customDomain?: string,
+  ): Promise<{
     success: boolean;
     message: string;
     expiresAt: string;
@@ -145,6 +162,16 @@ export const paymentsService = {
     const response = await fetch(`${API_URL}/payments/free-trial`, {
       method: "POST",
       headers,
+      body: JSON.stringify({ linksData, customDomain }),
+    });
+    return handleResponse(response);
+  },
+
+  /** Verifica si el usuario ya ha usado su prueba gratuita */
+  async checkFreeTrial(): Promise<{ hasUsedTrial: boolean }> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_URL}/payments/free-trial/check`, {
+      headers: { Authorization: headers.Authorization },
     });
     return handleResponse(response);
   },

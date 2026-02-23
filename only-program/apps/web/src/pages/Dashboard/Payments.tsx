@@ -64,6 +64,8 @@ export default function Payments() {
         }
         toast.success("¡Configuración de dominios completada!", { id: toastId });
       } else if (pendingPurchase.type === 'extra_links') {
+        // Cleanup localStorage drafts
+        localStorage.removeItem('my_links_data');
         toast.success("¡Links activados correctamente!", { id: toastId });
       }
 
@@ -148,6 +150,8 @@ export default function Payments() {
           initialMethod={selectedPaymentMethod}
           amount={location.state?.pendingPurchase?.amount || 10}
           onSuccess={handlePaymentSuccess}
+          linksData={location.state?.pendingPurchase?.linksData}
+          customDomain={location.state?.pendingPurchase?.customDomain}
         />
       </div>
 

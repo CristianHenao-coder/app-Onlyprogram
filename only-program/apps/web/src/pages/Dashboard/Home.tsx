@@ -157,7 +157,7 @@ export default function Home() {
                                         </td>
                                         <td className="p-4 text-right">
                                             <Link
-                                                to={`/dashboard/links/${link.id}/edit`}
+                                                to={`/dashboard/links?id=${link.id}`}
                                                 className="inline-flex items-center gap-1 text-primary hover:text-primary-dark text-sm font-bold transition-colors"
                                             >
                                                 <span className="material-symbols-outlined text-lg">edit</span>

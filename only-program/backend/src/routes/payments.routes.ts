@@ -12,6 +12,12 @@ import { v4 as uuidv4 } from "uuid";
 
 const router = Router();
 
+// Log all requests to this router
+router.use((req, res, next) => {
+  console.log(`[PaymentsRouter] ${req.method} ${req.path}`);
+  next();
+});
+
 // ─────────────────────────────────────────────────────────────
 // NOWPAYMENTS WEBHOOK (IPN) — debe ir ANTES de authenticateToken
 // ─────────────────────────────────────────────────────────────
@@ -101,7 +107,8 @@ router.use(authenticateToken);
 // ─────────────────────────────────────────────────────────────
 router.post("/paypal/create-order", async (req: AuthRequest, res) => {
   try {
-    const { amount, description, subscriptionId } = req.body;
+    const { amount, description, subscriptionId, linksData, customDomain } =
+      req.body;
     if (!amount) return res.status(400).json({ error: "Amount is required" });
 
     const order = (await PayPalService.createOrder({
@@ -120,6 +127,7 @@ router.post("/paypal/create-order", async (req: AuthRequest, res) => {
         status: "pending",
         tx_reference: order.id,
         created_at: new Date().toISOString(),
+        metadata: { linksData, customDomain },
       });
       if (error) console.error("Error inserting payment record:", error);
     }
@@ -172,6 +180,24 @@ router.post("/paypal/capture-order", async (req: AuthRequest, res) => {
             );
           }
         }
+
+        // FULFILLMENT: Activate links
+        try {
+          const { FulfillmentService } =
+            await import("../services/fulfillment.service");
+          await FulfillmentService.activateLinkProduct(
+            payment.user_id,
+            payment.id,
+            payment.amount,
+            "USD",
+          );
+        } catch (fulfillmentError) {
+          console.error(
+            "Fulfillment error after PayPal capture:",
+            fulfillmentError,
+          );
+        }
+
         if (req.user?.email && amountVal) {
           await sendPaymentConfirmationEmail(
             req.user.email,
@@ -222,7 +248,15 @@ router.post("/wompi/get-signature", async (req: AuthRequest, res) => {
 
 router.post("/wompi/transaction", async (req: AuthRequest, res) => {
   try {
-    const { amount, email, token, installments, acceptanceToken } = req.body;
+    const {
+      amount,
+      email,
+      token,
+      installments,
+      acceptanceToken,
+      linksData,
+      customDomain,
+    } = req.body;
 
     console.log(
       "💰 Wompi Transaction Initiated. Body:",
@@ -260,6 +294,7 @@ router.post("/wompi/transaction", async (req: AuthRequest, res) => {
         status,
         tx_reference: transaction.id,
         created_at: new Date().toISOString(),
+        metadata: { linksData, customDomain },
       });
       if (error) console.error("Error saving payment:", error);
 
@@ -285,17 +320,46 @@ router.post("/wompi/transaction", async (req: AuthRequest, res) => {
 router.post("/webhook/wompi", async (req, res) => {
   try {
     const event = req.body;
-    console.log("💰 Wompi Webhook received:", event);
+    console.log("💰 Wompi Webhook received:", JSON.stringify(event, null, 2));
 
     if (
       event.event === "transaction.updated" &&
       event.data.transaction.status === "APPROVED"
     ) {
       const tx = event.data.transaction;
-      await supabase
+      const reference = tx.reference;
+      const transactionId = tx.id;
+
+      // 1. Update Payment Record
+      const { data: payment, error: payError } = await supabase
         .from("payments")
-        .update({ status: "completed", confirmed_at: new Date().toISOString() })
-        .eq("tx_reference", tx.reference);
+        .update({
+          status: "completed",
+          tx_reference: transactionId,
+          confirmed_at: new Date().toISOString(),
+        })
+        .eq("id", reference)
+        .select()
+        .single();
+
+      if (payError || !payment) {
+        console.error("Payment record not found for ref:", reference);
+        return res.status(200).json({ received: true }); // Acknowledge to stop retries even if not found
+      }
+
+      // 2. FULFILLMENT: Activate links
+      const { FulfillmentService } =
+        await import("../services/fulfillment.service");
+      await FulfillmentService.activateLinkProduct(
+        payment.user_id,
+        reference,
+        payment.amount,
+        payment.currency,
+      );
+
+      console.log(
+        `✅ Payment ${reference} approved via Webhook. Links activated.`,
+      );
     }
 
     res.sendStatus(200);
@@ -330,7 +394,7 @@ router.get("/nowpayments/currencies", async (_req, res) => {
  */
 router.post("/nowpayments/create-payment", async (req: AuthRequest, res) => {
   try {
-    const { amount, payCurrency } = req.body;
+    const { amount, payCurrency, linksData, customDomain } = req.body;
 
     if (!amount) return res.status(400).json({ error: "Amount is required" });
     if (!payCurrency)
@@ -358,6 +422,7 @@ router.post("/nowpayments/create-payment", async (req: AuthRequest, res) => {
         status: "pending",
         tx_reference: paymentData.payment_id,
         created_at: new Date().toISOString(),
+        metadata: { linksData, customDomain },
       });
       if (error) console.error("Error guardando pago NOWPayments:", error);
     }
@@ -433,6 +498,29 @@ router.get("/", async (req: AuthRequest, res) => {
 // ─────────────────────────────────────────────────────────────
 
 /**
+ * GET /api/payments/free-trial/check
+ * Verifica si el usuario ya ha utilizado su prueba gratuita.
+ */
+router.get("/free-trial/check", async (req: AuthRequest, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: "No autenticado" });
+    const userId = req.user.id;
+
+    const { data: existingTrial } = await supabase
+      .from("payments")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("provider", "free-trial")
+      .maybeSingle();
+
+    res.json({ hasUsedTrial: !!existingTrial });
+  } catch (error: any) {
+    console.error("Error checking free trial:", error);
+    res.status(500).json({ error: "Error al verificar prueba gratuita." });
+  }
+});
+
+/**
  * POST /api/payments/free-trial
  * Activa el plan gratuito de 3 días para el usuario.
  * Solo puede usarse una vez por usuario.
@@ -443,6 +531,7 @@ router.post("/free-trial", async (req: AuthRequest, res) => {
 
     const userId = req.user.id;
     const userEmail = req.user.email;
+    const { linksData, customDomain } = req.body;
 
     // 1. Verificar que el usuario no haya usado ya una prueba gratuita
     const { data: existingTrial } = await supabase
@@ -460,6 +549,7 @@ router.post("/free-trial", async (req: AuthRequest, res) => {
       });
     }
 
+    console.log(`[FreeTrial] Starting activation for user: ${userId}`);
     // 2. Calcular fechas
     const now = new Date();
     const expiresAt = new Date(now);
@@ -477,6 +567,7 @@ router.post("/free-trial", async (req: AuthRequest, res) => {
       tx_reference: `free-trial-${orderId.slice(0, 8)}`,
       confirmed_at: now.toISOString(),
       created_at: now.toISOString(),
+      metadata: { linksData, customDomain },
     });
 
     if (paymentError) {
@@ -499,9 +590,10 @@ router.post("/free-trial", async (req: AuthRequest, res) => {
       userData.user?.email?.split("@")[0] ||
       "Usuario";
 
+    // Intentar insertar la suscripción (si ya existe, el error de PK será ignorado por el .then)
     await supabase
       .from("subscriptions")
-      .insert({
+      .upsert({
         user_id: userId,
         status: "active",
         started_at: now.toISOString(),
@@ -514,7 +606,7 @@ router.post("/free-trial", async (req: AuthRequest, res) => {
       .then(({ error }) => {
         if (error)
           console.warn(
-            "Subscriptions insert warning (non-critical):",
+            "Subscriptions upsert warning (non-critical):",
             error.message,
           );
       });
@@ -537,8 +629,11 @@ router.post("/free-trial", async (req: AuthRequest, res) => {
       orderId,
     });
   } catch (error: any) {
-    console.error("Error activando free trial:", error);
-    return res.status(500).json({ error: error.message || "Error interno." });
+    console.error("❌ Error activando free trial:", error);
+    return res.status(500).json({
+      error: error.message || "Error interno.",
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
   }
 });
 

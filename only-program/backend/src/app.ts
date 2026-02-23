@@ -21,6 +21,8 @@ import { startBillingCron } from "./cron/billing.cron";
 
 const app = express();
 
+// --- LOGGER GLOBAL (Para debugging 404/500) ---
+
 // Middlewares globales
 const allowedOrigins = [
   config.urls.frontend,
@@ -28,7 +30,7 @@ const allowedOrigins = [
   "https://www.onlyprogramlink.com",
   "http://localhost:3000",
   "http://misitio.com:3000", // Legacy test
-  "http://pruebafinal.com:3000" // Simulated Custom Domain
+  "http://pruebafinal.com:3000", // Simulated Custom Domain
 ];
 
 app.use(
@@ -39,7 +41,7 @@ app.use(
       if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
-        callback(new Error('Not allowed by CORS'));
+        callback(new Error("Not allowed by CORS"));
       }
     },
     credentials: true,
@@ -49,8 +51,8 @@ app.use(
 // ...
 // ...
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser()); // Cookie Parser para PoW Session
 
 // --- ANTI-BAN & GATE ROUTES (Antes de estáticos) ---

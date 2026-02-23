@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import toast, { Toaster } from 'react-hot-toast';
 import { useModal } from '@/contexts/ModalContext';
 import { useTranslation } from '@/contexts/I18nContext';
@@ -9,6 +9,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { supabase } from '@/services/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { linksService } from '@/services/links.service';
 
 // Import Social Media Logos
 import instagramLogo from '@/assets/animations/instagram.png';
@@ -57,6 +58,8 @@ interface LinkPage {
   };
   buttons: ButtonLink[];
   folder?: string;
+  customDomain?: string;
+  slug?: string;
 }
 
 // Icons Components
@@ -70,11 +73,11 @@ const Icons = {
 
 // Social Configs
 const SOCIAL_PRESETS = {
-  instagram: { title: 'Instagram', color: '#8B0000', icon: <Icons.Instagram /> },
-  tiktok: { title: 'TikTok', color: '#000000', icon: <Icons.TikTok /> },
-  telegram: { title: 'Telegram', color: '#0088cc', icon: <Icons.Telegram /> },
-  onlyfans: { title: 'Contenido Exclusivo', color: '#00AFF0', icon: <Icons.OnlyFans /> },
-  custom: { title: 'Personalizado', color: '#333333', icon: <Icons.Custom /> }
+  instagram: { title: 'Instagram', color: '#8B0000', icon: <Icons.Instagram />, placeholder: 'https://instagram.com/tu_usuario' },
+  tiktok: { title: 'TikTok', color: '#000000', icon: <Icons.TikTok />, placeholder: 'https://tiktok.com/@tu_usuario' },
+  telegram: { title: 'Telegram', color: '#0088cc', icon: <Icons.Telegram />, placeholder: 'https://t.me/tu_usuario' },
+  onlyfans: { title: 'Contenido Exclusivo', color: '#00AFF0', icon: <Icons.OnlyFans />, placeholder: 'https://onlyfans.com/tu_usuario' },
+  custom: { title: 'Personalizado', color: '#333333', icon: <Icons.Custom />, placeholder: 'https://...' }
 };
 
 const DEFAULT_PROFILE_IMAGE = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";
@@ -98,7 +101,6 @@ const DEFAULT_PAGE: LinkPage = {
   buttons: []
 };
 
-const MOCK_USER_HAS_CARD = false;
 
 // Font Classes Mapping
 const FONT_MAP: Record<FontType, string> = {
@@ -183,6 +185,7 @@ export default function Links() {
   const { t } = useTranslation();
   const { showConfirm } = useModal();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [pricingCfg, setPricingCfg] = useState<ProductPricingConfig>(DEFAULT_PRODUCT_PRICING);
 
@@ -243,14 +246,21 @@ export default function Links() {
   const [selectedPageId, setSelectedPageId] = useState<string>(pages[0]?.id || 'page1');
   const [selectedButtonId, setSelectedButtonId] = useState<string | null>(null);
   const [showButtonCreator, setShowButtonCreator] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<'profile' | 'domain'>('profile');
 
-  // Payment Modal
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  // Deep linking: select page from URL ?id=...
+  useEffect(() => {
+    const idParam = searchParams.get('id');
+    if (idParam && idParam !== selectedPageId) {
+      // Check if it exists in current pages
+      const exists = pages.some(p => p.id === idParam);
+      if (exists) {
+        setSelectedPageId(idParam);
+      }
+    }
+  }, [searchParams, pages, selectedPageId]);
 
-  // DISCOUNT STATE
-  const [discountCode, setDiscountCode] = useState('');
-  const [appliedDiscount, setAppliedDiscount] = useState<{ code: string, percent: number } | null>(null);
-  const [discountError, setDiscountError] = useState('');
+
 
   // Derived
   const currentPage = pages.find(p => p.id === selectedPageId) || pages[0];
@@ -285,6 +295,7 @@ export default function Links() {
   const [isSaving, setIsSaving] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
 
+
   // Sidebar Collapse State - Auto-collapse on mobile
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     // Auto-collapse on mobile/tablet screens
@@ -295,8 +306,6 @@ export default function Links() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'page' | 'button', id?: string, name?: string } | null>(null);
 
-  // Telegram Rotator Suggestion Modal
-  const [showRotatorSuggestion, setShowRotatorSuggestion] = useState(false);
 
   // Horizontal Scroll State for Link Navigation
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -334,7 +343,10 @@ export default function Links() {
         // ONLY fetch ACTIVE (paid) links from DB
         const { data, error } = await supabase
           .from('smart_links')
-          .select('*')
+          .select(`
+            *,
+            smart_link_buttons (*)
+          `)
           .eq('user_id', user.id)
           .eq('is_active', true) // Solo links activos/pagados
           .order('created_at', { ascending: true });
@@ -359,14 +371,25 @@ export default function Links() {
             backgroundStart: link.config?.theme?.backgroundStart || '#000000',
             backgroundEnd: link.config?.theme?.backgroundEnd || '#1a1a1a'
           },
-          buttons: Array.isArray(link.buttons) ? link.buttons.map((b: any) => ({
-            ...b,
-            opacity: b.opacity ?? 100,
-            borderRadius: b.borderRadius ?? 12,
-            isActive: b.isActive ?? true,
-            rotatorActive: b.rotatorActive ?? false,
-            rotatorLinks: b.rotatorLinks || ['', '', '', '', '']
-          })) : []
+          customDomain: link.custom_domain,
+          slug: link.slug,
+          buttons: (link.smart_link_buttons && link.smart_link_buttons.length > 0) 
+            ? link.smart_link_buttons.sort((a: any, b: any) => a.order - b.order).map((b: any) => ({
+                id: b.id,
+                type: b.type,
+                title: b.title,
+                subtitle: b.subtitle,
+                url: b.url,
+                color: b.color,
+                textColor: b.text_color,
+                font: b.font,
+                borderRadius: b.border_radius,
+                opacity: b.opacity,
+                isActive: b.is_active,
+                rotatorActive: b.rotator_active,
+                rotatorLinks: b.rotator_links || ['', '', '', '', '']
+              }))
+            : []
         })) : [];
 
         // Get drafts from localStorage
@@ -442,6 +465,7 @@ export default function Links() {
             photo: currentPageToSave.profileImage,
             buttons: currentPageToSave.buttons,
             is_active: true, // Links activos siempre son is_active=true
+            custom_domain: currentPageToSave.customDomain,
             config: {
               template: currentPageToSave.template,
               theme: currentPageToSave.theme,
@@ -458,6 +482,9 @@ export default function Links() {
             .eq('id', currentPageToSave.id);
 
           if (error) throw error;
+
+          // SPECIAL: Sync buttons to the dedicated table
+          await linksService.updateButtons(currentPageToSave.id, currentPageToSave.buttons);
         }
       } catch (err) {
         console.error("Error saving link:", err);
@@ -601,15 +628,8 @@ export default function Links() {
     const existingButton = currentPage.buttons.find(btn => btn.type === type);
 
     if (existingButton) {
-      if (type === 'telegram') {
-        // Show modal suggesting Telegram Rotativo
-        setShowRotatorSuggestion(true);
-        return;
-      } else {
-        // Silently prevent for other types
-        toast.error(`Ya tienes un botón de ${SOCIAL_PRESETS[type].title}. Solo puedes agregar uno de cada tipo.`);
-        return;
-      }
+      toast.error(`Ya tienes un botón de ${SOCIAL_PRESETS[type].title}. Solo puedes agregar uno de cada tipo.`);
+      return;
     }
 
     const config = SOCIAL_PRESETS[type];
@@ -657,193 +677,10 @@ export default function Links() {
     handleUpdateButton('rotatorLinks', currentLinks);
   };
 
-  // Payment Calculation
-  const getPaymentDetails = () => {
-    const rotatorPages = draftPages.filter(hasRotatorActive);
-    const standardPages = draftPages.filter(p => !hasRotatorActive(p));
-
-    const countRotator = rotatorPages.length;
-    const countStandard = standardPages.length;
-
-    const subtotal = (countStandard * LINK_PRICE_STANDARD) + (countRotator * LINK_PRICE_ROTATOR);
-
-    // DISCOUNT LOGIC
-    let discountAmount = 0;
-    if (appliedDiscount) {
-      discountAmount = (subtotal * appliedDiscount.percent) / 100;
-    }
-
-    const total = subtotal - discountAmount;
-
-    return { countRotator, countStandard, subtotal, discountAmount, total };
-  };
-
-  // APPLY COUPON
-  const handleApplyDiscount = () => {
-    const code = discountCode.trim().toUpperCase();
-    if (!code) return;
-
-    if (code === 'PRO20') {
-      setAppliedDiscount({ code: 'PRO20', percent: 20 });
-      setDiscountError('');
-      toast.success('¡Código aplicado! 20% OFF');
-    } else if (code === 'WELCOME10') {
-      setAppliedDiscount({ code: 'WELCOME10', percent: 10 });
-      setDiscountError('');
-      toast.success('¡Código aplicado! 10% OFF');
-    } else {
-      setDiscountError('Código inválido');
-      setAppliedDiscount(null);
-    }
-  };
-
-  const handleProcessPayment = async () => {
-    // ONLY COUNT DRAFTS
-    if (draftPages.length === 0) {
-      toast('No hay links nuevos para comprar', { icon: 'ℹ️' });
-      return;
-    }
-
-    const { total, countRotator, countStandard, discountAmount, subtotal } = getPaymentDetails();
-
-    if (MOCK_USER_HAS_CARD) {
-      try {
-        // PAYMENT VERIFIED - Create DB records for each draft
-        const activatedLinks: any[] = [];
-
-        for (const draft of draftPages) {
-          const randomSlug = Math.random().toString(36).substring(2, 8);
-          const slugToUse = draft.name.toLowerCase().replace(/[^a-z0-9]/g, '-') + '-' + randomSlug;
-
-          const { data: newLink, error: insertError } = await supabase
-            .from('smart_links')
-            .insert({
-              user_id: user!.id,
-              slug: slugToUse,
-              title: draft.profileName,
-              photo: draft.profileImage,
-              buttons: draft.buttons,
-              status: 'active',
-              is_active: true, // PAGADO = ACTIVO
-              mode: 'landing',
-              expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 año
-              config: {
-                template: draft.template,
-                theme: draft.theme,
-                name: draft.name,
-                folder: draft.folder,
-                landingMode: draft.landingMode,
-                profileImageSize: draft.profileImageSize
-              }
-            })
-            .select()
-            .single();
-
-          if (insertError) {
-            console.error('Error creating link in DB:', insertError);
-            throw insertError;
-          }
-
-          if (newLink) {
-            activatedLinks.push(newLink);
-          }
-        }
-
-        // Remove drafts from localStorage
-        const saved = localStorage.getItem('my_links_data');
-        const existing = saved ? JSON.parse(saved) : [];
-        const draftIdsToRemove = draftPages.map(d => d.id);
-        const remainingDrafts = existing.filter((p: any) => !draftIdsToRemove.includes(p.id));
-        localStorage.setItem('my_links_data', JSON.stringify(remainingDrafts));
-
-        // Refresh links (will fetch new active ones from DB + remaining drafts)
-        const { data: freshActiveLinks } = await supabase
-          .from('smart_links')
-          .select('*')
-          .eq('user_id', user!.id)
-          .eq('is_active', true)
-          .order('created_at', { ascending: true });
-
-        const dbPages: LinkPage[] = freshActiveLinks ? freshActiveLinks.map(link => ({
-          id: link.id,
-          status: 'active',
-          name: link.config?.name || link.slug,
-          profileName: link.title || '',
-          profileImage: link.photo || DEFAULT_PROFILE_IMAGE,
-          profileImageSize: link.config?.profileImageSize || 50,
-          folder: link.config?.folder || '',
-          template: link.config?.template || 'minimal',
-          landingMode: link.config?.landingMode || 'circle',
-          theme: {
-            pageBorderColor: link.config?.theme?.pageBorderColor || '#333333',
-            overlayOpacity: link.config?.theme?.overlayOpacity || 40,
-            backgroundType: link.config?.theme?.backgroundType || 'solid',
-            backgroundStart: link.config?.theme?.backgroundStart || '#000000',
-            backgroundEnd: link.config?.theme?.backgroundEnd || '#1a1a1a'
-          },
-          buttons: Array.isArray(link.buttons) ? link.buttons.map((b: any) => ({
-            ...b,
-            opacity: b.opacity ?? 100,
-            borderRadius: b.borderRadius ?? 12,
-            isActive: b.isActive ?? true,
-            rotatorActive: b.rotatorActive ?? false,
-            rotatorLinks: b.rotatorLinks || ['', '', '', '', '']
-          })) : []
-        })) : [];
-
-        const localDrafts: LinkPage[] = (() => {
-          try {
-            const saved = localStorage.getItem('my_links_data');
-            if (saved) {
-              const parsed = JSON.parse(saved);
-              if (Array.isArray(parsed)) {
-                return parsed.map((p: any) => ({ ...p, status: 'draft' }));
-              }
-            }
-          } catch (e) {
-            console.error('Error reading localStorage drafts:', e);
-          }
-          return [];
-        })();
-
-        const allPages = [...dbPages, ...localDrafts];
-        setPages(allPages);
-        if (allPages.length > 0 && dbPages.length > 0) {
-          setSelectedPageId(dbPages[0].id); // Select first active link
-        }
-
-        toast.success(`¡${activatedLinks.length} link(s) activado(s) correctamente!`);
-        setShowPaymentModal(false);
-      } catch (error) {
-        console.error('Error processing payment:', error);
-        toast.error('Error al activar los links. Intenta de nuevo.');
-      }
-    } else {
-      toast.loading('Redirigiendo a pagos...');
-      setTimeout(() => {
-        navigate('/dashboard/payments', {
-          state: {
-            pendingPurchase: {
-              type: 'extra_links',
-              quantity: draftPages.length,
-              amount: total,
-              hasRotator: countRotator > 0,
-              countStandard,
-              countRotator,
-              discountApplied: appliedDiscount ? { ...appliedDiscount, amount: discountAmount } : null,
-              details: { countStandard, countRotator, subtotal }
-            }
-          }
-        });
-        toast.dismiss();
-      }, 1000);
-    }
-  };
-
-  const paymentDetails = getPaymentDetails();
 
   return (
     <div className="h-full flex flex-col bg-[#050505] text-white font-sans overflow-hidden">
+
       <Toaster position="top-center" toastOptions={{ style: { background: '#333', color: '#fff' } }} />
 
       {/* Header */}
@@ -1153,7 +990,13 @@ export default function Links() {
                             <label className="text-[10px] font-black uppercase tracking-widest text-silver/40 pl-1">{t('dashboard.links.mainUrl')}</label>
                             <div className="flex items-center bg-[#111] border border-white/10 rounded-xl px-4 py-3 focus-within:border-primary/50">
                               <span className="material-symbols-outlined text-silver/20 mr-2 text-lg">link</span>
-                              <input type="text" value={selectedButton.url} onChange={(e) => handleUpdateButton('url', e.target.value)} className="flex-1 bg-transparent text-sm font-mono text-silver focus:outline-none" placeholder="https://..." />
+                              <input
+                                type="text"
+                                value={selectedButton.url}
+                                onChange={(e) => handleUpdateButton('url', e.target.value)}
+                                className="flex-1 bg-transparent text-sm font-mono text-silver focus:outline-none"
+                                placeholder={SOCIAL_PRESETS[selectedButton.type].placeholder || 'https://...'}
+                              />
                             </div>
                           </div>
                         </div>
@@ -1281,9 +1124,29 @@ export default function Links() {
                   {/* PAGE CONFIGURATION (When no button is selected) */}
                   {!selectedButtonId && !showButtonCreator && (
                     <div className="animate-fade-in space-y-8">
-                      <div className="flex justify-between items-center border-b border-white/5 pb-4">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-white/5 pb-4 gap-4">
                         <h2 className="text-xl font-bold">Configuración de la Página</h2>
+                        
+                        <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
+                          <button 
+                            onClick={() => setSettingsTab('profile')}
+                            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${settingsTab === 'profile' ? 'bg-primary text-white shadow-lg' : 'text-silver/40 hover:text-white'}`}
+                          >
+                            <span className="material-symbols-outlined text-sm">person</span>
+                            Perfil
+                          </button>
+                          <button 
+                            onClick={() => setSettingsTab('domain')}
+                            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${settingsTab === 'domain' ? 'bg-primary text-white shadow-lg' : 'text-silver/40 hover:text-white'}`}
+                          >
+                            <span className="material-symbols-outlined text-sm">language</span>
+                            Dominio
+                          </button>
+                        </div>
                       </div>
+
+                      {settingsTab === 'profile' ? (
+                        <div className="space-y-8 animate-fade-in">
                       <section className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
                         <div className="p-4 border-b border-white/5 bg-white/[0.02]">
                           <h3 className="text-sm font-bold flex items-center gap-2">
@@ -1415,7 +1278,196 @@ export default function Links() {
                             </div>
                           )}
                         </div>
-                      </section>
+                          </section>
+                        </div>
+                      ) : (
+                        <div className="space-y-8 animate-fade-in">
+                          {/* DOMAIN CONFIGURATION SECTION */}
+                          <section className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+                            <div className="p-4 border-b border-white/5 bg-white/[0.02] flex justify-between items-center">
+                              <h3 className="text-sm font-bold flex items-center gap-2">
+                                <span className="material-symbols-outlined text-silver/40">language</span>
+                                Estado del Dominio
+                              </h3>
+                              <div className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                currentPage.status === 'active' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/20'
+                              }`}>
+                                {currentPage.status === 'active' ? 'Publicado' : 'Borrador'}
+                              </div>
+                            </div>
+                            
+                            <div className="p-6 space-y-8">
+                              {/* URL & Custom Domain Section */}
+                              <div className="space-y-4">
+                                <div className="p-4 bg-black/40 border border-white/5 rounded-2xl">
+                                  <p className="text-[10px] font-bold text-silver/40 uppercase tracking-widest mb-3">Link Oficial (Subdominio)</p>
+                                  <div className="flex items-center justify-between gap-4">
+                                    <span className="text-sm font-bold text-white tracking-wide truncate">
+                                      {currentPage.slug || 'pendiente'}.onlyprogram.com
+                                    </span>
+                                    <button 
+                                      onClick={() => {
+                                        const url = `https://${currentPage.slug}.onlyprogram.com`;
+                                        window.open(url, '_blank');
+                                      }}
+                                      className="shrink-0 flex items-center gap-2 px-4 py-2 bg-primary/20 text-primary hover:bg-primary hover:text-white rounded-xl text-xs font-bold transition-all"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">launch</span>
+                                      Lanzar
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="p-5 bg-black/40 border border-white/5 rounded-2xl">
+                                  <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                      <p className="text-[10px] font-bold text-silver/40 uppercase tracking-widest mb-1">Dominio Personalizado</p>
+                                      <p className="text-[10px] text-silver/30">Ej: misitio.com</p>
+                                    </div>
+                                    {currentPage.customDomain && (
+                                      <button 
+                                        onClick={() => window.open(`http://${currentPage.customDomain}`, '_blank')}
+                                        className="flex items-center gap-2 px-3 py-1.5 bg-purple-500/20 text-purple-400 hover:bg-purple-500 hover:text-white rounded-lg text-[10px] font-bold transition-all"
+                                      >
+                                        <span className="material-symbols-outlined text-xs">rocket_launch</span>
+                                        Lanzar Pro
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  <div className="flex gap-2">
+                                    <input 
+                                      type="text" 
+                                      placeholder="pruebass.online"
+                                      value={currentPage.customDomain || ''}
+                                      onChange={(e) => handleUpdatePage('customDomain', e.target.value.toLowerCase().replace(/\s/g, ''))}
+                                      className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder:text-silver/20 focus:outline-none focus:border-primary/50 transition-all font-mono"
+                                    />
+                                    <button 
+                                      onClick={() => {
+                                        if (!currentPage.customDomain) {
+                                          toast.error('Ingresa un dominio primero');
+                                          return;
+                                        }
+                                        toast.success(`Dominio ${currentPage.customDomain} vinculado. El auto-guardado está activo.`);
+                                      }}
+                                      className="px-6 bg-primary hover:bg-primary-dark text-black font-black rounded-xl text-xs uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+                                    >
+                                      Vincular
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* DNS SECRETS / INSTRUCTIONS (Only for Custom Domains or Active links) */}
+                              {currentPage.status === 'active' && (
+                                <div className="space-y-6 animate-fade-in">
+                                  <div className="p-5 border border-primary/20 bg-primary/5 rounded-2xl">
+                                    <div className="flex items-center gap-3 mb-4 text-primary">
+                                      <span className="material-symbols-outlined">dns</span>
+                                      <h4 className="text-sm font-bold uppercase tracking-wider">Configuración DNS Automática</h4>
+                                    </div>
+                                    <p className="text-xs text-silver/60 leading-relaxed mb-6">
+                                      Para que tu dominio funcione correctamente, debes apuntar tus registros DNS a nuestros servidores. 
+                                      <span className="text-white font-bold ml-1">BotShield se activará automáticamente tras la propagación.</span>
+                                    </p>
+
+                                    <div className="space-y-3 font-mono text-[11px]">
+                                      <div className="p-3 bg-black/60 rounded-xl border border-white/10 flex items-center justify-between group text-yellow-500/80">
+                                        <div className="flex flex-col gap-1">
+                                          <span className="text-[10px] text-silver/30 font-bold">Tipo: A (Principal)</span>
+                                          <span className="text-white">TU_IP_DE_CONTABO</span>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[10px] font-bold">PENDIENTE</span>
+                                          <span className="material-symbols-outlined text-sm">warning</span>
+                                        </div>
+                                      </div>
+                                      <div className="p-3 bg-black/60 rounded-xl border border-white/10 flex items-center justify-between group">
+                                        <div className="flex flex-col gap-1">
+                                          <span className="text-[10px] text-silver/30 font-bold">Tipo: CNAME (WWW)</span>
+                                          <span className="text-white">cname.onlyprogram.com</span>
+                                        </div>
+                                        <button className="text-silver/30 hover:text-primary transition-colors">
+                                          <span className="material-symbols-outlined text-sm">content_copy</span>
+                                        </button>
+                                      </div>
+                                    </div>
+                                    
+                                    <p className="mt-6 text-[10px] text-silver/30 flex items-center gap-2 italic">
+                                      <span className="material-symbols-outlined text-sm">info</span>
+                                      La propagación puede tardar hasta 24 horas.
+                                    </p>
+                                  </div>
+
+                                  {/* GoDaddy specific tips */}
+                                  <div className="p-5 border border-white/5 bg-white/[0.02] rounded-2xl">
+                                    <div className="flex items-center gap-3 mb-4 text-silver/60">
+                                      <span className="material-symbols-outlined">help</span>
+                                      <h4 className="text-[10px] font-bold uppercase tracking-wider">¿Usas GoDaddy?</h4>
+                                    </div>
+                                    <ul className="space-y-3">
+                                      <li className="flex gap-3 text-xs text-silver/40">
+                                        <span className="text-primary font-bold">1.</span>
+                                        <span>Ve a "Mis productos" y haz clic en "DNS" al lado de <b>pruebass.online</b>.</span>
+                                      </li>
+                                      <li className="flex gap-3 text-xs text-silver/40">
+                                        <span className="text-primary font-bold">2.</span>
+                                        <span>Edita el registro <b>A</b> (Host: @) y pega el valor: <b>76.76.21.21</b></span>
+                                      </li>
+                                      <li className="flex gap-3 text-xs text-silver/40">
+                                        <span className="text-primary font-bold">3.</span>
+                                        <span>Guarda los cambios y espera unos minutos.</span>
+                                      </li>
+                                    </ul>
+                                  </div>
+
+                                  {/* Launch Section */}
+                                  <div className="p-6 bg-gradient-to-br from-green-500/5 to-emerald-600/5 border border-green-500/20 rounded-[2rem] text-center">
+                                    <div className="w-16 h-16 bg-green-500/10 rounded-2xl flex items-center justify-center text-green-500 mx-auto mb-4 border border-green-500/20">
+                                      <span className="material-symbols-outlined text-4xl">verified_user</span>
+                                    </div>
+                                    <h4 className="text-white font-black uppercase tracking-tight mb-2">Protección BotShield Avanzada</h4>
+                                    <p className="text-silver/50 text-xs mb-6 max-w-sm mx-auto">
+                                      Tu link está blindado contra bots, competidores y reportes maliciosos.
+                                    </p>
+                                    <button 
+                                      onClick={() => {
+                                        const url = currentPage.customDomain 
+                                          ? `http://${currentPage.customDomain}` 
+                                          : `https://${currentPage.slug}.onlyprogram.com`;
+                                        window.open(url, '_blank');
+                                      }}
+                                      className="w-full bg-green-500 hover:bg-green-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-green-500/20 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                                    >
+                                      Lanzar con BotShield
+                                      <span className="material-symbols-outlined">shield</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+
+                              {currentPage.status === 'draft' && (
+                                <div className="p-8 text-center bg-white/5 border border-white/5 rounded-[2rem] border-dashed">
+                                  <span className="material-symbols-outlined text-4xl text-silver/20 mb-4">lock</span>
+                                  <h4 className="text-white font-bold mb-2">Link no activado</h4>
+                                  <p className="text-silver/40 text-xs max-w-xs mx-auto mb-6">Debes contratar un plan para desbloquear la configuración de dominio y protección de seguridad.</p>
+                                  <button 
+                                    onClick={() => {
+                                      navigate('/dashboard/checkout', {
+                                        state: { pendingPurchase: { linksData: [currentPage] } }
+                                      });
+                                    }}
+                                    className="px-6 py-2.5 bg-white text-black font-bold rounded-xl text-xs hover:scale-110 transition-all"
+                                  >
+                                    Ver Planes
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </section>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1423,7 +1475,6 @@ export default function Links() {
             </div>
           </div>
 
-          {/* STRUCTURAL FOOTER BUY BUTTON (Only for unpaid draft links) */}
 
         </div>
 
@@ -1496,7 +1547,19 @@ export default function Links() {
 
           {/* SIGUIENTE PASO BUTTON */}
           <button
-            onClick={() => navigate('/dashboard/domains')}
+            onClick={() => {
+              if (draftPages.length > 0) {
+                navigate('/dashboard/checkout', {
+                  state: {
+                    pendingPurchase: {
+                      linksData: draftPages
+                    }
+                  }
+                });
+              } else {
+                navigate('/dashboard/home');
+              }
+            }}
             className="w-[320px] py-3.5 px-6 bg-black border-2 border-blue-500 text-blue-500 font-bold text-sm rounded-xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2 group animate-pulse"
             style={{ animationDuration: '2s' }}
           >
@@ -1505,117 +1568,6 @@ export default function Links() {
           </button>
         </div>
       </div >
-
-      {/* PAYMENT MODAL */}
-      {
-        showPaymentModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
-            <div className="w-full max-w-md bg-[#0A0A0A] border border-white/10 rounded-2xl overflow-hidden shadow-2xl relative">
-              <button onClick={() => setShowPaymentModal(false)} className="absolute top-4 right-4 p-2 bg-white/5 rounded-full hover:bg-white/10"><span className="material-symbols-outlined text-sm">close</span></button>
-              <div className="p-8">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4 text-primary"><span className="material-symbols-outlined text-3xl">shopping_cart</span></div>
-                  <h2 className="text-2xl font-bold text-white">{t('dashboard.links.activateNewLinks')}</h2>
-                  <p className="text-silver/60 text-sm mt-2">{t('dashboard.links.pendingLinks', { count: draftPages.length })}</p>
-                </div>
-                <div className="bg-white/5 p-4 rounded-xl space-y-3 my-6">
-                  {paymentDetails.countStandard > 0 && (
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-silver/60">{t('dashboard.links.standardLinks')} ({paymentDetails.countStandard})</span>
-                      <span>${(paymentDetails.countStandard * LINK_PRICE_STANDARD).toFixed(2)}</span>
-                    </div>
-                  )}
-                  {paymentDetails.countRotator > 0 && (
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-blue-400">Links con Rotativo ({paymentDetails.countRotator})</span>
-                      <span className="text-blue-400 font-bold">${(paymentDetails.countRotator * LINK_PRICE_ROTATOR).toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="border-t border-white/10 pt-3">
-                    <div className="flex justify-between items-center font-semibold text-silver/60 text-sm mb-1"><span>Subtotal</span><span>${paymentDetails.subtotal.toFixed(2)}</span></div>
-                    <div className="flex gap-2 mb-3 mt-3">
-                      <div className="relative flex-1">
-                        <input
-                          type="text"
-                          placeholder="Código de referido..."
-                          value={discountCode}
-                          onChange={(e) => setDiscountCode(e.target.value)}
-                          disabled={!!appliedDiscount}
-                          className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-primary uppercase disabled:opacity-50"
-                        />
-                        {appliedDiscount && (
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 text-green-500">
-                            <span className="material-symbols-outlined text-sm">check_circle</span>
-                          </div>
-                        )}
-                      </div>
-                      {!appliedDiscount ? (
-                        <button onClick={handleApplyDiscount} className="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-lg text-xs font-bold">Aplicar</button>
-                      ) : (
-                        <button onClick={() => { setAppliedDiscount(null); setDiscountCode(''); }} className="bg-red-500/10 hover:bg-red-500/20 text-red-500 px-3 py-2 rounded-lg text-xs font-bold">Quitar</button>
-                      )}
-                    </div>
-                    {discountError && <p className="text-red-500 text-[10px] mb-2">{discountError}</p>}
-                    {appliedDiscount && (
-                      <div className="flex justify-between items-center text-green-500 text-sm font-bold animate-fade-in mb-1">
-                        <span>Descuento ({appliedDiscount.percent}%)</span>
-                        <span>-${paymentDetails.discountAmount.toFixed(2)}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between items-center font-bold text-xl text-white mt-2 pt-2 border-t border-white/5">
-                      <span>Total a Pagar</span>
-                      <span>${paymentDetails.total.toFixed(2)}</span>
-                    </div>
-                  </div>
-                </div>
-                <button onClick={handleProcessPayment} className="w-full py-4 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-all uppercase tracking-wider shadow-lg">Continuar al Pago</button>
-              </div>
-            </div>
-          </div>
-        )
-      }
-
-      {/* TELEGRAM ROTATOR SUGGESTION MODAL */}
-      {
-        showRotatorSuggestion && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in" onClick={() => setShowRotatorSuggestion(false)}>
-            <div className="w-full max-w-lg bg-[#0A0A0A] border border-blue-500/20 rounded-2xl overflow-hidden shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
-              <div className="p-8">
-                <div className="text-center">
-                  <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-500">
-                    <span className="material-symbols-outlined text-3xl">sync</span>
-                  </div>
-                  <h2 className="text-2xl font-bold text-white mb-2">¿Necesitas más Telegrams?</h2>
-                  <p className="text-silver/60 text-sm mb-4">Ya tienes un botón de Telegram. Para agregar más URLs de Telegram, activa el <span className="text-blue-400 font-bold">Telegram Rotativo</span>.</p>
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-4">
-                    <div className="flex items-start gap-3 text-left">
-                      <span className="material-symbols-outlined text-blue-400 text-xl mt-0.5">info</span>
-                      <div>
-                        <p className="text-white font-bold text-sm mb-1">Telegram Rotativo</p>
-                        <p className="text-silver/60 text-xs mb-2">Permite agregar hasta <span className="text-blue-400 font-bold">5 URLs de Telegram</span> que rotarán automáticamente para distribuir el tráfico.</p>
-                        <p className="text-xs text-silver/50"><span className="text-primary font-bold">Precio:</span> $80 por link (+$20 de recargo)</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <button onClick={() => setShowRotatorSuggestion(false)} className="flex-1 py-3 bg-white/5 text-white font-bold rounded-xl hover:bg-white/10 transition-all uppercase tracking-wider">Cancelar</button>
-                  <button onClick={() => {
-                    const telegramButton = currentPage.buttons.find(btn => btn.type === 'telegram');
-                    if (telegramButton) {
-                      setSelectedButtonId(telegramButton.id);
-                      handleUpdateButton('rotatorActive', true);
-                      toast.success('Telegram Rotativo activado. Ahora puedes agregar hasta 5 URLs.');
-                    }
-                    setShowRotatorSuggestion(false);
-                    setShowButtonCreator(false);
-                  }} className="flex-1 py-3 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600 transition-all uppercase tracking-wider shadow-lg shadow-blue-500/20">Activar Rotativo</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      }
 
       {/* DELETE CONFIRMATION MODAL */}
       {

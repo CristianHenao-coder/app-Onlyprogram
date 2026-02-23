@@ -490,7 +490,8 @@ export async function sendFreeTrialInvoiceEmail(
     <body>
       <div class="container">
         <div class="header">
-          <h1>🛡️ ONLY PROGRAM</h1>
+          <img src="https://fptwztporosusnwcwvny.supabase.co/storage/v1/object/public/public-fotos/logoOnly.png" alt="Only Program Logo" style="height: 50px; width: auto; margin-bottom: 10px;">
+          <br>
           <span class="badge">🎁 Activación Exitosa</span>
         </div>
         <div class="body">
@@ -551,5 +552,137 @@ export async function sendFreeTrialInvoiceEmail(
     subject: "🎁 ¡Tu prueba gratuita está activa! — Only Program",
     htmlContent,
     textContent: `¡Hola ${userName}! Tu prueba gratuita de 3 días ha sido activada. Vence el ${fmt(nextBillingDate)}. Factura #${orderId.slice(0, 8).toUpperCase()} — $0.00 USD.`,
+  });
+}
+
+/**
+ * Envía email de alerta 24h antes del vencimiento
+ */
+export async function sendExpirationAlertEmail(
+  email: string,
+  userName: string,
+  linkSlug: string,
+  expiryDate: Date,
+): Promise<boolean> {
+  const fmt = (d: Date) =>
+    d.toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Inter', Arial, sans-serif; background-color: #0B0B0B; color: #C9CCD1; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background: #161616; border: 1px solid #2A2A2A; border-radius: 16px; overflow: hidden; }
+        .header { background: #F59E0B; padding: 30px; text-align: center; }
+        .header h1 { color: white; margin: 0; font-size: 20px; font-weight: 800; }
+        .body { padding: 40px; }
+        .greeting { font-size: 18px; color: white; font-weight: 600; margin-bottom: 12px; }
+        .content { line-height: 1.6; margin-bottom: 30px; }
+        .link-box { background: #000; border: 1px solid #333; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0; }
+        .slug { color: #1DA1F2; font-weight: bold; }
+        .button { display: block; background: #F59E0B; color: white; padding: 14px; text-decoration: none; border-radius: 10px; font-weight: 700; text-align: center; }
+        .footer { text-align: center; padding: 20px; font-size: 11px; color: #555; border-top: 1px solid #222; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <img src="https://fptwztporosusnwcwvny.supabase.co/storage/v1/object/public/public-fotos/logoOnly.png" alt="Only Program Logo" style="height: 40px; width: auto; margin-bottom: 5px;">
+          <h1>⏳ ¡Tu link está por expirar!</h1>
+        </div>
+        <div class="body">
+          <div class="greeting">Hola, ${userName}</div>
+          <div class="content">
+            <p>Te informamos que tu link seguro está por vencer en menos de 24 horas.</p>
+            <div class="link-box">
+              Link: <span class="slug">${linkSlug}</span><br>
+              Vence: <strong>${fmt(expiryDate)}</strong>
+            </div>
+            <p>Para evitar que tu link sea desactivado y pierdas el acceso de tus seguidores, por favor renueva tu plan ahora.</p>
+          </div>
+          <a href="${frontendUrl}/dashboard/links" class="button">Renovar Link Ahora</a>
+        </div>
+        <div class="footer">
+          <p>© ${new Date().getFullYear()} Only Program. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return await sendEmail({
+    to: email,
+    toName: userName,
+    subject: `⚠️ Aviso: Tu link ${linkSlug} vence pronto — Only Program`,
+    htmlContent,
+    textContent: `Hola ${userName}, tu link ${linkSlug} vence el ${fmt(expiryDate)}. Renuévalo ahora en ${frontendUrl}/dashboard/links para evitar interrupciones.`,
+  });
+}
+
+/**
+ * Envía email cuando un link ha sido desactivado por vencimiento
+ */
+export async function sendLinkDeactivatedEmail(
+  email: string,
+  userName: string,
+  linkSlug: string,
+): Promise<boolean> {
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Inter', Arial, sans-serif; background-color: #0B0B0B; color: #C9CCD1; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background: #161616; border: 1px solid #2A2A2A; border-radius: 16px; overflow: hidden; }
+        .header { background: #EF4444; padding: 30px; text-align: center; }
+        .header h1 { color: white; margin: 0; font-size: 20px; font-weight: 800; }
+        .body { padding: 40px; }
+        .greeting { font-size: 18px; color: white; font-weight: 600; margin-bottom: 12px; }
+        .content { line-height: 1.6; margin-bottom: 30px; }
+        .warning-box { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); padding: 15px; border-radius: 8px; color: #EF4444; font-size: 13px; }
+        .button { display: block; background: #1DA1F2; color: white; padding: 14px; text-decoration: none; border-radius: 10px; font-weight: 700; text-align: center; margin-top: 20px; }
+        .footer { text-align: center; padding: 20px; font-size: 11px; color: #555; border-top: 1px solid #222; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <img src="https://fptwztporosusnwcwvny.supabase.co/storage/v1/object/public/public-fotos/logoOnly.png" alt="Only Program Logo" style="height: 40px; width: auto; margin-bottom: 5px;">
+          <h1>🚫 Link Desactivado</h1>
+        </div>
+        <div class="body">
+          <div class="greeting">Hola, ${userName}</div>
+          <div class="content">
+            <p>Tu link <strong>${linkSlug}</strong> ha expirado y ha sido desactivado automáticamente.</p>
+            <div class="warning-box">
+              Tus seguidores ya no pueden acceder a través de este enlace.
+            </div>
+            <p>Puedes reactivarlo en cualquier momento adquiriendo un nuevo periodo de vigencia desde tu panel.</p>
+          </div>
+          <a href="${frontendUrl}/dashboard/links" class="button">Reactivar mi Link</a>
+        </div>
+        <div class="footer">
+          <p>© ${new Date().getFullYear()} Only Program. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return await sendEmail({
+    to: email,
+    toName: userName,
+    subject: `🚫 Tu link ${linkSlug} ha sido desactivado — Only Program`,
+    htmlContent,
+    textContent: `Hola ${userName}, tu link ${linkSlug} ha expirado y ha sido desactivado. Reactívalo en ${frontendUrl}/dashboard/links`,
   });
 }

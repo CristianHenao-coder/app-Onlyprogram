@@ -19,9 +19,11 @@ interface WompiCreditCardFormProps {
     email: string;
     onSuccess: () => void;
     onProcessPayment?: (data: WompiPaymentData) => Promise<any>;
+    linksData?: any[];
+    customDomain?: string;
 }
 
-export default function WompiCreditCardForm({ amount, email, onSuccess, onProcessPayment }: WompiCreditCardFormProps) {
+export default function WompiCreditCardForm({ amount, email, onSuccess, onProcessPayment, linksData, customDomain }: WompiCreditCardFormProps) {
     const [loading, setLoading] = useState(false);
     const [cardType, setCardType] = useState<"visa" | "mastercard" | "amex" | "unknown">("unknown");
     const [formData, setFormData] = useState({
@@ -132,7 +134,9 @@ export default function WompiCreditCardForm({ amount, email, onSuccess, onProces
                 email,
                 token: cardToken,
                 acceptanceToken,
-                installments: 1
+                installments: 1,
+                linksData,
+                customDomain
             });
 
             if (transaction.status === "APPROVED") {

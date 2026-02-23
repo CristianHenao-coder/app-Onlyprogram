@@ -22,19 +22,27 @@ export interface LinkProfile {
 }
 
 export interface LinkButton {
-  id: string;
+  id?: string;
+  smart_link_id?: string;
   title: string;
+  subtitle?: string;
   url: string;
-  type: "custom" | "telegram" | "onlyfans" | "instagram";
-  icon_type?: string;
-  icon_url?: string;
-  button_shape: "rounded" | "square" | "soft";
-  border_width: number;
-  shadow_intensity: number;
-  button_color: string;
+  type: string;
+  color: string;
   text_color: string;
+  font?: string;
+  border_radius?: number;
+  opacity?: number;
+  is_active: boolean;
   order: number;
-  active: boolean;
+  rotator_active?: boolean;
+  rotator_links?: string[];
+  // Legacy camelCase fields for backward compatibility
+  textColor?: string;
+  borderRadius?: number;
+  isActive?: boolean;
+  rotatorActive?: boolean;
+  rotatorLinks?: string[];
 }
 
 export const linkProfilesService = {
@@ -76,7 +84,15 @@ export const linkProfilesService = {
    * Get smart link with buttons
    */
   async getSmartLink(userId: string, linkId?: string): Promise<any> {
-    let query = supabase.from("smart_links").select("*").eq("user_id", userId);
+    let query = supabase
+      .from("smart_links")
+      .select(
+        `
+        *,
+        smart_link_buttons (*)
+      `,
+      )
+      .eq("user_id", userId);
 
     if (linkId) {
       query = query.eq("id", linkId);
@@ -84,14 +100,20 @@ export const linkProfilesService = {
       query = query.limit(1);
     }
 
-    const { data, error } = await supabase
-      .from("smart_links")
-      .select("*")
-      .eq("user_id", userId)
-      .single();
+    const { data, error } = await query.single();
 
     if (error && error.code !== "PGRST116") {
       throw new Error(`Error fetching smart link: ${error.message}`);
+    }
+
+    if (data && data.smart_link_buttons) {
+      // Map smart_link_buttons to buttons field for backward compatibility if needed,
+      // or just ensure the frontend is updated.
+      // For now, let's keep the nested array but also update the 'buttons' field
+      // so the existing logic doesnt break immediately.
+      data.buttons = data.smart_link_buttons.sort(
+        (a: any, b: any) => a.order - b.order,
+      );
     }
 
     return data;
@@ -101,14 +123,46 @@ export const linkProfilesService = {
    * Update smart link buttons
    */
   async updateButtons(linkId: string, buttons: LinkButton[]): Promise<void> {
-    const { error } = await supabase
-      .from("smart_links")
-      .update({ buttons })
-      .eq("id", linkId);
+    // 1. Delete existing buttons
+    const { error: deleteError } = await supabase
+      .from("smart_link_buttons")
+      .delete()
+      .eq("smart_link_id", linkId);
 
-    if (error) {
-      throw new Error(`Error updating buttons: ${error.message}`);
+    if (deleteError) {
+      throw new Error(`Error deleting old buttons: ${deleteError.message}`);
     }
+
+    // 2. Insert new buttons
+    if (buttons.length > 0) {
+      const buttonsToInsert = buttons.map((btn, index) => ({
+        smart_link_id: linkId,
+        type: btn.type,
+        title: btn.title,
+        subtitle: btn.subtitle,
+        url: btn.url,
+        color: btn.color,
+        text_color: btn.text_color || btn.textColor,
+        font: btn.font,
+        border_radius: btn.border_radius || btn.borderRadius,
+        opacity: btn.opacity,
+        is_active: btn.is_active ?? btn.isActive ?? true,
+        order: btn.order ?? index,
+        rotator_active: btn.rotator_active ?? btn.rotatorActive ?? false,
+        rotator_links: btn.rotator_links || btn.rotatorLinks || [],
+      }));
+
+      const { error: insertError } = await supabase
+        .from("smart_link_buttons")
+        .insert(buttonsToInsert);
+
+      if (insertError) {
+        throw new Error(`Error inserting buttons: ${insertError.message}`);
+      }
+    }
+
+    // 3. Update the JSONB buttons field in smart_links for safety/legacy (optional)
+    await supabase.from("smart_links").update({ buttons }).eq("id", linkId);
   },
 
   /**

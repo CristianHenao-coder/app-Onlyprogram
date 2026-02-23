@@ -40,8 +40,9 @@ import Telegram from '@/pages/Dashboard/Telegram';
 import Domains from '@/pages/Dashboard/Domains';
 import Settings from '@/pages/Dashboard/Settings';
 import Payments from '@/pages/Dashboard/Payments';
-import CreateLink from '@/pages/Dashboard/CreateLink';
-import LinkConfigurator from '@/pages/Dashboard/LinkConfigurator';
+import Checkout from '@/pages/Dashboard/Checkout';
+
+
 import Support from '@/pages/Dashboard/Support';
 
 // Admin Pages
@@ -108,13 +109,13 @@ function App() {
                 <Route index element={<Navigate to="/dashboard/links" replace />} />
                 <Route path="home" element={<HomeDashboard />} />
                 <Route path="links" element={<Links />} />
-                <Route path="links/new" element={<CreateLink />} />
-                <Route path="links/:id/edit" element={<LinkConfigurator />} />
+
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="telegram" element={<Telegram />} />
                 <Route path="domains" element={<Domains />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="payments" element={<Payments />} />
+                <Route path="checkout" element={<Checkout />} />
                 <Route path="support" element={<Support />} />
               </Route>
 

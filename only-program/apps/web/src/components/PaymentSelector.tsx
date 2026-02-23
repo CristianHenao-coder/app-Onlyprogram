@@ -10,6 +10,8 @@ interface PaymentSelectorProps {
   initialMethod?: 'card' | 'paypal' | 'crypto';
   amount?: number;
   onSuccess?: () => void;
+  linksData?: any[];
+  customDomain?: string;
 }
 
 // Criptos curadas con label e ícono emoji para mostrar en el selector
@@ -81,6 +83,8 @@ export default function PaymentSelector({
   initialMethod = 'card',
   amount,
   onSuccess,
+  linksData,
+  customDomain
 }: PaymentSelectorProps) {
   const { user } = useAuth();
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'crypto'>(initialMethod);
@@ -131,7 +135,7 @@ export default function PaymentSelector({
     if (isActivatingTrial || trialUsed) return;
     setIsActivatingTrial(true);
     try {
-      await paymentsService.activateFreeTrial();
+      await paymentsService.activateFreeTrial(linksData, customDomain);
       setTrialUsed(true);
       setPaymentSuccess(true);
       if (onSuccess) onSuccess();
@@ -158,7 +162,7 @@ export default function PaymentSelector({
     if (!amount) return toast.error('No se especificó el monto.');
     setIsCreatingPayment(true);
     try {
-      const data = await paymentsService.createNowPayment(amount, selectedCrypto);
+      const data = await paymentsService.createNowPayment(amount, selectedCrypto, linksData, customDomain);
       setCryptoInfo(data);
       setPaymentStatus('waiting');
       setCryptoStep('paying');
@@ -315,6 +319,8 @@ export default function PaymentSelector({
                 if (onSuccess) onSuccess();
                 if (onSelect) onSelect('card');
               }}
+              linksData={linksData}
+              customDomain={customDomain}
             />
           </div>
         )}
@@ -340,7 +346,7 @@ export default function PaymentSelector({
                   onClick={async () => {
                     const toastId = toast.loading('Conectando con PayPal...');
                     try {
-                      const order = await paymentsService.createPayPalOrder(amount || 0);
+                      const order = await paymentsService.createPayPalOrder(amount || 0, undefined, linksData, customDomain);
                       const approvalLink = order.links?.find((l: any) => l.rel === 'approve')?.href;
                       if (approvalLink) window.location.href = approvalLink;
                       else throw new Error('No se pudo obtener el enlace de pago');

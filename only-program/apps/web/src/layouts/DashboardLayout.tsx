@@ -137,7 +137,7 @@ export default function DashboardLayout() {
               {!collapsed && (
                 <div className="min-w-0">
                   <p className="text-white font-bold text-sm truncate">{profile?.full_name || user?.email?.split('@')[0] || "Usuario"}</p>
-                  <p className="text-[11px] text-silver/45 truncate">{profile?.plan || "Plan Gratuito"}</p>
+                  <p className="text-[11px] text-silver/45 truncate">{user?.email || ""}</p>
                 </div>
               )}
             </div>

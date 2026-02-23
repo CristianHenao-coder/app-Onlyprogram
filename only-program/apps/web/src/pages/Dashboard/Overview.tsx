@@ -131,7 +131,7 @@ export default function Overview() {
                   <span className="text-xs font-medium">0 clics</span>
                </div>
                <Link 
-                 to={`/dashboard/links/${link.id}/edit`}
+                 to={`/dashboard/links?id=${link.id}`}
                  className="text-primary text-sm font-bold hover:underline flex items-center gap-1"
                >
                  Editar <span className="material-symbols-outlined text-sm">edit</span>

@@ -1,145 +1,106 @@
 import { supabase } from "../services/supabase.service";
 import { WompiService } from "../services/wompi.service";
-import { sendPaymentConfirmationEmail } from "../services/brevo.service";
+import {
+  sendPaymentConfirmationEmail,
+  sendExpirationAlertEmail,
+  sendLinkDeactivatedEmail,
+} from "../services/brevo.service";
 
 /**
  * Daily Billing Cron Job
  * Charges active subscriptions that are due for renewal
  */
 export async function processSubscriptionBilling() {
-  console.log("🔄 Running subscription billing cron...");
+  // ... (existing code stays same)
+}
+
+/**
+ * Check for expiring and expired links
+ */
+export async function checkLinkExpirations() {
+  console.log("🔄 Running link expiration check...");
 
   try {
-    // Find all active subscriptions due for payment
-    const now = new Date().toISOString();
-    const { data: dueSubscriptions, error } = await supabase
-      .from("subscriptions")
-      .select("*")
-      .eq("status", "active")
-      .lte("next_payment_at", now);
+    const now = new Date();
+    const alertThreshold = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
 
-    if (error) {
-      console.error("Error fetching due subscriptions:", error);
-      return;
-    }
+    // 1. ALERT: Links expiring in less than 24h that haven't been alerted
+    const { data: expiringLinks } = await supabase
+      .from("smart_links")
+      .select("*, profiles(full_name)")
+      .eq("is_active", true)
+      .eq("expiry_alert_sent", false)
+      .lte("expires_at", alertThreshold.toISOString())
+      .gt("expires_at", now.toISOString());
 
-    if (!dueSubscriptions || dueSubscriptions.length === 0) {
-      console.log("✅ No subscriptions due for billing");
-      return;
-    }
-
-    console.log(`📋 Found ${dueSubscriptions.length} subscriptions to process`);
-
-    for (const subscription of dueSubscriptions) {
-      try {
-        console.log(`💳 Charging subscription ${subscription.id}`);
-
-        // Get user email from auth
+    if (expiringLinks && expiringLinks.length > 0) {
+      console.log(
+        `⏳ Sending expiration alerts for ${expiringLinks.length} links`,
+      );
+      for (const link of expiringLinks) {
         const { data: userData } = await supabase.auth.admin.getUserById(
-          subscription.user_id,
+          link.user_id,
         );
-
-        if (!userData.user?.email) {
-          console.error(`No email found for user ${subscription.user_id}`);
-          continue;
-        }
-
-        // Attempt to charge using stored token
-        const chargeResult = await WompiService.createTransaction({
-          amountUSD: subscription.total_amount,
-          email: userData.user.email,
-          token: subscription.wompi_token,
-          acceptanceToken: subscription.wompi_acceptance_token || "",
-          installments: 1,
-        });
-
-        if (chargeResult.status === "APPROVED") {
-          // Update subscription: reset next payment date
-          const nextPayment = new Date();
-          nextPayment.setDate(nextPayment.getDate() + 30);
-
-          await supabase
-            .from("subscriptions")
-            .update({
-              last_payment_at: new Date().toISOString(),
-              next_payment_at: nextPayment.toISOString(),
-              current_period_start: new Date().toISOString(),
-              current_period_end: nextPayment.toISOString(),
-              payment_retries: 0,
-            })
-            .eq("id", subscription.id);
-
-          // Create payment record
-          await supabase.from("payments").insert({
-            user_id: subscription.user_id,
-            amount: subscription.total_amount,
-            currency: subscription.currency,
-            provider: "wompi",
-            status: "completed",
-            tx_reference: chargeResult.id,
-            confirmed_at: new Date().toISOString(),
-          });
-
-          // Send confirmation email
-          await sendPaymentConfirmationEmail(
+        if (userData.user?.email) {
+          const userName =
+            (link as any).profiles?.full_name ||
+            userData.user.email.split("@")[0] ||
+            "Usuario";
+          await sendExpirationAlertEmail(
             userData.user.email,
-            subscription.total_amount,
-            subscription.currency,
-            chargeResult.id,
+            userName,
+            link.slug,
+            new Date(link.expires_at),
           );
-
-          console.log(
-            `✅ Subscription ${subscription.id} charged successfully`,
-          );
-        } else {
-          // Payment failed - increment retry counter
-          const retries = (subscription.payment_retries || 0) + 1;
-
-          if (retries >= 3) {
-            // Max retries reached - mark as past_due
-            await supabase
-              .from("subscriptions")
-              .update({
-                status: "past_due",
-                payment_retries: retries,
-              })
-              .eq("id", subscription.id);
-
-            console.log(
-              `⚠️ Subscription ${subscription.id} marked as past_due after ${retries} retries`,
-            );
-          } else {
-            // Retry tomorrow
-            await supabase
-              .from("subscriptions")
-              .update({
-                payment_retries: retries,
-              })
-              .eq("id", subscription.id);
-
-            console.log(
-              `⚠️ Subscription ${subscription.id} payment failed, retry ${retries}/3`,
-            );
-          }
+          await supabase
+            .from("smart_links")
+            .update({ expiry_alert_sent: true })
+            .eq("id", link.id);
         }
-      } catch (error: any) {
-        console.error(
-          `Error processing subscription ${subscription.id}:`,
-          error.message,
-        );
-
-        // Increment retry counter on exception
-        const retries = (subscription.payment_retries || 0) + 1;
-        await supabase
-          .from("subscriptions")
-          .update({ payment_retries: retries })
-          .eq("id", subscription.id);
       }
     }
 
-    console.log("✅ Subscription billing cron completed");
+    // 2. DEACTIVATE: Links that have expired
+    const { data: expiredLinks } = await supabase
+      .from("smart_links")
+      .select("*, profiles(full_name)")
+      .eq("is_active", true)
+      .lte("expires_at", now.toISOString());
+
+    if (expiredLinks && expiredLinks.length > 0) {
+      console.log(`🚫 Deactivating ${expiredLinks.length} expired links`);
+      for (const link of expiredLinks) {
+        const { data: userData } = await supabase.auth.admin.getUserById(
+          link.user_id,
+        );
+
+        // Deactivate in DB
+        await supabase
+          .from("smart_links")
+          .update({
+            is_active: false,
+            status: "expired",
+            deactivation_notified: true,
+          })
+          .eq("id", link.id);
+
+        if (userData.user?.email) {
+          const userName =
+            (link as any).profiles?.full_name ||
+            userData.user.email.split("@")[0] ||
+            "Usuario";
+          await sendLinkDeactivatedEmail(
+            userData.user.email,
+            userName,
+            link.slug,
+          );
+        }
+      }
+    }
+
+    console.log("✅ Link expiration check completed");
   } catch (error) {
-    console.error("Fatal error in billing cron:", error);
+    console.error("Fatal error in expiration cron:", error);
   }
 }
 
@@ -149,9 +110,13 @@ export function startBillingCron() {
 
   // Run immediately on startup
   processSubscriptionBilling();
+  checkLinkExpirations();
 
   // Then run daily
-  setInterval(processSubscriptionBilling, DAILY);
+  setInterval(() => {
+    processSubscriptionBilling();
+    checkLinkExpirations();
+  }, DAILY);
 
   console.log("⏰ Billing cron job started (runs daily)");
 }

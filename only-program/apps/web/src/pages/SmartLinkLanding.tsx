@@ -168,7 +168,10 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
             }
 
             // Cargar data visual
-            let query = supabase.from('smart_links').select('*');
+            let query = supabase.from('smart_links').select(`
+                *,
+                smart_link_buttons (*)
+            `);
             if (slug.length > 20 && slug.includes('-')) {
                 query = query.or(`slug.eq.${slug},id.eq.${slug}`);
             } else {
@@ -229,9 +232,16 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
     const bgEnd = theme?.backgroundEnd || '#1a1a1a';
 
     const renderButtons = (buttons: any[]) => {
-        if (!buttons) return null;
-        return buttons.map((btn: any) => {
-            if (!btn.isActive) return null;
+        // Combinamos o priorizamos smart_link_buttons si existen
+        const finalButtons = (linkData.smart_link_buttons && linkData.smart_link_buttons.length > 0)
+            ? linkData.smart_link_buttons.sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
+            : buttons;
+
+        if (!finalButtons) return null;
+        
+        return finalButtons.map((btn: any) => {
+            const isActive = btn.is_active ?? btn.isActive ?? true;
+            if (!isActive) return null;
 
             // Especial OnlyFans -> Redirect Flow
             if (btn.type === 'onlyfans') {
@@ -240,15 +250,16 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
                         key={btn.id}
                         type="onlyfans"
                         url="#"
-                        label="VER CONTENIDO EXCLUSIVO"
-                        sub="Acceso Directo a Galería"
+                        label={btn.title || "VER CONTENIDO EXCLUSIVO"}
+                        sub={btn.subtitle || btn.sub || "Acceso Directo a Galería"}
                         onClick={handleUnlockPremium}
                     />
                 );
             }
 
             // Botón estándar (incluyendo Telegram con Rotación)
-            const finalUrl = (btn.type === 'telegram' && btn.rotatorActive)
+            const rotatorActive = btn.rotator_active ?? btn.rotatorActive;
+            const finalUrl = (btn.type === 'telegram' && rotatorActive)
                 ? `${import.meta.env.VITE_API_URL}/t/${slug}`
                 : btn.url;
 
@@ -258,11 +269,11 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
                     type={btn.type}
                     url={finalUrl}
                     label={btn.title}
-                    sub={btn.sub || (btn.type === 'telegram' ? 'Join Channel' : 'Follow Me')}
+                    sub={btn.subtitle || btn.sub || (btn.type === 'telegram' ? 'Join Channel' : 'Follow Me')}
                     style={{
                         backgroundColor: btn.color,
-                        color: btn.textColor,
-                        borderRadius: btn.borderRadius,
+                        color: btn.text_color || btn.textColor,
+                        borderRadius: btn.border_radius || btn.borderRadius,
                         opacity: (btn.opacity || 100) / 100
                     }}
                 />
