@@ -178,7 +178,7 @@ export const buyDomain = async (req: Request, res: Response) => {
 
 export const verifyDomainExistence = async (req: Request, res: Response) => {
   try {
-    const { domain } = req.query;
+    const { domain, excludeLinkId } = req.query;
 
     if (!domain || typeof domain !== "string") {
       return res.status(400).json({ error: "Domain is required" });
@@ -190,11 +190,16 @@ export const verifyDomainExistence = async (req: Request, res: Response) => {
       .replace(/^(https?:\/\/)?(www\.)?/, "");
 
     // 1. Check Database (smart_links)
-    const { data: existingInDb, error: dbError } = await supabase
+    const query = supabase
       .from("smart_links")
       .select("id, user_id")
-      .eq("custom_domain", normalizedDomain)
-      .maybeSingle();
+      .eq("custom_domain", normalizedDomain);
+
+    if (excludeLinkId) {
+      query.neq("id", excludeLinkId);
+    }
+
+    const { data: existingInDb, error: dbError } = await query.maybeSingle();
 
     if (existingInDb) {
       return res.json({
