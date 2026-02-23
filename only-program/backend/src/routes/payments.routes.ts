@@ -371,7 +371,12 @@ router.post("/nowpayments/create-payment", async (req: AuthRequest, res) => {
     });
   } catch (error: any) {
     console.error("Error creating NOWPayments payment:", error);
-    res.status(500).json({ error: error.message });
+    // Errors from NOWPayments with user-friendly messages should be 400
+    const isClientError =
+      error.message &&
+      !error.message.startsWith("NOWPayments API Error") &&
+      !error.message.includes("NOWPayments API Key");
+    res.status(isClientError ? 400 : 500).json({ error: error.message });
   }
 });
 
