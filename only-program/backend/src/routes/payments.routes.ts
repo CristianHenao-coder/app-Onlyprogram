@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authenticateToken, AuthRequest } from "../middlewares/auth.middleware";
 import { PayPalService } from "../services/paypal.service";
-import { CryptoService } from "../services/crypto.service";
+import { NowPaymentsService } from "../services/nowpayments.service";
 import { sendPaymentConfirmationEmail } from "../services/brevo.service";
 import { supabase } from "../services/supabase.service";
 import { SubscriptionService } from "../services/subscription.service";
@@ -9,63 +9,73 @@ import { v4 as uuidv4 } from "uuid";
 
 const router = Router();
 
-// Webhook de RedotPay
-router.post("/webhook/redotpay", async (req, res) => {
+// ─────────────────────────────────────────────────────────────
+// NOWPAYMENTS WEBHOOK (IPN) — debe ir ANTES de authenticateToken
+// ─────────────────────────────────────────────────────────────
+router.post("/webhook/nowpayments", async (req, res) => {
   try {
-    const signature = req.headers["x-signature"] as string;
+    const signature = req.headers["x-nowpayments-sig"] as string;
+    const rawBody = JSON.stringify(req.body); // body-parser ya lo parseó
     const payload = req.body;
 
-    if (!CryptoService.verifyWebhookSignature(payload, signature)) {
-      return res.status(401).json({ error: "Invalid signature" });
+    if (!NowPaymentsService.verifyIpnSignature(rawBody, signature)) {
+      console.warn("⚠️ NOWPayments IPN signature inválida — rechazado.");
+      return res.status(401).json({ error: "Invalid IPN signature" });
     }
 
-    // Procesar el pago exitoso
-    if (payload.status === "PAID" || payload.status === "COMPLETED") {
-      console.log(
-        `💰 Crypto payment received for order ${payload.merchantOrderId}`,
-      );
+    const {
+      payment_id,
+      payment_status,
+      order_id,
+      actually_paid,
+      pay_currency,
+    } = payload;
 
-      // 1. Actualizar estado en la tabla 'payments'
+    console.log(
+      `💰 NOWPayments IPN recibido | payment_id=${payment_id} status=${payment_status}`,
+    );
+
+    const isCompleted =
+      payment_status === "finished" || payment_status === "confirmed";
+    const isPartial = payment_status === "partially_paid";
+
+    if (isCompleted || isPartial) {
+      // 1. Actualizar pago en DB
       const { data: payment, error } = await supabase
         .from("payments")
         .update({
-          status: "completed",
-          tx_reference: payload.transactionId || payload.id,
+          status: isCompleted ? "completed" : "partially_paid",
+          tx_reference: payment_id,
           confirmed_at: new Date().toISOString(),
         })
-        .eq("id", payload.merchantOrderId)
+        .eq("id", order_id)
         .select()
         .single();
 
       if (error) {
-        console.error("Error updating payment in DB:", error);
-      } else if (payment) {
-        // 2. Actualizar Suscripción si existe
-        if (payment.subscription_id) {
-          try {
-            await SubscriptionService.processSuccessfulPayment(
-              payment.subscription_id,
-            );
-          } catch (subError) {
-            console.error(
-              "Failed to update subscription after crypto payment:",
-              subError,
-            );
-          }
-        }
+        console.error("Error actualizando pago en DB:", error);
+      } else if (payment && isCompleted) {
+        // 2. Activar producto
+        const { FulfillmentService } =
+          await import("../services/fulfillment.service");
+        await FulfillmentService.activateLinkProduct(
+          payment.user_id,
+          payment_id,
+          payment.amount,
+          "USD",
+        );
 
-        // 3. Enviar Email
+        // 3. Enviar email de confirmación
         const { data: userData } = await supabase.auth.admin.getUserById(
           payment.user_id,
         );
         const userEmail = userData.user?.email;
-
         if (userEmail) {
           await sendPaymentConfirmationEmail(
             userEmail,
             payment.amount,
-            payment.currency,
-            payload.merchantOrderId,
+            pay_currency?.toUpperCase() || "CRYPTO",
+            payment_id,
           );
         }
       }
@@ -73,16 +83,19 @@ router.post("/webhook/redotpay", async (req, res) => {
 
     res.json({ received: true });
   } catch (error) {
-    console.error("Error processing RedotPay webhook:", error);
+    console.error("Error procesando NOWPayments IPN:", error);
     res.status(500).json({ error: "Webhook processing failed" });
   }
 });
 
+// ─────────────────────────────────────────────────────────────
 // Todas las rutas siguientes requieren autenticación
+// ─────────────────────────────────────────────────────────────
 router.use(authenticateToken);
 
-// --- PAYPAL ---
-
+// ─────────────────────────────────────────────────────────────
+// PAYPAL
+// ─────────────────────────────────────────────────────────────
 router.post("/paypal/create-order", async (req: AuthRequest, res) => {
   try {
     const { amount, description, subscriptionId } = req.body;
@@ -94,7 +107,6 @@ router.post("/paypal/create-order", async (req: AuthRequest, res) => {
       referenceId: subscriptionId,
     })) as any;
 
-    // Guardar intento de pago
     if (req.user) {
       const { error } = await supabase.from("payments").insert({
         user_id: req.user.id,
@@ -106,7 +118,6 @@ router.post("/paypal/create-order", async (req: AuthRequest, res) => {
         tx_reference: order.id,
         created_at: new Date().toISOString(),
       });
-
       if (error) console.error("Error inserting payment record:", error);
     }
 
@@ -132,7 +143,6 @@ router.post("/paypal/capture-order", async (req: AuthRequest, res) => {
         purchaseUnit?.payments?.captures?.[0]?.amount?.currency_code;
       const captureId = purchaseUnit?.payments?.captures?.[0]?.id;
 
-      // 1. Actualizar pago en DB
       const { data: payment, error } = await supabase
         .from("payments")
         .update({
@@ -140,14 +150,13 @@ router.post("/paypal/capture-order", async (req: AuthRequest, res) => {
           tx_reference: captureId || capture.id,
           confirmed_at: new Date().toISOString(),
         })
-        .eq("tx_reference", orderId) // Buscamos por el Order ID original
+        .eq("tx_reference", orderId)
         .select()
         .single();
 
       if (error) {
         console.error("Error updating payment status:", error);
       } else if (payment) {
-        // 2. Actualizar Suscripción
         if (payment.subscription_id) {
           try {
             await SubscriptionService.processSuccessfulPayment(
@@ -160,9 +169,7 @@ router.post("/paypal/capture-order", async (req: AuthRequest, res) => {
             );
           }
         }
-
-        // 3. Enviar Email
-        if (req.user && req.user.email && amountVal) {
+        if (req.user?.email && amountVal) {
           await sendPaymentConfirmationEmail(
             req.user.email,
             parseFloat(amountVal),
@@ -179,30 +186,30 @@ router.post("/paypal/capture-order", async (req: AuthRequest, res) => {
   }
 });
 
-// --- CRYPTO (RedotPay) ---
-
-// --- STRIPE ---
-
-// --- WOMPI ---
+// ─────────────────────────────────────────────────────────────
+// WOMPI
+// ─────────────────────────────────────────────────────────────
 router.post("/wompi/get-signature", async (req: AuthRequest, res) => {
   try {
     const { amount, currency = "COP" } = req.body;
-
     if (!amount) return res.status(400).json({ error: "Amount is required" });
 
-    // Wompi usa centavos para COP
     const amountInCents = Math.round(amount * 100);
     const { WompiService } = await import("../services/wompi.service");
 
     const reference = WompiService.generateReference();
-    const signature = WompiService.generateSignature(reference, amountInCents, currency);
+    const signature = WompiService.generateSignature(
+      reference,
+      amountInCents,
+      currency,
+    );
 
     res.json({
       reference,
       signature,
       amountInCents,
       currency,
-      publicKey: (await import("../config/env")).config.wompi.pubKey
+      publicKey: (await import("../config/env")).config.wompi.pubKey,
     });
   } catch (error: any) {
     console.error("Error creating Wompi Signature:", error);
@@ -214,43 +221,54 @@ router.post("/wompi/transaction", async (req: AuthRequest, res) => {
   try {
     const { amount, email, token, installments, acceptanceToken } = req.body;
 
-    console.log("💰 Wompi Transaction Initiated. Body:", JSON.stringify(req.body, null, 2));
+    console.log(
+      "💰 Wompi Transaction Initiated. Body:",
+      JSON.stringify(req.body, null, 2),
+    );
 
-    if (!amount) return res.status(400).json({ error: "Missing required field: amount" });
-    if (!token) return res.status(400).json({ error: "Missing required field: token" });
-    if (!email) return res.status(400).json({ error: "Missing required field: email" });
-    if (!acceptanceToken) return res.status(400).json({ error: "Missing required field: acceptanceToken" });
+    if (!amount)
+      return res.status(400).json({ error: "Missing required field: amount" });
+    if (!token)
+      return res.status(400).json({ error: "Missing required field: token" });
+    if (!email)
+      return res.status(400).json({ error: "Missing required field: email" });
+    if (!acceptanceToken)
+      return res
+        .status(400)
+        .json({ error: "Missing required field: acceptanceToken" });
 
     const { WompiService } = await import("../services/wompi.service");
-
     const transaction = await WompiService.createTransaction({
-      amountUSD: amount, // Frontend sends USD
+      amountUSD: amount,
       email,
       token,
       installments,
-      acceptanceToken
+      acceptanceToken,
     });
 
-    // Guardar transacción en DB
     if (req.user) {
-      const status = transaction.status === "APPROVED" ? "completed" : "pending";
-
+      const status =
+        transaction.status === "APPROVED" ? "completed" : "pending";
       const { error } = await supabase.from("payments").insert({
         user_id: req.user.id,
-        amount, // USD
+        amount,
         currency: "USD",
         provider: "wompi",
-        status: status,
+        status,
         tx_reference: transaction.id,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       });
-
       if (error) console.error("Error saving payment:", error);
 
-      // ACTIVACIÓN INMEDIATA SÍNCRONA
       if (status === "completed") {
-        const { FulfillmentService } = await import("../services/fulfillment.service");
-        await FulfillmentService.activateLinkProduct(req.user.id, transaction.id, amount, "USD");
+        const { FulfillmentService } =
+          await import("../services/fulfillment.service");
+        await FulfillmentService.activateLinkProduct(
+          req.user.id,
+          transaction.id,
+          amount,
+          "USD",
+        );
       }
     }
 
@@ -264,15 +282,17 @@ router.post("/wompi/transaction", async (req: AuthRequest, res) => {
 router.post("/webhook/wompi", async (req, res) => {
   try {
     const event = req.body;
-    // Wompi sends data in 'data' and signature in headers or inside event properties
-    // This is a simplified handler. In PROD verify signature! 
-
     console.log("💰 Wompi Webhook received:", event);
 
-    if (event.event === "transaction.updated" && event.data.transaction.status === "APPROVED") {
+    if (
+      event.event === "transaction.updated" &&
+      event.data.transaction.status === "APPROVED"
+    ) {
       const tx = event.data.transaction;
-      // Logic to update database...
-      // Similar to other methods: find payment by reference -> update status -> email
+      await supabase
+        .from("payments")
+        .update({ status: "completed", confirmed_at: new Date().toISOString() })
+        .eq("tx_reference", tx.reference);
     }
 
     res.sendStatus(200);
@@ -282,47 +302,97 @@ router.post("/webhook/wompi", async (req, res) => {
   }
 });
 
-// --- MANUAL CRYPTO ---
+// ─────────────────────────────────────────────────────────────
+// NOWPAYMENTS — Crear pago crypto
+// ─────────────────────────────────────────────────────────────
 
-router.post("/crypto/manual", async (req: AuthRequest, res) => {
+/**
+ * GET /api/payments/nowpayments/currencies
+ * Devuelve la lista de criptomonedas disponibles.
+ */
+router.get("/nowpayments/currencies", async (_req, res) => {
   try {
-    const { amount, currency, transactionHash, walletUsed, subscriptionId } = req.body;
-
-    if (!amount || !transactionHash) {
-      return res.status(400).json({ error: "Amount and Transaction Hash are required" });
-    }
-
-    const { ManualCryptoService } = await import("../services/manual-crypto.service");
-
-    const payment = await ManualCryptoService.createManualPayment({
-      userId: req.user!.id,
-      amount,
-      currency: currency || "USDT",
-      transactionHash,
-      walletUsed,
-      subscriptionId
-    });
-
-    // Notificar al admin sobre el nuevo pago manual (Opcional, implementar luego)
-    // await notifyAdmin("New Crypto Payment", payment);
-
-    res.json({
-      success: true,
-      message: "Pago registrado para verificación manual",
-      payment
-    });
+    const currencies = await NowPaymentsService.getCurrencies();
+    res.json({ currencies });
   } catch (error: any) {
-    console.error("Error registering manual crypto payment:", error);
+    console.error("Error fetching NOWPayments currencies:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Deprecated RedotPay kept for reference or removal
-// router.post("/crypto/create-order", ... );
+/**
+ * POST /api/payments/nowpayments/create-payment
+ * Crea un pago en NOWPayments y guarda el registro pending en la base de datos.
+ * Body: { amount: number, payCurrency: string }
+ */
+router.post("/nowpayments/create-payment", async (req: AuthRequest, res) => {
+  try {
+    const { amount, payCurrency } = req.body;
+
+    if (!amount) return res.status(400).json({ error: "Amount is required" });
+    if (!payCurrency)
+      return res.status(400).json({ error: "payCurrency is required" });
+
+    // Generar un order_id único que usaremos como PK en la tabla payments
+    const orderId = uuidv4();
+
+    const paymentData = await NowPaymentsService.createPayment({
+      amount,
+      payCurrency,
+      orderId,
+      orderDescription: "Only Program - Activación de Links Premium",
+      email: req.user?.email,
+    });
+
+    // Guardar en la tabla payments como 'pending'
+    if (req.user) {
+      const { error } = await supabase.from("payments").insert({
+        id: orderId,
+        user_id: req.user.id,
+        amount,
+        currency: "USD",
+        provider: "nowpayments",
+        status: "pending",
+        tx_reference: paymentData.payment_id,
+        created_at: new Date().toISOString(),
+      });
+      if (error) console.error("Error guardando pago NOWPayments:", error);
+    }
+
+    res.json({
+      payment_id: paymentData.payment_id,
+      pay_address: paymentData.pay_address,
+      pay_amount: paymentData.pay_amount,
+      pay_currency: paymentData.pay_currency,
+      price_amount: paymentData.price_amount,
+      price_currency: paymentData.price_currency,
+      expiration_estimate_date: paymentData.expiration_estimate_date,
+      order_id: orderId,
+    });
+  } catch (error: any) {
+    console.error("Error creating NOWPayments payment:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 /**
- * GET /api/payments
+ * GET /api/payments/nowpayments/status/:paymentId
+ * El frontend hace polling aquí para saber si el pago fue confirmado.
  */
+router.get("/nowpayments/status/:paymentId", async (req: AuthRequest, res) => {
+  try {
+    const { paymentId } = req.params;
+    const status = await NowPaymentsService.getPaymentStatus(paymentId);
+    res.json(status);
+  } catch (error: any) {
+    console.error("Error fetching NOWPayments status:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// HISTORIAL DE PAGOS
+// ─────────────────────────────────────────────────────────────
 router.get("/", async (req: AuthRequest, res) => {
   try {
     if (!req.user) return res.status(401).json({ error: "Unauthorized" });
@@ -343,10 +413,7 @@ router.get("/", async (req: AuthRequest, res) => {
 
     if (error) throw error;
 
-    res.json({
-      payments,
-      user: req.user,
-    });
+    res.json({ payments, user: req.user });
   } catch (error: any) {
     console.error("Error fetching payments history:", error);
     res.status(500).json({ error: error.message });

@@ -47,10 +47,11 @@ export const config = {
     apiUrl: process.env.PAYPAL_API_URL || "https://api-m.paypal.com",
   },
 
-  redotpay: {
-    apiKey: process.env.REDOTPAY_API_KEY || "",
-    appId: process.env.REDOTPAY_APP_ID || "",
-    apiUrl: process.env.REDOTPAY_API_URL || "https://api.redotpay.com",
+  nowpayments: {
+    apiKey: process.env.API_KEY_NOWPAYMENTS || "",
+    ipnSecret: process.env.IPN_SECRET_NOWPAYMENTS || "",
+    publicKey: process.env.PUBLIC_KEY_NOWPAYMENTS || "",
+    apiUrl: "https://api.nowpayments.io/v1",
   },
 
   urls: {

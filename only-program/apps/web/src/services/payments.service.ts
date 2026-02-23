@@ -1,6 +1,7 @@
 import { supabase } from "./supabase";
 
-const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:4005") + "/api";
+const API_URL =
+  (import.meta.env.VITE_API_URL || "http://localhost:4005") + "/api";
 
 export interface Payment {
   id: string;
@@ -17,8 +18,8 @@ async function handleResponse(response: Response) {
     const errorData = await response.json().catch(() => ({}));
     throw new Error(
       errorData.error ||
-      errorData.message ||
-      `Error ${response.status}: ${response.statusText}`,
+        errorData.message ||
+        `Error ${response.status}: ${response.statusText}`,
     );
   }
   return response.json();
@@ -41,29 +42,27 @@ async function getAuthHeaders() {
 }
 
 export const paymentsService = {
-  async createWompiTransaction(data: { amount: number, email: string, token: string, acceptanceToken: string, installments?: number }) {
+  async createWompiTransaction(data: {
+    amount: number;
+    email: string;
+    token: string;
+    acceptanceToken: string;
+    installments?: number;
+  }) {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_URL}/payments/wompi/transaction`, {
       method: "POST",
       headers,
       body: JSON.stringify(data),
     });
-
     return handleResponse(response);
   },
 
   async getHistory() {
     const headers = await getAuthHeaders();
-    // getAuthHeaders devuelve Content-Type, pero para GET no es estrictamente necesario, aunque no daña.
-    // Sin embargo, fetch GET no lleva body, así que Content-Type es irrelevante.
-    // Ajustamos para solo usar Authorization si fuera necesario, pero dejémoslo simple.
-
     const response = await fetch(`${API_URL}/payments`, {
-      headers: {
-        Authorization: headers.Authorization,
-      },
+      headers: { Authorization: headers.Authorization },
     });
-
     return handleResponse(response);
   },
 
@@ -74,7 +73,6 @@ export const paymentsService = {
       headers,
       body: JSON.stringify({ amount, subscriptionId }),
     });
-
     return handleResponse(response);
   },
 
@@ -85,11 +83,8 @@ export const paymentsService = {
       headers,
       body: JSON.stringify({ orderId }),
     });
-
     return handleResponse(response);
   },
-
-
 
   async getWompiSignature(amount: number, currency: string = "COP") {
     const headers = await getAuthHeaders();
@@ -98,25 +93,44 @@ export const paymentsService = {
       headers,
       body: JSON.stringify({ amount, currency }),
     });
-
     return handleResponse(response);
   },
 
-  async submitManualCryptoPayment(data: {
-    amount: number;
-    currency: string;
-    transactionHash: string;
-    walletUsed?: string;
-    subscriptionId?: string;
-  }) {
-    const headers = await getAuthHeaders();
-    const response = await fetch(`${API_URL}/payments/crypto/manual`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(data),
-    });
+  // ── NOWPayments ──────────────────────────────────────────────
 
+  /** Obtiene la lista de criptomonedas disponibles para pago */
+  async getNowPaymentsCurrencies(): Promise<string[]> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_URL}/payments/nowpayments/currencies`, {
+      headers: { Authorization: headers.Authorization },
+    });
+    const data = await handleResponse(response);
+    return data.currencies as string[];
+  },
+
+  /** Crea un pago en NOWPayments y recibe la dirección única de depósito */
+  async createNowPayment(amount: number, payCurrency: string) {
+    const headers = await getAuthHeaders();
+    const response = await fetch(
+      `${API_URL}/payments/nowpayments/create-payment`,
+      {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ amount, payCurrency }),
+      },
+    );
+    return handleResponse(response);
+  },
+
+  /** Consulta el estado actual de un pago NOWPayments (para polling) */
+  async getNowPaymentStatus(paymentId: string) {
+    const headers = await getAuthHeaders();
+    const response = await fetch(
+      `${API_URL}/payments/nowpayments/status/${paymentId}`,
+      {
+        headers: { Authorization: headers.Authorization },
+      },
+    );
     return handleResponse(response);
   },
 };
-
