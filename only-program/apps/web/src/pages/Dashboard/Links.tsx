@@ -1,6 +1,5 @@
 ﻿import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
 import toast, { Toaster } from 'react-hot-toast';
 import { useModal } from '@/contexts/ModalContext';
 import { useTranslation } from '@/contexts/I18nContext';
@@ -11,11 +10,11 @@ import { supabase } from '@/services/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { linksService } from '@/services/links.service';
+import { productPricingService, DEFAULT_PRODUCT_PRICING, type ProductPricingConfig } from '@/services/productPricing.service';
 
 // Import Social Media Logos
 import instagramLogo from '@/assets/animations/instagram.png';
 import tiktokLogo from '@/assets/animations/tik-tok.png';
-import { productPricingService, DEFAULT_PRODUCT_PRICING, type ProductPricingConfig } from '@/services/productPricing.service';
 
 // Types
 type TemplateType = 'minimal' | 'split' | 'full';
