@@ -1373,22 +1373,33 @@ export default function Links() {
                                     </p>
 
                                     <div className="space-y-3 font-mono text-[11px]">
-                                      <div className="p-3 bg-black/60 rounded-xl border border-white/10 flex items-center justify-between group text-yellow-500/80">
+                                      <div className="p-3 bg-black/60 rounded-xl border border-white/10 flex items-center justify-between group">
                                         <div className="flex flex-col gap-1">
                                           <span className="text-[10px] text-silver/30 font-bold">Tipo: A (Principal)</span>
-                                          <span className="text-white">TU_IP_DE_CONTABO</span>
+                                          <span className="text-white">147.93.131.4</span>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-[10px] font-bold">PENDIENTE</span>
-                                          <span className="material-symbols-outlined text-sm">warning</span>
-                                        </div>
+                                        <button 
+                                          onClick={() => {
+                                            navigator.clipboard.writeText('147.93.131.4');
+                                            toast.success('IP copiada');
+                                          }}
+                                          className="text-silver/30 hover:text-primary transition-colors"
+                                        >
+                                          <span className="material-symbols-outlined text-sm">content_copy</span>
+                                        </button>
                                       </div>
                                       <div className="p-3 bg-black/60 rounded-xl border border-white/10 flex items-center justify-between group">
                                         <div className="flex flex-col gap-1">
                                           <span className="text-[10px] text-silver/30 font-bold">Tipo: CNAME (WWW)</span>
                                           <span className="text-white">cname.onlyprogram.com</span>
                                         </div>
-                                        <button className="text-silver/30 hover:text-primary transition-colors">
+                                        <button 
+                                          onClick={() => {
+                                            navigator.clipboard.writeText('cname.onlyprogram.com');
+                                            toast.success('Host copiado');
+                                          }}
+                                          className="text-silver/30 hover:text-primary transition-colors"
+                                        >
                                           <span className="material-symbols-outlined text-sm">content_copy</span>
                                         </button>
                                       </div>
