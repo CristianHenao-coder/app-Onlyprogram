@@ -6,11 +6,13 @@ interface DomainRequest {
   id: string;
   slug: string;
   title: string;
-  custom_domain: string;
-  domain_status: 'pending' | 'active' | 'failed';
-  domain_requested_at: string;
+  custom_domain: string | null;
+  domain_status: 'pending' | 'active' | 'failed' | null;
+  domain_requested_at: string | null;
   domain_activated_at: string | null;
   domain_notes: string | null;
+  is_active: boolean;
+  status: string;
   profiles: { full_name: string };
 }
 
@@ -27,13 +29,15 @@ async function getAuthHeader() {
   return { Authorization: `Bearer ${session?.access_token}` };
 }
 
-const StatusBadge = ({ status }: { status: string }) => {
+const StatusBadge = ({ status }: { status: string | null }) => {
   const map: Record<string, { label: string; cls: string }> = {
     pending: { label: 'Pendiente', cls: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' },
-    active:  { label: 'Activo',    cls: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' },
-    failed:  { label: 'Fallido',   cls: 'bg-red-500/20 text-red-400 border-red-500/30' },
+    active: { label: 'Activo', cls: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' },
+    failed: { label: 'Fallido', cls: 'bg-red-500/20 text-red-400 border-red-500/30' },
+    none: { label: 'Sin Dominio', cls: 'bg-white/5 text-silver/30 border-white/10' },
   };
-  const { label, cls } = map[status] || { label: status, cls: 'bg-white/10 text-white/40' };
+  const effectiveStatus = status || 'none';
+  const { label, cls } = map[effectiveStatus] || { label: effectiveStatus, cls: 'bg-white/10 text-white/40' };
   return (
     <span className={`text-[10px] font-black px-2 py-1 rounded-lg border uppercase tracking-wider ${cls}`}>
       {label}
@@ -122,11 +126,15 @@ const DomainRequests = () => {
     }
   };
 
-  const filtered = filter === 'all' ? requests : requests.filter(r => r.domain_status === filter);
+  const filtered = filter === 'all'
+    ? requests
+    : requests.filter(r => (r.domain_status || 'none') === filter);
+
   const counts = {
     pending: requests.filter(r => r.domain_status === 'pending').length,
-    active:  requests.filter(r => r.domain_status === 'active').length,
-    failed:  requests.filter(r => r.domain_status === 'failed').length,
+    active: requests.filter(r => r.domain_status === 'active').length,
+    failed: requests.filter(r => r.domain_status === 'failed').length,
+    total: requests.length
   };
 
   return (
@@ -149,7 +157,7 @@ const DomainRequests = () => {
       {/* DNS Configuration Reference */}
       <div className="bg-surface/30 border border-border/50 rounded-3xl p-8 relative overflow-hidden group">
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-3xl rounded-full -mr-32 -mt-32"></div>
-        
+
         <div className="relative flex flex-col gap-6">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
@@ -219,8 +227,8 @@ const DomainRequests = () => {
       <div className="grid grid-cols-3 gap-4">
         {[
           { label: 'Pendientes', count: counts.pending, color: 'text-yellow-400', icon: 'schedule' },
-          { label: 'Activos',    count: counts.active,  color: 'text-emerald-400', icon: 'check_circle' },
-          { label: 'Fallidos',   count: counts.failed,  color: 'text-red-400',    icon: 'cancel' },
+          { label: 'Activos', count: counts.active, color: 'text-emerald-400', icon: 'check_circle' },
+          { label: 'Fallidos', count: counts.failed, color: 'text-red-400', icon: 'cancel' },
         ].map(s => (
           <div key={s.label} className="bg-surface/30 border border-border/50 rounded-2xl p-5 flex items-center gap-4">
             <span className={`material-symbols-outlined text-2xl ${s.color}`}>{s.icon}</span>
@@ -234,17 +242,16 @@ const DomainRequests = () => {
 
       {/* Filter tabs */}
       <div className="flex gap-2 flex-wrap">
-        {(['all', 'pending', 'active', 'failed'] as const).map(f => (
+        {(['all', 'pending', 'active', 'failed', 'none'] as const).map(f => (
           <button
             key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
-              filter === f
-                ? 'bg-primary/10 text-primary border-primary/30'
-                : 'bg-white/5 text-silver/50 border-white/5 hover:text-white hover:bg-white/10'
-            }`}
+            onClick={() => setFilter(f as any)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${filter === f
+              ? 'bg-primary/10 text-primary border-primary/30'
+              : 'bg-white/5 text-silver/50 border-white/5 hover:text-white hover:bg-white/10'
+              }`}
           >
-            {f === 'all' ? 'Todos' : f === 'pending' ? 'Pendientes' : f === 'active' ? 'Activos' : 'Fallidos'}
+            {f === 'all' ? `Todos (${counts.total})` : f === 'pending' ? 'Pendientes' : f === 'active' ? 'Activos' : f === 'failed' ? 'Fallidos' : 'Sin Dominio'}
           </button>
         ))}
       </div>
@@ -277,8 +284,10 @@ const DomainRequests = () => {
                 {/* Domain info */}
                 <div className="bg-black/20 rounded-2xl p-4 space-y-3">
                   <div>
-                    <span className="text-[10px] text-silver/40 uppercase tracking-widest block mb-1">Dominio Solicitado</span>
-                    <p className="text-primary font-mono text-sm font-bold">{req.custom_domain}</p>
+                    <span className="text-[10px] text-silver/40 uppercase tracking-widest block mb-1">Dominio</span>
+                    <p className={`font-mono text-sm font-bold ${req.custom_domain ? 'text-primary' : 'text-silver/20'}`}>
+                      {req.custom_domain || 'Sin habilitar'}
+                    </p>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -286,11 +295,11 @@ const DomainRequests = () => {
                       <p className="text-white/80 font-mono text-xs">{req.slug || '—'}</p>
                     </div>
                     <div>
-                      <span className="text-[10px] text-silver/40 uppercase tracking-widest block mb-1">Solicitado</span>
+                      <span className="text-[10px] text-silver/40 uppercase tracking-widest block mb-1">Día Solicitud</span>
                       <p className="text-white/60 text-xs">
                         {req.domain_requested_at
                           ? new Date(req.domain_requested_at).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
-                          : '—'}
+                          : 'Pendiente'}
                       </p>
                     </div>
                   </div>
@@ -303,11 +312,10 @@ const DomainRequests = () => {
 
                 {/* DNS test result */}
                 {dns && (
-                  <div className={`rounded-xl p-3 text-xs font-medium border ${
-                    dns.configured
-                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
-                      : 'bg-red-500/10 border-red-500/20 text-red-300'
-                  }`}>
+                  <div className={`rounded-xl p-3 text-xs font-medium border ${dns.configured
+                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
+                    : 'bg-red-500/10 border-red-500/20 text-red-300'
+                    }`}>
                     {dns.message}
                   </div>
                 )}

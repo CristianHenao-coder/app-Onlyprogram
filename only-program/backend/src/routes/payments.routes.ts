@@ -533,6 +533,7 @@ router.post("/free-trial", async (req: AuthRequest, res) => {
     const userEmail = req.user.email;
     const { linksData, customDomain } = req.body;
 
+    /* 
     // 1. Verificar que el usuario no haya usado ya una prueba gratuita
     const { data: existingTrial } = await supabase
       .from("payments")
@@ -548,12 +549,13 @@ router.post("/free-trial", async (req: AuthRequest, res) => {
         code: "TRIAL_ALREADY_USED",
       });
     }
+    */
 
     console.log(`[FreeTrial] Starting activation for user: ${userId}`);
-    // 2. Calcular fechas
+    // 2. Calcular fechas (30 días para pruebas)
     const now = new Date();
     const expiresAt = new Date(now);
-    expiresAt.setDate(expiresAt.getDate() + 3);
+    expiresAt.setDate(expiresAt.getDate() + 30);
     const orderId = uuidv4();
 
     // 3. Crear registro de pago $0

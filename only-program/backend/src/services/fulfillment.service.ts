@@ -33,7 +33,7 @@ export class FulfillmentService {
       let expiresAt = new Date();
 
       if (amount === 0) {
-        expiresAt.setDate(now.getDate() + 3);
+        expiresAt.setDate(now.getDate() + 30);
       } else {
         expiresAt.setDate(now.getDate() + 30);
       }

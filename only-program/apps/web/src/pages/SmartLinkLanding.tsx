@@ -231,6 +231,18 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
     const bgStart = theme?.backgroundStart || '#000000';
     const bgEnd = theme?.backgroundEnd || '#1a1a1a';
 
+    // Read real user-entered data from config.profile (fallback to table columns)
+    const displayName = config?.profile?.title || linkData.display_name || linkData.name || linkData.title || 'Verified Profile';
+    const displayBio = config?.profile?.bio || linkData.subtitle || '';
+    const displayPhoto = config?.profile?.image || linkData.photo;
+
+    // Build background style from theme
+    const backgroundStyle: React.CSSProperties = bgType === 'gradient'
+        ? { background: `linear-gradient(to bottom, ${bgStart}, ${bgEnd})` }
+        : bgType === 'blur'
+            ? { backgroundColor: bgStart, backgroundImage: displayPhoto ? `url(${displayPhoto})` : undefined, backgroundSize: 'cover', backgroundPosition: 'center' }
+            : { backgroundColor: bgStart };
+
     const renderButtons = (buttons: any[]) => {
         // Combinamos o priorizamos smart_link_buttons si existen
         const finalButtons = (linkData.smart_link_buttons && linkData.smart_link_buttons.length > 0)
@@ -238,7 +250,7 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
             : buttons;
 
         if (!finalButtons) return null;
-        
+
         return finalButtons.map((btn: any) => {
             const isActive = btn.is_active ?? btn.isActive ?? true;
             if (!isActive) return null;
@@ -283,22 +295,27 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
 
     return (
         <div className="min-h-screen flex flex-col relative overflow-hidden text-white"
-            style={{ background: bgType === 'gradient' ? `linear-gradient(to bottom, ${bgStart}, ${bgEnd})` : bgStart }}>
+            style={backgroundStyle}>
+
+            {/* Blur overlay for blur type */}
+            {bgType === 'blur' && (
+                <div className="absolute inset-0 backdrop-blur-xl bg-black/40" />
+            )}
 
             <div className="relative z-10 px-6 max-w-md mx-auto w-full text-center py-12 flex flex-col justify-center min-h-screen">
-                {linkData.photo && (
+                {displayPhoto && (
                     <div className="w-24 h-24 rounded-full bg-gray-800 mb-6 overflow-hidden border-4 shadow-xl mx-auto"
                         style={{ borderColor: theme?.pageBorderColor || '#333333' }}>
-                        <img src={linkData.photo} alt="Profile" className="w-full h-full object-cover" />
+                        <img src={displayPhoto} alt="Profile" className="w-full h-full object-cover" />
                     </div>
                 )}
 
                 <h1 className="text-3xl font-black mb-1 drop-shadow-lg tracking-tight uppercase">
-                    {linkData.display_name || linkData.name || 'Verified Profile'}
+                    {displayName}
                 </h1>
 
                 <p className="text-[#00aff0] font-bold mb-8 text-sm drop-shadow-md">
-                    {linkData.subtitle || 'MODELO PROFESIONAL'}
+                    {displayBio}
                 </p>
 
                 <div className="flex flex-col gap-3 w-full max-w-[300px] mx-auto">

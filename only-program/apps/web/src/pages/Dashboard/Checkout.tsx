@@ -10,7 +10,6 @@ export default function Checkout() {
   const [pricingCfg, setPricingCfg] = useState<ProductPricingConfig>(DEFAULT_PRODUCT_PRICING);
   const [loading, setLoading] = useState(true);
   const [isActivating, setIsActivating] = useState(false);
-  const [hasUsedTrial, setHasUsedTrial] = useState(false);
 
   // Extract linksData from navigation state
   const linksData = location.state?.pendingPurchase?.linksData || [];
@@ -46,7 +45,7 @@ export default function Checkout() {
     }
 
     const amount = type === 'premium' ? pricingCfg.domain.connect : pricingCfg.link.standard * linksData.length;
-    
+
     navigate('/dashboard/payments', {
       state: {
         pendingPurchase: {
@@ -90,27 +89,25 @@ export default function Checkout() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* FREE TRIAL */}
-        {!hasUsedTrial && (
-          <div className="bg-[#0A0A0A] border border-green-500/20 rounded-[2.5rem] p-8 flex flex-col hover:border-green-500/40 transition-all group relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4">
-              <span className="bg-green-500/10 text-green-500 text-[10px] font-bold px-3 py-1 rounded-full border border-green-500/20">RECOMENDADO</span>
-            </div>
-            <div className="w-14 h-14 bg-green-500/10 rounded-2xl flex items-center justify-center text-green-500 mb-6 group-hover:scale-110 transition-transform">
-              <span className="material-symbols-outlined text-3xl">auto_awesome</span>
-            </div>
-            <h3 className="text-xl font-bold text-white mb-2">Prueba Gratis</h3>
-            <p className="text-silver/50 text-sm mb-6 flex-1">Prueba todas las funciones durante 3 días sin compromiso.</p>
-            <div className="text-3xl font-black text-white mb-8">$0.00</div>
-            <button
-              onClick={() => handleProductSelect('free-trial')}
-              disabled={isActivating}
-              className="w-full py-4 bg-white/5 border border-white/10 text-white font-bold rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-2"
-            >
-              Probar Ahora
-            </button>
+        {/* FREE TRIAL (Keep always visible for testing) */}
+        <div className="bg-[#0A0A0A] border border-green-500/20 rounded-[2.5rem] p-8 flex flex-col hover:border-green-500/40 transition-all group relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4">
+            <span className="bg-green-500/10 text-green-500 text-[10px] font-bold px-3 py-1 rounded-full border border-green-500/20">RECOMENDADO</span>
           </div>
-        )}
+          <div className="w-14 h-14 bg-green-500/10 rounded-2xl flex items-center justify-center text-green-500 mb-6 group-hover:scale-110 transition-transform">
+            <span className="material-symbols-outlined text-3xl">auto_awesome</span>
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">Prueba Gratis</h3>
+          <p className="text-silver/50 text-sm mb-6 flex-1">Prueba todas las funciones durante 30 días sin compromiso.</p>
+          <div className="text-3xl font-black text-white mb-8">$0.00</div>
+          <button
+            onClick={() => handleProductSelect('free-trial')}
+            disabled={isActivating}
+            className="w-full py-4 bg-white/5 border border-white/10 text-white font-bold rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+          >
+            Probar Ahora
+          </button>
+        </div>
 
         {/* STANDARD VITALICIO */}
         <div className="bg-[#0A0A0A] border border-white/5 rounded-[2.5rem] p-8 flex flex-col hover:border-primary/40 transition-all group">

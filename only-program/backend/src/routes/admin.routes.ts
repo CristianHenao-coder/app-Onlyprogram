@@ -265,7 +265,8 @@ router.post("/site-config", async (req: AuthRequest, res: Response) => {
 
 /**
  * GET /api/admin/domain-requests
- * Lista todos los links con domain_status = 'pending'
+ * Lista TODOS los links activos para gestión de dominios.
+ * Incluye links sin domain_status para que el admin pueda gestionarlos todos.
  */
 router.get("/domain-requests", async (req: AuthRequest, res: Response) => {
   try {
@@ -275,11 +276,12 @@ router.get("/domain-requests", async (req: AuthRequest, res: Response) => {
         `
         id, slug, title, custom_domain, domain_status,
         domain_requested_at, domain_activated_at, domain_notes,
+        is_active, status,
         profiles!smart_links_user_id_fkey (full_name)
       `,
       )
-      .in("domain_status", ["pending", "active", "failed"])
-      .order("domain_requested_at", { ascending: false });
+      .eq("is_active", true)
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
     res.json({ success: true, data: data || [] });
@@ -288,6 +290,7 @@ router.get("/domain-requests", async (req: AuthRequest, res: Response) => {
     res.status(500).json({ error: "Error al obtener solicitudes" });
   }
 });
+
 
 /**
  * POST /api/admin/domain-requests/:linkId/test
