@@ -13,7 +13,6 @@ interface PendingLink {
   created_at: string;
   profiles: {
     full_name: string;
-    email: string;
   };
 }
 
@@ -35,8 +34,7 @@ const LinksModeration = () => {
         .select(`
           *,
           profiles (
-            full_name,
-            email
+            full_name
           )
         `)
         .eq('status', 'pending')
@@ -100,7 +98,6 @@ const LinksModeration = () => {
               <div>
                 <h3 className="font-bold text-white text-lg">{link.title || 'Sin Título'}</h3>
                 <p className="text-sm text-silver/60">{link.profiles?.full_name}</p>
-                <p className="text-xs text-silver/40">{link.profiles?.email}</p>
               </div>
               <span className="bg-yellow-500/20 text-yellow-500 text-[10px] font-black px-2 py-1 rounded uppercase">
                 Pendiente
