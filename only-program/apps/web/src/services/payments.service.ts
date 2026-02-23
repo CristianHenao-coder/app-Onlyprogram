@@ -133,4 +133,19 @@ export const paymentsService = {
     );
     return handleResponse(response);
   },
+
+  /** Activa el plan gratuito de 3 días (uso único por cuenta) */
+  async activateFreeTrial(): Promise<{
+    success: boolean;
+    message: string;
+    expiresAt: string;
+    orderId: string;
+  }> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_URL}/payments/free-trial`, {
+      method: "POST",
+      headers,
+    });
+    return handleResponse(response);
+  },
 };

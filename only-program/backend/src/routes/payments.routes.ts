@@ -2,7 +2,10 @@ import { Router } from "express";
 import { authenticateToken, AuthRequest } from "../middlewares/auth.middleware";
 import { PayPalService } from "../services/paypal.service";
 import { NowPaymentsService } from "../services/nowpayments.service";
-import { sendPaymentConfirmationEmail } from "../services/brevo.service";
+import {
+  sendPaymentConfirmationEmail,
+  sendFreeTrialInvoiceEmail,
+} from "../services/brevo.service";
 import { supabase } from "../services/supabase.service";
 import { SubscriptionService } from "../services/subscription.service";
 import { v4 as uuidv4 } from "uuid";
@@ -422,6 +425,120 @@ router.get("/", async (req: AuthRequest, res) => {
   } catch (error: any) {
     console.error("Error fetching payments history:", error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// FREE TRIAL — Plan gratuito de 3 días
+// ─────────────────────────────────────────────────────────────
+
+/**
+ * POST /api/payments/free-trial
+ * Activa el plan gratuito de 3 días para el usuario.
+ * Solo puede usarse una vez por usuario.
+ */
+router.post("/free-trial", async (req: AuthRequest, res) => {
+  try {
+    if (!req.user) return res.status(401).json({ error: "No autenticado" });
+
+    const userId = req.user.id;
+    const userEmail = req.user.email;
+
+    // 1. Verificar que el usuario no haya usado ya una prueba gratuita
+    const { data: existingTrial } = await supabase
+      .from("payments")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("provider", "free-trial")
+      .maybeSingle();
+
+    if (existingTrial) {
+      return res.status(400).json({
+        error:
+          "Ya utilizaste tu prueba gratuita. Solo se permite una vez por cuenta.",
+        code: "TRIAL_ALREADY_USED",
+      });
+    }
+
+    // 2. Calcular fechas
+    const now = new Date();
+    const expiresAt = new Date(now);
+    expiresAt.setDate(expiresAt.getDate() + 3);
+    const orderId = uuidv4();
+
+    // 3. Crear registro de pago $0
+    const { error: paymentError } = await supabase.from("payments").insert({
+      id: orderId,
+      user_id: userId,
+      amount: 0,
+      currency: "USD",
+      provider: "free-trial",
+      status: "completed",
+      tx_reference: `free-trial-${orderId.slice(0, 8)}`,
+      confirmed_at: now.toISOString(),
+      created_at: now.toISOString(),
+    });
+
+    if (paymentError) {
+      console.error("Error creando pago free trial:", paymentError);
+      return res
+        .status(500)
+        .json({ error: "Error al registrar el plan gratuito." });
+    }
+
+    // 4. Activar links pendientes del usuario
+    const { FulfillmentService } =
+      await import("../services/fulfillment.service");
+    await FulfillmentService.activateLinkProduct(userId, orderId, 0, "USD");
+
+    // 5. Registrar/actualizar suscripción con fecha de expiración
+    const { data: userData } = await supabase.auth.admin.getUserById(userId);
+    const userName =
+      userData.user?.user_metadata?.full_name ||
+      userData.user?.user_metadata?.name ||
+      userData.user?.email?.split("@")[0] ||
+      "Usuario";
+
+    await supabase
+      .from("subscriptions")
+      .insert({
+        user_id: userId,
+        status: "active",
+        started_at: now.toISOString(),
+        current_period_start: now.toISOString(),
+        current_period_end: expiresAt.toISOString(),
+        next_payment_at: expiresAt.toISOString(),
+        last_payment_at: now.toISOString(),
+        total_amount: 0,
+      })
+      .then(({ error }) => {
+        if (error)
+          console.warn(
+            "Subscriptions insert warning (non-critical):",
+            error.message,
+          );
+      });
+
+    // 6. Enviar email de factura
+    if (userEmail) {
+      await sendFreeTrialInvoiceEmail(
+        userEmail,
+        userName,
+        now,
+        expiresAt,
+        orderId,
+      );
+    }
+
+    return res.json({
+      success: true,
+      message: "¡Plan gratuito activado! Revisa tu email para ver la factura.",
+      expiresAt: expiresAt.toISOString(),
+      orderId,
+    });
+  } catch (error: any) {
+    console.error("Error activando free trial:", error);
+    return res.status(500).json({ error: error.message || "Error interno." });
   }
 });
 

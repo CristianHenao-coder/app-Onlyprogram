@@ -86,6 +86,10 @@ export default function PaymentSelector({
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'crypto'>(initialMethod);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
+  // ─── FREE TRIAL STATE ─────────────────────────────────────
+  const [isActivatingTrial, setIsActivatingTrial] = useState(false);
+  const [trialUsed, setTrialUsed] = useState(false);
+
   // ─── CRYPTO / NOWPAYMENTS STATE ───────────────────────────
   const [selectedCrypto, setSelectedCrypto] = useState<string>('usdttrc20');
   const [cryptoStep, setCryptoStep] = useState<'select' | 'paying' | 'done' | 'failed'>('select');
@@ -122,6 +126,28 @@ export default function PaymentSelector({
       } catch { /* silently ignore poll errors */ }
     }, 10_000);
   }, [onSuccess]);
+
+  const handleActivateFreeTrial = async () => {
+    if (isActivatingTrial || trialUsed) return;
+    setIsActivatingTrial(true);
+    try {
+      await paymentsService.activateFreeTrial();
+      setTrialUsed(true);
+      setPaymentSuccess(true);
+      if (onSuccess) onSuccess();
+      toast.success('¡Prueba gratuita activada! Revisa tu email para ver la factura.', { duration: 6000 });
+    } catch (error: any) {
+      const isAlreadyUsed = error.message?.includes('Ya utilizaste');
+      if (isAlreadyUsed) {
+        setTrialUsed(true);
+        toast.error('Ya usaste tu prueba gratuita anteriormente.');
+      } else {
+        toast.error(error.message || 'Error al activar la prueba gratuita.');
+      }
+    } finally {
+      setIsActivatingTrial(false);
+    }
+  };
 
   const handleSelect = (method: 'card' | 'paypal' | 'crypto') => {
     setPaymentMethod(method);
@@ -203,6 +229,46 @@ export default function PaymentSelector({
   return (
     <div className="space-y-8 animate-fade-in relative">
       <div className="absolute -top-4 right-0 text-[9px] text-silver/20 font-mono">v3.0-NP</div>
+
+      {/* ── FREE TRIAL BANNER ── */}
+      <div className="relative overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/60 via-teal-950/60 to-emerald-950/60 p-6 backdrop-blur-sm">
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-emerald-500/5" />
+        <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-start gap-4">
+            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg shadow-emerald-500/30">
+              <span className="material-symbols-outlined text-3xl text-white">card_giftcard</span>
+            </div>
+            <div>
+              <div className="mb-1 flex flex-wrap items-center gap-2">
+                <span className="text-lg font-bold text-white">Prueba Gratuita</span>
+                <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-white">GRATIS · 3 DÍAS</span>
+                <span className="rounded-full bg-zinc-700/80 px-2 py-0.5 text-[10px] font-semibold text-zinc-300">Solo una vez</span>
+              </div>
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                Activa la versión completa del sistema por 3 días. Incluye links activos, dominio personalizado y analíticas. Solo necesitas apuntar el DNS de tu dominio a nuestro servidor.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            disabled={isActivatingTrial || trialUsed}
+            onClick={handleActivateFreeTrial}
+            className={`flex-shrink-0 flex items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-bold transition-all ${
+              trialUsed
+                ? 'cursor-not-allowed bg-zinc-800 text-zinc-500'
+                : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105 active:scale-95'
+            }`}
+          >
+            {isActivatingTrial ? (
+              <><span className="material-symbols-outlined animate-spin text-lg">progress_activity</span> Activando...</>
+            ) : trialUsed ? (
+              <><span className="material-symbols-outlined text-lg">check_circle</span> Ya activada</>
+            ) : (
+              <><span className="material-symbols-outlined text-lg">rocket_launch</span> Activar gratis</>
+            )}
+          </button>
+        </div>
+      </div>
 
       {/* ── METHOD TABS ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
