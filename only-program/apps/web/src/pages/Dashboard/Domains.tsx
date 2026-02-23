@@ -6,6 +6,13 @@ import { toast } from 'react-hot-toast';
 import DomainSearchModal from '@/components/DomainSearchModal';
 import { productPricingService, DEFAULT_PRODUCT_PRICING, type ProductPricingConfig } from '@/services/productPricing.service';
 
+const BACKEND_URL = import.meta.env.VITE_API_URL || '';
+
+async function getAuthToken() {
+    const session = (await supabase.auth.getSession()).data.session;
+    return session?.access_token || '';
+}
+
 interface LinkHelper {
     id: string;
     title: string;
@@ -20,20 +27,20 @@ const MOCK_USER_HAS_CARD = false; // Simulate if user has card
 const Domains = () => {
     const navigate = useNavigate();
 
-  const [pricingCfg, setPricingCfg] = useState<ProductPricingConfig>(DEFAULT_PRODUCT_PRICING);
+    const [pricingCfg, setPricingCfg] = useState<ProductPricingConfig>(DEFAULT_PRODUCT_PRICING);
 
-  useEffect(() => {
-    let mounted = true;
-    productPricingService.get().then((cfg) => {
-      if (mounted) setPricingCfg(cfg);
-    }).catch(() => {});
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    useEffect(() => {
+        let mounted = true;
+        productPricingService.get().then((cfg) => {
+            if (mounted) setPricingCfg(cfg);
+        }).catch(() => { });
+        return () => {
+            mounted = false;
+        };
+    }, []);
 
-  const PRICE_CONNECT = pricingCfg.domain.connect;
-  const PRICE_BUY = pricingCfg.domain.buy;
+    const PRICE_CONNECT = pricingCfg.domain.connect;
+    const PRICE_BUY = pricingCfg.domain.buy;
     const { user } = useAuth();
     const [links, setLinks] = useState<LinkHelper[]>([]);
     const [loading, setLoading] = useState(true);
@@ -158,15 +165,40 @@ const Domains = () => {
         }
     };
 
-    const handlePayment = () => {
+    const handlePayment = async () => {
         if (itemsCount === 0) {
             toast.error("Selecciona al menos una opción para continuar");
             return;
         }
 
+        // Before redirecting to payment, persist domain 'connect' requests
+        const connectEntries = Object.entries(selectedActions).filter(
+            ([, action]) => action === 'connect'
+        );
+
+        if (connectEntries.length > 0) {
+            const token = await getAuthToken();
+            const domainRequests = connectEntries.map(async ([linkId]) => {
+                const domain = domainsInput[linkId]?.trim();
+                if (!domain) return; // skip if no domain typed
+                try {
+                    await fetch(`${BACKEND_URL}/api/links/${linkId}/request-domain`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}`,
+                        },
+                        body: JSON.stringify({ custom_domain: domain }),
+                    });
+                } catch (e) {
+                    console.error('Error registering domain request for link', linkId, e);
+                }
+            });
+            await Promise.allSettled(domainRequests);
+        }
+
         if (MOCK_USER_HAS_CARD) {
             toast.success(`¡Pago exitoso de $${total.toFixed(2)}!`);
-            // Here we would process backend update
         } else {
             toast.loading('Redirigiendo a pagos...');
             setTimeout(() => {
@@ -177,7 +209,7 @@ const Domains = () => {
                             amount: total,
                             subtotal: subtotal,
                             discountApplied: appliedDiscount ? { ...appliedDiscount, amount: discountAmount } : null,
-                            items: selectedActions // We pass what was selected so payment page knows
+                            items: selectedActions
                         }
                     }
                 });

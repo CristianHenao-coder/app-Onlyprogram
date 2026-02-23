@@ -275,7 +275,7 @@ router.get("/domain-requests", async (req: AuthRequest, res: Response) => {
         `
         id, slug, title, custom_domain, domain_status,
         domain_requested_at, domain_activated_at, domain_notes,
-        profiles (full_name)
+        profiles!smart_links_user_id_fkey (full_name)
       `,
       )
       .in("domain_status", ["pending", "active", "failed"])
@@ -405,5 +405,50 @@ router.post(
     }
   },
 );
+
+/**
+ * GET /api/admin/links
+ * Lista todos los smart links con info del perfil del usuario (bypass RLS via serviceRoleKey)
+ */
+router.get("/links", async (req: AuthRequest, res: Response) => {
+  try {
+    const { data, error } = await supabase
+      .from("smart_links")
+      .select(`
+        id, slug, title, photo, status, is_active,
+        created_at, custom_domain, domain_status,
+        profiles!smart_links_user_id_fkey (full_name)
+      `)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    res.json({ success: true, data: data || [] });
+  } catch (err: any) {
+    console.error("[Admin] links error:", err);
+    res.status(500).json({ error: "Error al obtener links" });
+  }
+});
+
+/**
+ * POST /api/admin/links/:linkId/toggle
+ * Activa o desactiva un smart link
+ */
+router.post("/links/:linkId/toggle", async (req: AuthRequest, res: Response) => {
+  try {
+    const { linkId } = req.params;
+    const { is_active } = req.body;
+
+    const { error } = await supabase
+      .from("smart_links")
+      .update({ is_active: !!is_active })
+      .eq("id", linkId);
+
+    if (error) throw error;
+    res.json({ success: true, message: `Link ${is_active ? 'activado' : 'desactivado'}` });
+  } catch (err: any) {
+    console.error("[Admin] link toggle error:", err);
+    res.status(500).json({ error: "Error al cambiar estado del link" });
+  }
+});
 
 export default router;
