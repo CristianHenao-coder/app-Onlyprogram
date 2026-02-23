@@ -55,6 +55,7 @@ import CouponManager from '@/pages/Admin/CouponManager';
 import AdminSettings from '@/pages/Admin/Settings';
 import AuditLogs from './pages/Admin/AuditLogs';
 import LinksModeration from '@/pages/Admin/LinksModeration';
+import DomainRequests from '@/pages/Admin/DomainRequests';
 
 import '@/styles/index.css';
 
@@ -139,6 +140,7 @@ function App() {
                   <Route path="settings" element={<AdminSettings />} />
                   <Route path="audit-logs" element={<AuditLogs />} />
                   <Route path="moderation" element={<LinksModeration />} />
+                  <Route path="domains" element={<DomainRequests />} />
                 </Route>
               </Route>
             </Routes>

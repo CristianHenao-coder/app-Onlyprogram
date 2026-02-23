@@ -190,13 +190,13 @@ export const verifyDomainExistence = async (req: Request, res: Response) => {
       .replace(/^(https?:\/\/)?(www\.)?/, "");
 
     // 1. Check Database (smart_links)
-    const query = supabase
+    let query = supabase
       .from("smart_links")
       .select("id, user_id")
       .eq("custom_domain", normalizedDomain);
 
     if (excludeLinkId) {
-      query.neq("id", excludeLinkId);
+      query = query.neq("id", excludeLinkId);
     }
 
     const { data: existingInDb, error: dbError } = await query.maybeSingle();
@@ -240,5 +240,81 @@ export const verifyDomainExistence = async (req: Request, res: Response) => {
     res
       .status(500)
       .json({ error: "Error verifying domain", details: error.message });
+  }
+};
+
+export const requestDomainLink = async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    const userId = authReq.user?.id;
+    const { linkId, domain } = req.body;
+
+    if (!linkId || !domain) {
+      return res.status(400).json({ error: "linkId y domain son requeridos" });
+    }
+
+    const normalizedDomain = domain
+      .toLowerCase()
+      .trim()
+      .replace(/^(https?:\/\/)?(www\.)?/, "");
+
+    // Verify the link belongs to this user
+    const { data: link, error: linkError } = await supabase
+      .from("smart_links")
+      .select("id, user_id")
+      .eq("id", linkId)
+      .eq("user_id", userId)
+      .single();
+
+    if (linkError || !link) {
+      return res.status(403).json({ error: "Link no encontrado o sin acceso" });
+    }
+
+    // Check this domain is not already used by another link
+    const { data: existing } = await supabase
+      .from("smart_links")
+      .select("id")
+      .eq("custom_domain", normalizedDomain)
+      .neq("id", linkId)
+      .maybeSingle();
+
+    if (existing) {
+      return res.status(409).json({
+        error: "Este dominio ya está vinculado a otra cuenta en OnlyProgram.",
+      });
+    }
+
+    // Save domain request
+    const { error: updateError } = await supabase
+      .from("smart_links")
+      .update({
+        custom_domain: normalizedDomain,
+        domain_status: "pending",
+        domain_requested_at: new Date().toISOString(),
+        domain_activated_at: null,
+        domain_notes: null,
+      })
+      .eq("id", linkId);
+
+    if (updateError) throw updateError;
+
+    console.log(
+      `[Domain Request] Link ${linkId} requested domain: ${normalizedDomain}`,
+    );
+
+    res.json({
+      success: true,
+      message:
+        "Solicitud de vinculación recibida. El equipo la configurará pronto.",
+      domain: normalizedDomain,
+    });
+  } catch (error: any) {
+    console.error("Request Domain Error:", error);
+    res
+      .status(500)
+      .json({
+        error: "Error al solicitar vinculación",
+        details: error.message,
+      });
   }
 };

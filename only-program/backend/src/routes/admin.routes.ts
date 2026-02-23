@@ -263,4 +263,147 @@ router.post("/site-config", async (req: AuthRequest, res: Response) => {
   }
 });
 
+/**
+ * GET /api/admin/domain-requests
+ * Lista todos los links con domain_status = 'pending'
+ */
+router.get("/domain-requests", async (req: AuthRequest, res: Response) => {
+  try {
+    const { data, error } = await supabase
+      .from("smart_links")
+      .select(
+        `
+        id, slug, title, custom_domain, domain_status,
+        domain_requested_at, domain_activated_at, domain_notes,
+        profiles (full_name, email)
+      `,
+      )
+      .in("domain_status", ["pending", "active", "failed"])
+      .order("domain_requested_at", { ascending: false });
+
+    if (error) throw error;
+    res.json({ success: true, data: data || [] });
+  } catch (err: any) {
+    console.error("[Admin] domain-requests error:", err);
+    res.status(500).json({ error: "Error al obtener solicitudes" });
+  }
+});
+
+/**
+ * POST /api/admin/domain-requests/:linkId/test
+ * Hace un DNS lookup del custom_domain del link y verifica si el A record
+ * apunta a la IP del servidor configurada en SERVER_IP.
+ */
+router.post(
+  "/domain-requests/:linkId/test",
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { linkId } = req.params;
+
+      const { data: link, error } = await supabase
+        .from("smart_links")
+        .select("id, custom_domain")
+        .eq("id", linkId)
+        .single();
+
+      if (error || !link || !link.custom_domain) {
+        return res
+          .status(404)
+          .json({ error: "Link no encontrado o sin dominio" });
+      }
+
+      const domain = link.custom_domain;
+      const expectedIp = process.env.SERVER_IP || "147.93.131.4";
+
+      // Use dns module to do lookup
+      const dns = await import("dns/promises");
+      try {
+        const addresses = await dns.resolve4(domain);
+        const hasCorrectIp = addresses.includes(expectedIp);
+        res.json({
+          success: true,
+          domain,
+          addresses,
+          expectedIp,
+          configured: hasCorrectIp,
+          message: hasCorrectIp
+            ? `✅ DNS correcto. ${domain} apunta a ${expectedIp}`
+            : `❌ DNS incorrecto. ${domain} apunta a ${addresses.join(", ")}, se esperaba ${expectedIp}`,
+        });
+      } catch (dnsErr: any) {
+        res.json({
+          success: false,
+          domain,
+          configured: false,
+          message: `❌ No se pudo resolver ${domain}: ${dnsErr.code || dnsErr.message}`,
+        });
+      }
+    } catch (err: any) {
+      console.error("[Admin] domain test error:", err);
+      res.status(500).json({ error: "Error al probar DNS" });
+    }
+  },
+);
+
+/**
+ * POST /api/admin/domain-requests/:linkId/activate
+ * Marca el dominio como activo
+ */
+router.post(
+  "/domain-requests/:linkId/activate",
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { linkId } = req.params;
+
+      const { error } = await supabase
+        .from("smart_links")
+        .update({
+          domain_status: "active",
+          domain_activated_at: new Date().toISOString(),
+          domain_notes: null,
+        })
+        .eq("id", linkId);
+
+      if (error) throw error;
+
+      console.log(`[Admin] Domain activated for link: ${linkId}`);
+      res.json({ success: true, message: "Dominio activado exitosamente" });
+    } catch (err: any) {
+      console.error("[Admin] domain activate error:", err);
+      res.status(500).json({ error: "Error al activar dominio" });
+    }
+  },
+);
+
+/**
+ * POST /api/admin/domain-requests/:linkId/reject
+ * Marca el dominio como fallido con una nota
+ */
+router.post(
+  "/domain-requests/:linkId/reject",
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { linkId } = req.params;
+      const { notes } = req.body;
+
+      const { error } = await supabase
+        .from("smart_links")
+        .update({
+          domain_status: "failed",
+          domain_notes:
+            notes || "Error de configuración. Por favor contacta soporte.",
+        })
+        .eq("id", linkId);
+
+      if (error) throw error;
+
+      console.log(`[Admin] Domain rejected for link: ${linkId}`);
+      res.json({ success: true, message: "Solicitud rechazada" });
+    } catch (err: any) {
+      console.error("[Admin] domain reject error:", err);
+      res.status(500).json({ error: "Error al rechazar solicitud" });
+    }
+  },
+);
+
 export default router;

@@ -60,6 +60,8 @@ interface LinkPage {
   buttons: ButtonLink[];
   folder?: string;
   customDomain?: string;
+  domainStatus?: 'none' | 'pending' | 'active' | 'failed';
+  domainNotes?: string;
   slug?: string;
 }
 
@@ -99,7 +101,8 @@ const DEFAULT_PAGE: LinkPage = {
     backgroundStart: '#000000',
     backgroundEnd: '#1a1a1a'
   },
-  buttons: []
+  buttons: [],
+  domainStatus: 'none'
 };
 
 
@@ -373,6 +376,8 @@ export default function Links() {
             backgroundEnd: link.config?.theme?.backgroundEnd || '#1a1a1a'
           },
           customDomain: link.custom_domain,
+          domainStatus: link.domain_status || 'none',
+          domainNotes: link.domain_notes || '',
           slug: link.slug,
           buttons: (link.smart_link_buttons && link.smart_link_buttons.length > 0) 
             ? link.smart_link_buttons.sort((a: any, b: any) => a.order - b.order).map((b: any) => ({
@@ -467,6 +472,8 @@ export default function Links() {
             buttons: currentPageToSave.buttons,
             is_active: true, // Links activos siempre son is_active=true
             custom_domain: currentPageToSave.customDomain,
+            domain_status: currentPageToSave.domainStatus,
+            domain_notes: currentPageToSave.domainNotes,
             config: {
               template: currentPageToSave.template,
               theme: currentPageToSave.theme,
@@ -1297,255 +1304,171 @@ export default function Links() {
                               </div>
                             </div>
                             
-                            <div className="p-6 space-y-8">
-                              {/* URL & Custom Domain Section */}
-                              <div className="space-y-4">
-                                {/* Custom Domain Section */}
-                                <div className="p-5 bg-black/40 border border-white/5 rounded-2xl relative overflow-hidden group">
-                                  {/* Glass background effect */}
-                                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                                  
-                                  <div className="flex justify-between items-start mb-6 relative">
-                                    <div>
-                                      <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em] mb-1.5 flex items-center gap-2">
-                                        <span className="material-symbols-outlined text-xs">verified</span>
-                                        Dominio Personalizado Pro
-                                      </h4>
-                                      <p className="text-[10px] text-silver/30 font-medium">Conecta tu propia marca (Ej: misitio.com)</p>
-                                    </div>
-                                    
+                            <div className="p-6 space-y-6">
+
+                              {/* Custom Domain Section — state-based flow */}
+                              <div className="p-5 bg-black/40 border border-white/5 rounded-2xl relative overflow-hidden group">
+                                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                                <div className="flex items-center gap-2 mb-4 relative">
+                                  <span className="material-symbols-outlined text-primary text-sm">verified</span>
+                                  <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Dominio Personalizado Pro</h4>
+                                </div>
+
+                                {/* STATE: draft / no plan */}
+                                {currentPage.status === 'draft' && (
+                                  <div className="p-8 text-center bg-white/5 border border-white/5 rounded-[2rem] border-dashed">
+                                    <span className="material-symbols-outlined text-4xl text-silver/20 mb-4 block">lock</span>
+                                    <h4 className="text-white font-bold mb-2">Link no activado</h4>
+                                    <p className="text-silver/40 text-xs max-w-xs mx-auto mb-6">Debes contratar un plan para desbloquear la configuración de dominio personalizado.</p>
+                                    <button
+                                      onClick={() => navigate('/dashboard/checkout', { state: { pendingPurchase: { linksData: [currentPage] } } })}
+                                      className="px-6 py-2.5 bg-white text-black font-bold rounded-xl text-xs hover:scale-110 transition-all"
+                                    >
+                                      Ver Planes
+                                    </button>
+                                  </div>
+                                )}
+
+                                {/* STATE: none — form to request domain */}
+                                {currentPage.status === 'active' && (!currentPage.domainStatus || currentPage.domainStatus === 'none') && (
+                                  <div className="space-y-4 relative">
+                                    <p className="text-[11px] text-silver/40 leading-relaxed">
+                                      Ingresa tu dominio y nuestro equipo lo configurará por ti. No necesitas tocar ningún DNS.
+                                    </p>
                                     <div className="flex gap-2">
-                                      {currentPage.customDomain && (
-                                        <button 
-                                          onClick={() => window.open(`http://${currentPage.customDomain}`, '_blank')}
-                                          className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white rounded-lg text-[10px] font-bold transition-all border border-white/5"
-                                        >
-                                          <span className="material-symbols-outlined text-xs">visibility</span>
-                                          Vista Previa
-                                        </button>
-                                      )}
-                                      
-                                      <button 
+                                      <div className="relative flex-1">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-silver/20 text-sm">language</span>
+                                        <input
+                                          type="text"
+                                          placeholder="ej: misitio.com"
+                                          value={currentPage.customDomain || ''}
+                                          onChange={(e) => handleUpdatePage('customDomain', e.target.value.toLowerCase().replace(/\s/g, '').replace(/https?:\/\//, ''))}
+                                          className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-4 text-sm text-white placeholder:text-silver/20 focus:outline-none focus:border-primary/50 transition-all font-mono"
+                                        />
+                                      </div>
+                                      <button
                                         onClick={async () => {
                                           if (!currentPage.customDomain) {
-                                            toast.error('Debes vincular un dominio antes de publicar', {
-                                              icon: '🚫',
-                                              duration: 4000
-                                            });
+                                            toast.error('Ingresa un dominio primero');
                                             return;
                                           }
-                                          
-                                          const loadingToast = toast.loading('Verificando disponibilidad...');
-                                          
+                                          const loadingToast = toast.loading('Enviando solicitud...');
                                           try {
                                             const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
-                                            const { data: vData } = await axios.get(`${BACKEND_URL}/api/domains/verify`, {
-                                              params: { domain: currentPage.customDomain }
+                                            const { supabase: sb } = await import('@/services/supabase');
+                                            const { data: { session } } = await sb.auth.getSession();
+                                            const res = await fetch(`${BACKEND_URL}/api/domains/request`, {
+                                              method: 'POST',
+                                              headers: {
+                                                'Content-Type': 'application/json',
+                                                Authorization: `Bearer ${session?.access_token}`,
+                                              },
+                                              body: JSON.stringify({ linkId: currentPage.id, domain: currentPage.customDomain }),
                                             });
-
-                                            if (vData.exists) {
-                                              toast.dismiss(loadingToast);
-                                              toast.error(vData.message || 'El dominio ya está en uso.', {
-                                                icon: '⚠️',
-                                                duration: 5000
-                                              });
-                                              return;
-                                            }
-
-                                            toast.loading('Configurando SSL y BotShield...', { id: loadingToast });
-                                            
-                                            if (currentPage.status !== 'active') {
-                                              await handleUpdatePage('status', 'active');
-                                            }
-                                            
-                                            setTimeout(() => {
-                                              toast.dismiss(loadingToast);
-                                              toast.success('¡Dominio Activo y Protegido!', {
-                                                icon: '🛡️',
-                                                duration: 5000
-                                              });
-                                            }, 2000);
-                                          } catch (err) {
+                                            const json = await res.json();
                                             toast.dismiss(loadingToast);
-                                            toast.error('Error al activar el dominio');
+                                            if (!res.ok) {
+                                              toast.error(json.error || 'Error al enviar solicitud');
+                                            } else {
+                                              toast.success('¡Solicitud enviada! El equipo lo activará pronto.');
+                                              handleUpdatePage('domainStatus', 'pending');
+                                            }
+                                          } catch {
+                                            toast.dismiss(loadingToast);
+                                            toast.error('Error al enviar solicitud');
                                           }
                                         }}
-                                        className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                                          currentPage.status === 'active' 
-                                          ? 'bg-green-500 text-black' 
-                                          : 'bg-primary text-black hover:scale-105 active:scale-95'
-                                        }`}
+                                        className="px-5 bg-primary hover:bg-primary/80 text-black border border-primary/20 font-black rounded-xl text-xs uppercase tracking-widest transition-all whitespace-nowrap"
                                       >
-                                        <span className="material-symbols-outlined text-xs">
-                                          {currentPage.status === 'active' ? 'check_circle' : 'publish'}
-                                        </span>
-                                        {currentPage.status === 'active' ? 'Publicado' : 'Publicar Ahora'}
+                                        Solicitar Vinculación
                                       </button>
                                     </div>
                                   </div>
+                                )}
 
-                                  <div className="flex gap-2 relative">
-                                    <div className="relative flex-1">
-                                      <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-silver/20 text-sm">link</span>
-                                      <input 
-                                        type="text" 
-                                        placeholder="ej: misitio.com"
-                                        value={currentPage.customDomain || ''}
-                                        onChange={(e) => handleUpdatePage('customDomain', e.target.value.toLowerCase().replace(/\s/g, '').replace(/https?:\/\//, ''))}
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-4 text-sm text-white placeholder:text-silver/20 focus:outline-none focus:border-primary/50 transition-all font-mono"
-                                      />
-                                    </div>
-                                    <button 
-                                      onClick={async () => {
-                                        if (!currentPage.customDomain) {
-                                          toast.error('Ingresa un dominio primero');
-                                          return;
-                                        }
-
-                                        const loadingToast = toast.loading('Validando dominio...');
-                                        try {
-                                          const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
-                                          const { data: vData } = await axios.get(`${BACKEND_URL}/api/domains/verify`, {
-                                            params: { domain: currentPage.customDomain }
-                                          });
-
-                                          toast.dismiss(loadingToast);
-                                          if (vData.exists) {
-                                            toast.error(vData.message || 'Dominio no disponible.', { icon: '🚫' });
-                                          } else {
-                                            toast.success(`Dominio disponible. Siguiente paso: Configura tus DNS.`);
-                                          }
-                                        } catch (err) {
-                                          toast.dismiss(loadingToast);
-                                          toast.error('Error al validar dominio');
-                                        }
-                                      }}
-                                      className="px-6 bg-white/5 hover:bg-white/10 text-white border border-white/10 font-bold rounded-xl text-xs uppercase tracking-widest transition-all"
-                                    >
-                                      Vincular
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* DNS SECRETS / INSTRUCTIONS (Only for Custom Domains or Active links) */}
-                              {currentPage.status === 'active' && (
-                                <div className="space-y-6 animate-fade-in">
-                                  <div className="p-5 border border-primary/20 bg-primary/5 rounded-2xl">
-                                    <div className="flex items-center gap-3 mb-4 text-primary">
-                                      <span className="material-symbols-outlined">dns</span>
-                                      <h4 className="text-sm font-bold uppercase tracking-wider">Configuración DNS Automática</h4>
-                                    </div>
-                                    <p className="text-xs text-silver/60 leading-relaxed mb-6">
-                                      Para que tu dominio funcione correctamente, debes apuntar tus registros DNS a nuestros servidores. 
-                                      <span className="text-white font-bold ml-1">BotShield se activará automáticamente tras la propagación.</span>
-                                    </p>
-
-                                    <div className="space-y-3 font-mono text-[11px]">
-                                      <div className="p-3 bg-black/60 rounded-xl border border-white/10 flex items-center justify-between group">
-                                        <div className="flex flex-col gap-1">
-                                          <span className="text-[10px] text-silver/30 font-bold">Tipo: A (Principal)</span>
-                                          <span className="text-white">147.93.131.4</span>
-                                        </div>
-                                        <button 
-                                          onClick={() => {
-                                            navigator.clipboard.writeText('147.93.131.4');
-                                            toast.success('IP copiada');
-                                          }}
-                                          className="text-silver/30 hover:text-primary transition-colors"
-                                        >
-                                          <span className="material-symbols-outlined text-sm">content_copy</span>
-                                        </button>
-                                      </div>
-                                      <div className="p-3 bg-black/60 rounded-xl border border-white/10 flex items-center justify-between group">
-                                        <div className="flex flex-col gap-1">
-                                          <span className="text-[10px] text-silver/30 font-bold">Tipo: CNAME (WWW)</span>
-                                          <span className="text-white">cname.onlyprogram.com</span>
-                                        </div>
-                                        <button 
-                                          onClick={() => {
-                                            navigator.clipboard.writeText('cname.onlyprogram.com');
-                                            toast.success('Host copiado');
-                                          }}
-                                          className="text-silver/30 hover:text-primary transition-colors"
-                                        >
-                                          <span className="material-symbols-outlined text-sm">content_copy</span>
-                                        </button>
+                                {/* STATE: pending — waiting for admin */}
+                                {currentPage.status === 'active' && currentPage.domainStatus === 'pending' && (
+                                  <div className="space-y-4 relative">
+                                    <div className="flex items-center gap-3 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl">
+                                      <span className="animate-pulse material-symbols-outlined text-yellow-400 text-2xl">schedule</span>
+                                      <div>
+                                        <p className="text-sm font-bold text-yellow-300">En proceso de configuración</p>
+                                        <p className="text-xs text-yellow-400/70 mt-0.5">Nuestro equipo está configurando tu dominio. Te avisaremos cuando esté listo.</p>
                                       </div>
                                     </div>
-                                    
-                                    <p className="mt-6 text-[10px] text-silver/30 flex items-center gap-2 italic">
-                                      <span className="material-symbols-outlined text-sm">info</span>
-                                      La propagación puede tardar hasta 24 horas.
-                                    </p>
-                                  </div>
-
-                                  {/* GoDaddy specific tips */}
-                                  <div className="p-5 border border-white/5 bg-white/[0.02] rounded-2xl">
-                                    <div className="flex items-center gap-3 mb-4 text-silver/60">
-                                      <span className="material-symbols-outlined">help</span>
-                                      <h4 className="text-[10px] font-bold uppercase tracking-wider">¿Usas GoDaddy?</h4>
+                                    <div className="p-4 bg-black/30 border border-white/5 rounded-xl">
+                                      <span className="text-[10px] text-silver/40 uppercase tracking-widest block mb-1">Dominio Solicitado</span>
+                                      <p className="text-primary font-mono text-sm font-bold">{currentPage.customDomain}</p>
                                     </div>
-                                    <ul className="space-y-3">
-                                      <li className="flex gap-3 text-xs text-silver/40">
-                                        <span className="text-primary font-bold">1.</span>
-                                        <span>Ve a "Mis productos" y haz clic en "DNS" al lado de <b>pruebass.online</b>.</span>
-                                      </li>
-                                      <li className="flex gap-3 text-xs text-silver/40">
-                                        <span className="text-primary font-bold">2.</span>
-                                        <span>Edita el registro <b>A</b> (Host: @) y pega el valor: <b>76.76.21.21</b></span>
-                                      </li>
-                                      <li className="flex gap-3 text-xs text-silver/40">
-                                        <span className="text-primary font-bold">3.</span>
-                                        <span>Guarda los cambios y espera unos minutos.</span>
-                                      </li>
-                                    </ul>
-                                  </div>
-
-                                  {/* Launch Section */}
-                                  <div className="p-6 bg-gradient-to-br from-green-500/5 to-emerald-600/5 border border-green-500/20 rounded-[2rem] text-center">
-                                    <div className="w-16 h-16 bg-green-500/10 rounded-2xl flex items-center justify-center text-green-500 mx-auto mb-4 border border-green-500/20">
-                                      <span className="material-symbols-outlined text-4xl">verified_user</span>
-                                    </div>
-                                    <h4 className="text-white font-black uppercase tracking-tight mb-2">Protección BotShield Avanzada</h4>
-                                    <p className="text-silver/50 text-xs mb-6 max-w-sm mx-auto">
-                                      Tu link está blindado contra bots, competidores y reportes maliciosos.
-                                    </p>
-                                    <button 
+                                    <button
                                       onClick={() => {
-                                        if (!currentPage.customDomain) {
-                                          toast.error('Configura tu dominio primero');
-                                          return;
-                                        }
-                                        const url = `http://${currentPage.customDomain}`;
-                                        window.open(url, '_blank');
+                                        handleUpdatePage('domainStatus', 'none');
+                                        handleUpdatePage('customDomain', '');
                                       }}
-                                      className="w-full bg-green-500 hover:bg-green-600 text-white font-black py-4 rounded-2xl shadow-xl shadow-green-500/20 transition-all flex items-center justify-center gap-2 uppercase tracking-widest"
+                                      className="text-xs text-silver/40 hover:text-silver transition-colors underline underline-offset-2"
                                     >
-                                      Abrir sitio protegido
-                                      <span className="material-symbols-outlined">shield</span>
+                                      Cancelar solicitud / Cambiar dominio
                                     </button>
                                   </div>
-                                </div>
-                              )}
+                                )}
 
-                              {currentPage.status === 'draft' && (
-                                <div className="p-8 text-center bg-white/5 border border-white/5 rounded-[2rem] border-dashed">
-                                  <span className="material-symbols-outlined text-4xl text-silver/20 mb-4">lock</span>
-                                  <h4 className="text-white font-bold mb-2">Link no activado</h4>
-                                  <p className="text-silver/40 text-xs max-w-xs mx-auto mb-6">Debes contratar un plan para desbloquear la configuración de dominio y protección de seguridad.</p>
-                                  <button 
-                                    onClick={() => {
-                                      navigate('/dashboard/checkout', {
-                                        state: { pendingPurchase: { linksData: [currentPage] } }
-                                      });
-                                    }}
-                                    className="px-6 py-2.5 bg-white text-black font-bold rounded-xl text-xs hover:scale-110 transition-all"
-                                  >
-                                    Ver Planes
-                                  </button>
-                                </div>
-                              )}
+                                {/* STATE: active — domain live */}
+                                {currentPage.status === 'active' && currentPage.domainStatus === 'active' && (
+                                  <div className="space-y-4 relative">
+                                    <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+                                      <span className="material-symbols-outlined text-emerald-400 text-2xl">check_circle</span>
+                                      <div>
+                                        <p className="text-sm font-bold text-emerald-300">¡Dominio Activo!</p>
+                                        <p className="text-xs text-emerald-400/70 mt-0.5">Tu dominio ya está funcionando.</p>
+                                      </div>
+                                    </div>
+                                    <div className="p-4 bg-black/30 border border-white/5 rounded-xl">
+                                      <span className="text-[10px] text-silver/40 uppercase tracking-widest block mb-1">Tu Dominio</span>
+                                      <p className="text-primary font-mono text-sm font-bold">{currentPage.customDomain}</p>
+                                    </div>
+                                    <div className="flex gap-3 flex-wrap">
+                                      <button
+                                        onClick={() => window.open(`https://${currentPage.customDomain}`, '_blank')}
+                                        className="flex items-center gap-2 flex-1 py-3 px-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-300 font-bold rounded-xl text-xs transition-all"
+                                      >
+                                        <span className="material-symbols-outlined text-sm">open_in_new</span>
+                                        Ver mi sitio
+                                      </button>
+                                      <button
+                                        onClick={() => navigate('/dashboard/analytics')}
+                                        className="flex items-center gap-2 flex-1 py-3 px-4 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary font-bold rounded-xl text-xs transition-all"
+                                      >
+                                        <span className="material-symbols-outlined text-sm">bar_chart</span>
+                                        Ver métricas
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* STATE: failed */}
+                                {currentPage.status === 'active' && currentPage.domainStatus === 'failed' && (
+                                  <div className="space-y-4 relative">
+                                    <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
+                                      <span className="material-symbols-outlined text-red-400 text-2xl">cancel</span>
+                                      <div>
+                                        <p className="text-sm font-bold text-red-300">Error de configuración</p>
+                                        <p className="text-xs text-red-400/70 mt-0.5">{currentPage.domainNotes || 'Hubo un problema al configurar tu dominio. Contacta soporte.'}</p>
+                                      </div>
+                                    </div>
+                                    <button
+                                      onClick={() => {
+                                        handleUpdatePage('domainStatus', 'none');
+                                        handleUpdatePage('customDomain', '');
+                                      }}
+                                      className="flex items-center gap-2 px-5 py-2.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary font-bold rounded-xl text-xs transition-all"
+                                    >
+                                      <span className="material-symbols-outlined text-sm">refresh</span>
+                                      Intentar de nuevo
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </section>
                         </div>
