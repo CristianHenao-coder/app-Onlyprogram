@@ -64,8 +64,6 @@ export class NowPaymentsService {
       ipn_callback_url: `${config.urls.backend}/api/payments/webhook/nowpayments`,
     };
 
-    if (email) payload.payer_email = email;
-
     const response = await fetch(`${config.nowpayments.apiUrl}/payment`, {
       method: "POST",
       headers: this.headers,
