@@ -11,7 +11,7 @@ interface DomainRequest {
   domain_requested_at: string;
   domain_activated_at: string | null;
   domain_notes: string | null;
-  profiles: { full_name: string; email: string };
+  profiles: { full_name: string };
 }
 
 interface DnsTestResult {
@@ -201,7 +201,6 @@ const DomainRequests = () => {
                   <div className="min-w-0">
                     <h3 className="font-bold text-white text-lg truncate">{req.title || 'Sin Título'}</h3>
                     <p className="text-sm text-silver/60 truncate">{req.profiles?.full_name}</p>
-                    <p className="text-xs text-silver/40 truncate">{req.profiles?.email}</p>
                   </div>
                   <StatusBadge status={req.domain_status} />
                 </div>

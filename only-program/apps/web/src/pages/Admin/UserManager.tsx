@@ -27,7 +27,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005/api';
      try {
        const { data, error } = await supabase
          .from('profiles')
-         .select('*, smart_links(*)')
+         .select('*, smart_links!smart_links_user_id_fkey(*)')
          .order('created_at', { ascending: false });
 
        if (error) throw error;

@@ -33,7 +33,7 @@ const LinksModeration = () => {
         .from('smart_links')
         .select(`
           *,
-          profiles (
+          profiles!smart_links_user_id_fkey (
             full_name
           )
         `)
