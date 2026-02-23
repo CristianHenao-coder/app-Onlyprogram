@@ -348,7 +348,7 @@ const DomainRequests = () => {
 
                   {req.domain_status !== 'failed' && (
                     <button
-                      onClick={() => setRejectModal({ linkId: req.id, domain: req.custom_domain })}
+                      onClick={() => setRejectModal({ linkId: req.id, domain: req.custom_domain || '' })}
                       disabled={acting[req.id]}
                       className="flex items-center gap-2 flex-1 min-w-[120px] py-2.5 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 text-xs font-bold transition-all disabled:opacity-50"
                     >

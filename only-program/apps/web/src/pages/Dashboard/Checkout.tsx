@@ -22,12 +22,10 @@ export default function Checkout() {
 
     const loadData = async () => {
       try {
-        const [pricing, trialStatus] = await Promise.all([
-          productPricingService.get(),
-          paymentsService.checkFreeTrial()
+        const [pricing] = await Promise.all([
+          productPricingService.get()
         ]);
         setPricingCfg(pricing);
-        setHasUsedTrial(trialStatus.hasUsedTrial);
       } catch (error) {
         console.error("Error loading checkout data:", error);
       } finally {
