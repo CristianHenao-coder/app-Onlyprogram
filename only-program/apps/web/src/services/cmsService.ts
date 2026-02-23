@@ -35,7 +35,7 @@ export const cmsService = {
     const token = sessionData?.session?.access_token;
     if (!token) throw new Error("Authenticated user required to save config");
 
-    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:4005/api";
+    const apiUrl = `${import.meta.env.VITE_API_URL || "http://localhost:4005"}/api`;
 
     const response = await fetch(`${apiUrl}/admin/site-config`, {
       method: "POST",
