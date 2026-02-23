@@ -146,6 +146,75 @@ const DomainRequests = () => {
         </button>
       </div>
 
+      {/* DNS Configuration Reference */}
+      <div className="bg-surface/30 border border-border/50 rounded-3xl p-8 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-3xl rounded-full -mr-32 -mt-32"></div>
+        
+        <div className="relative flex flex-col gap-6">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+              <span className="material-symbols-outlined text-primary">dns</span>
+            </div>
+            <div>
+              <h2 className="text-lg font-black text-white tracking-tight">Configuración DNS Requerida</h2>
+              <p className="text-silver/40 text-xs font-medium">Estos son los valores que los usuarios deben configurar en su proveedor de dominio.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="space-y-4">
+              <div className="bg-black/20 rounded-2xl p-4 border border-white/5 hover:border-primary/20 transition-colors">
+                <p className="text-[10px] text-silver/40 font-black uppercase tracking-widest mb-1.5">Tipo</p>
+                <span className="bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded uppercase">Registro A</span>
+              </div>
+              <div className="bg-black/20 rounded-2xl p-4 border border-white/5">
+                <p className="text-[10px] text-silver/40 font-black uppercase tracking-widest mb-1.5">Tipo</p>
+                <span className="bg-blue-500/10 text-blue-400 text-[10px] font-black px-2 py-0.5 rounded uppercase">CNAME</span>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-black/20 rounded-2xl p-4 border border-white/5">
+                <p className="text-[10px] text-silver/40 font-black uppercase tracking-widest mb-1.5">Nombre (Host)</p>
+                <p className="text-white font-mono text-sm font-bold">@</p>
+              </div>
+              <div className="bg-black/20 rounded-2xl p-4 border border-white/5">
+                <p className="text-[10px] text-silver/40 font-black uppercase tracking-widest mb-1.5">Nombre (Host)</p>
+                <p className="text-white font-mono text-sm font-bold">www</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-black/20 rounded-2xl p-4 border border-white/5 group/copy relative cursor-pointer" onClick={() => { navigator.clipboard.writeText('147.93.131.4'); toast.success('Copiado'); }}>
+                <p className="text-[10px] text-silver/40 font-black uppercase tracking-widest mb-1.5 flex justify-between">
+                  Valor (Punta a)
+                  <span className="material-symbols-outlined text-[12px] opacity-0 group-hover/copy:opacity-100 transition-opacity">content_copy</span>
+                </p>
+                <p className="text-primary font-mono text-sm font-bold">147.93.131.4</p>
+              </div>
+              <div className="bg-black/20 rounded-2xl p-4 border border-white/5 group/copy relative cursor-pointer" onClick={() => { navigator.clipboard.writeText('onlyprogram.com'); toast.success('Copiado'); }}>
+                <p className="text-[10px] text-silver/40 font-black uppercase tracking-widest mb-1.5 flex justify-between">
+                  Valor (Punta a)
+                  <span className="material-symbols-outlined text-[12px] opacity-0 group-hover/copy:opacity-100 transition-opacity">content_copy</span>
+                </p>
+                <p className="text-white font-mono text-sm font-bold">onlyprogram.com</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-black/20 rounded-2xl p-4 border border-white/5">
+                <p className="text-[10px] text-silver/40 font-black uppercase tracking-widest mb-1.5">TTL</p>
+                <p className="text-white font-mono text-sm font-bold">1/2 Hora (1800)</p>
+              </div>
+              <div className="bg-black/20 rounded-2xl p-4 border border-white/5">
+                <p className="text-[10px] text-silver/40 font-black uppercase tracking-widest mb-1.5">TTL</p>
+                <p className="text-white font-mono text-sm font-bold">1/2 Hora (1800)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
