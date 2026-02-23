@@ -116,7 +116,7 @@ export class NowPaymentsService {
         { headers: this.headers },
       );
       if (!response.ok) return DEFAULT_CURRENCIES;
-      const data = await response.json();
+      const data = (await response.json()) as { currencies?: string[] };
       return data.currencies ?? DEFAULT_CURRENCIES;
     } catch {
       return DEFAULT_CURRENCIES;
