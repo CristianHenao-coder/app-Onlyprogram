@@ -196,7 +196,7 @@ router.post("/approve-link", async (req: AuthRequest, res: Response) => {
       .select("id")
       .eq("slug", slug)
       .neq("id", linkId) // Excluir el mismo link si ya tenía ese slug
-      .single();
+      .maybeSingle();
 
     if (existingLink) {
       return res.status(409).json({ error: "El slug ya está en uso" });
@@ -209,7 +209,7 @@ router.post("/approve-link", async (req: AuthRequest, res: Response) => {
         slug: slug,
         status: "active",
         is_active: true,
-        updated_at: new Date().toISOString(),
+        // Eliminado updated_at porque la columna no existe en la tabla
       })
       .eq("id", linkId)
       .select()
