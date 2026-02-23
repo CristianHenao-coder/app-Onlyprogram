@@ -89,11 +89,16 @@ router.get("/api/gate/domain/:domain", async (req, res) => {
   try {
     const { domain } = req.params;
 
-    // 1. Buscar Link
+    // 1. Buscar Link (Normalizado)
+    const normalizedDomain = domain
+      .toLowerCase()
+      .trim()
+      .replace(/^www\./, "");
+
     const { data: link, error } = await supabase
       .from("smart_links")
       .select("*")
-      .eq("custom_domain", domain)
+      .eq("custom_domain", normalizedDomain)
       .single();
 
     if (error || !link) {
@@ -133,11 +138,16 @@ router.get("/api/system/check-domain", async (req, res) => {
       return res.status(200).send("System Domain Allowed");
     }
 
-    // 2. Buscar en la base de datos de Smart Links
+    // 2. Buscar en la base de datos de Smart Links (Normalizado)
+    const normalizedDomain = domain
+      .toLowerCase()
+      .trim()
+      .replace(/^www\./, "");
+
     const { data: link, error } = await supabase
       .from("smart_links")
       .select("id")
-      .eq("custom_domain", domain)
+      .eq("custom_domain", normalizedDomain)
       .single();
 
     if (link && !error) {
