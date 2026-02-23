@@ -32,6 +32,19 @@ export interface NowPaymentStatusResult {
   order_id: string;
 }
 
+/** Curated default list used if API call fails */
+const DEFAULT_CURRENCIES = [
+  "btc",
+  "eth",
+  "usdttrc20",
+  "usdterc20",
+  "sol",
+  "bnbbsc",
+  "trx",
+  "ltc",
+  "doge",
+];
+
 export class NowPaymentsService {
   private static get headers() {
     return {
@@ -49,7 +62,6 @@ export class NowPaymentsService {
     payCurrency,
     orderId,
     orderDescription = "Only Program - Links Premium",
-    email,
   }: NowPaymentCreateParams): Promise<NowPaymentResult> {
     if (!config.nowpayments.apiKey) {
       throw new Error("NOWPayments API Key no configurada en el servidor.");
@@ -71,9 +83,39 @@ export class NowPaymentsService {
     });
 
     const text = await response.text();
+
     if (!response.ok) {
       console.error(`❌ NOWPayments Error (${response.status}):`, text);
-      throw new Error(`NOWPayments API Error ${response.status}: ${text}`);
+
+      // Parse error for user-friendly messages
+      try {
+        const errJson = JSON.parse(text);
+        const code = errJson.code || "";
+
+        if (code === "AMOUNT_MINIMAL_ERROR") {
+          throw new Error(
+            "El monto es demasiado pequeño para esa criptomoneda. Por favor elige USDT (TRC20 o ERC20) u otra moneda con menor monto mínimo.",
+          );
+        }
+        if (code === "INVALID_REQUEST_PARAMS") {
+          throw new Error(`Parámetros inválidos: ${errJson.message}`);
+        }
+        if (code === "CURRENCY_NOT_SUPPORTED") {
+          throw new Error(
+            "La criptomoneda seleccionada no está disponible. Elige otra.",
+          );
+        }
+        throw new Error(
+          errJson.message ||
+            `Error del proveedor de pagos (${response.status})`,
+        );
+      } catch (e: any) {
+        // Re-throw if it's our own descriptive error
+        if (e.message && !e.message.startsWith("NOWPayments API Error")) {
+          throw e;
+        }
+        throw new Error(`NOWPayments API Error ${response.status}: ${text}`);
+      }
     }
 
     try {
@@ -136,7 +178,6 @@ export class NowPaymentsService {
       return true;
     }
     try {
-      // NOWPayments IPN: sort keys of parsed body alphabetically, then HMAC-SHA512
       const parsed = JSON.parse(
         typeof rawBody === "string" ? rawBody : rawBody.toString("utf8"),
       );
@@ -152,19 +193,6 @@ export class NowPaymentsService {
     }
   }
 }
-
-/** Curated default list used if API call fails */
-const DEFAULT_CURRENCIES = [
-  "btc",
-  "eth",
-  "usdttrc20",
-  "usdterc20",
-  "sol",
-  "bnbbsc",
-  "trx",
-  "ltc",
-  "doge",
-];
 
 /** Deep-sort object keys alphabetically (required for IPN signature) */
 function sortKeysDeep(obj: any): any {
