@@ -60,17 +60,26 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     });
 
     if (!res.ok) {
-      const bodyText = await res.text().catch(() => "");
+      const bodyText = await res.text().catch(() => "Sin cuerpo de respuesta");
       console.error(
-        `❌ Error al enviar email (Brevo). Status: ${res.status} ${res.statusText}. Body: ${bodyText}`,
+        `❌ Error al enviar email (Brevo). Status: ${res.status} ${res.statusText}. Payload: ${JSON.stringify(payload)}. Body: ${bodyText}`,
       );
+
+      if (res.status === 401) {
+        console.error("💡 TIP: La API Key de Brevo parece ser inválida.");
+      } else if (res.status === 403) {
+        console.error(
+          "💡 TIP: Es posible que el remitente (senderEmail) no esté verificado en Brevo.",
+        );
+      }
+
       return false;
     }
 
-    console.log(`✅ Email enviado a ${options.to}`);
+    console.log(`✅ Email enviado exitosamente a: ${options.to}`);
     return true;
   } catch (error) {
-    console.error("❌ Error al enviar email:", error);
+    console.error("❌ Error inesperado al enviar email con Brevo:", error);
     return false;
   }
 }
