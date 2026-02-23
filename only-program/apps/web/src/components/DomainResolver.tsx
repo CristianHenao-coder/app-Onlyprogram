@@ -19,7 +19,7 @@ const DomainResolver = ({ children }: DomainResolverProps) => {
             // Dominios que NO son custom (localhost, dominios de la app)
             // Ajusta esto con tus dominios reales de producción/desarrollo
             const isLocal = host.includes('localhost') || host.includes('127.0.0.1');
-            const isMainApp = host.includes('onlyprogramlink.com') || host.includes('vercel.app'); // Ajustar según domain real
+            const isMainApp = host.includes('onlyprogramlink.com') || host.includes('onlyprogram.com') || host.includes('vercel.app'); // Ajustar según domain real
 
             if (isLocal || isMainApp) {
                 setLoading(false);
@@ -85,7 +85,7 @@ const DomainResolver = ({ children }: DomainResolverProps) => {
 
                     <div className="pt-4">
                         <a 
-                            href="https://onlyprogram.com" 
+                            href="https://onlyprogramlink.com" 
                             className="inline-flex items-center gap-2 px-8 py-3 bg-white/5 hover:bg-white/10 text-white border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] transition-all hover:scale-105 active:scale-95"
                         >
                             Ir a OnlyProgram
