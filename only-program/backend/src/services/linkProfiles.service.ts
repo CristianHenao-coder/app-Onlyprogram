@@ -123,7 +123,25 @@ export const linkProfilesService = {
    * Update smart link buttons
    */
   async updateButtons(linkId: string, buttons: LinkButton[]): Promise<void> {
-    // 1. Delete existing buttons
+    // 1. Filter buttons to ensure only one of each social type exists
+    // Social types that should be unique: instagram, tiktok, telegram, onlyfans
+    const socialTypes = ["instagram", "tiktok", "telegram", "onlyfans"];
+    const seenSocialTypes = new Set<string>();
+
+    const deduplicatedButtons = buttons.filter((btn) => {
+      if (socialTypes.includes(btn.type)) {
+        if (seenSocialTypes.has(btn.type)) {
+          console.warn(
+            `Duplicated button type ${btn.type} found for link ${linkId}. Skipping.`,
+          );
+          return false;
+        }
+        seenSocialTypes.add(btn.type);
+      }
+      return true;
+    });
+
+    // 2. Delete existing buttons
     const { error: deleteError } = await supabase
       .from("smart_link_buttons")
       .delete()
@@ -133,9 +151,9 @@ export const linkProfilesService = {
       throw new Error(`Error deleting old buttons: ${deleteError.message}`);
     }
 
-    // 2. Insert new buttons
-    if (buttons.length > 0) {
-      const buttonsToInsert = buttons.map((btn, index) => ({
+    // 3. Insert new buttons
+    if (deduplicatedButtons.length > 0) {
+      const buttonsToInsert = deduplicatedButtons.map((btn, index) => ({
         smart_link_id: linkId,
         type: btn.type,
         title: btn.title,
@@ -161,8 +179,11 @@ export const linkProfilesService = {
       }
     }
 
-    // 3. Update the JSONB buttons field in smart_links for safety/legacy (optional)
-    await supabase.from("smart_links").update({ buttons }).eq("id", linkId);
+    // 4. Update the JSONB buttons field in smart_links for safety/legacy
+    await supabase
+      .from("smart_links")
+      .update({ buttons: deduplicatedButtons })
+      .eq("id", linkId);
   },
 
   /**

@@ -23,6 +23,25 @@ type FontType = 'sans' | 'serif' | 'mono' | 'display';
 type PageStatus = 'active' | 'draft';
 type BackgroundType = 'solid' | 'gradient' | 'blur';
 
+// Social types that MUST be unique per page (except for custom which can be multiple)
+const UNIQUE_SOCIAL_TYPES: SocialType[] = ['instagram', 'tiktok', 'telegram', 'onlyfans'];
+
+/**
+ * Utility to deduplicate buttons by type for specific social networks.
+ * Keeps only the first occurrence of each unique social type.
+ */
+const cleanButtons = (buttons: ButtonLink[]): ButtonLink[] => {
+  const seenTypes = new Set<SocialType>();
+  return buttons.filter(btn => {
+    if (UNIQUE_SOCIAL_TYPES.includes(btn.type)) {
+      if (seenTypes.has(btn.type)) return false;
+      seenTypes.add(btn.type);
+    }
+    return true;
+  });
+};
+
+
 interface ButtonLink {
   id: string;
   type: SocialType;
@@ -229,6 +248,7 @@ export default function Links() {
           return Array.from(uniqueMap.values()).map((p: any) => ({
             ...p,
             status: 'draft', // FORCE DRAFT FOR MIGRATION
+            buttons: cleanButtons(p.buttons || []),
             theme: {
               ...p.theme,
               backgroundType: p.theme?.backgroundType || 'solid',
@@ -410,7 +430,7 @@ export default function Links() {
                 rotatorLinks: b.rotator_links || ['', '', '', '', '']
               }))
             : []
-        })) : [];
+        })).map(p => ({ ...p, buttons: cleanButtons(p.buttons) })) : [];
 
         // Get drafts from localStorage
         const localDrafts: LinkPage[] = (() => {
@@ -421,6 +441,7 @@ export default function Links() {
               if (Array.isArray(parsed)) {
                 return parsed.map((p: any) => ({
                   ...p,
+                  buttons: cleanButtons(p.buttons || []),
                   status: 'draft' // Todos los de localStorage son drafts
                 }));
               }
