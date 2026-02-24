@@ -8,12 +8,15 @@ interface PendingLink {
   slug: string;
   title: string;
   subtitle: string;
+  photo: string;
   status: string;
   config: any;
   created_at: string;
   profiles: {
     full_name: string;
+    email?: string;
   };
+  smart_link_buttons?: any[];
 }
 
 const LinksModeration = () => {
@@ -35,7 +38,8 @@ const LinksModeration = () => {
           *,
           profiles!smart_links_user_id_fkey (
             full_name
-          )
+          ),
+          smart_link_buttons (*)
         `)
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
@@ -97,7 +101,7 @@ const LinksModeration = () => {
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-bold text-white text-lg">{link.title || 'Sin Título'}</h3>
-                <p className="text-sm text-silver/60">{link.profiles?.full_name}</p>
+                <p className="text-sm text-primary font-bold">Propietario: {link.profiles?.full_name || 'Desconocido'}</p>
               </div>
               <span className="bg-yellow-500/20 text-yellow-500 text-[10px] font-black px-2 py-1 rounded uppercase">
                 Pendiente
@@ -105,27 +109,27 @@ const LinksModeration = () => {
             </div>
 
             <div className="bg-black/20 rounded-xl p-4 flex-1 space-y-3">
-               <p className="text-xs text-silver/60 mb-2 font-mono">ID: {link.id}</p>
-               
-               <div className="flex flex-col gap-1">
-                 <span className="text-[10px] text-silver/40 uppercase tracking-widest">Slug Solicitado</span>
-                 <p className="text-white font-mono text-sm">{link.slug}</p>
-               </div>
+              <p className="text-xs text-silver/60 mb-2 font-mono">ID: {link.id}</p>
 
-               <div className="flex flex-col gap-1">
-                 <span className="text-[10px] text-silver/40 uppercase tracking-widest">Diseño</span>
-                 <p className="text-silver/80 text-xs truncate">{JSON.stringify(link.config).substring(0, 50)}...</p>
-               </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] text-silver/40 uppercase tracking-widest">Slug Solicitado</span>
+                <p className="text-white font-mono text-sm">{link.slug}</p>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <span className="text-[10px] text-silver/40 uppercase tracking-widest">Diseño</span>
+                <p className="text-silver/80 text-xs truncate">{JSON.stringify(link.config).substring(0, 50)}...</p>
+              </div>
             </div>
 
             <div className="flex gap-3 mt-auto">
-              <button 
+              <button
                 onClick={() => setPreviewLink(link)}
                 className="flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-xl transition-all"
               >
                 Ver Diseño
               </button>
-              <button 
+              <button
                 onClick={() => {
                   setSelectedLink(link);
                   setTargetSlug(link.slug || '');
@@ -137,7 +141,7 @@ const LinksModeration = () => {
             </div>
           </div>
         ))}
-        
+
         {links.length === 0 && !loading && (
           <div className="col-span-full p-20 text-center border border-dashed border-white/10 rounded-3xl">
             <span className="material-symbols-outlined text-4xl text-silver/10 mb-4 block">check_circle</span>
@@ -147,15 +151,25 @@ const LinksModeration = () => {
       </div>
 
       {previewLink && (
-        <LinkPreviewModal 
+        <LinkPreviewModal
           config={{
             theme: previewLink.config?.theme || 'custom',
             profile: {
               title: previewLink.title,
               bio: previewLink.subtitle,
-              image: previewLink.config?.profilePhotoBase64 || null
+              image: previewLink.photo || previewLink.config?.profilePhotoBase64 || null
             },
-            buttons: previewLink.config?.blocks?.filter((b: any) => b.type === 'button').map((b: any) => ({
+            buttons: previewLink.smart_link_buttons?.map((b: any) => ({
+              id: b.id,
+              title: b.title,
+              url: b.url,
+              color: b.color,
+              text_color: b.text_color,
+              border_radius: b.border_radius,
+              opacity: b.opacity,
+              type: b.type,
+              isActive: b.is_active
+            })) || previewLink.config?.blocks?.filter((b: any) => b.type === 'button').map((b: any) => ({
               id: b.id,
               title: b.title,
               url: b.url
@@ -175,19 +189,19 @@ const LinksModeration = () => {
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-silver/60 uppercase mb-2">Asignar URL Final (Slug)</label>
                 <div className="flex items-center bg-surface/30 border border-border/50 rounded-xl px-4 py-3 focus-within:border-primary/50 transition-colors">
-                   <span className="text-silver/40 text-sm mr-1">onlyprogram.com/</span>
-                   <input 
-                    type="text" 
+                  <span className="text-silver/40 text-sm mr-1">onlyprogram.com/</span>
+                  <input
+                    type="text"
                     value={targetSlug}
                     onChange={(e) => setTargetSlug(e.target.value)}
                     className="bg-transparent border-none outline-none text-white font-mono text-sm w-full placeholder:text-silver/20"
                     placeholder="mi-link"
-                   />
+                  />
                 </div>
                 <p className="text-[10px] text-silver/40 mt-2">
                   Esta será la URL pública del link una vez aprobado.
@@ -206,14 +220,14 @@ const LinksModeration = () => {
             </div>
 
             <div className="flex gap-4 pt-2">
-              <button 
+              <button
                 onClick={() => setSelectedLink(null)}
                 className="flex-1 px-6 py-4 rounded-xl font-bold text-silver hover:bg-white/5 transition-colors border border-transparent"
                 disabled={isApproving}
               >
                 Cancelar
               </button>
-              <button 
+              <button
                 onClick={handleApprove}
                 disabled={isApproving || !targetSlug}
                 className="flex-1 bg-primary text-black px-6 py-4 rounded-xl font-black hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
