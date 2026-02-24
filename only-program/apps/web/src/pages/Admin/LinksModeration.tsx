@@ -153,7 +153,15 @@ const LinksModeration = () => {
       {previewLink && (
         <LinkPreviewModal
           config={{
-            theme: previewLink.config?.theme || 'custom',
+            template: previewLink.config?.template || 'minimal',
+            profileImageSize: previewLink.config?.profileImageSize,
+            theme: {
+              backgroundType: previewLink.config?.theme?.backgroundType || 'solid',
+              backgroundStart: previewLink.config?.theme?.backgroundStart || '#000',
+              backgroundEnd: previewLink.config?.theme?.backgroundEnd || '#111',
+              pageBorderColor: previewLink.config?.theme?.pageBorderColor || '#333',
+              overlayOpacity: previewLink.config?.theme?.overlayOpacity ?? 40,
+            },
             profile: {
               title: previewLink.title,
               bio: previewLink.subtitle,

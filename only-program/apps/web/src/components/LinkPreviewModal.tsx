@@ -1,9 +1,13 @@
 
 interface LinkConfig {
+    template?: 'minimal' | 'full' | 'split';
+    profileImageSize?: number;
     theme: {
         backgroundType?: 'solid' | 'gradient' | 'blur';
         backgroundStart?: string;
         backgroundEnd?: string;
+        pageBorderColor?: string;
+        overlayOpacity?: number;
     } | string;
     buttons: any[];
     profile: {
@@ -56,9 +60,18 @@ const ButtonIcon = ({ type }: { type: string }) => {
 };
 
 const LinkPreviewModal = ({ config, onClose }: LinkPreviewModalProps) => {
-
     const backgroundStyle = getPreviewBackground(config.theme, config.profile.image);
-    const theme = typeof config.theme === 'string' ? null : config.theme;
+    const rawTheme = typeof config.theme === 'string' ? { backgroundType: 'solid' as const, backgroundStart: config.theme } : config.theme;
+    const theme = {
+        backgroundType: 'solid' as const,
+        backgroundStart: '#000000',
+        backgroundEnd: '#1a1a1a',
+        pageBorderColor: '#333333',
+        overlayOpacity: 40,
+        ...rawTheme
+    };
+    const template = config.template || 'minimal';
+    const profileImageSize = config.profileImageSize || (template === 'full' ? 100 : 96);
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in zoom-in-95 duration-200">
@@ -70,29 +83,54 @@ const LinkPreviewModal = ({ config, onClose }: LinkPreviewModalProps) => {
             </button>
 
             <div className="relative w-full max-w-[375px] h-[80vh] bg-black rounded-[3rem] border-8 border-[#333] overflow-hidden shadow-2xl flex flex-col">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#333] rounded-b-xl z-20"></div>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#333] rounded-b-xl z-30"></div>
 
                 {/* Content with real theme background */}
                 <div
-                    className="flex-1 overflow-y-auto no-scrollbar relative"
+                    className="flex-1 overflow-y-auto no-scrollbar relative flex flex-col"
                     style={backgroundStyle}
                 >
                     {theme?.backgroundType === 'blur' && (
-                        <div className="absolute inset-0 backdrop-blur-xl bg-black/40" />
+                        <div className="absolute inset-0 backdrop-blur-xl bg-black/40 z-0" />
                     )}
 
-                    <div className="relative z-10 flex flex-col items-center pt-16 pb-12 px-6 text-center min-h-full">
+                    {/* FULL MODE BACKGROUND IMAGE */}
+                    {template === 'full' && config.profile.image && (
+                        <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
+                            <div
+                                className="relative transition-all duration-300 shadow-2xl"
+                                style={{
+                                    width: `${profileImageSize}%`,
+                                    height: `${profileImageSize}%`
+                                }}
+                            >
+                                <img src={config.profile.image} className="w-full h-full object-cover" />
+                                <div
+                                    className="absolute inset-0 bg-black transition-all"
+                                    style={{ opacity: (theme?.overlayOpacity || 40) / 100 }}
+                                />
+                            </div>
+                        </div>
+                    )}
 
-                        {/* Avatar */}
-                        {config.profile.image && (
-                            <div className="w-24 h-24 rounded-full bg-gray-800 mb-6 overflow-hidden border-4 shadow-xl mx-auto"
-                                style={{ borderColor: (theme as any)?.pageBorderColor || '#333333' }}>
+                    <div className={`relative z-10 flex flex-col items-center pt-16 pb-12 px-6 text-center min-h-full ${template === 'full' ? 'justify-end' : ''}`}>
+
+                        {/* MINIMAL MODE AVATAR */}
+                        {template === 'minimal' && config.profile.image && (
+                            <div
+                                className="rounded-full bg-gray-800 mb-6 overflow-hidden border-4 shadow-xl mx-auto flex-shrink-0"
+                                style={{
+                                    borderColor: theme?.pageBorderColor || '#333333',
+                                    width: `${profileImageSize}px`,
+                                    height: `${profileImageSize}px`
+                                }}
+                            >
                                 <img src={config.profile.image} alt="Profile" className="w-full h-full object-cover" />
                             </div>
                         )}
 
                         {/* Text */}
-                        <div className="mb-8">
+                        <div className="mb-8 relative z-20">
                             <h2 className="text-3xl font-black mb-1 drop-shadow-lg tracking-tight uppercase text-white">
                                 {config.profile.title || 'Sin Título'}
                             </h2>
@@ -102,7 +140,7 @@ const LinkPreviewModal = ({ config, onClose }: LinkPreviewModalProps) => {
                         </div>
 
                         {/* Buttons */}
-                        <div className="w-full max-w-[300px] space-y-3 mx-auto">
+                        <div className="w-full max-w-[300px] space-y-3 mx-auto relative z-20">
                             {config.buttons.map((btn: any) => (
                                 <a
                                     key={btn.id}
@@ -111,10 +149,11 @@ const LinkPreviewModal = ({ config, onClose }: LinkPreviewModalProps) => {
                                     rel="noopener noreferrer"
                                     className="group relative w-full p-4 rounded-full flex items-center justify-center gap-3 transition-all active:scale-95"
                                     style={{
-                                        backgroundColor: btn.color || 'rgba(255, 255, 255, 0.1)',
+                                        backgroundColor: template === 'full' ? `${btn.color || 'rgba(255, 255, 255, 0.1)'}CC` : (btn.color || 'rgba(255, 255, 255, 0.1)'),
                                         color: btn.text_color || btn.textColor || '#ffffff',
                                         borderRadius: btn.border_radius ? `${btn.border_radius}px` : '9999px',
-                                        opacity: (btn.opacity || 100) / 100
+                                        opacity: (btn.opacity || 100) / 100,
+                                        backdropFilter: 'blur(4px)'
                                     }}
                                     onClick={(e) => e.preventDefault()}
                                 >
@@ -132,7 +171,7 @@ const LinkPreviewModal = ({ config, onClose }: LinkPreviewModalProps) => {
                 </div>
 
                 {/* Simulated Phone home bar */}
-                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/20 rounded-full"></div>
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-32 h-1 bg-white/20 rounded-full z-30"></div>
             </div>
         </div>
     );
