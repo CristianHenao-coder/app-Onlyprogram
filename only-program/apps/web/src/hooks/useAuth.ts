@@ -110,7 +110,10 @@ export function useAuth() {
     return { error };
   };
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:4005/api";
+  const baseUrl = (
+    import.meta.env.VITE_API_URL || "http://localhost:4005"
+  ).replace(/\/$/, "");
+  const API_URL = baseUrl.includes("/api") ? baseUrl : `${baseUrl}/api`;
 
   const requestOTP = async (
     email: string,

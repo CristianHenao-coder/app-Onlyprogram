@@ -27,23 +27,24 @@ export default function PasswordInput({
   
   // Password Strength Logic
   const hasMinLength = value.length >= 6;
-  const hasLetter = /[A-Za-z]/.test(value);
+  const hasLetter = /[a-z]/.test(value);
+  const hasUppercase = /[A-Z]/.test(value);
   const hasNumber = /\d/.test(value);
   const hasSpecial = /[@$!%*#?&]/.test(value);
 
   const PasswordRequirement = ({ met, text }: { met: boolean; text: string }) => (
-    <div className={`flex items-center gap-2 text-xs transition-colors ${met ? 'text-green-400' : 'text-silver/40'}`}>
-      <span className="material-symbols-outlined text-sm">
-        {met ? 'check_circle' : 'radio_button_unchecked'}
+    <div className={`flex items-center gap-2 text-[10px] uppercase font-black tracking-widest transition-all duration-300 ${met ? 'text-green-400' : 'text-silver/20'}`}>
+      <span className="material-symbols-outlined text-xs">
+        {met ? 'check_circle' : 'circle'}
       </span>
-      <span className={met ? 'line-through' : ''}>{text}</span>
+      <span>{text}</span>
     </div>
   );
 
   return (
     <div className={className}>
       {label && (
-        <label className="block text-xs font-semibold text-silver/70 uppercase tracking-wider mb-2" htmlFor={id}>
+        <label className="block text-[10px] font-black text-silver/40 uppercase tracking-[0.2em] mb-2 ml-1" htmlFor={id}>
           {label}
         </label>
       )}
@@ -55,10 +56,10 @@ export default function PasswordInput({
           required={required}
           value={value}
           onChange={onChange}
-          className={`w-full bg-background-dark/50 border rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 transition-all placeholder:text-silver/20 pr-12
+          className={`w-full bg-white/5 border rounded-2xl px-6 py-4 text-white focus:outline-none transition-all placeholder:text-silver/10 pr-14
             ${showStrength && value.length > 0 
-                ? (hasMinLength && hasLetter && hasNumber && hasSpecial ? 'border-green-500/50 focus:border-green-500 focus:ring-green-500/20' : 'border-border focus:border-primary focus:ring-primary/30')
-                : 'border-border focus:border-primary focus:ring-primary/30'
+                ? (hasMinLength && hasLetter && hasUppercase && hasNumber && hasSpecial ? 'border-green-500/50 focus:border-green-500' : 'border-white/10 focus:border-primary/50')
+                : 'border-white/10 focus:border-primary/50'
             }
           `}
           placeholder={placeholder}
@@ -66,7 +67,7 @@ export default function PasswordInput({
         <button
           type="button"
           onClick={() => setShowPassword(!showPassword)}
-          className="absolute inset-y-0 right-4 flex items-center text-silver/50 hover:text-white transition-colors"
+          className="absolute inset-y-0 right-6 flex items-center text-silver/30 hover:text-white transition-colors"
           tabIndex={-1}
         >
           <span className="material-symbols-outlined text-xl">
@@ -76,11 +77,11 @@ export default function PasswordInput({
       </div>
 
       {showStrength && value.length > 0 && (
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 p-3 bg-surface/30 rounded-lg border border-white/5 animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 p-4 bg-white/[0.02] border border-white/5 rounded-2xl animate-in fade-in slide-in-from-top-2 duration-300">
           <PasswordRequirement met={hasMinLength} text="Mínimo 6 caracteres" />
-          <PasswordRequirement met={hasLetter} text="Al menos una letra" />
-          <PasswordRequirement met={hasNumber} text="Al menos un número" />
-          <PasswordRequirement met={hasSpecial} text="Carácter especial (@$!%*#?&)" />
+          <PasswordRequirement met={hasUppercase} text="Mayúscula (A-Z)" />
+          <PasswordRequirement met={hasNumber} text="Número (0-9)" />
+          <PasswordRequirement met={hasSpecial} text="Símbolo (@$!%*#?&)" />
         </div>
       )}
     </div>

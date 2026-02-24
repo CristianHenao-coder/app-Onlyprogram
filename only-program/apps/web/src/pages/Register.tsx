@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import Turnstile from '@/components/Turnstile';
 import Logo from '@/components/Logo';
+import PasswordInput from '@/components/PasswordInput';
 import { useTranslation } from '@/contexts/I18nContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -34,8 +35,12 @@ export default function Register() {
       return;
     }
 
-    if (password.length < 6) {
-      setError(t("auth.passwordTooShort") || "Password must be at least 6 characters");
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecial = /[@$!%*#?&]/.test(password);
+
+    if (password.length < 6 || !hasUppercase || !hasNumber || !hasSpecial) {
+      setError("La contraseña debe cumplir todos los requisitos de seguridad.");
       setLoading(false);
       return;
     }
@@ -181,32 +186,25 @@ export default function Register() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-[10px] font-black text-silver/40 uppercase tracking-[0.2em] mb-2 ml-1 min-h-[30px] sm:min-h-0 md:min-h-[30px] flex items-end">
-                      {t("auth.password")}
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-primary/50 transition-all placeholder:text-silver/10"
-                      placeholder="••••••"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black text-silver/40 uppercase tracking-[0.2em] mb-2 ml-1 min-h-[30px] sm:min-h-0 md:min-h-[30px] flex items-end">
-                      {t("auth.confirmPassword") || t("auth.password")}
-                    </label>
-                    <input
-                      type="password"
-                      required
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:outline-none focus:border-primary/50 transition-all placeholder:text-silver/10"
-                      placeholder="••••••"
-                    />
-                  </div>
+                  <PasswordInput
+                    id="password"
+                    label={t("auth.password")}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    showStrength={true}
+                    placeholder="••••••"
+                    className="sm:col-span-2"
+                  />
+                  <PasswordInput
+                    id="confirmPassword"
+                    label={t("auth.confirmPassword") || t("auth.password")}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    placeholder="••••••"
+                    className="sm:col-span-2"
+                  />
                 </div>
 
                 <Turnstile onVerify={setCaptchaToken} />
