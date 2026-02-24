@@ -293,33 +293,70 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
         });
     };
 
+    const template = config?.template || (config?.landingMode === 'full' ? 'full' : 'minimal');
+    const profileImageSize = config?.profileImageSize || (template === 'full' ? 100 : 96);
+
     return (
-        <div className="min-h-screen flex flex-col relative overflow-hidden text-white"
+        <div className="min-h-screen w-full flex flex-col items-center relative overflow-x-hidden text-white"
             style={backgroundStyle}>
 
-            {/* Blur overlay for blur type */}
+            {/* Legacy Blur overlay for blur type (Full window) */}
             {bgType === 'blur' && (
-                <div className="absolute inset-0 backdrop-blur-xl bg-black/40" />
+                <div className="absolute inset-0 backdrop-blur-xl bg-black/40 z-0" />
             )}
 
-            <div className="relative z-10 px-6 max-w-md mx-auto w-full text-center py-12 flex flex-col justify-center min-h-screen">
-                {displayPhoto && (
-                    <div className="w-24 h-24 rounded-full bg-gray-800 mb-6 overflow-hidden border-4 shadow-xl mx-auto"
-                        style={{ borderColor: theme?.pageBorderColor || '#333333' }}>
-                        <img src={displayPhoto} alt="Profile" className="w-full h-full object-cover" />
+            {/* MOBILE-WIDTH CONTAINER FOR PC */}
+            <div className="relative w-full max-w-[480px] flex-1 flex flex-col shadow-[0_0_100px_rgba(0,0,0,0.5)] border-x border-white/10 bg-black/20 z-10">
+
+                {/* FULL MODE BACKGROUND IMAGE (Contained in mobile width) */}
+                {template === 'full' && displayPhoto && (
+                    <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
+                        <div
+                            className="relative w-full h-full transition-all duration-300"
+                        >
+                            <img src={displayPhoto} className="w-full h-full object-cover" />
+                            <div
+                                className="absolute inset-0 bg-black transition-all"
+                                style={{ opacity: (theme?.overlayOpacity || 40) / 100 }}
+                            />
+                        </div>
                     </div>
                 )}
 
-                <h1 className="text-3xl font-black mb-1 drop-shadow-lg tracking-tight uppercase">
-                    {displayName}
-                </h1>
+                {/* SPLIT MODE HEADER */}
+                {template === 'split' && displayPhoto && (
+                    <div className="absolute top-0 left-0 w-full h-1/2 z-0">
+                        <img src={displayPhoto} className="w-full h-full object-cover" />
+                    </div>
+                )}
 
-                <p className="text-[#00aff0] font-bold mb-8 text-sm drop-shadow-md">
-                    {displayBio}
-                </p>
+                <div className={`relative z-10 px-6 w-full text-center py-12 flex flex-col min-h-screen ${template === 'full' ? 'justify-end pb-24' : 'justify-center'}`}>
 
-                <div className="flex flex-col gap-3 w-full max-w-[300px] mx-auto">
-                    {renderButtons(linkData.buttons)}
+                    {/* MINIMAL MODE AVATAR */}
+                    {template === 'minimal' && displayPhoto && (
+                        <div className="w-24 h-24 rounded-full bg-gray-800 mb-6 overflow-hidden border-4 shadow-xl mx-auto flex-shrink-0"
+                            style={{
+                                borderColor: theme?.pageBorderColor || '#333333',
+                                width: `${profileImageSize}px`,
+                                height: `${profileImageSize}px`
+                            }}>
+                            <img src={displayPhoto} alt="Profile" className="w-full h-full object-cover" />
+                        </div>
+                    )}
+
+                    <div className="mb-10">
+                        <h1 className="text-4xl font-black mb-2 drop-shadow-lg tracking-tight uppercase">
+                            {displayName}
+                        </h1>
+
+                        <p className="text-[#00aff0] font-bold text-base drop-shadow-md">
+                            {displayBio}
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col gap-4 w-full max-w-[320px] mx-auto pb-10">
+                        {renderButtons(linkData.buttons)}
+                    </div>
                 </div>
             </div>
 

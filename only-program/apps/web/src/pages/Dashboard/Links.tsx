@@ -1457,14 +1457,20 @@ export default function Links() {
                                   </div>
                                   <div className="flex bg-black/40 p-1 rounded-lg border border-white/5">
                                     <button
-                                      onClick={() => handleUpdatePage('template', 'minimal')}
-                                      className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${currentPage.template === 'minimal' ? 'bg-white text-black shadow-lg' : 'text-silver/60 hover:text-white'}`}
+                                      onClick={() => {
+                                        handleUpdatePage('template', 'minimal');
+                                        handleUpdatePage('landingMode', 'circle');
+                                      }}
+                                      className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${currentPage.template === 'minimal' || currentPage.landingMode === 'circle' ? 'bg-white text-black shadow-lg' : 'text-silver/60 hover:text-white'}`}
                                     >
                                       Minimalista
                                     </button>
                                     <button
-                                      onClick={() => handleUpdatePage('template', 'full')}
-                                      className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${currentPage.template === 'full' ? 'bg-primary text-white shadow-lg' : 'text-silver/60 hover:text-white'}`}
+                                      onClick={() => {
+                                        handleUpdatePage('template', 'full');
+                                        handleUpdatePage('landingMode', 'full');
+                                      }}
+                                      className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${currentPage.template === 'full' || currentPage.landingMode === 'full' ? 'bg-primary text-white shadow-lg' : 'text-silver/60 hover:text-white'}`}
                                     >
                                       Full
                                     </button>
