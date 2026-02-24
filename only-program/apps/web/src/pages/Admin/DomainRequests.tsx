@@ -8,11 +8,13 @@ interface DomainRequest {
   title: string;
   custom_domain: string | null;
   domain_status: 'pending' | 'active' | 'failed' | null;
+  domain_reservation_type: 'buy_new' | 'connect_own' | null;
   domain_requested_at: string | null;
   domain_activated_at: string | null;
   domain_notes: string | null;
   is_active: boolean;
   status: string;
+  user_email: string | null;
   profiles: { full_name: string };
 }
 
@@ -200,12 +202,12 @@ const DomainRequests = () => {
                 </p>
                 <p className="text-primary font-mono text-sm font-bold">147.93.131.4</p>
               </div>
-              <div className="bg-black/20 rounded-2xl p-4 border border-white/5 group/copy relative cursor-pointer" onClick={() => { navigator.clipboard.writeText('onlyprogram.com'); toast.success('Copiado'); }}>
+              <div className="bg-black/20 rounded-2xl p-4 border border-white/5 group/copy relative cursor-pointer" onClick={() => { navigator.clipboard.writeText('onlyprogramlink'); toast.success('Copiado'); }}>
                 <p className="text-[10px] text-silver/40 font-black uppercase tracking-widest mb-1.5 flex justify-between">
                   Valor (Punta a)
                   <span className="material-symbols-outlined text-[12px] opacity-0 group-hover/copy:opacity-100 transition-opacity">content_copy</span>
                 </p>
-                <p className="text-white font-mono text-sm font-bold">onlyprogram.com</p>
+                <p className="text-white font-mono text-sm font-bold">onlyprogramlink</p>
               </div>
             </div>
 
@@ -277,8 +279,22 @@ const DomainRequests = () => {
                   <div className="min-w-0">
                     <h3 className="font-bold text-white text-lg truncate">{req.title || 'Sin Título'}</h3>
                     <p className="text-sm text-silver/60 truncate">{req.profiles?.full_name}</p>
+                    {req.user_email && (
+                      <p className="text-xs text-silver/40 truncate font-mono mt-0.5">{req.user_email}</p>
+                    )}
                   </div>
-                  <StatusBadge status={req.domain_status} />
+                  <div className="flex flex-col items-end gap-2 shrink-0">
+                    <StatusBadge status={req.domain_status} />
+                    {req.domain_reservation_type && (
+                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg border uppercase tracking-wider ${
+                        req.domain_reservation_type === 'buy_new'
+                          ? 'bg-primary/10 text-primary border-primary/20'
+                          : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                      }`}>
+                        {req.domain_reservation_type === 'buy_new' ? '🛒 Comprar Nuevo' : '🔗 Conectar Propio'}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Domain info */}

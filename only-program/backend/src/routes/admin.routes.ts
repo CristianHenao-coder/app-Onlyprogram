@@ -265,8 +265,8 @@ router.post("/site-config", async (req: AuthRequest, res: Response) => {
 
 /**
  * GET /api/admin/domain-requests
- * Lista TODOS los links activos para gestión de dominios.
- * Incluye links sin domain_status para que el admin pueda gestionarlos todos.
+ * Lista todos los links con solicitudes de dominio (pending/active/failed).
+ * Solo muestra los que tienen un custom_domain o domain_status activo.
  */
 router.get("/domain-requests", async (req: AuthRequest, res: Response) => {
   try {
@@ -274,23 +274,45 @@ router.get("/domain-requests", async (req: AuthRequest, res: Response) => {
       .from("smart_links")
       .select(
         `
-        id, slug, title, custom_domain, domain_status,
+        id, slug, title, custom_domain, domain_status, domain_reservation_type,
         domain_requested_at, domain_activated_at, domain_notes,
         is_active, status,
-        profiles!smart_links_user_id_fkey (full_name)
+        profiles!smart_links_user_id_fkey (full_name, id)
       `,
       )
-      .eq("is_active", true)
-      .order("created_at", { ascending: false });
+      .not("domain_status", "eq", "none")
+      .not("domain_status", "is", null)
+      .order("domain_requested_at", { ascending: false });
 
     if (error) throw error;
-    res.json({ success: true, data: data || [] });
+
+    // Enrich with user emails via auth.admin API (service role only)
+    const enriched = await Promise.all(
+      (data || []).map(async (link: any) => {
+        let userEmail: string | null = null;
+        const userId = link.profiles?.id;
+        if (userId) {
+          try {
+            const { data: authUser } =
+              await supabase.auth.admin.getUserById(userId);
+            userEmail = authUser?.user?.email || null;
+          } catch {
+            // ignore
+          }
+        }
+        return {
+          ...link,
+          user_email: userEmail,
+        };
+      }),
+    );
+
+    res.json({ success: true, data: enriched });
   } catch (err: any) {
     console.error("[Admin] domain-requests error:", err);
     res.status(500).json({ error: "Error al obtener solicitudes" });
   }
 });
-
 
 /**
  * POST /api/admin/domain-requests/:linkId/test
@@ -317,7 +339,8 @@ router.post(
         return res.json({
           success: false,
           configured: false,
-          message: "⚠️ Esperar asociación de dominio. Todavía no tienes un dominio vinculado a este perfil.",
+          message:
+            "⚠️ Esperar asociación de dominio. Todavía no tienes un dominio vinculado a este perfil.",
         });
       }
 
@@ -423,11 +446,13 @@ router.get("/links", async (req: AuthRequest, res: Response) => {
   try {
     const { data, error } = await supabase
       .from("smart_links")
-      .select(`
+      .select(
+        `
         id, slug, title, photo, status, is_active,
         created_at, custom_domain, domain_status,
         profiles!smart_links_user_id_fkey (full_name)
-      `)
+      `,
+      )
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -446,27 +471,29 @@ router.get("/moderation-links", async (req: AuthRequest, res: Response) => {
   try {
     const { data, error } = await supabase
       .from("smart_links")
-      .select(`
+      .select(
+        `
         *,
         owner_name:profiles!smart_links_user_id_fkey(full_name),
         buttons_list:smart_link_buttons(*)
-      `)
+      `,
+      )
       .eq("status", "pending")
       .order("created_at", { ascending: false });
 
     if (error) throw error;
 
     // Flatten data to match the view structure the frontend expects
-    const flattenedData = data?.map(link => ({
+    const flattenedData = data?.map((link) => ({
       ...link,
       owner_name: (link as any).owner_name?.full_name || null,
-      buttons_list: link.buttons_list || []
+      buttons_list: link.buttons_list || [],
     }));
 
     res.json({
       success: true,
       data: flattenedData || [],
-      _debug: { source: 'direct_table', count: data?.length || 0 }
+      _debug: { source: "direct_table", count: data?.length || 0 },
     });
   } catch (err: any) {
     console.error("[Admin] moderation-links error:", err);
@@ -478,22 +505,28 @@ router.get("/moderation-links", async (req: AuthRequest, res: Response) => {
  * POST /api/admin/links/:linkId/toggle
  * Activa o desactiva un smart link
  */
-router.post("/links/:linkId/toggle", async (req: AuthRequest, res: Response) => {
-  try {
-    const { linkId } = req.params;
-    const { is_active } = req.body;
+router.post(
+  "/links/:linkId/toggle",
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { linkId } = req.params;
+      const { is_active } = req.body;
 
-    const { error } = await supabase
-      .from("smart_links")
-      .update({ is_active: !!is_active })
-      .eq("id", linkId);
+      const { error } = await supabase
+        .from("smart_links")
+        .update({ is_active: !!is_active })
+        .eq("id", linkId);
 
-    if (error) throw error;
-    res.json({ success: true, message: `Link ${is_active ? 'activado' : 'desactivado'}` });
-  } catch (err: any) {
-    console.error("[Admin] link toggle error:", err);
-    res.status(500).json({ error: "Error al cambiar estado del link" });
-  }
-});
+      if (error) throw error;
+      res.json({
+        success: true,
+        message: `Link ${is_active ? "activado" : "desactivado"}`,
+      });
+    } catch (err: any) {
+      console.error("[Admin] link toggle error:", err);
+      res.status(500).json({ error: "Error al cambiar estado del link" });
+    }
+  },
+);
 
 export default router;

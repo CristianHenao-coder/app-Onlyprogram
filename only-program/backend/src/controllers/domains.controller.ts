@@ -12,15 +12,46 @@ export const searchDomains = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Query parameter "q" is required' });
     }
 
-    const gdResult = await godaddyService.searchDomains(q);
+    const normalizedQuery = q
+      .toLowerCase()
+      .trim()
+      .replace(/^(https?:\/\/)?(www\.)?/, "");
 
-    // Return single result in list for frontend compatibility
+    // 1. Check our DB first: is this domain already reserved or active for another link?
+    const { data: reservedInDb } = await supabase
+      .from("smart_links")
+      .select("id, domain_status")
+      .eq("custom_domain", normalizedQuery)
+      .in("domain_status", ["pending", "active"])
+      .maybeSingle();
+
+    if (reservedInDb) {
+      // Domain is reserved or active in our system — not available to others
+      return res.json({
+        success: true,
+        result: [
+          {
+            name: normalizedQuery,
+            available: false,
+            reserved: true,
+            reservedStatus: reservedInDb.domain_status,
+            price: null,
+            currency: null,
+          },
+        ],
+      });
+    }
+
+    // 2. Check GoDaddy availability
+    const gdResult = await godaddyService.searchDomains(normalizedQuery);
+
     res.json({
       success: true,
       result: [
         {
           name: gdResult.domain,
           available: gdResult.available,
+          reserved: false,
           price: gdResult.price,
           currency: gdResult.currency,
         },
@@ -247,7 +278,7 @@ export const requestDomainLink = async (req: Request, res: Response) => {
   try {
     const authReq = req as AuthRequest;
     const userId = authReq.user?.id;
-    const { linkId, domain } = req.body;
+    const { linkId, domain, reservation_type } = req.body;
 
     if (!linkId || !domain) {
       return res.status(400).json({ error: "linkId y domain son requeridos" });
@@ -257,6 +288,9 @@ export const requestDomainLink = async (req: Request, res: Response) => {
       .toLowerCase()
       .trim()
       .replace(/^(https?:\/\/)?(www\.)?/, "");
+
+    const validType =
+      reservation_type === "connect_own" ? "connect_own" : "buy_new";
 
     // Verify the link belongs to this user
     const { data: link, error: linkError } = await supabase
@@ -270,26 +304,30 @@ export const requestDomainLink = async (req: Request, res: Response) => {
       return res.status(403).json({ error: "Link no encontrado o sin acceso" });
     }
 
-    // Check this domain is not already used by another link
+    // Check this domain is not already reserved or active for another link
     const { data: existing } = await supabase
       .from("smart_links")
-      .select("id")
+      .select("id, domain_status")
       .eq("custom_domain", normalizedDomain)
       .neq("id", linkId)
+      .in("domain_status", ["pending", "active"])
       .maybeSingle();
 
     if (existing) {
-      return res.status(409).json({
-        error: "Este dominio ya está vinculado a otra cuenta en OnlyProgram.",
-      });
+      const msg =
+        existing.domain_status === "active"
+          ? "Este dominio ya está activo en otra cuenta."
+          : "Este dominio ya está reservado por otro usuario. Intenta con otro nombre.";
+      return res.status(409).json({ error: msg });
     }
 
-    // Save domain request
+    // Save domain reservation
     const { error: updateError } = await supabase
       .from("smart_links")
       .update({
         custom_domain: normalizedDomain,
         domain_status: "pending",
+        domain_reservation_type: validType,
         domain_requested_at: new Date().toISOString(),
         domain_activated_at: null,
         domain_notes: null,
@@ -299,22 +337,82 @@ export const requestDomainLink = async (req: Request, res: Response) => {
     if (updateError) throw updateError;
 
     console.log(
-      `[Domain Request] Link ${linkId} requested domain: ${normalizedDomain}`,
+      `[Domain Request] Link ${linkId} reserved domain: ${normalizedDomain} (type: ${validType})`,
     );
 
     res.json({
       success: true,
       message:
-        "Solicitud de vinculación recibida. El equipo la configurará pronto.",
+        validType === "buy_new"
+          ? "Dominio reservado. El equipo lo comprará y configurará pronto."
+          : "Solicitud de vinculación recibida. El equipo la configurará pronto.",
       domain: normalizedDomain,
+      reservation_type: validType,
     });
   } catch (error: any) {
     console.error("Request Domain Error:", error);
-    res
-      .status(500)
-      .json({
-        error: "Error al solicitar vinculación",
-        details: error.message,
+    res.status(500).json({
+      error: "Error al solicitar vinculación",
+      details: error.message,
+    });
+  }
+};
+
+export const cancelDomainReservation = async (req: Request, res: Response) => {
+  try {
+    const authReq = req as AuthRequest;
+    const userId = authReq.user?.id;
+    const { linkId } = req.params;
+
+    if (!linkId) {
+      return res.status(400).json({ error: "linkId es requerido" });
+    }
+
+    // Verify the link belongs to this user and is in pending state
+    const { data: link, error: linkError } = await supabase
+      .from("smart_links")
+      .select("id, user_id, domain_status, custom_domain")
+      .eq("id", linkId)
+      .eq("user_id", userId)
+      .single();
+
+    if (linkError || !link) {
+      return res.status(403).json({ error: "Link no encontrado o sin acceso" });
+    }
+
+    if (link.domain_status === "active") {
+      return res.status(400).json({
+        error: "No puedes cancelar un dominio ya activado. Contacta a soporte.",
       });
+    }
+
+    // Clear domain reservation
+    const { error: updateError } = await supabase
+      .from("smart_links")
+      .update({
+        custom_domain: null,
+        domain_status: "none",
+        domain_reservation_type: null,
+        domain_requested_at: null,
+        domain_notes: null,
+      })
+      .eq("id", linkId);
+
+    if (updateError) throw updateError;
+
+    console.log(
+      `[Domain Cancel] Link ${linkId} cancelled domain reservation: ${link.custom_domain}`,
+    );
+
+    res.json({
+      success: true,
+      message: "Reserva de dominio cancelada correctamente.",
+    });
+  } catch (error: any) {
+    console.error("Cancel Domain Reservation Error:", error);
+    res.status(500).json({
+      error: "Error al cancelar la reserva",
+      details: error.message,
+    });
   }
 };
