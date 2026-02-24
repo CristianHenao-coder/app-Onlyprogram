@@ -15,13 +15,14 @@ export default function Turnstile({ onVerify, siteKey }: TurnstileProps) {
     // If no site key, try to fetch from backend
     if (!activeSiteKey) {
       console.log('--- Turnstile: Fetching siteKey from backend ---');
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:4005/api';
+      const apiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:4005').replace(/\/$/, '');
+      const fetchUrl = apiUrl.includes('/api') ? `${apiUrl}/config/turnstile` : `${apiUrl}/api/config/turnstile`;
       
       const timeout = setTimeout(() => {
         setError('Tiempo de espera agotado obteniendo configuración de seguridad.');
-      }, 5000);
+      }, 10000);
 
-      fetch(`${apiUrl}/config/turnstile`)
+      fetch(fetchUrl)
         .then(res => {
           clearTimeout(timeout);
           if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
@@ -43,6 +44,7 @@ export default function Turnstile({ onVerify, siteKey }: TurnstileProps) {
           const envKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
           if (envKey) {
             setActiveSiteKey(envKey);
+            setError(null); // Clear error if we found a fallback
           } else {
              setError('No se pudo conectar con el servicio de verificación.');
           }

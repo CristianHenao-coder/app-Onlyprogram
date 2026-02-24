@@ -182,7 +182,7 @@ export default function Register() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-[10px] font-black text-silver/40 uppercase tracking-[0.2em] mb-2 ml-1">
+                    <label className="block text-[10px] font-black text-silver/40 uppercase tracking-[0.2em] mb-2 ml-1 min-h-[30px] sm:min-h-0 md:min-h-[30px] flex items-end">
                       {t("auth.password")}
                     </label>
                     <input
@@ -195,7 +195,7 @@ export default function Register() {
                     />
                   </div>
                   <div>
-                    <label className="block text-[10px] font-black text-silver/40 uppercase tracking-[0.2em] mb-2 ml-1">
+                    <label className="block text-[10px] font-black text-silver/40 uppercase tracking-[0.2em] mb-2 ml-1 min-h-[30px] sm:min-h-0 md:min-h-[30px] flex items-end">
                       {t("auth.confirmPassword") || t("auth.password")}
                     </label>
                     <input
