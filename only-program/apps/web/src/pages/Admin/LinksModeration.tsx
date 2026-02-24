@@ -154,6 +154,7 @@ const LinksModeration = () => {
         <LinkPreviewModal
           config={{
             template: previewLink.config?.template || 'minimal',
+            landingMode: previewLink.config?.landingMode || 'circle',
             profileImageSize: previewLink.config?.profileImageSize,
             theme: {
               backgroundType: previewLink.config?.theme?.backgroundType || 'solid',

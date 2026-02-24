@@ -1,6 +1,7 @@
 
 interface LinkConfig {
     template?: 'minimal' | 'full' | 'split';
+    landingMode?: 'circle' | 'full';
     profileImageSize?: number;
     theme: {
         backgroundType?: 'solid' | 'gradient' | 'blur';
@@ -70,8 +71,10 @@ const LinkPreviewModal = ({ config, onClose }: LinkPreviewModalProps) => {
         overlayOpacity: 40,
         ...rawTheme
     };
-    const template = config.template || 'minimal';
-    const profileImageSize = config.profileImageSize || (template === 'full' ? 100 : 96);
+
+    // Priority: config.landingMode > config.template
+    const effectiveTemplate = (config as any).landingMode === 'full' || config.template === 'full' ? 'full' : 'minimal';
+    const profileImageSize = config.profileImageSize || (effectiveTemplate === 'full' ? 100 : 96);
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-in fade-in zoom-in-95 duration-200">
@@ -95,7 +98,7 @@ const LinkPreviewModal = ({ config, onClose }: LinkPreviewModalProps) => {
                     )}
 
                     {/* FULL MODE BACKGROUND IMAGE */}
-                    {template === 'full' && config.profile.image && (
+                    {effectiveTemplate === 'full' && config.profile.image && (
                         <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
                             <div
                                 className="relative transition-all duration-300 shadow-2xl"
@@ -113,10 +116,10 @@ const LinkPreviewModal = ({ config, onClose }: LinkPreviewModalProps) => {
                         </div>
                     )}
 
-                    <div className={`relative z-10 flex flex-col items-center pt-16 pb-12 px-6 text-center min-h-full ${template === 'full' ? 'justify-end' : ''}`}>
+                    <div className={`relative z-10 flex flex-col items-center pt-16 pb-12 px-6 text-center min-h-full ${effectiveTemplate === 'full' ? 'justify-end' : ''}`}>
 
                         {/* MINIMAL MODE AVATAR */}
-                        {template === 'minimal' && config.profile.image && (
+                        {effectiveTemplate === 'minimal' && config.profile.image && (
                             <div
                                 className="rounded-full bg-gray-800 mb-6 overflow-hidden border-4 shadow-xl mx-auto flex-shrink-0"
                                 style={{
@@ -149,7 +152,7 @@ const LinkPreviewModal = ({ config, onClose }: LinkPreviewModalProps) => {
                                     rel="noopener noreferrer"
                                     className="group relative w-full p-4 rounded-full flex items-center justify-center gap-3 transition-all active:scale-95"
                                     style={{
-                                        backgroundColor: template === 'full' ? `${btn.color || 'rgba(255, 255, 255, 0.1)'}CC` : (btn.color || 'rgba(255, 255, 255, 0.1)'),
+                                        backgroundColor: effectiveTemplate === 'full' ? `${btn.color || 'rgba(255, 255, 255, 0.1)'}CC` : (btn.color || 'rgba(255, 255, 255, 0.1)'),
                                         color: btn.text_color || btn.textColor || '#ffffff',
                                         borderRadius: btn.border_radius ? `${btn.border_radius}px` : '9999px',
                                         opacity: (btn.opacity || 100) / 100,

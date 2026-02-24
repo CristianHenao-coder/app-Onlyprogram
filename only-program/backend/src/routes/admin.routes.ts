@@ -445,13 +445,29 @@ router.get("/links", async (req: AuthRequest, res: Response) => {
 router.get("/moderation-links", async (req: AuthRequest, res: Response) => {
   try {
     const { data, error } = await supabase
-      .from("admin_moderation_view")
-      .select("*")
+      .from("smart_links")
+      .select(`
+        *,
+        owner_name:profiles!smart_links_user_id_fkey(full_name),
+        buttons_list:smart_link_buttons(*)
+      `)
       .eq("status", "pending")
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-    res.json({ success: true, data: data || [] });
+
+    // Flatten data to match the view structure the frontend expects
+    const flattenedData = data?.map(link => ({
+      ...link,
+      owner_name: (link as any).owner_name?.full_name || null,
+      buttons_list: link.buttons_list || []
+    }));
+
+    res.json({
+      success: true,
+      data: flattenedData || [],
+      _debug: { source: 'direct_table', count: data?.length || 0 }
+    });
   } catch (err: any) {
     console.error("[Admin] moderation-links error:", err);
     res.status(500).json({ error: "Error al obtener datos de moderación" });
