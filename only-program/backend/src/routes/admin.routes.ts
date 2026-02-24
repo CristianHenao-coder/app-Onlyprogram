@@ -439,6 +439,26 @@ router.get("/links", async (req: AuthRequest, res: Response) => {
 });
 
 /**
+ * GET /api/admin/moderation-links
+ * Lista links con estado pendiente usando la vista de moderación (incluye dueño y botones)
+ */
+router.get("/moderation-links", async (req: AuthRequest, res: Response) => {
+  try {
+    const { data, error } = await supabase
+      .from("admin_moderation_view")
+      .select("*")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    res.json({ success: true, data: data || [] });
+  } catch (err: any) {
+    console.error("[Admin] moderation-links error:", err);
+    res.status(500).json({ error: "Error al obtener datos de moderación" });
+  }
+});
+
+/**
  * POST /api/admin/links/:linkId/toggle
  * Activa o desactiva un smart link
  */

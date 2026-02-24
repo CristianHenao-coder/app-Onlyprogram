@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/services/supabase';
-
 import LinkPreviewModal from '@/components/LinkPreviewModal';
 
 interface PendingLink {
@@ -9,18 +8,15 @@ interface PendingLink {
   title: string;
   subtitle: string;
   photo: string;
-  status: string;
   config: any;
+  status: string;
   created_at: string;
-  profiles: {
-    full_name: string;
-    email?: string;
-  };
-  smart_link_buttons?: any[];
+  owner_name?: string;
+  owner_email?: string;
+  buttons_list?: any[];
 }
 
 const LinksModeration = () => {
-  // const { t } = useTranslation();
   const [links, setLinks] = useState<PendingLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLink, setSelectedLink] = useState<PendingLink | null>(null);
@@ -28,26 +24,25 @@ const LinksModeration = () => {
   const [isApproving, setIsApproving] = useState(false);
   const [previewLink, setPreviewLink] = useState<PendingLink | null>(null);
 
-
   const fetchPendingLinks = async () => {
-    setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('smart_links')
-        .select(`
-          *,
-          profiles!smart_links_user_id_fkey (
-            full_name
-          ),
-          smart_link_buttons (*)
-        `)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
+      setLoading(true);
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      if (!token) throw new Error("No session");
 
-      if (error) throw error;
-      setLinks(data || []);
-    } catch (err) {
-      console.error(err);
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/moderation-links`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const json = await response.json();
+      if (json.success) {
+        setLinks(json.data || []);
+      } else {
+        console.error('API Error:', json.error);
+      }
+    } catch (error) {
+      console.error('Error fetching links:', error);
     } finally {
       setLoading(false);
     }
@@ -61,12 +56,12 @@ const LinksModeration = () => {
     if (!selectedLink || !targetSlug) return;
     setIsApproving(true);
     try {
-      // Using backend route
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/approve-link`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ linkId: selectedLink.id, slug: targetSlug })
       });
@@ -101,11 +96,16 @@ const LinksModeration = () => {
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-bold text-white text-lg">{link.title || 'Sin Título'}</h3>
-                <p className="text-sm text-primary font-bold">Propietario: {link.profiles?.full_name || 'Desconocido'}</p>
+                <div className="mb-4">
+                  <p className="text-sm text-primary font-bold">Propietario: {link.owner_name || link.owner_email || 'Desconocido'}</p>
+                  {link.owner_name && link.owner_email && (
+                    <p className="text-xs text-gray-500">{link.owner_email}</p>
+                  )}
+                </div>
+                <span className="bg-yellow-500/20 text-yellow-500 text-[10px] font-black px-2 py-1 rounded uppercase">
+                  Pendiente
+                </span>
               </div>
-              <span className="bg-yellow-500/20 text-yellow-500 text-[10px] font-black px-2 py-1 rounded uppercase">
-                Pendiente
-              </span>
             </div>
 
             <div className="bg-black/20 rounded-xl p-4 flex-1 space-y-3">
@@ -159,7 +159,7 @@ const LinksModeration = () => {
               bio: previewLink.subtitle,
               image: previewLink.photo || previewLink.config?.profilePhotoBase64 || null
             },
-            buttons: previewLink.smart_link_buttons?.map((b: any) => ({
+            buttons: previewLink.buttons_list?.map((b: any) => ({
               id: b.id,
               title: b.title,
               url: b.url,
@@ -168,13 +168,10 @@ const LinksModeration = () => {
               border_radius: b.border_radius,
               opacity: b.opacity,
               type: b.type,
-              isActive: b.is_active
-            })) || previewLink.config?.blocks?.filter((b: any) => b.type === 'button').map((b: any) => ({
-              id: b.id,
-              title: b.title,
-              url: b.url
+              isActive: b.is_active,
+              subtitle: b.subtitle
             })) || [],
-            socials: [] // Add if available in config
+            socials: []
           }}
           onClose={() => setPreviewLink(null)}
         />
