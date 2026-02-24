@@ -82,7 +82,13 @@ const LinkPreviewModal = ({ config, onClose }: LinkPreviewModalProps) => {
                                     href={btn.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="block w-full bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/10 p-4 rounded-xl text-white font-medium transition-all text-center"
+                                    className="block w-full backdrop-blur-sm border border-white/10 p-4 font-medium transition-all text-center"
+                                    style={{
+                                        backgroundColor: btn.color || 'rgba(255, 255, 255, 0.1)',
+                                        color: btn.text_color || btn.textColor || '#ffffff',
+                                        borderRadius: btn.border_radius || btn.borderRadius || '12px',
+                                        opacity: (btn.opacity || 100) / 100
+                                    }}
                                     onClick={(e) => e.preventDefault()}
                                 >
                                     {btn.title}
