@@ -286,6 +286,7 @@ export default function Links() {
   const [selectedButtonId, setSelectedButtonId] = useState<string | null>(null);
   const [showButtonCreator, setShowButtonCreator] = useState(false);
   const [settingsTab, setSettingsTab] = useState<'profile' | 'domain'>('profile');
+  const [domainFlowChoice, setDomainFlowChoice] = useState<'buy' | 'connect' | null>(null);
 
   // Deep linking: select page from URL ?id=...
   useEffect(() => {
@@ -1613,59 +1614,125 @@ export default function Links() {
                                     </div>
                                   )}
 
-                                  {/* STATE: none — form to request domain */}
+                                  {/* STATE: none — choose domain flow */}
                                   {currentPage.status === 'active' && (!currentPage.domainStatus || currentPage.domainStatus === 'none') && (
-                                    <div className="space-y-4 relative">
+                                    <div className="space-y-3 relative">
                                       <p className="text-[11px] text-silver/40 leading-relaxed">
-                                        Ingresa tu dominio y nuestro equipo lo configurará por ti. No necesitas tocar ningún DNS.
+                                        ¿Cómo prefieres usar tu dominio personalizado?
                                       </p>
-                                      <div className="flex gap-2">
-                                        <div className="relative flex-1">
-                                          <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-silver/20 text-sm">language</span>
-                                          <input
-                                            type="text"
-                                            placeholder="ej: misitio.com"
-                                            value={currentPage.customDomain || ''}
-                                            onChange={(e) => handleUpdatePage('customDomain', e.target.value.toLowerCase().replace(/\s/g, '').replace(/https?:\/\//, ''))}
-                                            className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-4 text-sm text-white placeholder:text-silver/20 focus:outline-none focus:border-primary/50 transition-all font-mono"
-                                          />
-                                        </div>
+
+                                      {/* Option A: Buy new domain */}
+                                      <div className="rounded-2xl border border-white/10 overflow-hidden bg-black/30">
                                         <button
-                                          onClick={async () => {
-                                            if (!currentPage.customDomain) {
-                                              toast.error('Ingresa un dominio primero');
-                                              return;
-                                            }
-                                            const loadingToast = toast.loading('Enviando solicitud...');
-                                            try {
-                                              const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
-                                              const { supabase: sb } = await import('@/services/supabase');
-                                              const { data: { session } } = await sb.auth.getSession();
-                                              const res = await fetch(`${BACKEND_URL}/api/domains/request`, {
-                                                method: 'POST',
-                                                headers: {
-                                                  'Content-Type': 'application/json',
-                                                  Authorization: `Bearer ${session?.access_token}`,
-                                                },
-                                                body: JSON.stringify({ linkId: currentPage.id, domain: currentPage.customDomain }),
-                                              });
-                                              const json = await res.json();
-                                              toast.dismiss(loadingToast);
-                                              if (!res.ok) {
-                                                toast.error(json.error || 'Error al enviar solicitud');
-                                              } else {
-                                                toast.success('¡Solicitud enviada! El equipo lo activará pronto.');
-                                                handleUpdatePage('domainStatus', 'pending');
-                                              }
-                                            } catch {
-                                              toast.dismiss(loadingToast);
-                                              toast.error('Error al enviar solicitud');
-                                            }
-                                          }}
-                                          className="px-5 bg-primary hover:bg-primary/80 text-black border border-primary/20 font-black rounded-xl text-xs uppercase tracking-widest transition-all whitespace-nowrap"
+                                          onClick={() => setDomainFlowChoice(domainFlowChoice === 'buy' ? null : 'buy')}
+                                          className="w-full flex items-center gap-4 p-4 hover:bg-white/5 transition-all text-left group"
                                         >
-                                          Solicitar Vinculación
+                                          <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-all">
+                                            <span className="material-symbols-outlined text-primary text-lg">shopping_cart</span>
+                                          </div>
+                                          <div className="flex-1">
+                                            <p className="text-sm font-bold text-white">Comprar Nuevo Dominio</p>
+                                            <p className="text-[10px] text-silver/40">Búscalo y resérvalo — nosotros lo configuramos</p>
+                                          </div>
+                                          <span className={`material-symbols-outlined text-silver/30 transition-transform ${domainFlowChoice === 'buy' ? 'rotate-180' : ''}`}>expand_more</span>
                                         </button>
+                                        {domainFlowChoice === 'buy' && (
+                                          <div className="border-t border-white/5 p-4 animate-fade-in">
+                                            <p className="text-[10px] text-silver/40 mb-3">Ingresa el dominio que quieres reservar y nuestro equipo lo activará por ti.</p>
+                                            <div className="flex gap-2">
+                                              <div className="relative flex-1">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-silver/20 text-sm">language</span>
+                                                <input
+                                                  type="text"
+                                                  placeholder="ej: misitio.com"
+                                                  value={currentPage.customDomain || ''}
+                                                  onChange={(e) => handleUpdatePage('customDomain', e.target.value.toLowerCase().replace(/\s/g, '').replace(/https?:\/\//, ''))}
+                                                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder:text-silver/20 focus:outline-none focus:border-primary/50 transition-all font-mono"
+                                                />
+                                              </div>
+                                              <button
+                                                onClick={async () => {
+                                                  if (!currentPage.customDomain) { toast.error('Ingresa un dominio primero'); return; }
+                                                  const loadingToast = toast.loading('Enviando solicitud...');
+                                                  try {
+                                                    const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
+                                                    const { supabase: sb } = await import('@/services/supabase');
+                                                    const { data: { session } } = await sb.auth.getSession();
+                                                    const res = await fetch(`${BACKEND_URL}/api/domains/request`, {
+                                                      method: 'POST',
+                                                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+                                                      body: JSON.stringify({ linkId: currentPage.id, domain: currentPage.customDomain, reservation_type: 'buy_new' }),
+                                                    });
+                                                    const json = await res.json();
+                                                    toast.dismiss(loadingToast);
+                                                    if (!res.ok) { toast.error(json.error || 'Error al enviar solicitud'); }
+                                                    else { toast.success('¡Reserva enviada! El equipo lo activará pronto.'); handleUpdatePage('domainStatus', 'pending'); }
+                                                  } catch { toast.dismiss(loadingToast); toast.error('Error al enviar solicitud'); }
+                                                }}
+                                                className="px-4 bg-primary hover:bg-primary/80 text-black font-black rounded-xl text-xs uppercase tracking-widest transition-all whitespace-nowrap"
+                                              >
+                                                Reservar
+                                              </button>
+                                            </div>
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {/* Option B: Connect own domain */}
+                                      <div className="rounded-2xl border border-white/10 overflow-hidden bg-black/30">
+                                        <button
+                                          onClick={() => setDomainFlowChoice(domainFlowChoice === 'connect' ? null : 'connect')}
+                                          className="w-full flex items-center gap-4 p-4 hover:bg-white/5 transition-all text-left group"
+                                        >
+                                          <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 group-hover:bg-blue-500/20 transition-all">
+                                            <span className="material-symbols-outlined text-blue-400 text-lg">link</span>
+                                          </div>
+                                          <div className="flex-1">
+                                            <p className="text-sm font-bold text-white">Conectar Dominio Propio</p>
+                                            <p className="text-[10px] text-silver/40">Ya tengo un dominio y quiero vincularlo</p>
+                                          </div>
+                                          <span className={`material-symbols-outlined text-silver/30 transition-transform ${domainFlowChoice === 'connect' ? 'rotate-180' : ''}`}>expand_more</span>
+                                        </button>
+                                        {domainFlowChoice === 'connect' && (
+                                          <div className="border-t border-white/5 p-4 animate-fade-in">
+                                            <p className="text-[10px] text-silver/40 mb-3">Ingresa tu dominio y te enviaremos las instrucciones de configuración DNS.</p>
+                                            <div className="flex gap-2">
+                                              <div className="relative flex-1">
+                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-silver/20 text-sm">language</span>
+                                                <input
+                                                  type="text"
+                                                  placeholder="ej: midominio.com"
+                                                  value={currentPage.customDomain || ''}
+                                                  onChange={(e) => handleUpdatePage('customDomain', e.target.value.toLowerCase().replace(/\s/g, '').replace(/https?:\/\//, ''))}
+                                                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder:text-silver/20 focus:outline-none focus:border-blue-500/50 transition-all font-mono"
+                                                />
+                                              </div>
+                                              <button
+                                                onClick={async () => {
+                                                  if (!currentPage.customDomain) { toast.error('Ingresa un dominio primero'); return; }
+                                                  const loadingToast = toast.loading('Enviando solicitud...');
+                                                  try {
+                                                    const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
+                                                    const { supabase: sb } = await import('@/services/supabase');
+                                                    const { data: { session } } = await sb.auth.getSession();
+                                                    const res = await fetch(`${BACKEND_URL}/api/domains/request`, {
+                                                      method: 'POST',
+                                                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+                                                      body: JSON.stringify({ linkId: currentPage.id, domain: currentPage.customDomain, reservation_type: 'connect_own' }),
+                                                    });
+                                                    const json = await res.json();
+                                                    toast.dismiss(loadingToast);
+                                                    if (!res.ok) { toast.error(json.error || 'Error al enviar solicitud'); }
+                                                    else { toast.success('¡Solicitud enviada! Te enviaremos las instrucciones DNS.'); handleUpdatePage('domainStatus', 'pending'); }
+                                                  } catch { toast.dismiss(loadingToast); toast.error('Error al enviar solicitud'); }
+                                                }}
+                                                className="px-4 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl text-xs uppercase tracking-widest transition-all whitespace-nowrap"
+                                              >
+                                                Vincular
+                                              </button>
+                                            </div>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   )}
