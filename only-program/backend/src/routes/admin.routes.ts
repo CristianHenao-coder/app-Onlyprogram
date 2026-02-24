@@ -309,10 +309,16 @@ router.post(
         .eq("id", linkId)
         .single();
 
-      if (error || !link || !link.custom_domain) {
-        return res
-          .status(404)
-          .json({ error: "Link no encontrado o sin dominio" });
+      if (error || !link) {
+        return res.status(404).json({ error: "Link no encontrado" });
+      }
+
+      if (!link.custom_domain) {
+        return res.json({
+          success: false,
+          configured: false,
+          message: "⚠️ Esperar asociación de dominio. Todavía no tienes un dominio vinculado a este perfil.",
+        });
       }
 
       const domain = link.custom_domain;

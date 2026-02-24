@@ -285,8 +285,8 @@ const DomainRequests = () => {
                 <div className="bg-black/20 rounded-2xl p-4 space-y-3">
                   <div>
                     <span className="text-[10px] text-silver/40 uppercase tracking-widest block mb-1">Dominio</span>
-                    <p className={`font-mono text-sm font-bold ${req.custom_domain ? 'text-primary' : 'text-silver/20'}`}>
-                      {req.custom_domain || 'Sin habilitar'}
+                    <p className={`font-mono text-sm font-bold ${req.custom_domain ? 'text-primary' : 'text-yellow-500/40'}`}>
+                      {req.custom_domain || 'Esperar asociación de dominio'}
                     </p>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -314,7 +314,9 @@ const DomainRequests = () => {
                 {dns && (
                   <div className={`rounded-xl p-3 text-xs font-medium border ${dns.configured
                     ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-300'
-                    : 'bg-red-500/10 border-red-500/20 text-red-300'
+                    : dns.message.includes('⚠️')
+                      ? 'bg-yellow-500/10 border-yellow-500/20 text-yellow-300'
+                      : 'bg-red-500/10 border-red-500/20 text-red-300'
                     }`}>
                     {dns.message}
                   </div>

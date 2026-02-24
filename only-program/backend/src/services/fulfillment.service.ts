@@ -64,7 +64,7 @@ export class FulfillmentService {
               is_active: false,
               status: "pending",
               expires_at: expiresAt.toISOString(),
-              custom_domain: customDomain?.toLowerCase(),
+              custom_domain: (customDomain && customDomain.trim() !== "") ? customDomain.toLowerCase() : null,
               config: {
                 template: draft.template,
                 theme: draft.theme,
