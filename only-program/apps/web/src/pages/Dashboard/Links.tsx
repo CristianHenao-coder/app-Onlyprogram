@@ -1656,7 +1656,6 @@ export default function Links() {
                                                   if (!currentPage.customDomain) { toast.error('Ingresa un dominio primero'); return; }
                                                   const loadingToast = toast.loading('Enviando solicitud...');
                                                   try {
-                                                    const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
                                                     const { supabase: sb } = await import('@/services/supabase');
                                                     const { data: { session } } = await sb.auth.getSession();
                                                     const res = await fetch(`${API_URL}/domains/request`, {
@@ -1713,7 +1712,6 @@ export default function Links() {
                                                   if (!currentPage.customDomain) { toast.error('Ingresa un dominio primero'); return; }
                                                   const loadingToast = toast.loading('Enviando solicitud...');
                                                   try {
-                                                    const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
                                                     const { supabase: sb } = await import('@/services/supabase');
                                                     const { data: { session } } = await sb.auth.getSession();
                                                     const res = await fetch(`${API_URL}/domains/request`, {
