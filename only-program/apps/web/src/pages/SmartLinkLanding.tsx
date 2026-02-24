@@ -300,63 +300,67 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
         <div className="min-h-screen flex flex-col relative overflow-hidden text-white"
             style={backgroundStyle}>
 
-            {/* Blur overlay for blur type */}
+            {/* Legacy Blur overlay for blur type */}
             {bgType === 'blur' && (
                 <div className="absolute inset-0 backdrop-blur-xl bg-black/40" />
             )}
 
-            {/* FULL MODE BACKGROUND IMAGE */}
-            {template === 'full' && displayPhoto && (
-                <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
-                    <div
-                        className="relative transition-all duration-300 shadow-2xl"
-                        style={{
-                            width: `${profileImageSize}%`,
-                            height: `${profileImageSize}%`
-                        }}
-                    >
-                        <img src={displayPhoto} className="w-full h-full object-cover" />
+            {/* CONTAINER FOR DESKTOP CONSISTENCY */}
+            <div className="flex-1 flex flex-col relative max-w-[480px] mx-auto w-full shadow-2xl">
+
+                {/* FULL MODE BACKGROUND IMAGE (Contained in desktop width) */}
+                {template === 'full' && displayPhoto && (
+                    <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
                         <div
-                            className="absolute inset-0 bg-black transition-all"
-                            style={{ opacity: (theme?.overlayOpacity || 40) / 100 }}
-                        />
-                    </div>
-                </div>
-            )}
-
-            {/* SPLIT MODE HEADER (Not fully implemented yet, but adding placeholder logic) */}
-            {template === 'split' && displayPhoto && (
-                <div className="absolute top-0 left-0 w-full h-1/2 z-0">
-                    <img src={displayPhoto} className="w-full h-full object-cover" />
-                </div>
-            )}
-
-            <div className={`relative z-10 px-6 max-w-md mx-auto w-full text-center py-12 flex flex-col min-h-screen ${template === 'full' ? 'justify-end pb-20' : 'justify-center'}`}>
-
-                {/* MINIMAL MODE AVATAR */}
-                {template === 'minimal' && displayPhoto && (
-                    <div className="w-24 h-24 rounded-full bg-gray-800 mb-6 overflow-hidden border-4 shadow-xl mx-auto flex-shrink-0"
-                        style={{
-                            borderColor: theme?.pageBorderColor || '#333333',
-                            width: `${profileImageSize}px`,
-                            height: `${profileImageSize}px`
-                        }}>
-                        <img src={displayPhoto} alt="Profile" className="w-full h-full object-cover" />
+                            className="relative transition-all duration-300 shadow-2xl"
+                            style={{
+                                width: `${profileImageSize}%`,
+                                height: `${profileImageSize}%`
+                            }}
+                        >
+                            <img src={displayPhoto} className="w-full h-full object-cover" />
+                            <div
+                                className="absolute inset-0 bg-black transition-all"
+                                style={{ opacity: (theme?.overlayOpacity || 40) / 100 }}
+                            />
+                        </div>
                     </div>
                 )}
 
-                <div className="mb-8">
-                    <h1 className="text-3xl font-black mb-1 drop-shadow-lg tracking-tight uppercase">
-                        {displayName}
-                    </h1>
+                {/* SPLIT MODE HEADER (Contained in desktop width) */}
+                {template === 'split' && displayPhoto && (
+                    <div className="absolute top-0 left-0 w-full h-1/2 z-0">
+                        <img src={displayPhoto} className="w-full h-full object-cover" />
+                    </div>
+                )}
 
-                    <p className="text-[#00aff0] font-bold text-sm drop-shadow-md">
-                        {displayBio}
-                    </p>
-                </div>
+                <div className={`relative z-10 px-6 w-full text-center py-12 flex flex-col min-h-screen ${template === 'full' ? 'justify-end pb-20' : 'justify-center'}`}>
 
-                <div className="flex flex-col gap-3 w-full max-w-[300px] mx-auto">
-                    {renderButtons(linkData.buttons)}
+                    {/* MINIMAL MODE AVATAR */}
+                    {template === 'minimal' && displayPhoto && (
+                        <div className="w-24 h-24 rounded-full bg-gray-800 mb-6 overflow-hidden border-4 shadow-xl mx-auto flex-shrink-0"
+                            style={{
+                                borderColor: theme?.pageBorderColor || '#333333',
+                                width: `${profileImageSize}px`,
+                                height: `${profileImageSize}px`
+                            }}>
+                            <img src={displayPhoto} alt="Profile" className="w-full h-full object-cover" />
+                        </div>
+                    )}
+
+                    <div className="mb-8">
+                        <h1 className="text-3xl font-black mb-1 drop-shadow-lg tracking-tight uppercase">
+                            {displayName}
+                        </h1>
+
+                        <p className="text-[#00aff0] font-bold text-sm drop-shadow-md">
+                            {displayBio}
+                        </p>
+                    </div>
+
+                    <div className="flex flex-col gap-3 w-full max-w-[300px] mx-auto">
+                        {renderButtons(linkData.buttons)}
+                    </div>
                 </div>
             </div>
 
