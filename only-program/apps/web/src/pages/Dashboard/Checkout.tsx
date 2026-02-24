@@ -11,8 +11,11 @@ export default function Checkout() {
   const [loading, setLoading] = useState(true);
   const [isActivating, setIsActivating] = useState(false);
 
-  // Extract linksData from navigation state
-  const linksData = location.state?.pendingPurchase?.linksData || [];
+  // Extract linksData from navigation state, fall back to localStorage
+  const linksDataFromState = location.state?.pendingPurchase?.linksData || [];
+  const linksData = linksDataFromState.length > 0
+    ? linksDataFromState
+    : (() => { try { return JSON.parse(localStorage.getItem('my_links_data') || '[]'); } catch { return []; } })();
 
   useEffect(() => {
     if (linksData.length === 0) {
@@ -87,7 +90,7 @@ export default function Checkout() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        {/* FREE TRIAL (Keep always visible for testing) */}
+        {/* FREE TRIAL */}
         <div className="bg-[#0A0A0A] border border-green-500/20 rounded-[2.5rem] p-8 flex flex-col hover:border-green-500/40 transition-all group relative overflow-hidden">
           <div className="absolute top-0 right-0 p-4">
             <span className="bg-green-500/10 text-green-500 text-[10px] font-bold px-3 py-1 rounded-full border border-green-500/20">RECOMENDADO</span>
@@ -101,9 +104,14 @@ export default function Checkout() {
           <button
             onClick={() => handleProductSelect('free-trial')}
             disabled={isActivating}
-            className="w-full py-4 bg-white/5 border border-white/10 text-white font-bold rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+            className="w-full py-4 bg-white/5 border border-white/10 text-white font-bold rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            Probar Ahora
+            {isActivating ? (
+              <>
+                <span className="material-symbols-outlined animate-spin text-lg">progress_activity</span>
+                Activando...
+              </>
+            ) : 'Probar Ahora'}
           </button>
         </div>
 
@@ -148,6 +156,32 @@ export default function Checkout() {
           ← Volver al Editor
         </button>
       </div>
+
+      {/* ── LOADING OVERLAY ── */}
+      {isActivating && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md">
+          <div className="flex flex-col items-center gap-6 text-center px-8">
+            {/* Spinner animado */}
+            <div className="relative w-20 h-20">
+              <div className="absolute inset-0 rounded-full border-4 border-green-500/20" />
+              <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-green-500 animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="material-symbols-outlined text-3xl text-green-400">auto_awesome</span>
+              </div>
+            </div>
+            <div>
+              <h3 className="text-white font-black text-xl mb-1">Activando tu prueba gratuita</h3>
+              <p className="text-silver/50 text-sm">Esto puede tomar unos segundos, por favor espera...</p>
+            </div>
+            {/* Puntos animados */}
+            <div className="flex gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

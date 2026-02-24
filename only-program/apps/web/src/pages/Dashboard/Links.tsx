@@ -1592,7 +1592,20 @@ export default function Links() {
                                       <h4 className="text-white font-bold mb-2">Link no activado</h4>
                                       <p className="text-silver/40 text-xs max-w-xs mx-auto mb-6">Debes contratar un plan para desbloquear la configuración de dominio personalizado.</p>
                                       <button
-                                        onClick={() => navigate('/dashboard/checkout', { state: { pendingPurchase: { linksData: [currentPage] } } })}
+                                        onClick={() => {
+                                          // Ensure the link data is available for checkout
+                                          const linkForCheckout = [currentPage];
+                                          try {
+                                            localStorage.setItem('my_links_data', JSON.stringify(linkForCheckout));
+                                          } catch {}
+                                          navigate('/dashboard/checkout', {
+                                            state: {
+                                              pendingPurchase: {
+                                                linksData: linkForCheckout
+                                              }
+                                            }
+                                          });
+                                        }}
                                         className="px-6 py-2.5 bg-white text-black font-bold rounded-xl text-xs hover:scale-110 transition-all"
                                       >
                                         Ver Planes
