@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../services/supabase';
+import { API_URL } from '../services/apiConfig';
 
 // --- SUB-COMPONENTES UI (PORTADOS DEL SISTEMA ANTERIOR) ---
 
@@ -154,7 +155,7 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
 
             try {
                 // Consultamos nuestro Backend Gate para obtener data + decisión de tráfico
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/gate/${slug}`);
+                const response = await fetch(`${API_URL}/gate/${slug}`);
                 const json = await response.json().catch(() => null);
 
                 if (json?.data) {
@@ -197,7 +198,7 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
         // Lógica portada de legacy loading.ejs
         setTimeout(async () => {
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/gate/${slug}`);
+                const response = await fetch(`${API_URL}/gate/${slug}`);
                 const json = await response.json().catch(() => null);
                 if (json?.data) {
                     const payload = JSON.parse(atob(json.data));
@@ -272,7 +273,7 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
             // Botón estándar (incluyendo Telegram con Rotación)
             const rotatorActive = btn.rotator_active ?? btn.rotatorActive;
             const finalUrl = (btn.type === 'telegram' && rotatorActive)
-                ? `${import.meta.env.VITE_API_URL}/t/${slug}`
+                ? `${API_URL}/t/${slug}`
                 : btn.url;
 
             return (

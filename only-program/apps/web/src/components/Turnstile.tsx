@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { API_URL } from '@/services/apiConfig';
 
 interface TurnstileProps {
   onVerify: (token: string) => void;
@@ -15,8 +16,7 @@ export default function Turnstile({ onVerify, siteKey }: TurnstileProps) {
     // If no site key, try to fetch from backend
     if (!activeSiteKey) {
       console.log('--- Turnstile: Fetching siteKey from backend ---');
-      const apiUrl = (import.meta.env.VITE_API_URL || 'http://localhost:4005').replace(/\/$/, '');
-      const fetchUrl = apiUrl.includes('/api') ? `${apiUrl}/config/turnstile` : `${apiUrl}/api/config/turnstile`;
+      const fetchUrl = `${API_URL}/config/turnstile`;
       
       const timeout = setTimeout(() => {
         setError('Tiempo de espera agotado obteniendo configuración de seguridad.');

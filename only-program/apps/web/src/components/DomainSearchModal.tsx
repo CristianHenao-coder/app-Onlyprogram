@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Search, Loader2, Check, AlertCircle, X, Globe, Lock, ShoppingCart } from 'lucide-react';
 import { supabase } from '@/services/supabase';
+import { API_URL } from '@/services/apiConfig';
 
-const BACKEND_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || '';
 
 interface DomainSearchModalProps {
     isOpen: boolean;
@@ -74,7 +74,7 @@ const DomainSearchModal = ({
         setState({ phase: 'searching' });
 
         try {
-            const res = await fetch(`${BACKEND_URL}/api/domains/search?q=${encodeURIComponent(domain)}`);
+            const res = await fetch(`${API_URL}/domains/search?q=${encodeURIComponent(domain)}`);
             const data = await res.json();
 
             if (!data.success || !Array.isArray(data.result) || data.result.length === 0) {
@@ -109,7 +109,7 @@ const DomainSearchModal = ({
         setReserving(true);
         try {
             const token = await getAuthToken();
-            const res = await fetch(`${BACKEND_URL}/api/domains/request`, {
+            const res = await fetch(`${API_URL}/domains/request`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

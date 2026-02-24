@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/services/supabase';
+import { API_URL } from '@/services/apiConfig';
 import toast from 'react-hot-toast';
 
 interface DomainRequest {
@@ -24,7 +25,6 @@ interface DnsTestResult {
   addresses?: string[];
 }
 
-const BACKEND_URL = import.meta.env.VITE_API_URL || '';
 
 async function getAuthHeader() {
   const session = (await supabase.auth.getSession()).data.session;
@@ -61,7 +61,7 @@ const DomainRequests = () => {
     setLoading(true);
     try {
       const headers = await getAuthHeader();
-      const res = await fetch(`${BACKEND_URL}/api/admin/domain-requests`, { headers });
+      const res = await fetch(`${API_URL}/admin/domain-requests`, { headers });
       const json = await res.json();
       setRequests(json.data || []);
     } catch {
@@ -77,7 +77,7 @@ const DomainRequests = () => {
     setTesting(p => ({ ...p, [linkId]: true }));
     try {
       const headers = await getAuthHeader();
-      const res = await fetch(`${BACKEND_URL}/api/admin/domain-requests/${linkId}/test`, {
+      const res = await fetch(`${API_URL}/admin/domain-requests/${linkId}/test`, {
         method: 'POST', headers,
       });
       const json = await res.json();
@@ -93,7 +93,7 @@ const DomainRequests = () => {
     setActing(p => ({ ...p, [linkId]: true }));
     try {
       const headers = await getAuthHeader();
-      const res = await fetch(`${BACKEND_URL}/api/admin/domain-requests/${linkId}/activate`, {
+      const res = await fetch(`${API_URL}/admin/domain-requests/${linkId}/activate`, {
         method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' },
       });
       if (!res.ok) throw new Error();
@@ -111,7 +111,7 @@ const DomainRequests = () => {
     setActing(p => ({ ...p, [rejectModal.linkId]: true }));
     try {
       const headers = await getAuthHeader();
-      const res = await fetch(`${BACKEND_URL}/api/admin/domain-requests/${rejectModal.linkId}/reject`, {
+      const res = await fetch(`${API_URL}/admin/domain-requests/${rejectModal.linkId}/reject`, {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ notes: rejectNote || undefined }),

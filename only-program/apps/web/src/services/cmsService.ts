@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { API_URL } from "./apiConfig";
 
 export interface SiteConfig {
   key: string;
@@ -35,9 +36,7 @@ export const cmsService = {
     const token = sessionData?.session?.access_token;
     if (!token) throw new Error("Authenticated user required to save config");
 
-    const apiUrl = `${import.meta.env.VITE_API_URL || "http://localhost:4005"}/api`;
-
-    const response = await fetch(`${apiUrl}/admin/site-config`, {
+    const response = await fetch(`${API_URL}/admin/site-config`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

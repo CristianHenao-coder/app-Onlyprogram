@@ -8,6 +8,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from '@dnd-kit/utilities';
 import { supabase } from '@/services/supabase';
 import { useAuth } from '@/hooks/useAuth';
+import { API_URL } from '@/services/apiConfig';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { linksService } from '@/services/links.service';
 import { productPricingService, DEFAULT_PRODUCT_PRICING, type ProductPricingConfig } from '@/services/productPricing.service';
@@ -1658,7 +1659,7 @@ export default function Links() {
                                                     const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
                                                     const { supabase: sb } = await import('@/services/supabase');
                                                     const { data: { session } } = await sb.auth.getSession();
-                                                    const res = await fetch(`${BACKEND_URL}/api/domains/request`, {
+                                                    const res = await fetch(`${API_URL}/domains/request`, {
                                                       method: 'POST',
                                                       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
                                                       body: JSON.stringify({ linkId: currentPage.id, domain: currentPage.customDomain, reservation_type: 'buy_new' }),
@@ -1715,7 +1716,7 @@ export default function Links() {
                                                     const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:4005';
                                                     const { supabase: sb } = await import('@/services/supabase');
                                                     const { data: { session } } = await sb.auth.getSession();
-                                                    const res = await fetch(`${BACKEND_URL}/api/domains/request`, {
+                                                    const res = await fetch(`${API_URL}/domains/request`, {
                                                       method: 'POST',
                                                       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
                                                       body: JSON.stringify({ linkId: currentPage.id, domain: currentPage.customDomain, reservation_type: 'connect_own' }),

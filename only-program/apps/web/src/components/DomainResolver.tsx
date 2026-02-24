@@ -2,6 +2,7 @@ import { useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
 import SmartLinkLanding from '@/pages/SmartLinkLanding';
 import { Loader2 } from 'lucide-react';
+import { API_URL } from '@/services/apiConfig';
 
 interface DomainResolverProps {
     children: ReactNode;
@@ -29,10 +30,8 @@ const DomainResolver = ({ children }: DomainResolverProps) => {
             // Es un dominio custom
             setIsCustomDomain(true);
             try {
-                // Try VITE_API_URL first as it's defined in .env
-                const BACKEND_URL = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || '';
-                console.log("Checking domain on:", BACKEND_URL);
-                const { data } = await axios.get(`${BACKEND_URL}/api/gate/domain/${host}`);
+                console.log("Checking domain on:", API_URL);
+                const { data } = await axios.get(`${API_URL}/gate/domain/${host}`);
 
                 if (data && data.slug) {
                     setCustomSlug(data.slug);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/services/supabase';
 import LinkPreviewModal from '@/components/LinkPreviewModal';
+import { API_URL } from '@/services/apiConfig';
 
 interface PendingLink {
   id: string;
@@ -30,7 +31,7 @@ const LinksModeration = () => {
       const token = (await supabase.auth.getSession()).data.session?.access_token;
       if (!token) throw new Error("No session");
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/moderation-links`, {
+      const response = await fetch(`${API_URL}/admin/moderation-links`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -57,7 +58,7 @@ const LinksModeration = () => {
     setIsApproving(true);
     try {
       const token = (await supabase.auth.getSession()).data.session?.access_token;
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/admin/approve-link`, {
+      const response = await fetch(`${API_URL}/admin/approve-link`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

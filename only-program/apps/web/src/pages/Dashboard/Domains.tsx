@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/services/supabase';
 import { useAuth } from '@/hooks/useAuth';
+import { API_URL } from '@/services/apiConfig';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import DomainSearchModal from '@/components/DomainSearchModal';
 
-const BACKEND_URL = import.meta.env.VITE_API_URL || '';
 
 async function getAuthToken() {
     const session = (await supabase.auth.getSession()).data.session;
@@ -97,7 +97,7 @@ const Domains = () => {
         setCanceling(prev => ({ ...prev, [linkId]: true }));
         try {
             const token = await getAuthToken();
-            const res = await fetch(`${BACKEND_URL}/api/domains/reservation/${linkId}`, {
+            const res = await fetch(`${API_URL}/domains/reservation/${linkId}`, {
                 method: 'DELETE',
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -121,7 +121,7 @@ const Domains = () => {
         setConnectSending(prev => ({ ...prev, [linkId]: true }));
         try {
             const token = await getAuthToken();
-            const res = await fetch(`${BACKEND_URL}/api/domains/request`, {
+            const res = await fetch(`${API_URL}/domains/request`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
                 body: JSON.stringify({ linkId, domain, reservation_type: 'connect_own' }),

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_URL } from '@/services/apiConfig';
 
 const LoadingPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
@@ -11,7 +12,7 @@ const LoadingPage: React.FC = () => {
         const fetchGate = async () => {
             try {
                 // Consultar API Gate
-                const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/gate/${slug}`);
+                const response = await axios.get(`${API_URL}/gate/${slug}`);
 
                 if (response.data && response.data.data) {
                     // Desencriptar Payload (Base64 -> JSON)

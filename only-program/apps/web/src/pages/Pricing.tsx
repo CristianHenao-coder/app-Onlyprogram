@@ -4,6 +4,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useTranslation } from '@/contexts/I18nContext';
 import { productPricingService, type ProductPricingConfig, DEFAULT_PRODUCT_PRICING } from '@/services/productPricing.service';
+import { API_URL } from '@/services/apiConfig';
 
 function formatUSD(value: number) {
   return value.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -56,7 +57,7 @@ export default function Pricing() {
             return;
           }
 
-          const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4005'}/api/wompi/transaction-init`, {
+          const response = await fetch(`${API_URL}/wompi/transaction-init`, {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',

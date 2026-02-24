@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/services/supabase';
 import { useTranslation } from '@/contexts/I18nContext';
+import { API_URL } from '@/services/apiConfig';
 
-const BACKEND_URL = import.meta.env.VITE_API_URL || '';
 
 async function getAuthHeader() {
   const session = (await supabase.auth.getSession()).data.session;
@@ -19,7 +19,7 @@ const GlobalLinks = () => {
     setLoading(true);
     try {
       const headers = await getAuthHeader();
-      const res = await fetch(`${BACKEND_URL}/api/admin/links`, { headers });
+      const res = await fetch(`${API_URL}/admin/links`, { headers });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Error fetching links');
       setLinks(json.data || []);
@@ -37,7 +37,7 @@ const GlobalLinks = () => {
   const toggleStatus = async (linkId: string, currentStatus: boolean) => {
     try {
       const headers = await getAuthHeader();
-      const res = await fetch(`${BACKEND_URL}/api/admin/links/${linkId}/toggle`, {
+      const res = await fetch(`${API_URL}/admin/links/${linkId}/toggle`, {
         method: 'POST',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({ is_active: !currentStatus }),

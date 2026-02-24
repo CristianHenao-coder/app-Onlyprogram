@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_URL } from "@/services/apiConfig";
 import { supabase } from "@/services/supabase";
 import { User, Session } from "@supabase/supabase-js";
 
@@ -109,11 +110,6 @@ export function useAuth() {
     const { error } = await supabase.auth.signOut();
     return { error };
   };
-
-  const baseUrl = (
-    import.meta.env.VITE_API_URL || "http://localhost:4005"
-  ).replace(/\/$/, "");
-  const API_URL = baseUrl.includes("/api") ? baseUrl : `${baseUrl}/api`;
 
   const requestOTP = async (
     email: string,
