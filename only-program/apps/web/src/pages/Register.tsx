@@ -45,7 +45,7 @@ export default function Register() {
       return;
     }
 
-    const { error: otpError } = await requestOTP(email, 'register', lang);
+    const { error: otpError } = await requestOTP(email, 'register', lang, captchaToken || undefined);
     if (otpError) {
       setError(otpError.message);
     } else {

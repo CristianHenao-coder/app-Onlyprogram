@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import AuthShell from '@/components/AuthShell';
-import { supabase } from '@/services/supabase';
+import Turnstile from '@/components/Turnstile';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function ForgotPassword() {
+  const { forgotPassword } = useAuth() as any;
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -14,9 +17,7 @@ export default function ForgotPassword() {
     setError(null);
     setMessage(null);
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
+    const { error } = await forgotPassword(email, captchaToken || undefined);
 
     if (error) {
       setError(error.message);
@@ -61,9 +62,11 @@ export default function ForgotPassword() {
             />
           </div>
 
+          <Turnstile onVerify={setCaptchaToken} />
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !captchaToken}
             data-magnetic="0.12"
             className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import AuthShell from '@/components/AuthShell';
+import Turnstile from '@/components/Turnstile';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/contexts/I18nContext';
 import { supabase } from '@/services/supabase';
@@ -22,6 +23,7 @@ export default function Login() {
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const handleProfileRedirect = async (userId: string) => {
     const { data: profile } = await supabase
@@ -64,7 +66,7 @@ export default function Login() {
     setLoading(true);
     setError(null);
 
-    const { error } = await requestOTP(email, 'login', lang);
+    const { error } = await requestOTP(email, 'login', lang, captchaToken || undefined);
     if (error) {
       setError(error.message);
     } else {
@@ -147,6 +149,12 @@ export default function Login() {
             OTP Code
           </button>
         </div>
+
+        {loginMode === 'otp' && otpStep === 'request' && (
+          <div className="mb-6">
+            <Turnstile onVerify={setCaptchaToken} />
+          </div>
+        )}
 
         {error && (
           <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
@@ -267,7 +275,7 @@ export default function Login() {
 
               <button
                 type="submit"
-                disabled={loading || (otpStep === 'verify' && otp.length < 6)}
+                disabled={loading || (otpStep === 'verify' && otp.length < 6) || (otpStep === 'request' && !captchaToken)}
                 className="w-full bg-primary hover:bg-primary-light text-black font-black py-4 rounded-2xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2 uppercase tracking-widest text-sm"
               >
                 {loading ? t('common.processing') || "..." : (otpStep === 'request' ? "Send Code" : "Verify & Login")}

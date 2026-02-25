@@ -115,12 +115,13 @@ export function useAuth() {
     email: string,
     usage: "register" | "login" | "reset",
     lang: string = "es",
+    captchaToken?: string,
   ) => {
     try {
       const response = await fetch(`${API_URL}/auth/request-otp`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, usage, lang }),
+        body: JSON.stringify({ email, usage, lang, captchaToken }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Error requesting OTP");
@@ -156,6 +157,22 @@ export function useAuth() {
     }
   };
 
+  const forgotPassword = async (email: string, captchaToken?: string) => {
+    try {
+      const response = await fetch(`${API_URL}/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, captchaToken }),
+      });
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "Error requesting password reset");
+      return { data, error: null };
+    } catch (error: any) {
+      return { data: null, error };
+    }
+  };
+
   return {
     user,
     session,
@@ -168,5 +185,6 @@ export function useAuth() {
     signOut,
     requestOTP,
     verifyOTP,
+    forgotPassword,
   };
 }
