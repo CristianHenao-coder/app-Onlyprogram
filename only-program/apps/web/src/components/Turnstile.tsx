@@ -15,38 +15,52 @@ export default function Turnstile({ onVerify, siteKey }: TurnstileProps) {
   useEffect(() => {
     // If no site key, try to fetch from backend
     if (!activeSiteKey) {
-      console.log('--- Turnstile: Fetching siteKey from backend ---');
       const fetchUrl = `${API_URL}/config/turnstile`;
+      console.log('--- Turnstile: Fetching siteKey from:', fetchUrl);
       
       const timeout = setTimeout(() => {
         setError('Tiempo de espera agotado obteniendo configuración de seguridad.');
       }, 10000);
 
       fetch(fetchUrl)
-        .then(res => {
+        .then(async res => {
           clearTimeout(timeout);
-          if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+          const contentType = res.headers.get('content-type');
+          if (!res.ok) {
+            console.error(`--- Turnstile: HTTP Error ${res.status} from ${fetchUrl}`);
+            throw new Error(`HTTP error! status: ${res.status}`);
+          }
+          if (!contentType || !contentType.includes('application/json')) {
+            const text = await res.text();
+            console.error('--- Turnstile: Received non-JSON response ---', {
+              contentType,
+              preview: text.substring(0, 100),
+              url: fetchUrl
+            });
+            throw new Error('La respuesta del servidor no es válida (JSON esperado).');
+          }
           return res.json();
         })
         .then(data => {
           if (data.siteKey) {
-            console.log('--- Turnstile: SiteKey received ---');
+            console.log('--- Turnstile: SiteKey successfully loaded from backend ---');
             setActiveSiteKey(data.siteKey);
           } else {
-            console.error('--- Turnstile: No siteKey in response ---', data);
+            console.error('--- Turnstile: No siteKey in JSON response ---', data);
             setError('Error de configuración: siteKey no encontrado.');
           }
         })
         .catch(err => {
           clearTimeout(timeout);
-          console.error('--- Turnstile: Error fetching config ---', err);
+          console.error('--- Turnstile: Error fetching config ---', err.message);
           // Fallback to check env again just in case
           const envKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
           if (envKey) {
+            console.log('--- Turnstile: Falling back to environment variable siteKey ---');
             setActiveSiteKey(envKey);
-            setError(null); // Clear error if we found a fallback
+            setError(null);
           } else {
-             setError('No se pudo conectar con el servicio de verificación.');
+             setError(`Error de seguridad: ${err.message}`);
           }
         });
         

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import Turnstile from '@/components/Turnstile';
 import Logo from '@/components/Logo';
-import PasswordInput from '@/components/PasswordInput';
+import PasswordInput, { PasswordStrengthChecklist } from '@/components/PasswordInput';
 import { useTranslation } from '@/contexts/I18nContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -192,9 +192,7 @@ export default function Register() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    showStrength={true}
                     placeholder="••••••"
-                    className="sm:col-span-2"
                   />
                   <PasswordInput
                     id="confirmPassword"
@@ -203,9 +201,10 @@ export default function Register() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                     placeholder="••••••"
-                    className="sm:col-span-2"
                   />
                 </div>
+
+                <PasswordStrengthChecklist value={password} />
 
                 <Turnstile onVerify={setCaptchaToken} />
 
