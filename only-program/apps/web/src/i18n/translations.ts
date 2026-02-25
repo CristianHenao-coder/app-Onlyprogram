@@ -13,6 +13,9 @@ export const translations = {
       save: "Guardar",
       viewAllCountries: "Ver todos los países",
       viewPrices: "Ver precios",
+      verify: "Verificar",
+      verifying: "Verificando...",
+      back: "Atrás",
     },
 
     countries: {
@@ -679,6 +682,9 @@ export const translations = {
       save: "Save",
       viewAllCountries: "View all countries",
       viewPrices: "View Prices",
+      verify: "Verify",
+      verifying: "Verifying...",
+      back: "Back",
     },
 
     countries: {
@@ -1289,6 +1295,9 @@ export const translations = {
       menu: "Menu",
       save: "Enregistrer",
       viewAllCountries: "Voir tous les pays",
+      verify: "Vérifier",
+      verifying: "Vérification...",
+      back: "Retour",
     },
 
     countries: {
