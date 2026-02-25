@@ -66,7 +66,7 @@ const AuditLogs = () => {
                 <td colSpan={5} className="px-6 py-20 text-center">
                   <div className="flex flex-col items-center gap-4">
                     <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full"></div>
-                    <p className="text-silver/40 text-sm font-bold">Cargando historial...</p>
+                    <p className="text-silver/40 text-sm font-bold">{t('common.loading')}</p>
                   </div>
                 </td>
               </tr>

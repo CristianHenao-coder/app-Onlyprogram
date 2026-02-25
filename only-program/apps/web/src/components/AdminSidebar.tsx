@@ -60,7 +60,7 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
             </div>
             <div>
               <h1 className="text-white font-black tracking-tighter text-xl leading-none">ADMIN</h1>
-              <p className="text-[10px] text-primary font-black uppercase tracking-widest leading-none mt-1">Panel de Control</p>
+              <p className="text-[10px] text-primary font-black uppercase tracking-widest leading-none mt-1">{t('admin.layout.panel')}</p>
             </div>
           </div>
         )}
@@ -93,13 +93,13 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
         
         <NavItem to="/admin/dashboard" icon="dashboard" label={t('admin.menu.overview')} isCollapsed={isCollapsed} />
         <NavItem to="/admin/cms" icon="edit_note" label={t('admin.menu.cms')} isCollapsed={isCollapsed} />
-        <NavItem to="/admin/pricing" icon="paid" label="Precios" isCollapsed={isCollapsed} />
+        <NavItem to="/admin/pricing" icon="paid" label={t('admin.menu.pricing')} isCollapsed={isCollapsed} />
         <NavItem to="/admin/users" icon="group" label={t('admin.menu.users')} isCollapsed={isCollapsed} />
         <NavItem to="/admin/links" icon="link" label={t('admin.menu.links')} isCollapsed={isCollapsed} />
         <NavItem to="/admin/coupons" icon="confirmation_number" label={t('admin.menu.coupons')} isCollapsed={isCollapsed} />
         <NavItem to="/admin/audit-logs" icon="history" label={t('admin.menu.auditLogs')} isCollapsed={isCollapsed} />
-        <NavItem to="/admin/moderation" icon="verified_user" label="Moderación" isCollapsed={isCollapsed} />
-        <NavItem to="/admin/domains" icon="dns" label="Dominios" isCollapsed={isCollapsed} />
+        <NavItem to="/admin/moderation" icon="verified_user" label={t('admin.menu.moderation')} isCollapsed={isCollapsed} />
+        <NavItem to="/admin/domains" icon="dns" label={t('admin.menu.domains')} isCollapsed={isCollapsed} />
       </nav>
 
       {/* User Footer */}
@@ -123,7 +123,7 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
                     {profile?.full_name || 'Admin'}
                   </p>
                   <p className="text-[9px] text-silver/40 truncate uppercase font-black tracking-widest">
-                     Administrador
+                     {t('admin.menu.roleAdmin')}
                   </p>
                 </div>
                 <span className="material-symbols-outlined text-silver/20 text-sm group-hover:text-white group-hover:rotate-45 transition-all">settings</span>
@@ -134,7 +134,7 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
           {isCollapsed && (
             <Link 
               to="/admin/settings"
-              title="Ajustes de Perfil"
+              title={t('admin.menu.settings')}
               className="h-10 w-10 mx-auto rounded-xl bg-primary/20 flex items-center justify-center border border-primary/30 overflow-hidden mb-2 hover:border-primary transition-all"
             >
                {profile?.avatar_url ? (
@@ -147,14 +147,14 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
 
           <button
             onClick={handleSignOut}
-            title={isCollapsed ? 'Cerrar Sesión' : undefined}
+            title={isCollapsed ? t('admin.menu.logout') : undefined}
             className={`
               flex items-center justify-center gap-2 py-2 rounded-lg text-red-500/60 hover:text-red-500 hover:bg-red-500/10 transition-all text-xs font-bold border border-red-500/10 hover:border-red-500/20
               ${isCollapsed ? 'w-10 mx-auto px-0' : 'w-full'}
             `}
           >
             <span className="material-symbols-outlined text-sm">logout</span>
-            {!isCollapsed && <span>Cerrar Sesión</span>}
+            {!isCollapsed && <span>{t('admin.menu.logout')}</span>}
           </button>
         </div>
       </div>

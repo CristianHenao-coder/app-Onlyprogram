@@ -107,10 +107,6 @@ export const linkProfilesService = {
     }
 
     if (data && data.smart_link_buttons) {
-      // Map smart_link_buttons to buttons field for backward compatibility if needed,
-      // or just ensure the frontend is updated.
-      // For now, let's keep the nested array but also update the 'buttons' field
-      // so the existing logic doesnt break immediately.
       data.buttons = data.smart_link_buttons.sort(
         (a: any, b: any) => a.order - b.order,
       );
@@ -178,12 +174,6 @@ export const linkProfilesService = {
         throw new Error(`Error inserting buttons: ${insertError.message}`);
       }
     }
-
-    // 4. Update the JSONB buttons field in smart_links for safety/legacy
-    await supabase
-      .from("smart_links")
-      .update({ buttons: deduplicatedButtons })
-      .eq("id", linkId);
   },
 
   /**

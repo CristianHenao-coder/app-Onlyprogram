@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { productPricingService, DEFAULT_PRODUCT_PRICING, type ProductPricingConfig } from '@/services/productPricing.service';
+import { useTranslation } from '@/contexts/I18nContext';
 import Snackbar from '@/components/Snackbar';
 
 const toNumber = (v: string) => {
@@ -8,6 +9,7 @@ const toNumber = (v: string) => {
 };
 
 export default function ProductPricing() {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +25,7 @@ export default function ProductPricing() {
         const cfg = await productPricingService.get();
         if (mounted) setForm(cfg);
       } catch (e: any) {
-        if (mounted) setError(e?.message || 'No se pudo cargar la configuración de precios.');
+        if (mounted) setError(e?.message || t('admin.pricing.loadError'));
       } finally {
         if (mounted) setLoading(false);
       }
@@ -44,17 +46,17 @@ export default function ProductPricing() {
     setOk(null);
 
     // validaciones simples
-    if (form.link.standard <= 0) return setError('El precio del link estándar debe ser mayor a 0.');
-    if (form.link.rotator <= 0) return setError('El precio del link rotador debe ser mayor a 0.');
-    if (form.domain.connect <= 0) return setError('El precio de conectar dominio debe ser mayor a 0.');
-    if (form.domain.buy <= 0) return setError('El precio de comprar dominio debe ser mayor a 0.');
+    if (form.link.standard <= 0) return setError(t('admin.pricing.validationPositive'));
+    if (form.link.rotator <= 0) return setError(t('admin.pricing.validationPositive'));
+    if (form.domain.connect <= 0) return setError(t('admin.pricing.validationPositive'));
+    if (form.domain.buy <= 0) return setError(t('admin.pricing.validationPositive'));
 
     try {
       setSaving(true);
       await productPricingService.save(form);
-      setOk('Precios guardados.');
+      setOk(t('admin.pricing.saveSuccess'));
     } catch (e: any) {
-      setError(e?.message || 'No se pudieron guardar los precios.');
+      setError(e?.message || t('admin.pricing.saveError'));
     } finally {
       setSaving(false);
     }
@@ -64,9 +66,9 @@ export default function ProductPricing() {
     <div className="p-6 space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">Precios de productos</h1>
+          <h1 className="text-2xl font-semibold">{t('admin.pricing.title')}</h1>
           <p className="text-sm text-white/70 mt-1">
-            Estos precios se usan tanto en el landing (página de precios) como en el cálculo de compra dentro del panel del usuario.
+            {t('admin.pricing.subtitle')}
           </p>
         </div>
 
@@ -75,19 +77,19 @@ export default function ProductPricing() {
           disabled={loading || saving}
           className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 disabled:opacity-60"
         >
-          {saving ? 'Guardando…' : 'Guardar'}
+          {saving ? t('common.saving') : t('common.save')}
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Link pricing */}
         <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-          <h2 className="text-lg font-medium">Links</h2>
-          <p className="text-sm text-white/60 mt-1">Precios para creación de links y extras.</p>
+          <h2 className="text-lg font-medium">{t('admin.menu.links')}</h2>
+          <p className="text-sm text-white/60 mt-1">{t('admin.pricing.linksDesc')}</p>
 
           <div className="mt-4 space-y-4">
             <div>
-              <label className="text-sm text-white/70">Moneda (USD/COP)</label>
+              <label className="text-sm text-white/70">{t('admin.pricing.currency')}</label>
               <input
                 value={form.currency}
                 onChange={(e) => setForm((p) => ({ ...p, currency: e.target.value }))}
@@ -98,7 +100,7 @@ export default function ProductPricing() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
-                <label className="text-sm text-white/70">Link estándar ({currencyLabel})</label>
+                <label className="text-sm text-white/70">{t('admin.pricing.standardPrice')} ({currencyLabel})</label>
                 <input
                   type="number"
                   step="0.01"
@@ -109,7 +111,7 @@ export default function ProductPricing() {
               </div>
 
               <div>
-                <label className="text-sm text-white/70">Link rotador ({currencyLabel})</label>
+                <label className="text-sm text-white/70">{t('admin.pricing.rotatorPrice')} ({currencyLabel})</label>
                 <input
                   type="number"
                   step="0.01"
@@ -120,7 +122,7 @@ export default function ProductPricing() {
               </div>
 
               <div>
-                <label className="text-sm text-white/70">Extra Telegram ({currencyLabel})</label>
+                <label className="text-sm text-white/70">{t('admin.pricing.telegramAddon')} ({currencyLabel})</label>
                 <input
                   type="number"
                   step="0.01"
@@ -132,19 +134,19 @@ export default function ProductPricing() {
             </div>
 
             <div className="text-xs text-white/55">
-              Nota: En el usuario, el total se calcula como: <span className="text-white/80">precio del tipo de link</span> + <span className="text-white/80">extra Telegram</span> (si aplica).
+              {t('admin.pricing.linksNote')}
             </div>
           </div>
         </div>
 
         {/* Domain pricing */}
         <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-          <h2 className="text-lg font-medium">Dominios</h2>
-          <p className="text-sm text-white/60 mt-1">Precios para la compra/activación de dominios.</p>
+          <h2 className="text-lg font-medium">{t('admin.menu.domains')}</h2>
+          <p className="text-sm text-white/60 mt-1">{t('admin.pricing.domainsDesc')}</p>
 
           <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="text-sm text-white/70">Conectar dominio ({currencyLabel})</label>
+              <label className="text-sm text-white/70">{t('admin.pricing.connectDomain')} ({currencyLabel})</label>
               <input
                 type="number"
                 step="0.01"
@@ -155,7 +157,7 @@ export default function ProductPricing() {
             </div>
 
             <div>
-              <label className="text-sm text-white/70">Comprar dominio ({currencyLabel})</label>
+              <label className="text-sm text-white/70">{t('admin.pricing.buyDomain')} ({currencyLabel})</label>
               <input
                 type="number"
                 step="0.01"
@@ -167,12 +169,12 @@ export default function ProductPricing() {
           </div>
 
           <div className="mt-4 text-xs text-white/55">
-            Nota: En el flujo de dominios, el total normalmente es: <span className="text-white/80">setup</span> + <span className="text-white/80">mensualidad</span> (si se cobra el primer mes por adelantado).
+            {t('admin.pricing.domainsNote')}
           </div>
         </div>
       </div>
 
-      {loading && <div className="text-sm text-white/70">Cargando…</div>}
+      {loading && <div className="text-sm text-white/70">{t('common.loading')}</div>}
 
       {error && (
         <Snackbar

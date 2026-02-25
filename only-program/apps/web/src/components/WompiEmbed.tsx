@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { paymentsService } from "@/services/payments.service";
+import { useTranslation } from "@/contexts/I18nContext";
 
 interface WompiSignatureResponse {
     reference: string;
@@ -10,6 +11,7 @@ interface WompiSignatureResponse {
 }
 
 export default function WompiEmbed({ amount, email }: { amount: number, email?: string }) {
+    const { t } = useTranslation();
     const [data, setData] = useState<WompiSignatureResponse | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -52,8 +54,8 @@ export default function WompiEmbed({ amount, email }: { amount: number, email?: 
         }
     }, [data, email]);
 
-    if (loading) return <div className="text-white">Cargando Wompi...</div>;
-    if (!data) return <div className="text-red-500">Error cargando pago</div>;
+    if (loading) return <div className="text-white">{t('common.payments.wompiLoading')}</div>;
+    if (!data) return <div className="text-red-500">{t('common.payments.wompiError')}</div>;
 
     return (
         <div className="w-full flex justify-center py-4">

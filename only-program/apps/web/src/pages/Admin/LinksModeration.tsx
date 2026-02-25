@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/services/supabase';
 import LinkPreviewModal from '@/components/LinkPreviewModal';
+import { useTranslation } from '@/contexts/I18nContext';
 import { API_URL } from '@/services/apiConfig';
 
 interface PendingLink {
@@ -18,6 +19,7 @@ interface PendingLink {
 }
 
 const LinksModeration = () => {
+  const { t } = useTranslation();
   const [links, setLinks] = useState<PendingLink[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedLink, setSelectedLink] = useState<PendingLink | null>(null);
@@ -69,7 +71,7 @@ const LinksModeration = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Error al aprobar');
+        throw new Error(errorData.error || t('admin.pricing.loadError')); // Using generic load error for now or fallback
       }
 
       setSelectedLink(null);
@@ -86,8 +88,8 @@ const LinksModeration = () => {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tighter mb-2">Moderación de Links</h1>
-          <p className="text-silver/40 text-sm font-medium">Revisa y aprueba los links pagados pendientes.</p>
+          <h1 className="text-3xl font-black text-white tracking-tighter mb-2">{t('admin.moderation.title')}</h1>
+          <p className="text-silver/40 text-sm font-medium">{t('admin.moderation.subtitle')}</p>
         </div>
       </div>
 
@@ -96,15 +98,15 @@ const LinksModeration = () => {
           <div key={link.id} className="bg-surface/30 border border-border/50 rounded-3xl p-6 flex flex-col gap-4">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-bold text-white text-lg">{link.title || 'Sin Título'}</h3>
+                <h3 className="font-bold text-white text-lg">{link.title || t('admin.links.untitled')}</h3>
                 <div className="mb-4">
-                  <p className="text-sm text-primary font-bold">Propietario: {link.owner_name || link.owner_email || 'Desconocido'}</p>
+                  <p className="text-sm text-primary font-bold">{t('admin.moderation.owner')}: {link.owner_name || link.owner_email || t('admin.links.unknown')}</p>
                   {link.owner_name && link.owner_email && (
                     <p className="text-xs text-gray-500">{link.owner_email}</p>
                   )}
                 </div>
                 <span className="bg-yellow-500/20 text-yellow-500 text-[10px] font-black px-2 py-1 rounded uppercase">
-                  Pendiente
+                  {t('admin.moderation.pending')}
                 </span>
               </div>
             </div>
@@ -113,12 +115,12 @@ const LinksModeration = () => {
               <p className="text-xs text-silver/60 mb-2 font-mono">ID: {link.id}</p>
 
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-silver/40 uppercase tracking-widest">Slug Solicitado</span>
+                <span className="text-[10px] text-silver/40 uppercase tracking-widest">{t('admin.moderation.requestedSlug')}</span>
                 <p className="text-white font-mono text-sm">{link.slug}</p>
               </div>
 
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] text-silver/40 uppercase tracking-widest">Diseño</span>
+                <span className="text-[10px] text-silver/40 uppercase tracking-widest">{t('admin.moderation.design')}</span>
                 <p className="text-silver/80 text-xs truncate">{JSON.stringify(link.config).substring(0, 50)}...</p>
               </div>
             </div>
@@ -128,7 +130,7 @@ const LinksModeration = () => {
                 onClick={() => setPreviewLink(link)}
                 className="flex-1 bg-white/5 hover:bg-white/10 text-white font-bold py-3 rounded-xl transition-all"
               >
-                Ver Diseño
+                {t('admin.moderation.viewDesign')}
               </button>
               <button
                 onClick={() => {
@@ -137,7 +139,7 @@ const LinksModeration = () => {
                 }}
                 className="flex-1 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 font-bold py-3 rounded-xl transition-all"
               >
-                Aprobar
+                {t('admin.moderation.approve')}
               </button>
             </div>
           </div>
@@ -146,7 +148,7 @@ const LinksModeration = () => {
         {links.length === 0 && !loading && (
           <div className="col-span-full p-20 text-center border border-dashed border-white/10 rounded-3xl">
             <span className="material-symbols-outlined text-4xl text-silver/10 mb-4 block">check_circle</span>
-            <p className="text-silver/40 text-sm font-bold">No hay links pendientes de aprobación.</p>
+            <p className="text-silver/40 text-sm font-bold">{t('admin.moderation.noPending')}</p>
           </div>
         )}
       </div>
@@ -191,7 +193,7 @@ const LinksModeration = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-[#111] border border-white/10 rounded-3xl p-8 max-w-md w-full space-y-6 shadow-2xl">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-black text-white">Aprobar Link</h2>
+              <h2 className="text-2xl font-black text-white">{t('admin.moderation.modalTitle')}</h2>
               <button onClick={() => setSelectedLink(null)} className="text-silver/40 hover:text-white transition-colors">
                 <span className="material-symbols-outlined">close</span>
               </button>
@@ -199,7 +201,7 @@ const LinksModeration = () => {
 
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-silver/60 uppercase mb-2">Asignar URL Final (Slug)</label>
+                <label className="block text-xs font-bold text-silver/60 uppercase mb-2">{t('admin.moderation.assignSlug')}</label>
                 <div className="flex items-center bg-surface/30 border border-border/50 rounded-xl px-4 py-3 focus-within:border-primary/50 transition-colors">
                   <span className="text-silver/40 text-sm mr-1">onlyprogram.com/</span>
                   <input
@@ -211,17 +213,17 @@ const LinksModeration = () => {
                   />
                 </div>
                 <p className="text-[10px] text-silver/40 mt-2">
-                  Esta será la URL pública del link una vez aprobado.
+                  {t('admin.moderation.urlDesc')}
                 </p>
               </div>
 
               <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="material-symbols-outlined text-yellow-500 text-sm">warning</span>
-                  <span className="text-xs font-bold text-yellow-500 uppercase">Confirmación</span>
+                  <span className="text-xs font-bold text-yellow-500 uppercase">{t('admin.moderation.warningTitle')}</span>
                 </div>
                 <p className="text-[10px] text-silver/70">
-                  Al aprobar, el link se volverá público inmediatamente y el usuario podrá ver sus estadísticas.
+                  {t('admin.moderation.warningDesc')}
                 </p>
               </div>
             </div>
@@ -232,7 +234,7 @@ const LinksModeration = () => {
                 className="flex-1 px-6 py-4 rounded-xl font-bold text-silver hover:bg-white/5 transition-colors border border-transparent"
                 disabled={isApproving}
               >
-                Cancelar
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleApprove}
@@ -240,7 +242,7 @@ const LinksModeration = () => {
                 className="flex-1 bg-primary text-black px-6 py-4 rounded-xl font-black hover:bg-primary/90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isApproving && <span className="animate-spin material-symbols-outlined text-lg">progress_activity</span>}
-                {isApproving ? 'Aprobando...' : 'Aprobar'}
+                {isApproving ? t('admin.moderation.approving') : t('admin.moderation.approve')}
               </button>
             </div>
           </div>

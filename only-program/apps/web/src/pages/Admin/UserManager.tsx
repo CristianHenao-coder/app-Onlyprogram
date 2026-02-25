@@ -58,27 +58,27 @@ import { API_URL } from '@/services/apiConfig';
        fetchUsers();
        
        showAlert({
-          title: !currentStatus ? "Usuario Suspendido" : "Suspensión Levantada",
-          message: `El estado del usuario ha sido actualizado correctamente.`,
+          title: !currentStatus ? t('admin.user.suspendedTitle') : t('admin.user.unsuspendedTitle'),
+          message: t('admin.user.statusUpdated'),
           type: "success"
        });
      } catch (err) {
        console.error(err);
        showAlert({
-         title: "Error de Sistema",
-         message: "No se pudo cambiar el estado de suspensión del usuario.",
+         title: t('common.error'),
+         message: t('admin.common.updateError'),
          type: "error"
        });
      }
    };
 
    const handleDeleteUser = async (user: any) => {
-        const userName = user.full_name || user.email || user.id || 'Desconocido';
+        const userName = user.full_name || user.email || user.id || t('admin.links.unknown');
         const confirmed = await showConfirm({
-            title: "Eliminar Usuario",
-            message: `¿Estás seguro de que quieres eliminar al usuario ${userName}? Esta acción no se puede deshacer.`,
-            confirmText: "Eliminar",
-            cancelText: "Cancelar"
+            title: t('admin.user.deleteTitle'),
+            message: t('admin.user.deleteConfirm', { name: userName }),
+            confirmText: t('admin.user.delete'),
+            cancelText: t('common.cancel')
         });
 
         if (!confirmed) return;
@@ -94,12 +94,12 @@ import { API_URL } from '@/services/apiConfig';
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error || 'Error al eliminar usuario');
+                throw new Error(errorData.error || t('admin.common.error'));
             }
 
             showAlert({
-                title: "Usuario Eliminado",
-                message: "El usuario ha sido eliminado correctamente del sistema.",
+                title: t('admin.user.deleteTitle'),
+                message: t('admin.user.statusUpdated'),
                 type: "success"
             });
             
@@ -107,8 +107,8 @@ import { API_URL } from '@/services/apiConfig';
         } catch (err: any) {
             console.error(err);
             showAlert({
-                title: "Error",
-                message: err.message || "No se pudo eliminar el usuario.",
+                title: t('common.error'),
+                message: err.message || t('admin.common.updateError'),
                 type: "error"
             });
         }
@@ -128,13 +128,13 @@ import { API_URL } from '@/services/apiConfig';
          body: JSON.stringify({ targetUserId: promotionTarget.id })
        });
        
-       if (!response.ok) throw new Error('Error al enviar código');
+       if (!response.ok) throw new Error(t('admin.common.error'));
        
        setStep('verify');
      } catch (err) {
        showAlert({
-         title: "Error de Seguridad",
-         message: "No se pudo enviar el código de verificación. Revisa tu conexión.",
+         title: t('admin.user.securityTitle'),
+         message: t('admin.common.updateError'),
          type: "error"
        });
        console.error(err);
@@ -161,13 +161,13 @@ import { API_URL } from '@/services/apiConfig';
        });
        
        const result = await response.json();
-       if (!response.ok) throw new Error(result.error || 'Error de verificación');
+       if (!response.ok) throw new Error(result.error || t('admin.common.error'));
        
        await logActions.userPromote(promotionTarget.id);
 
        showAlert({
-         title: "Usuario Promovido",
-         message: "El usuario ha sido elevado al rango de Administrador con éxito.",
+         title: t('admin.user.promotedTitle'),
+         message: t('admin.user.promotedMsg'),
          type: "success"
        });
        setStep('none');
@@ -176,8 +176,8 @@ import { API_URL } from '@/services/apiConfig';
        fetchUsers();
      } catch (err: any) {
        showAlert({
-         title: "Verificación Fallida",
-         message: err.message || "El código introducido es incorrecto o ha expirado.",
+         title: t('admin.user.securityTitle'),
+         message: err.message || t('admin.common.updateError'),
          type: "error"
        });
      } finally {
@@ -214,7 +214,7 @@ import { API_URL } from '@/services/apiConfig';
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-silver/20 group-hover:text-primary transition-colors">search</span>
             <input 
              type="text" 
-             placeholder="Buscar por nombre o ID..." 
+             placeholder={t('admin.user.searchPlaceholder')}
              value={search}
              onChange={(e) => setSearch(e.target.value)}
              className="w-full bg-surface/30 border border-border/50 rounded-2xl py-3 pl-12 pr-4 text-sm text-white focus:border-primary/50 outline-none transition-all"
@@ -258,11 +258,11 @@ import { API_URL } from '@/services/apiConfig';
                         )}
                      </div>
                      <div>
-                       <p className="text-sm font-bold text-white">{user.full_name || user.email?.split('@')[0] || user.email || 'Usuario'}</p>
+                       <p className="text-sm font-bold text-white">{user.full_name || user.email?.split('@')[0] || user.email || t('admin.links.unknown')}</p>
                        <p className="text-[10px] text-silver/40 font-mono truncate max-w-[150px]">{user.id}</p>
                        <span className="text-[10px] text-primary/60 font-bold flex items-center gap-1 mt-1">
                             <span className="material-symbols-outlined text-[10px]">link</span>
-                            {user.smart_links?.length || 0} Links
+                            {user.smart_links?.length || 0} {t('admin.menu.links')}
                        </span>
                      </div>
                    </div>
@@ -273,7 +273,7 @@ import { API_URL } from '@/services/apiConfig';
                        {user.role}
                      </span>
                      <span className="text-[10px] text-silver font-medium italic">
-                       {user.plan_type || 'GRATIS'}
+                       {user.plan_type || t('admin.user.free')}
                      </span>
                    </div>
                  </td>
@@ -292,7 +292,7 @@ import { API_URL } from '@/services/apiConfig';
                              onClick={() => { setPromotionTarget(user); setStep('confirm'); }}
                              className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-purple-500/10 border border-purple-500/20 text-purple-400 hover:bg-purple-500 hover:text-white transition-all"
                           >
-                             Hacer Admin
+                             {t('admin.user.promote')}
                           </button>
                         )}
                        <button 
@@ -311,7 +311,7 @@ import { API_URL } from '@/services/apiConfig';
                            onClick={() => handleDeleteUser(user)}
                            className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all ml-2"
                         >
-                           Eliminar
+                           {t('admin.user.delete')}
                         </button>
                     </div>
                  </td>
@@ -327,7 +327,7 @@ import { API_URL } from '@/services/apiConfig';
                            <div className="py-4 pl-16 pr-6 relative">
                                {user.smart_links && user.smart_links.length > 0 ? (
                                    <div className="flex flex-col gap-3">
-                                       <h4 className="text-[10px] font-black uppercase tracking-widest text-silver/40 mb-2 pl-2">Links Asociados al Usuario</h4>
+                                       <h4 className="text-[10px] font-black uppercase tracking-widest text-silver/40 mb-2 pl-2">{t('admin.user.associatedLinks')}</h4>
                                        {user.smart_links.map((link: any) => (
                                            <div key={link.id} className="relative flex items-center gap-4 group">
                                                 {/* Conector Rama Horizontal */}
@@ -349,7 +349,7 @@ import { API_URL } from '@/services/apiConfig';
                                                            <div className="flex items-center gap-2">
                                                                <p className="text-[10px] text-silver/60 font-mono">/{link.slug}</p>
                                                                <span className={`text-[8px] px-1.5 py-0.5 rounded-md font-bold uppercase ${link.is_active ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-                                                                    {link.is_active ? 'Activo' : 'Inactivo'}
+                                                                    {link.is_active ? t('admin.user.active') : t('admin.user.inactive')}
                                                                </span>
                                                            </div>
                                                        </div>
@@ -357,11 +357,11 @@ import { API_URL } from '@/services/apiConfig';
                                                    
                                                    <div className="flex items-center gap-4">
                                                        <div className="text-right">
-                                                            <span className="text-[10px] text-silver/40 font-bold block">Clicks</span>
+                                                            <span className="text-[10px] text-silver/40 font-bold block">{t('admin.user.clicks')}</span>
                                                             <span className="text-xs font-mono text-white">{link.clicks || 0}</span>
                                                        </div>
                                                        <div className="text-right">
-                                                            <span className="text-[10px] text-silver/40 font-bold block">Creado</span>
+                                                            <span className="text-[10px] text-silver/40 font-bold block">{t('admin.user.created')}</span>
                                                             <span className="text-[10px] font-mono text-silver">{new Date(link.created_at).toLocaleDateString()}</span>
                                                        </div>
                                                        <a 
@@ -381,7 +381,7 @@ import { API_URL } from '@/services/apiConfig';
                                    <div className="p-4 rounded-xl border border-white/5 bg-white/[0.01] text-center relative">
                                         {/* Conector vacío */}
                                         <div className="absolute -left-10 top-1/2 w-8 h-px bg-white/10 border-t border-dashed border-silver/20 opacity-50"></div>
-                                        <span className="text-xs text-silver/30 font-medium italic">Este usuario no tiene links creados.</span>
+                                        <span className="text-xs text-silver/30 font-medium italic">{t('admin.user.noLinks')}</span>
                                    </div>
                                )}
                            </div>
@@ -396,7 +396,7 @@ import { API_URL } from '@/services/apiConfig';
          {filteredUsers.length === 0 && (
            <div className="p-20 text-center">
              <span className="material-symbols-outlined text-4xl text-silver/10 mb-4 block">group_off</span>
-             <p className="text-silver/40 text-sm font-bold">No se encontraron usuarios.</p>
+             <p className="text-silver/40 text-sm font-bold">{t('admin.user.noUsers')}</p>
            </div>
          )}
        </div>
@@ -416,10 +416,9 @@ import { API_URL } from '@/services/apiConfig';
                {step === 'confirm' ? (
                  <>
                    <div>
-                     <h3 className="text-xl font-black text-white">Promover a Admin</h3>
+                     <h3 className="text-xl font-black text-white">{t('admin.user.promote')}</h3>
                      <p className="text-silver/60 text-sm mt-2">
-                        Estás a punto de dar privilegios de administrador a <span className="text-white font-bold">{promotionTarget?.full_name}</span>. 
-                        Por seguridad, enviaremos un código a tu correo.
+                        {t('admin.user.promoteMsg', { name: promotionTarget?.full_name })}
                      </p>
                    </div>
                    <div className="flex flex-col gap-3 pt-4">
@@ -428,16 +427,16 @@ import { API_URL } from '@/services/apiConfig';
                        disabled={isSendingCode}
                        className="w-full bg-purple-600 hover:bg-purple-700 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-purple-600/20 disabled:opacity-50"
                      >
-                       {isSendingCode ? 'Enviando Código...' : 'Enviar Código a mi Correo'}
+                       {isSendingCode ? t('admin.user.sendingCode') : t('admin.user.sendCode')}
                      </button>
-                     <button onClick={() => setStep('none')} className="text-silver/40 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors">Cancelar</button>
+                     <button onClick={() => setStep('none')} className="text-silver/40 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors">{t('common.cancel')}</button>
                    </div>
                  </>
                ) : (
                  <>
                    <div>
-                     <h3 className="text-xl font-black text-white">Verificación de Correo</h3>
-                     <p className="text-silver/60 text-sm mt-2">Introduce el código de 6 dígitos enviado a tu correo.</p>
+                     <h3 className="text-xl font-black text-white">{t('admin.user.verifyTitle')}</h3>
+                     <p className="text-silver/60 text-sm mt-2">{t('admin.user.enterCode')}</p>
                    </div>
                    <div className="space-y-4">
                      <input 
@@ -453,9 +452,9 @@ import { API_URL } from '@/services/apiConfig';
                        disabled={isVerifying || verificationCode.length !== 6}
                        className="w-full bg-green-600 hover:bg-green-700 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-green-600/20 disabled:opacity-50"
                      >
-                       {isVerifying ? 'Verificando...' : 'Confirmar Promoción'}
+                       {isVerifying ? t('admin.user.verifying') : t('admin.user.confirmPromotion')}
                      </button>
-                     <button onClick={() => setStep('confirm')} className="text-silver/40 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors">Atrás</button>
+                     <button onClick={() => setStep('confirm')} className="text-silver/40 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors">{t('common.back')}</button>
                    </div>
                  </>
                )}

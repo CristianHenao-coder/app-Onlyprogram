@@ -137,7 +137,7 @@ const AdminDashboard = () => {
                   : 'text-silver/40 hover:text-silver/60'
               }`}
             >
-              {r === '24h' ? 'Hoy' : r === '7d' ? '7 Días' : '30 Días'}
+              {r === '24h' ? t('admin.dashboard.today') : r === '7d' ? t('admin.dashboard.days7') : t('admin.dashboard.days30')}
             </button>
           ))}
         </div>
@@ -145,28 +145,28 @@ const AdminDashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard 
-          title="Nuevos Usuarios" 
+          title={t('admin.dashboard.newUsers')} 
           value={stats.users} 
           prevValue={stats.prevUsers} 
           icon="group" 
           color="blue" 
         />
         <MetricCard 
-          title="Smart Links Creados" 
+          title={t('admin.dashboard.smartLinksCreated')} 
           value={stats.links} 
           prevValue={stats.prevLinks} 
           icon="link" 
           color="primary" 
         />
         <MetricCard 
-          title="Transacciones" 
+          title={t('admin.dashboard.transactions')} 
           value={stats.payments} 
           prevValue={stats.prevPayments} 
           icon="shopping_cart" 
           color="green" 
         />
         <MetricCard 
-          title="Ingresos Estimados" 
+          title={t('admin.dashboard.estimatedRevenue')} 
           value={stats.revenue} 
           prevValue={stats.prevRevenue} 
           icon="payments" 
@@ -179,12 +179,12 @@ const AdminDashboard = () => {
         <div className="lg:col-span-2 bg-surface/30 border border-border/50 rounded-[2.5rem] p-8 overflow-hidden relative">
            <div className="flex items-center justify-between mb-8">
               <div>
-                 <h2 className="text-xl font-black text-white tracking-tight uppercase italic">Actividad del Sistema</h2>
-                 <p className="text-silver/40 text-[10px] font-black uppercase tracking-widest mt-1">Tendencia de crecimiento de usuarios</p>
+                 <h2 className="text-xl font-black text-white tracking-tight uppercase italic">{t('admin.dashboard.systemActivity')}</h2>
+                 <p className="text-silver/40 text-[10px] font-black uppercase tracking-widest mt-1">{t('admin.dashboard.growthTrend')}</p>
               </div>
               <div className="text-right">
                  <p className="text-2xl font-black text-primary tracking-tighter">+{calculateGrowth(stats.users, stats.prevUsers)}%</p>
-                 <p className="text-[10px] text-silver/40 font-black uppercase tracking-widest">vs periodo anterior</p>
+                 <p className="text-[10px] text-silver/40 font-black uppercase tracking-widest">{t('admin.dashboard.vsPrevious')}</p>
               </div>
            </div>
 
@@ -242,16 +242,16 @@ const AdminDashboard = () => {
                  <span className="material-symbols-outlined text-3xl">offline_bolt</span>
               </div>
               <h3 className="text-xl font-black text-white tracking-tight leading-tight uppercase mb-4">
-                 Listo para el <br /> <span className="text-primary italic">Futuro Digital</span>
+                 {t('admin.dashboard.readyForFuture')} <br /> <span className="text-primary italic">{t('admin.dashboard.digitalFuture')}</span>
               </h3>
               <p className="text-silver/60 text-sm leading-relaxed">
-                 Las métricas actuales muestran una retención sólida. El sistema escala automáticamente para manejar picos de hasta 10k req/s.
+                 {t('admin.dashboard.futureDesc')}
               </p>
            </div>
            
            <div className="mt-8 space-y-4">
               <div className="flex items-center justify-between text-[11px] font-black uppercase tracking-widest text-silver/40">
-                 <span>Salud del Servidor</span>
+                 <span>{t('admin.dashboard.serverHealth')}</span>
                  <span className="text-green-500">99.9%</span>
               </div>
               <div className="h-1.5 w-full bg-background/50 rounded-full overflow-hidden">

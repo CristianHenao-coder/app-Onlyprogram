@@ -6,11 +6,11 @@ import { useTranslation } from '@/contexts/I18nContext';
 const AdminLayout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const { language, setLanguage } = useTranslation() as any;
+  const { language, setLanguage, t } = useTranslation() as any;
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement | null>(null);
 
-  // Close dropdown on click outside
+  
   useEffect(() => {
     const onDown = (e: MouseEvent) => {
       if (!langRef.current) return;
@@ -66,7 +66,7 @@ const AdminLayout = () => {
             </button>
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-primary animate-pulse"></span>
-              <h2 className="text-sm font-bold text-white/40 uppercase tracking-widest">Panel Administrativo</h2>
+              <h2 className="text-sm font-bold text-white/40 uppercase tracking-widest">{t('admin.layout.panel')}</h2>
             </div>
           </div>
           
