@@ -185,7 +185,7 @@ export default function Register() {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-4">
                   <PasswordInput
                     id="password"
                     label={t("auth.password")}
@@ -206,12 +206,14 @@ export default function Register() {
 
                 <PasswordStrengthChecklist value={password} />
 
-                <Turnstile onVerify={setCaptchaToken} />
+                <div className="py-4">
+                  <Turnstile onVerify={setCaptchaToken} />
+                </div>
 
                 <button
                   type="submit"
                   disabled={loading || !captchaToken}
-                  className="w-full bg-primary hover:bg-primary-light text-black font-black py-4 rounded-2xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2 uppercase tracking-widest text-sm"
+                  className="w-full bg-primary hover:bg-primary-light text-black font-black py-5 rounded-2xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4 uppercase tracking-widest text-sm"
                 >
                   {loading ? t("auth.registering") : t("nav.signup")}
                 </button>

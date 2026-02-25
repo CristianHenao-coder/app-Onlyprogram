@@ -62,13 +62,15 @@ export default function ForgotPassword() {
             />
           </div>
 
-          <Turnstile onVerify={setCaptchaToken} />
+          <div className="py-4">
+            <Turnstile onVerify={setCaptchaToken} />
+          </div>
 
           <button
             type="submit"
             disabled={loading || !captchaToken}
             data-magnetic="0.12"
-            className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-4 rounded-xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
           >
             {loading ? (
               <>

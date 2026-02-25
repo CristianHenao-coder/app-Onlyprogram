@@ -151,7 +151,7 @@ export default function Login() {
         </div>
 
         {loginMode === 'otp' && otpStep === 'request' && (
-          <div className="mb-6">
+          <div className="mb-8 py-2">
             <Turnstile onVerify={setCaptchaToken} />
           </div>
         )}
@@ -209,7 +209,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-primary hover:bg-primary-light text-black font-black py-4 rounded-2xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2 uppercase tracking-widest text-sm"
+                className="w-full bg-primary hover:bg-primary-light text-black font-black py-5 rounded-2xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4 uppercase tracking-widest text-sm"
               >
                 {loading ? t('auth.loginButton') + "..." : t('auth.loginButton')}
                 {!loading && <span className="material-symbols-outlined text-lg">arrow_forward</span>}
@@ -276,7 +276,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={loading || (otpStep === 'verify' && otp.length < 6) || (otpStep === 'request' && !captchaToken)}
-                className="w-full bg-primary hover:bg-primary-light text-black font-black py-4 rounded-2xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-2 uppercase tracking-widest text-sm"
+                className="w-full bg-primary hover:bg-primary-light text-black font-black py-5 rounded-2xl transition-all shadow-lg shadow-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-6 uppercase tracking-widest text-sm"
               >
                 {loading ? t('common.processing') || "..." : (otpStep === 'request' ? "Send Code" : "Verify & Login")}
               </button>
