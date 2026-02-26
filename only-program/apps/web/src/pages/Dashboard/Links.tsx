@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { API_URL } from "@/services/apiConfig";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { linksService } from "@/services/links.service";
+import InlineDomainSearch from "@/components/InlineDomainSearch";
 import {
   productPricingService,
   DEFAULT_PRODUCT_PRICING,
@@ -406,6 +407,8 @@ export default function Links() {
   const [domainFlowChoice, setDomainFlowChoice] = useState<
     "buy" | "connect" | null
   >(null);
+  const [showProcessingModal, setShowProcessingModal] = useState(false);
+  const [ownDomainError, setOwnDomainError] = useState<string | null>(null);
 
   // Deep linking: select page from URL ?id=...
   useEffect(() => {
@@ -2424,382 +2427,424 @@ export default function Links() {
                                   )}
 
                                   {/* STATE: none — choose domain flow */}
-                                  {currentPage.status === "active" &&
-                                    (!currentPage.domainStatus ||
-                                      currentPage.domainStatus === "none") && (
-                                      <div className="space-y-3 relative">
-                                        <p className="text-[11px] text-silver/40 leading-relaxed">
-                                          {t("dashboard.links.domainFlowPref")}
-                                        </p>
-
-                                        {/* Option A: Buy new domain */}
-                                        <div className="rounded-2xl border border-white/10 overflow-hidden bg-black/30">
-                                          <button
-                                            onClick={() =>
-                                              setDomainFlowChoice(
-                                                domainFlowChoice === "buy"
-                                                  ? null
-                                                  : "buy",
-                                              )
-                                            }
-                                            className="w-full flex items-center gap-4 p-4 hover:bg-white/5 transition-all text-left group"
-                                          >
-                                            <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-all">
-                                              <span className="material-symbols-outlined text-primary text-lg">
-                                                shopping_cart
-                                              </span>
-                                            </div>
-                                            <div className="flex-1">
-                                              <p className="text-sm font-bold text-white">
-                                                {t(
-                                                  "dashboard.links.buyNewDomain",
-                                                )}
-                                              </p>
-                                              <p className="text-[10px] text-silver/40">
-                                                {t(
-                                                  "dashboard.links.buyNewDomainDesc",
-                                                )}
-                                              </p>
-                                            </div>
-                                            <span
-                                              className={`material-symbols-outlined text-silver/30 transition-transform ${domainFlowChoice === "buy" ? "rotate-180" : ""}`}
-                                            >
-                                              expand_more
+                                  {currentPage.status === "active" && (
+                                    <div className="space-y-4">
+                                      {currentPage.domainStatus ===
+                                      "pending" ? (
+                                        /* Persistent Pending View */
+                                        <div className="rounded-[2rem] border border-primary/20 bg-primary/5 p-8 text-center animate-pulse-slow">
+                                          <div className="w-16 h-16 bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                                            <span className="material-symbols-outlined text-primary text-3xl animate-pulse">
+                                              verified
                                             </span>
-                                          </button>
-                                          {domainFlowChoice === "buy" && (
-                                            <div className="border-t border-white/5 p-4 animate-fade-in">
-                                              <p className="text-[10px] text-silver/40 mb-3">
-                                                {t(
-                                                  "dashboard.links.domainInstruction",
-                                                )}
-                                              </p>
-                                              <div className="flex gap-2">
-                                                <div className="relative flex-1">
-                                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-silver/20 text-sm">
-                                                    language
-                                                  </span>
-                                                  <input
-                                                    type="text"
-                                                    placeholder={t(
-                                                      "dashboard.links.exampleSite",
-                                                    )}
-                                                    value={
-                                                      currentPage.customDomain ||
-                                                      ""
-                                                    }
-                                                    onChange={(e) =>
-                                                      handleUpdatePage(
-                                                        "customDomain",
-                                                        e.target.value
-                                                          .toLowerCase()
-                                                          .replace(/\s/g, "")
-                                                          .replace(
-                                                            /https?:\/\//,
-                                                            "",
-                                                          ),
-                                                      )
-                                                    }
-                                                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder:text-silver/20 focus:outline-none focus:border-primary/50 transition-all font-mono"
-                                                  />
-                                                </div>
-                                                <button
-                                                  onClick={async () => {
-                                                    if (
-                                                      !currentPage.customDomain
-                                                    ) {
-                                                      toast.error(
-                                                        t(
-                                                          "dashboard.links.enterDomainError",
-                                                        ),
-                                                      );
-                                                      return;
-                                                    }
-                                                    const loadingToast =
-                                                      toast.loading(
-                                                        t(
-                                                          "dashboard.links.sendingRequest",
-                                                        ),
-                                                      );
-                                                    try {
-                                                      const { supabase: sb } =
-                                                        await import("@/services/supabase");
-                                                      const {
-                                                        data: { session },
-                                                      } =
-                                                        await sb.auth.getSession();
-                                                      const res = await fetch(
-                                                        `${API_URL}/domains/request`,
-                                                        {
-                                                          method: "POST",
-                                                          headers: {
-                                                            "Content-Type":
-                                                              "application/json",
-                                                            Authorization: `Bearer ${session?.access_token}`,
-                                                          },
-                                                          body: JSON.stringify({
-                                                            linkId:
-                                                              currentPage.id,
-                                                            domain:
-                                                              currentPage.customDomain,
-                                                            reservation_type:
-                                                              "buy_new",
-                                                          }),
-                                                        },
-                                                      );
-                                                      const json =
-                                                        await res.json();
-                                                      toast.dismiss(
-                                                        loadingToast,
-                                                      );
-                                                      if (!res.ok) {
-                                                        toast.error(
-                                                          json.error ||
-                                                            t(
-                                                              "common.errorSendingRequest",
-                                                            ),
-                                                        );
-                                                      } else {
-                                                        toast.success(
-                                                          t(
-                                                            "dashboard.links.reserveSuccess",
-                                                          ),
-                                                        );
-                                                        handleUpdatePage(
-                                                          "domainStatus",
-                                                          "pending",
-                                                        );
-                                                      }
-                                                    } catch {
-                                                      toast.dismiss(
-                                                        loadingToast,
-                                                      );
-                                                      toast.error(
-                                                        t(
-                                                          "common.errorSendingRequest",
-                                                        ),
-                                                      );
-                                                    }
-                                                  }}
-                                                  className="px-4 bg-primary hover:bg-primary/80 text-black font-black rounded-xl text-xs uppercase tracking-widest transition-all whitespace-nowrap"
-                                                >
-                                                  {t("dashboard.links.reserve")}
-                                                </button>
-                                              </div>
-                                            </div>
-                                          )}
-                                        </div>
+                                          </div>
 
-                                        {/* Option B: Connect own domain */}
-                                        <div className="rounded-2xl border border-white/10 overflow-hidden bg-black/30">
-                                          <button
-                                            onClick={() =>
-                                              setDomainFlowChoice(
-                                                domainFlowChoice === "connect"
-                                                  ? null
-                                                  : "connect",
-                                              )
-                                            }
-                                            className="w-full flex items-center gap-4 p-4 hover:bg-white/5 transition-all text-left group"
-                                          >
-                                            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 group-hover:bg-blue-500/20 transition-all">
-                                              <span className="material-symbols-outlined text-blue-400 text-lg">
-                                                link
+                                          <h3 className="text-xl font-black text-white mb-2 tracking-tight">
+                                            {t(
+                                              "dashboard.links.requestInProcessTitle",
+                                              {
+                                                defaultValue:
+                                                  "Solicitud en proceso",
+                                              },
+                                            )}
+                                          </h3>
+
+                                          <p className="text-silver/60 text-[11px] leading-relaxed mb-0 px-4">
+                                            {t(
+                                              "dashboard.links.requestInProcessDesc",
+                                              {
+                                                defaultValue:
+                                                  "Estamos procesando tu solicitud de dominio. Nuestro equipo se encargará de realizar la configuración necesaria.",
+                                              },
+                                            )}
+                                          </p>
+
+                                          <div className="mt-8 pt-6 border-t border-white/5">
+                                            <p className="text-[10px] text-silver/40 uppercase tracking-widest font-black">
+                                              Estado:{" "}
+                                              <span className="text-primary">
+                                                Pendiente de Activación
                                               </span>
-                                            </div>
-                                            <div className="flex-1">
-                                              <p className="text-sm font-bold text-white">
-                                                {t(
-                                                  "dashboard.links.connectOwnDomain",
-                                                )}
-                                              </p>
-                                              <p className="text-[10px] text-silver/40">
-                                                {t(
-                                                  "dashboard.links.connectOwnDomainDesc",
-                                                )}
-                                              </p>
-                                            </div>
-                                            <span
-                                              className={`material-symbols-outlined text-silver/30 transition-transform ${domainFlowChoice === "connect" ? "rotate-180" : ""}`}
-                                            >
-                                              expand_more
-                                            </span>
-                                          </button>
-                                          {domainFlowChoice === "connect" && (
-                                            <div className="border-t border-white/5 p-4 animate-fade-in">
-                                              <p className="text-[10px] text-silver/40 mb-3">
-                                                {t(
-                                                  "dashboard.links.dnsInstruction",
-                                                )}
-                                              </p>
-                                              <div className="flex gap-2">
-                                                <div className="relative flex-1">
-                                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-silver/20 text-sm">
-                                                    language
-                                                  </span>
-                                                  <input
-                                                    type="text"
-                                                    placeholder={t(
-                                                      "dashboard.links.exampleSite",
-                                                    )}
-                                                    value={
-                                                      currentPage.customDomain ||
-                                                      ""
-                                                    }
-                                                    onChange={(e) =>
-                                                      handleUpdatePage(
-                                                        "customDomain",
-                                                        e.target.value
-                                                          .toLowerCase()
-                                                          .replace(/\s/g, "")
-                                                          .replace(
-                                                            /https?:\/\//,
-                                                            "",
-                                                          ),
-                                                      )
-                                                    }
-                                                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder:text-silver/20 focus:outline-none focus:border-blue-500/50 transition-all font-mono"
-                                                  />
-                                                </div>
-                                                <button
-                                                  onClick={async () => {
-                                                    if (
-                                                      !currentPage.customDomain
-                                                    ) {
-                                                      toast.error(
-                                                        t(
-                                                          "dashboard.links.enterDomainError",
-                                                        ),
-                                                      );
-                                                      return;
-                                                    }
-                                                    const loadingToast =
-                                                      toast.loading(
-                                                        t(
-                                                          "dashboard.links.sendingRequest",
-                                                        ),
-                                                      );
-                                                    try {
-                                                      const { supabase: sb } =
-                                                        await import("@/services/supabase");
-                                                      const {
-                                                        data: { session },
-                                                      } =
-                                                        await sb.auth.getSession();
-                                                      const res = await fetch(
-                                                        `${API_URL}/domains/request`,
-                                                        {
-                                                          method: "POST",
-                                                          headers: {
-                                                            "Content-Type":
-                                                              "application/json",
-                                                            Authorization: `Bearer ${session?.access_token}`,
-                                                          },
-                                                          body: JSON.stringify({
-                                                            linkId:
-                                                              currentPage.id,
-                                                            domain:
-                                                              currentPage.customDomain,
-                                                            reservation_type:
-                                                              "connect_own",
-                                                          }),
-                                                        },
-                                                      );
-                                                      const json =
-                                                        await res.json();
-                                                      toast.dismiss(
-                                                        loadingToast,
-                                                      );
-                                                      if (!res.ok) {
-                                                        toast.error(
-                                                          json.error ||
-                                                            t(
-                                                              "common.errorSendingRequest",
-                                                            ),
-                                                        );
-                                                      } else {
-                                                        toast.success(
-                                                          t(
-                                                            "dashboard.links.linkSuccess",
-                                                          ),
-                                                        );
-                                                        handleUpdatePage(
-                                                          "domainStatus",
-                                                          "pending",
-                                                        );
-                                                      }
-                                                    } catch {
-                                                      toast.dismiss(
-                                                        loadingToast,
-                                                      );
-                                                      toast.error(
-                                                        t(
-                                                          "common.errorSendingRequest",
-                                                        ),
-                                                      );
-                                                    }
-                                                  }}
-                                                  className="px-4 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-xl text-xs uppercase tracking-widest transition-all whitespace-nowrap"
-                                                >
-                                                  {t(
-                                                    "dashboard.links.linkButton",
-                                                  )}
-                                                </button>
-                                              </div>
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    )}
-
-                                  {/* STATE: pending — waiting for admin */}
-                                  {currentPage.status === "active" &&
-                                    currentPage.domainStatus === "pending" && (
-                                      <div className="space-y-4 relative">
-                                        <div className="flex items-center gap-3 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl">
-                                          <span className="animate-pulse material-symbols-outlined text-yellow-400 text-2xl">
-                                            schedule
-                                          </span>
-                                          <div>
-                                            <p className="text-sm font-bold text-yellow-300">
-                                              {t(
-                                                "dashboard.links.configuringDomain",
-                                              )}
-                                            </p>
-                                            <p className="text-xs text-yellow-400/70 mt-0.5">
-                                              {t(
-                                                "dashboard.links.configuringDomainDesc",
-                                              )}
                                             </p>
                                           </div>
+
+                                          <button
+                                            onClick={() => {
+                                              handleUpdatePage(
+                                                "domainStatus",
+                                                "none",
+                                              );
+                                              handleUpdatePage(
+                                                "customDomain",
+                                                "",
+                                              );
+                                            }}
+                                            className="mt-6 text-xs text-silver/40 hover:text-silver transition-colors underline underline-offset-4"
+                                          >
+                                            {t("dashboard.links.cancelRequest")}
+                                          </button>
                                         </div>
-                                        <div className="p-4 bg-black/30 border border-white/5 rounded-xl">
-                                          <span className="text-[10px] text-silver/40 uppercase tracking-widest block mb-1">
-                                            {t(
-                                              "dashboard.links.requestedDomain",
-                                            )}
-                                          </span>
-                                          <p className="text-primary font-mono text-sm font-bold">
-                                            {currentPage.customDomain}
-                                          </p>
-                                        </div>
-                                        <button
-                                          onClick={() => {
-                                            handleUpdatePage(
-                                              "domainStatus",
-                                              "none",
-                                            );
-                                            handleUpdatePage(
-                                              "customDomain",
-                                              "",
-                                            );
-                                          }}
-                                          className="text-xs text-silver/40 hover:text-silver transition-colors underline underline-offset-2"
-                                        >
-                                          {t("dashboard.links.cancelRequest")}
-                                        </button>
-                                      </div>
-                                    )}
+                                      ) : (
+                                        (!currentPage.domainStatus ||
+                                          currentPage.domainStatus ===
+                                            "none") && (
+                                          <div className="space-y-3 relative">
+                                            <p className="text-[11px] text-silver/40 leading-relaxed">
+                                              {t(
+                                                "dashboard.links.domainFlowPref",
+                                              )}
+                                            </p>
+
+                                            {/* Option A: Buy new domain */}
+                                            <div className="rounded-2xl border border-white/10 overflow-hidden bg-black/30">
+                                              <button
+                                                onClick={() =>
+                                                  setDomainFlowChoice(
+                                                    domainFlowChoice === "buy"
+                                                      ? null
+                                                      : "buy",
+                                                  )
+                                                }
+                                                className="w-full flex items-center gap-4 p-4 hover:bg-white/5 transition-all text-left group"
+                                              >
+                                                <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-all">
+                                                  <span className="material-symbols-outlined text-primary text-lg">
+                                                    shopping_cart
+                                                  </span>
+                                                </div>
+                                                <div className="flex-1">
+                                                  <p className="text-sm font-bold text-white">
+                                                    {t(
+                                                      "dashboard.links.buyNewDomain",
+                                                    )}
+                                                  </p>
+                                                  <p className="text-[10px] text-silver/40">
+                                                    {t(
+                                                      "dashboard.links.buyNewDomainDesc",
+                                                    )}
+                                                  </p>
+                                                </div>
+                                                <span
+                                                  className={`material-symbols-outlined text-silver/30 transition-transform ${domainFlowChoice === "buy" ? "rotate-180" : ""}`}
+                                                >
+                                                  expand_more
+                                                </span>
+                                              </button>
+                                              {domainFlowChoice === "buy" && (
+                                                <div className="border-t border-white/5 p-4 animate-fade-in relative z-20">
+                                                  <p className="text-[10px] text-silver/40 mb-1">
+                                                    {t(
+                                                      "dashboard.links.domainInstruction",
+                                                    )}
+                                                  </p>
+
+                                                  <InlineDomainSearch
+                                                    onDomainSelected={(
+                                                      domain,
+                                                    ) =>
+                                                      handleUpdatePage(
+                                                        "customDomain",
+                                                        domain,
+                                                      )
+                                                    }
+                                                    initialValue={
+                                                      currentPage.customDomain ||
+                                                      ""
+                                                    }
+                                                  />
+
+                                                  <div className="mt-4 flex justify-end">
+                                                    <button
+                                                      disabled={
+                                                        !currentPage.customDomain
+                                                      }
+                                                      onClick={async () => {
+                                                        const loadingToast =
+                                                          toast.loading(
+                                                            t(
+                                                              "dashboard.links.sendingRequest",
+                                                            ),
+                                                          );
+                                                        try {
+                                                          const {
+                                                            supabase: sb,
+                                                          } =
+                                                            await import("@/services/supabase");
+                                                          const {
+                                                            data: { session },
+                                                          } =
+                                                            await sb.auth.getSession();
+                                                          const res =
+                                                            await fetch(
+                                                              `${API_URL}/domains/request`,
+                                                              {
+                                                                method: "POST",
+                                                                headers: {
+                                                                  "Content-Type":
+                                                                    "application/json",
+                                                                  Authorization: `Bearer ${session?.access_token}`,
+                                                                },
+                                                                body: JSON.stringify(
+                                                                  {
+                                                                    linkId:
+                                                                      currentPage.id,
+                                                                    domain:
+                                                                      currentPage.customDomain,
+                                                                    reservation_type:
+                                                                      "buy_new",
+                                                                  },
+                                                                ),
+                                                              },
+                                                            );
+
+                                                          const json =
+                                                            await res.json();
+                                                          toast.dismiss(
+                                                            loadingToast,
+                                                          );
+                                                          if (!res.ok) {
+                                                            toast.error(
+                                                              json.error ||
+                                                                t(
+                                                                  "common.errorSendingRequest",
+                                                                ),
+                                                            );
+                                                          } else {
+                                                            handleUpdatePage(
+                                                              "domainStatus",
+                                                              "pending",
+                                                            );
+                                                            setShowProcessingModal(
+                                                              true,
+                                                            );
+                                                          }
+                                                        } catch {
+                                                          toast.dismiss(
+                                                            loadingToast,
+                                                          );
+                                                          toast.error(
+                                                            t(
+                                                              "common.errorSendingRequest",
+                                                            ),
+                                                          );
+                                                        }
+                                                      }}
+                                                      className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                                                        currentPage.customDomain
+                                                          ? "bg-primary text-black hover:scale-105 active:scale-95"
+                                                          : "bg-white/5 text-white/20 cursor-not-allowed"
+                                                      }`}
+                                                    >
+                                                      {t(
+                                                        "dashboard.links.reserve",
+                                                      )}
+                                                    </button>
+                                                  </div>
+                                                </div>
+                                              )}
+                                            </div>
+
+                                            {/* Option B: Connect own domain */}
+                                            <div className="rounded-2xl border border-white/10 overflow-hidden bg-black/30">
+                                              <button
+                                                onClick={() =>
+                                                  setDomainFlowChoice(
+                                                    domainFlowChoice ===
+                                                      "connect"
+                                                      ? null
+                                                      : "connect",
+                                                  )
+                                                }
+                                                className="w-full flex items-center gap-4 p-4 hover:bg-white/5 transition-all text-left group"
+                                              >
+                                                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 group-hover:bg-blue-500/20 transition-all">
+                                                  <span className="material-symbols-outlined text-blue-400 text-lg">
+                                                    link
+                                                  </span>
+                                                </div>
+                                                <div className="flex-1">
+                                                  <p className="text-sm font-bold text-white">
+                                                    {t(
+                                                      "dashboard.links.connectOwnDomain",
+                                                    )}
+                                                  </p>
+                                                  <p className="text-[10px] text-silver/40">
+                                                    {t(
+                                                      "dashboard.links.connectOwnDomainDesc",
+                                                    )}
+                                                  </p>
+                                                </div>
+                                                <span
+                                                  className={`material-symbols-outlined text-silver/30 transition-transform ${domainFlowChoice === "connect" ? "rotate-180" : ""}`}
+                                                >
+                                                  expand_more
+                                                </span>
+                                              </button>
+                                              {domainFlowChoice ===
+                                                "connect" && (
+                                                <div className="border-t border-white/5 p-4 animate-fade-in relative z-20">
+                                                  <p className="text-[10px] text-silver/40 mb-3">
+                                                    {t(
+                                                      "dashboard.links.dnsInstruction",
+                                                    )}
+                                                  </p>
+                                                  <div className="relative">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-silver/20 text-sm">
+                                                      language
+                                                    </span>
+                                                    <input
+                                                      type="text"
+                                                      placeholder="tudominio.com"
+                                                      value={
+                                                        currentPage.customDomain ||
+                                                        ""
+                                                      }
+                                                      onChange={(e) => {
+                                                        const val =
+                                                          e.target.value
+                                                            .toLowerCase()
+                                                            .replace(/\s/g, "")
+                                                            .replace(
+                                                              /https?:\/\//,
+                                                              "",
+                                                            );
+                                                        handleUpdatePage(
+                                                          "customDomain",
+                                                          val,
+                                                        );
+
+                                                        if (
+                                                          val &&
+                                                          !/\.[a-z]{2,}$/i.test(
+                                                            val,
+                                                          )
+                                                        ) {
+                                                          setOwnDomainError(
+                                                            t(
+                                                              "dashboard.links.invalidExtensionError",
+                                                              {
+                                                                defaultValue:
+                                                                  "Se requiere una extensión válida (.com, .net, .co, etc)",
+                                                              },
+                                                            ),
+                                                          );
+                                                        } else {
+                                                          setOwnDomainError(
+                                                            null,
+                                                          );
+                                                        }
+                                                      }}
+                                                      className={`w-full bg-[#0a0a0a] border rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder:text-silver/20 focus:outline-none transition-all font-mono ${
+                                                        ownDomainError
+                                                          ? "border-red-500/50"
+                                                          : "border-white/10 focus:border-primary/50"
+                                                      }`}
+                                                    />
+                                                  </div>
+
+                                                  {ownDomainError && (
+                                                    <p className="mt-2 text-[10px] text-red-500 font-bold">
+                                                      {ownDomainError}
+                                                    </p>
+                                                  )}
+
+                                                  <div className="mt-4 flex justify-end">
+                                                    <button
+                                                      disabled={
+                                                        !currentPage.customDomain ||
+                                                        !!ownDomainError
+                                                      }
+                                                      onClick={async () => {
+                                                        const loadingToast =
+                                                          toast.loading(
+                                                            t(
+                                                              "dashboard.links.sendingRequest",
+                                                            ),
+                                                          );
+                                                        try {
+                                                          const {
+                                                            supabase: sb,
+                                                          } =
+                                                            await import("@/services/supabase");
+                                                          const {
+                                                            data: { session },
+                                                          } =
+                                                            await sb.auth.getSession();
+                                                          const res =
+                                                            await fetch(
+                                                              `${API_URL}/domains/request`,
+                                                              {
+                                                                method: "POST",
+                                                                headers: {
+                                                                  "Content-Type":
+                                                                    "application/json",
+                                                                  Authorization: `Bearer ${session?.access_token}`,
+                                                                },
+                                                                body: JSON.stringify(
+                                                                  {
+                                                                    linkId:
+                                                                      currentPage.id,
+                                                                    domain:
+                                                                      currentPage.customDomain,
+                                                                    reservation_type:
+                                                                      "connect_own",
+                                                                  },
+                                                                ),
+                                                              },
+                                                            );
+
+                                                          const json =
+                                                            await res.json();
+                                                          toast.dismiss(
+                                                            loadingToast,
+                                                          );
+                                                          if (!res.ok) {
+                                                            toast.error(
+                                                              json.error ||
+                                                                t(
+                                                                  "common.errorSendingRequest",
+                                                                ),
+                                                            );
+                                                          } else {
+                                                            handleUpdatePage(
+                                                              "domainStatus",
+                                                              "pending",
+                                                            );
+                                                            setShowProcessingModal(
+                                                              true,
+                                                            );
+                                                          }
+                                                        } catch {
+                                                          toast.dismiss(
+                                                            loadingToast,
+                                                          );
+                                                          toast.error(
+                                                            t(
+                                                              "common.errorSendingRequest",
+                                                            ),
+                                                          );
+                                                        }
+                                                      }}
+                                                      className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
+                                                        currentPage.customDomain &&
+                                                        !ownDomainError
+                                                          ? "bg-white text-black hover:scale-105 active:scale-95"
+                                                          : "bg-white/5 text-white/20 cursor-not-allowed"
+                                                      }`}
+                                                    >
+                                                      {t(
+                                                        "dashboard.links.connect",
+                                                      )}
+                                                    </button>
+                                                  </div>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                        )
+                                      )}
+                                    </div>
+                                  )}
 
                                   {/* STATE: active — domain live */}
                                   {currentPage.status === "active" &&
@@ -3155,6 +3200,47 @@ export default function Links() {
                 {t("common.yesDelete")}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showProcessingModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/80 backdrop-blur-xl animate-fade-in"
+            onClick={() => setShowProcessingModal(false)}
+          />
+          <div className="relative w-full max-w-sm bg-zinc-900 border border-white/10 rounded-[2.5rem] p-8 text-center shadow-2xl animate-scale-up">
+            <div className="w-20 h-20 bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="material-symbols-outlined text-primary text-4xl animate-pulse">
+                verified
+              </span>
+            </div>
+
+            <h3 className="text-2xl font-black text-white mb-3 tracking-tight leading-tight">
+              {t("dashboard.links.requestInProcessTitle", {
+                defaultValue: "Solicitud en proceso",
+              })}
+            </h3>
+
+            <p className="text-silver/60 text-sm leading-relaxed mb-8 px-2">
+              {t("dashboard.links.requestInProcessDesc", {
+                defaultValue:
+                  "Estamos procesando tu solicitud de dominio. Nuestro equipo se encargará de realizar la configuración necesaria.",
+              })}
+            </p>
+
+            <button
+              onClick={() => {
+                setShowProcessingModal(false);
+                setDomainFlowChoice(null);
+              }}
+              className="w-full py-4 bg-primary text-black font-black rounded-2xl hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest text-xs"
+            >
+              {t("dashboard.links.goToLinks", {
+                defaultValue: "Ir a mis links",
+              })}
+            </button>
           </div>
         </div>
       )}
