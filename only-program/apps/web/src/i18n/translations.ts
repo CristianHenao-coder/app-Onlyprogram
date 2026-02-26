@@ -24,6 +24,10 @@ export const translations = {
         wompiLoading: "Cargando Wompi...",
         wompiError: "Error cargando pago",
       },
+      create: "Crear",
+      viewAll: "Ver Todo",
+      yesDeactivate: "Sí, Desactivar",
+      cancel: "Cancelar",
     },
 
     countries: {
@@ -416,6 +420,20 @@ export const translations = {
         tiktokPlaceholder: "https://tiktok.com/@tu_usuario",
         telegramPlaceholder: "https://t.me/tu_usuario",
         onlyfansPlaceholder: "https://onlyfans.com/tu_usuario",
+        profileTab: "Perfil",
+        domainTab: "Dominio",
+        expandMenu: "Expandir menú",
+        collapseMenu: "Colapsar menú",
+        filteredBy: "Filtrado por: {{folder}}",
+        myFolders: "Mis Carpetas",
+        createFolder: "Crear carpeta",
+        pageConfigTitle: "Configuración de la Página",
+        deactivateRotatorConfirmTitle: "¿Desactivar Telegram Rotativo?",
+        deactivateRotatorConfirmMsg:
+          "Al desactivar el rotador, se eliminarán las URLs 2-5. Solo se mantendrá la primera URL.",
+        rotatorDeactivatedSuccess: "Rotador desactivado. URLs 2-5 eliminadas.",
+        rotatorActivatedSuccess:
+          "Telegram Rotativo activado. Ahora puedes agregar hasta 5 URLs.",
       },
     },
 
@@ -930,6 +948,10 @@ export const translations = {
         wompiLoading: "Loading Wompi...",
         wompiError: "Error loading payment",
       },
+      create: "Create",
+      viewAll: "View All",
+      yesDeactivate: "Yes, Deactivate",
+      cancel: "Cancel",
     },
 
     countries: {
@@ -1317,6 +1339,20 @@ export const translations = {
         tiktokPlaceholder: "https://tiktok.com/@your_user",
         telegramPlaceholder: "https://t.me/your_user",
         onlyfansPlaceholder: "https://onlyfans.com/your_user",
+        profileTab: "Profile",
+        domainTab: "Domain",
+        expandMenu: "Expand menu",
+        collapseMenu: "Collapse menu",
+        filteredBy: "Filtered by: {{folder}}",
+        myFolders: "My Folders",
+        createFolder: "Create folder",
+        pageConfigTitle: "Page Configuration",
+        deactivateRotatorConfirmTitle: "Deactivate Rotating Telegram?",
+        deactivateRotatorConfirmMsg:
+          "By deactivating the rotator, URLs 2-5 will be deleted. Only the first URL will be kept.",
+        rotatorDeactivatedSuccess: "Rotator deactivated. URLs 2-5 deleted.",
+        rotatorActivatedSuccess:
+          "Rotating Telegram activated. You can now add up to 5 URLs.",
       },
     },
 
@@ -1825,6 +1861,10 @@ export const translations = {
         wompiLoading: "Chargement de Wompi...",
         wompiError: "Erreur lors du chargement du paiement",
       },
+      create: "Créer",
+      viewAll: "Voir Tout",
+      yesDeactivate: "Oui, Désactiver",
+      cancel: "Annuler",
     },
 
     countries: {
@@ -2213,6 +2253,20 @@ export const translations = {
         tiktokPlaceholder: "https://tiktok.com/@votre_utilisateur",
         telegramPlaceholder: "https://t.me/votre_utilisateur",
         onlyfansPlaceholder: "https://onlyfans.com/votre_utilisateur",
+        profileTab: "Profil",
+        domainTab: "Domaine",
+        expandMenu: "Agrandir le menu",
+        collapseMenu: "Réduire le menu",
+        filteredBy: "Filtré par : {{folder}}",
+        myFolders: "Mes Dossiers",
+        createFolder: "Créer un dossier",
+        pageConfigTitle: "Configuration de la Page",
+        deactivateRotatorConfirmTitle: "Désactiver le Telegram Rotatif ?",
+        deactivateRotatorConfirmMsg:
+          "En désactivant le rotateur, les URL 2-5 seront supprimées. Seule la première URL sera conservée.",
+        rotatorDeactivatedSuccess: "Rotateur désactivé. URL 2-5 supprimées.",
+        rotatorActivatedSuccess:
+          "Telegram Rotatif activé. Vous pouvez maintenant ajouter jusqu'à 5 URL.",
       },
     },
 

@@ -1,7 +1,17 @@
-import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  ReactNode,
+} from "react";
 import { translations, Language } from "../i18n/translations";
 
-type InterpolateValues = Record<string, string | number | boolean | null | undefined>;
+type InterpolateValues = Record<
+  string,
+  string | number | boolean | null | undefined
+>;
 
 interface I18nContextType {
   language: Language;
@@ -35,8 +45,9 @@ function interpolate(template: string, values?: InterpolateValues): string {
 function detectDefaultLanguage(): Language {
   try {
     const saved = localStorage.getItem(STORAGE_KEY) as Language | null;
-    if (saved && (saved === "es" || saved === "en" || saved === "fr")) return saved;
-  } catch { }
+    if (saved && (saved === "es" || saved === "en" || saved === "fr"))
+      return saved;
+  } catch {}
 
   const nav = (navigator.language || "es").toLowerCase();
   if (nav.startsWith("fr")) return "fr";
@@ -45,13 +56,15 @@ function detectDefaultLanguage(): Language {
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguageState] = useState<Language>(() => detectDefaultLanguage());
+  const [language, setLanguageState] = useState<Language>(() =>
+    detectDefaultLanguage(),
+  );
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     try {
       localStorage.setItem(STORAGE_KEY, lang);
-    } catch { }
+    } catch {}
     document.documentElement.lang = lang;
   };
 
@@ -68,7 +81,9 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     const dict = translations[language] ?? translations.es;
 
     if (!dict) {
-      console.warn(`I18nContext: No translations found for language ${language}`);
+      console.warn(
+        `I18nContext: No translations found for language ${language}`,
+      );
       return key;
     }
 
@@ -85,6 +100,11 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       return rawEs;
     }
 
+    // Si no se encuentra, usar defaultValue si existe
+    if (values && values.defaultValue !== undefined) {
+      return interpolate(String(values.defaultValue), values);
+    }
+
     return key;
   };
 
@@ -95,7 +115,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       t,
       availableLanguages: ["es", "en", "fr"],
     }),
-    [language]
+    [language],
   );
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
