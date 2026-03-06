@@ -141,7 +141,8 @@ const Icons = {
 const getSocialPresets = (t: any) => ({
   instagram: {
     title: "Instagram",
-    color: "#8B0000",
+    color: "#FFFFFF",
+    textColor: "#000000",
     icon: <Icons.Instagram />,
     placeholder: t("dashboard.links.instagramPlaceholder"),
   },
@@ -983,7 +984,7 @@ export default function Links() {
       subtitle: "",
       url: "",
       color: config.color,
-      textColor: "#FFFFFF",
+      textColor: (config as any).textColor || "#FFFFFF",
       font: "sans",
       borderRadius: 12,
       opacity: 100,
