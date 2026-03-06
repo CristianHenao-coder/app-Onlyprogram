@@ -125,14 +125,27 @@ export default function Home() {
                             </thead>
                             <tbody className="divide-y divide-border/50">
                                 {links.map((link) => (
-                                    <tr key={link.id} className="hover:bg-white/5 transition-colors">
+                                    <tr
+                                        key={link.id}
+                                        className="hover:bg-white/5 transition-colors cursor-pointer group"
+                                        onClick={() => window.location.href = `/dashboard/links?id=${link.id}`}
+                                        role="link"
+                                        tabIndex={0}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                e.preventDefault();
+                                                window.location.href = `/dashboard/links?id=${link.id}`;
+                                            }
+                                        }}
+                                        aria-label={`Editar link ${link.title || 'Sin título'}`}
+                                    >
                                         <td className="p-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center border border-primary/20">
+                                                <div className="h-10 w-10 rounded-lg bg-primary/10 group-hover:bg-primary/20 flex items-center justify-center border border-primary/20 group-hover:border-primary/40 transition-all duration-200">
                                                     <span className="material-symbols-outlined text-primary text-lg">link</span>
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-white">{link.title || 'Sin título'}</p>
+                                                    <p className="font-bold text-white group-hover:text-primary transition-colors duration-200">{link.title || 'Sin título'}</p>
                                                     <p className="text-xs text-silver/50 font-mono">{link.slug}.onlyprogram.com</p>
                                                 </div>
                                             </div>
@@ -156,13 +169,10 @@ export default function Home() {
                                             </span>
                                         </td>
                                         <td className="p-4 text-right">
-                                            <Link
-                                                to={`/dashboard/links?id=${link.id}`}
-                                                className="inline-flex items-center gap-1 text-primary hover:text-primary-dark text-sm font-bold transition-colors"
-                                            >
+                                            <span className="inline-flex items-center gap-1 text-primary group-hover:gap-2 text-sm font-bold transition-all duration-200">
                                                 <span className="material-symbols-outlined text-lg">edit</span>
                                                 Editar
-                                            </Link>
+                                            </span>
                                         </td>
                                     </tr>
                                 ))}

@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 import { useModal } from "@/contexts/ModalContext";
@@ -181,7 +181,7 @@ const getDefaults = (t: any) => ({
     profileName: t("dashboard.links.profileName"),
     profileImage:
       "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
-    profileImageSize: 50,
+    profileImageSize: 100,
     template: "minimal" as TemplateType,
     landingMode: "circle" as const,
     theme: {
@@ -232,11 +232,10 @@ function SortableButton({
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className={`w-full p-3 rounded-xl border cursor-grab active:cursor-grabbing transition-all relative group touch-none ${
-        collapsed
-          ? "flex items-center justify-center"
-          : "flex items-center gap-3"
-      } ${isSelected ? "bg-white/5 border-primary shadow-lg" : "bg-transparent border-transparent hover:bg-white/[0.02]"}`}
+      className={`w-full p-3 rounded-xl border cursor-grab active:cursor-grabbing transition-all relative group touch-none ${collapsed
+        ? "flex items-center justify-center"
+        : "flex items-center gap-3"
+        } ${isSelected ? "bg-white/5 border-primary shadow-lg" : "bg-transparent border-transparent hover:bg-white/[0.02]"}`}
       title={collapsed ? btn.title : undefined} // Show title on hover only when collapsed
     >
       <div
@@ -319,7 +318,7 @@ export default function Links() {
       .then((cfg) => {
         if (mounted) setPricingCfg(cfg);
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => {
       mounted = false;
     };
@@ -383,6 +382,7 @@ export default function Links() {
         name: t("dashboard.links.untitledLink"),
         profileName: t("dashboard.links.profileName"),
         profileImage: DEFAULTS.PROFILE_IMAGE,
+        profileImageSize: 100,
         template: "minimal",
         theme: {
           pageBorderColor: "#222222",
@@ -444,17 +444,29 @@ export default function Links() {
   const [showFolders, setShowFolders] = useState(false);
   const [folderFilter, setFolderFilter] = useState<string | null>(null);
 
-  // Derived Folders
+  // Extra folders created manually (persist in localStorage)
+  const [extraFolders, setExtraFolders] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("link_folders");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // All folders = derived from links + manually created ones
   const folders = Array.from(
-    new Set(pages.map((p) => p.folder).filter(Boolean)),
+    new Set([
+      ...pages.map((p) => p.folder).filter(Boolean),
+      ...extraFolders,
+    ]),
   ) as string[];
 
-  // Filtered Pages
-  const filteredPages = folderFilter
-    ? pages.filter((p) => p.folder === folderFilter)
-    : pages;
-  const activePages = filteredPages.filter((p) => p.status === "active");
-  const draftPages = filteredPages.filter((p) => p.status === "draft");
+
+
+  // All pages for the EDITOR tab strip (always show all, regardless of folder filter)
+  const allActivePages = pages.filter((p) => p.status === "active");
+  const allDraftPages = pages.filter((p) => p.status === "draft");
 
   const [isSaving, setIsSaving] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
@@ -478,25 +490,77 @@ export default function Links() {
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
 
-  const handleCreateFolder = async () => {
-    // Simple alert prompt for now, consistent with requested flow
-    // In a real app we might use a custom modal
-    // leveraging existing modal context if available or browser prompt
+  const handleCreateFolder = () => {
     const name = window.prompt(t("dashboard.links.newFolderPrompt"));
     if (name && name.trim()) {
       const cleanName = name.trim();
-      // Just switch filter to new folder (it 'exists' when a link uses it)
-      // But to make it "Created", we might want to update the current link to this folder?
-      // Or just show it?
-      // Logic: Folders exist if links have them. "Creating" one usually implies
-      // assigning the CURRENT link to it, or just creating a placeholder?
-      // Let's assign current page to it to make it persist immediately.
-      handleUpdatePage("folder", cleanName);
+      if (folders.includes(cleanName)) {
+        toast.error("Ya existe una carpeta con ese nombre");
+        return;
+      }
+      // Persist the new folder name independently
+      const updated = [...extraFolders, cleanName];
+      setExtraFolders(updated);
+      try {
+        localStorage.setItem("link_folders", JSON.stringify(updated));
+      } catch { }
+
+      // Auto-assign to the currently edited page
+      setPages((prev) =>
+        prev.map((p) =>
+          p.id === selectedPageId ? { ...p, folder: cleanName } : p
+        )
+      );
+
       setFolderFilter(cleanName);
       setShowFolders(true);
       toast.success(t("dashboard.links.folderCreated", { name: cleanName }));
     }
   };
+
+
+
+  // Delete a folder (removes from extraFolders and clears from all pages)
+  const handleDeleteFolder = (folderName: string) => {
+    if (!window.confirm(`¿Eliminar la carpeta "${folderName}"? Los links quedarán sin carpeta.`)) return;
+    const updatedFolders = extraFolders.filter((f) => f !== folderName);
+    setExtraFolders(updatedFolders);
+    try { localStorage.setItem("link_folders", JSON.stringify(updatedFolders)); } catch { }
+    // Clear folder from all pages and persist to localStorage
+    setPages((prev) => {
+      const updated = prev.map((p) => (p.folder === folderName ? { ...p, folder: "" } : p));
+      try {
+        const drafts = updated.filter((p) => p.status === "draft");
+        if (drafts.length > 0) localStorage.setItem("my_links_data", JSON.stringify(drafts));
+      } catch { }
+      return updated;
+    });
+    if (folderFilter === folderName) setFolderFilter(null);
+    toast.success(`Carpeta "${folderName}" eliminada`);
+  };
+
+  // Rename a folder
+  const handleRenameFolder = (oldName: string) => {
+    const newName = window.prompt("Nuevo nombre de carpeta:", oldName);
+    if (!newName || !newName.trim() || newName.trim() === oldName) return;
+    const clean = newName.trim();
+    if (folders.includes(clean)) { toast.error("Ya existe una carpeta con ese nombre"); return; }
+    const updatedFolders = extraFolders.map((f) => (f === oldName ? clean : f));
+    setExtraFolders(updatedFolders);
+    try { localStorage.setItem("link_folders", JSON.stringify(updatedFolders)); } catch { }
+    // Rename in all pages and persist
+    setPages((prev) => {
+      const updated = prev.map((p) => (p.folder === oldName ? { ...p, folder: clean } : p));
+      try {
+        const drafts = updated.filter((p) => p.status === "draft");
+        if (drafts.length > 0) localStorage.setItem("my_links_data", JSON.stringify(drafts));
+      } catch { }
+      return updated;
+    });
+    if (folderFilter === oldName) setFolderFilter(clean);
+    toast.success(`Carpeta renombrada a "${clean}"`);
+  };
+
 
   // --- SUPABASE INTEGRATION ---
 
@@ -524,73 +588,73 @@ export default function Links() {
         const dbPages: LinkPage[] =
           data && data.length > 0
             ? data
-                .map((link) => ({
-                  id: link.id,
-                  // Map DB statuses: active/is_active=true → 'active', everything else → 'draft'
-                  status: (link.is_active === true
-                    ? "active"
-                    : "draft") as PageStatus,
-                  name:
-                    link.config?.name ||
-                    link.config?.profile?.name ||
-                    link.slug,
-                  profileName: link.config?.profile?.title || link.title || "",
-                  profileImage:
-                    link.config?.profile?.image ||
-                    link.photo ||
-                    DEFAULTS.PROFILE_IMAGE,
-                  profileImageSize: link.config?.profileImageSize || 50,
-                  folder: link.config?.folder || "",
-                  template:
-                    (link.config?.template as TemplateType) || "minimal",
-                  landingMode:
-                    (link.config?.landingMode as "circle" | "full") || "circle",
-                  theme: {
-                    pageBorderColor:
-                      link.config?.theme?.pageBorderColor || "#333333",
-                    overlayOpacity: link.config?.theme?.overlayOpacity || 40,
-                    backgroundType:
-                      link.config?.theme?.backgroundType || "solid",
-                    backgroundStart:
-                      link.config?.theme?.backgroundStart || "#000000",
-                    backgroundEnd:
-                      link.config?.theme?.backgroundEnd || "#1a1a1a",
-                  },
-                  customDomain: link.custom_domain,
-                  domainStatus: (link.domain_status as any) || "none",
-                  domainNotes: link.domain_notes || "",
-                  slug: link.slug,
-                  // Store pending status to show badge in UI
-                  dbStatus: link.status || "pending",
-                  buttons:
-                    link.smart_link_buttons &&
+              .map((link) => ({
+                id: link.id,
+                // Map DB statuses: active/is_active=true ? 'active', everything else ? 'draft'
+                status: (link.is_active === true
+                  ? "active"
+                  : "draft") as PageStatus,
+                name:
+                  link.config?.name ||
+                  link.config?.profile?.name ||
+                  link.slug,
+                profileName: link.config?.profile?.title || link.title || "",
+                profileImage:
+                  link.config?.profile?.image ||
+                  link.photo ||
+                  DEFAULTS.PROFILE_IMAGE,
+                profileImageSize: link.config?.profileImageSize || 50,
+                folder: link.config?.folder || "",
+                template:
+                  (link.config?.template as TemplateType) || "minimal",
+                landingMode:
+                  (link.config?.landingMode as "circle" | "full") || "circle",
+                theme: {
+                  pageBorderColor:
+                    link.config?.theme?.pageBorderColor || "#333333",
+                  overlayOpacity: link.config?.theme?.overlayOpacity || 40,
+                  backgroundType:
+                    link.config?.theme?.backgroundType || "solid",
+                  backgroundStart:
+                    link.config?.theme?.backgroundStart || "#000000",
+                  backgroundEnd:
+                    link.config?.theme?.backgroundEnd || "#1a1a1a",
+                },
+                customDomain: link.custom_domain,
+                domainStatus: (link.domain_status as any) || "none",
+                domainNotes: link.domain_notes || "",
+                slug: link.slug,
+                // Store pending status to show badge in UI
+                dbStatus: link.status || "pending",
+                buttons:
+                  link.smart_link_buttons &&
                     link.smart_link_buttons.length > 0
-                      ? link.smart_link_buttons
-                          .sort((a: any, b: any) => a.order - b.order)
-                          .map((b: any) => ({
-                            id: b.id,
-                            type: b.type,
-                            title: b.title,
-                            subtitle: b.subtitle,
-                            url: b.url,
-                            color: b.color,
-                            textColor: b.text_color,
-                            font: b.font,
-                            borderRadius: b.border_radius,
-                            opacity: b.opacity,
-                            isActive: b.is_active,
-                            rotatorActive: b.rotator_active,
-                            rotatorLinks: b.rotator_links || [
-                              "",
-                              "",
-                              "",
-                              "",
-                              "",
-                            ],
-                          }))
-                      : [],
-                }))
-                .map((p) => ({ ...p, buttons: cleanButtons(p.buttons) }))
+                    ? link.smart_link_buttons
+                      .sort((a: any, b: any) => a.order - b.order)
+                      .map((b: any) => ({
+                        id: b.id,
+                        type: b.type,
+                        title: b.title,
+                        subtitle: b.subtitle,
+                        url: b.url,
+                        color: b.color,
+                        textColor: b.text_color,
+                        font: b.font,
+                        borderRadius: b.border_radius,
+                        opacity: b.opacity,
+                        isActive: b.is_active,
+                        rotatorActive: b.rotator_active,
+                        rotatorLinks: b.rotator_links || [
+                          "",
+                          "",
+                          "",
+                          "",
+                          "",
+                        ],
+                      }))
+                    : [],
+              }))
+              .map((p) => ({ ...p, buttons: cleanButtons(p.buttons) }))
             : [];
 
         // Get drafts from localStorage
@@ -778,7 +842,7 @@ export default function Links() {
           ...page,
           buttons: page.buttons.map((btn) =>
             btn.type === "instagram" &&
-            (btn.color === "#E1306C" || btn.color === "#8B5CF6")
+              (btn.color === "#E1306C" || btn.color === "#8B5CF6")
               ? { ...btn, color: "#FFFFFF" }
               : btn,
           ),
@@ -957,7 +1021,7 @@ export default function Links() {
         ),
       );
       if (selectedButtonId === id) setSelectedButtonId(null);
-      toast(t("dashboard.links.buttonDeletedToast"), { icon: "🗑️" });
+      toast(t("dashboard.links.buttonDeletedToast"), { icon: "???" });
     }
   };
 
@@ -966,11 +1030,11 @@ export default function Links() {
       prev.map((p) =>
         p.id === selectedPageId
           ? {
-              ...p,
-              buttons: p.buttons.map((b) =>
-                b.id === selectedButtonId ? { ...b, [field]: value } : b,
-              ),
-            }
+            ...p,
+            buttons: p.buttons.map((b) =>
+              b.id === selectedButtonId ? { ...b, [field]: value } : b,
+            ),
+          }
           : p,
       ),
     );
@@ -1057,7 +1121,7 @@ export default function Links() {
         </div>
       </header>
 
-      {/* ─── VISTA LISTA ─── */}
+      {/* --- VISTA LISTA --- */}
       {view === "list" && (
         <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-4xl mx-auto">
@@ -1069,7 +1133,7 @@ export default function Links() {
                 </h2>
                 <p className="text-sm text-silver/40 mt-1">
                   {pages.filter((p) => p.dbStatus).length}{" "}
-                  {t("dashboard.links.links")} ·{" "}
+                  {t("dashboard.links.links")} �{" "}
                   {
                     pages.filter((p) => !p.dbStatus && p.status === "draft")
                       .length
@@ -1100,7 +1164,8 @@ export default function Links() {
                     .map((page) => (
                       <div
                         key={page.id}
-                        className="relative group rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden hover:border-white/20 transition-all"
+                        onClick={() => openEditor(page.id)}
+                        className="relative group rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
                       >
                         {/* Mini preview background */}
                         <div
@@ -1112,7 +1177,7 @@ export default function Links() {
                           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
                             <div className="w-14 h-14 rounded-full border-2 border-white/30 overflow-hidden bg-gray-800">
                               {page.profileImage &&
-                              page.profileImage !== DEFAULTS.PROFILE_IMAGE ? (
+                                page.profileImage !== DEFAULTS.PROFILE_IMAGE ? (
                                 <img
                                   src={page.profileImage}
                                   className="w-full h-full object-cover"
@@ -1156,11 +1221,21 @@ export default function Links() {
                             )}
                           </div>
 
+                          {/* Folder badge (read-only in list view — assign inside editor) */}
+                          {page.folder && (
+                            <div className="mt-2 flex justify-center">
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-bold text-primary">
+                                <span className="material-symbols-outlined text-[10px]">folder</span>
+                                {page.folder}
+                              </span>
+                            </div>
+                          )}
+
                           {/* Buttons */}
                           <div className="mt-3 flex gap-2">
                             <button
-                              onClick={() => openEditor(page.id)}
-                              className="flex-1 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/30 text-xs font-bold text-white transition-all flex items-center justify-center gap-1"
+                              onClick={(e) => { e.stopPropagation(); openEditor(page.id); }}
+                              className="flex-1 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 hover:border-primary/40 text-xs font-bold text-primary transition-all flex items-center justify-center gap-1"
                             >
                               <span className="material-symbols-outlined text-sm">
                                 edit
@@ -1172,6 +1247,7 @@ export default function Links() {
                                 href={`/${page.slug}`}
                                 target="_blank"
                                 rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
                                 className="py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-white transition-all flex items-center justify-center"
                               >
                                 <span className="material-symbols-outlined text-sm">
@@ -1190,68 +1266,78 @@ export default function Links() {
             {/* Local Drafts */}
             {pages.filter((p) => !p.dbStatus && p.status === "draft").length >
               0 && (
-              <div>
-                <h3 className="text-xs font-bold uppercase tracking-wider text-silver/40 mb-4">
-                  {t("dashboard.links.draftsTitle")}
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {pages
-                    .filter((p) => !p.dbStatus && p.status === "draft")
-                    .map((page) => (
-                      <div
-                        key={page.id}
-                        className="relative group rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.01] overflow-hidden hover:border-yellow-500/30 transition-all"
-                      >
+                <div>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-silver/40 mb-4">
+                    {t("dashboard.links.draftsTitle")}
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {pages
+                      .filter((p) => !p.dbStatus && p.status === "draft")
+                      .map((page) => (
                         <div
-                          className="h-28 w-full relative"
-                          style={getBackgroundStyle(page)}
+                          key={page.id}
+                          onClick={() => openEditor(page.id)}
+                          className="relative group rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.01] overflow-hidden hover:border-yellow-500/40 hover:shadow-lg hover:shadow-yellow-500/10 hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
                         >
-                          <div className="absolute inset-0 bg-black/40" />
-                          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
-                            <div className="w-14 h-14 rounded-full border-2 border-white/20 overflow-hidden bg-gray-800">
-                              {page.profileImage &&
-                              page.profileImage !== DEFAULTS.PROFILE_IMAGE ? (
-                                <img
-                                  src={page.profileImage}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-white/5">
-                                  <span className="material-symbols-outlined text-2xl text-white/20">
-                                    edit
-                                  </span>
-                                </div>
-                              )}
+                          <div
+                            className="h-28 w-full relative"
+                            style={getBackgroundStyle(page)}
+                          >
+                            <div className="absolute inset-0 bg-black/40" />
+                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
+                              <div className="w-14 h-14 rounded-full border-2 border-white/20 overflow-hidden bg-gray-800">
+                                {page.profileImage &&
+                                  page.profileImage !== DEFAULTS.PROFILE_IMAGE ? (
+                                  <img
+                                    src={page.profileImage}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center bg-white/5">
+                                    <span className="material-symbols-outlined text-2xl text-white/20">
+                                      edit
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="pt-9 pb-4 px-4 text-center">
+                            <p className="font-bold text-sm text-white/70 truncate">
+                              {page.name || t("dashboard.links.untitledLink")}
+                            </p>
+                            <div className="mt-2 flex items-center justify-center gap-1.5">
+                              <span className="text-[9px] font-black uppercase tracking-wider text-yellow-500">
+                                {t("dashboard.links.creatingDraft")}
+                              </span>
+                            </div>
+                            {/* Folder badge (read-only in list view — assign inside editor) */}
+                            {page.folder && (
+                              <div className="mt-2 flex justify-center">
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-[9px] font-bold text-yellow-400">
+                                  <span className="material-symbols-outlined text-[10px]">folder</span>
+                                  {page.folder}
+                                </span>
+                              </div>
+                            )}
+                            <div className="mt-3">
+                              <button
+                                onClick={(e) => { e.stopPropagation(); openEditor(page.id); }}
+                                className="w-full py-2 rounded-xl bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 hover:border-yellow-500/40 text-xs font-bold text-yellow-400 transition-all flex items-center justify-center gap-1"
+                              >
+                                <span className="material-symbols-outlined text-sm">
+                                  edit
+                                </span>
+                                {t("dashboard.links.continueEditing")}
+                              </button>
                             </div>
                           </div>
                         </div>
-
-                        <div className="pt-9 pb-4 px-4 text-center">
-                          <p className="font-bold text-sm text-white/70 truncate">
-                            {page.name || t("dashboard.links.untitledLink")}
-                          </p>
-                          <div className="mt-2 flex items-center justify-center gap-1.5">
-                            <span className="text-[9px] font-black uppercase tracking-wider text-yellow-500">
-                              {t("dashboard.links.creatingDraft")}
-                            </span>
-                          </div>
-                          <div className="mt-3">
-                            <button
-                              onClick={() => openEditor(page.id)}
-                              className="w-full py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-yellow-500/30 text-xs font-bold text-white transition-all flex items-center justify-center gap-1"
-                            >
-                              <span className="material-symbols-outlined text-sm">
-                                edit
-                              </span>
-                              {t("dashboard.links.continueEditing")}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Empty state */}
             {pages.length === 0 && (
@@ -1274,7 +1360,7 @@ export default function Links() {
         </div>
       )}
 
-      {/* ─── VISTA EDITOR ─── */}
+      {/* --- VISTA EDITOR --- */}
       {view === "editor" && (
         <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
           {/* COL 1: Editor & Config (Main Area) */}
@@ -1313,7 +1399,7 @@ export default function Links() {
 
                 <div className="h-8 w-px bg-white/10 shrink-0 mx-2"></div>
 
-                {activePages.map((page) => (
+                {allActivePages.map((page) => (
                   <button
                     key={page.id}
                     onClick={() => {
@@ -1324,7 +1410,7 @@ export default function Links() {
                   >
                     <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 shrink-0">
                       {page.profileImage &&
-                      page.profileImage !== DEFAULTS.PROFILE_IMAGE ? (
+                        page.profileImage !== DEFAULTS.PROFILE_IMAGE ? (
                         <img
                           src={page.profileImage}
                           className="w-full h-full object-cover"
@@ -1357,10 +1443,10 @@ export default function Links() {
                 ))}
 
                 {/* Drafts */}
-                {draftPages.length > 0 && (
+                {allDraftPages.length > 0 && (
                   <div className="h-8 w-px bg-white/10 shrink-0 mx-2"></div>
                 )}
-                {draftPages.map((page) => (
+                {allDraftPages.map((page) => (
                   <button
                     key={page.id}
                     onClick={() => {
@@ -1371,7 +1457,7 @@ export default function Links() {
                   >
                     <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 shrink-0">
                       {page.profileImage &&
-                      page.profileImage !== DEFAULTS.PROFILE_IMAGE ? (
+                        page.profileImage !== DEFAULTS.PROFILE_IMAGE ? (
                         <img
                           src={page.profileImage}
                           className="w-full h-full object-cover"
@@ -1443,11 +1529,11 @@ export default function Links() {
                       title={
                         sidebarCollapsed
                           ? t("dashboard.links.expandMenu", {
-                              defaultValue: "Expandir menú",
-                            })
+                            defaultValue: "Expandir men�",
+                          })
                           : t("dashboard.links.collapseMenu", {
-                              defaultValue: "Colapsar menú",
-                            })
+                            defaultValue: "Colapsar men�",
+                          })
                       }
                     >
                       <span className="material-symbols-outlined text-white text-xl">
@@ -1482,14 +1568,14 @@ export default function Links() {
                         >
                           <div className="flex items-center gap-2">
                             <span
-                              className={`material-symbols-outlined text-base ${folderFilter ? "text-primary" : ""}`}
+                              className={`material-symbols-outlined text-base ${currentPage.folder ? "text-primary" : ""}`}
                             >
-                              {folderFilter ? "folder_open" : "folder"}
+                              {currentPage.folder ? "folder_open" : "folder"}
                             </span>
                             <span
-                              className={folderFilter ? "text-primary" : ""}
+                              className={currentPage.folder ? "text-primary" : ""}
                             >
-                              {folderFilter ||
+                              {currentPage.folder ||
                                 t("dashboard.links.myFolders", {
                                   defaultValue: "Mis Carpetas",
                                 })}
@@ -1502,7 +1588,7 @@ export default function Links() {
                           </span>
                         </button>
 
-                        {(showFolders || folderFilter) && (
+                        {(showFolders || currentPage.folder) && (
                           <div
                             className={`space-y-1 overflow-hidden transition-all ${showFolders ? "max-h-64 p-2 pt-0 opacity-100" : "max-h-0 opacity-0"}`}
                           >
@@ -1521,41 +1607,58 @@ export default function Links() {
                             </button>
 
                             <button
-                              onClick={() => setFolderFilter(null)}
-                              className={`w-full flex items-center gap-2 p-2 rounded-lg text-xs font-bold transition-colors ${!folderFilter ? "bg-white/10 text-white" : "text-silver/40 hover:text-white hover:bg-white/5"}`}
+                              onClick={() => handleUpdatePage("folder", "")}
+                              className={`w-full flex items-center gap-2 p-2 rounded-lg text-xs font-bold transition-colors ${!currentPage.folder ? "bg-white/10 text-white" : "text-silver/40 hover:text-white hover:bg-white/5"}`}
                             >
                               <span className="material-symbols-outlined text-sm">
                                 grid_view
                               </span>
                               <span>
-                                {t("common.viewAll", {
-                                  defaultValue: "Ver Todo",
-                                })}
+                                Sin Carpeta
                               </span>
                             </button>
 
                             {folders.map((f) => (
-                              <button
+                              <div
                                 key={f}
-                                onClick={() =>
-                                  setFolderFilter(f === folderFilter ? null : f)
-                                }
-                                className={`w-full flex items-center justify-between p-2 rounded-lg text-xs font-bold transition-colors group ${f === folderFilter ? "bg-primary/20 text-primary border border-primary/20" : "text-silver/40 hover:text-white hover:bg-white/5"}`}
+                                className={`w-full flex items-center justify-between p-2 rounded-lg text-xs font-bold transition-colors group ${f === currentPage.folder ? "bg-primary/20 text-primary border border-primary/20" : "text-silver/40 hover:text-white hover:bg-white/5"}`}
                               >
-                                <div className="flex items-center gap-2 truncate">
+                                {/* Click on name to select folder for current link */}
+                                <button
+                                  onClick={() => {
+                                    const next = f === currentPage.folder ? "" : f;
+                                    handleUpdatePage("folder", next);
+                                    if (next) toast.success(`Asignado a la carpeta "${next}"`);
+                                    else toast.success(`Carpeta removida`);
+                                  }}
+                                  className="flex items-center gap-2 truncate flex-1 text-left"
+                                >
                                   <span className="material-symbols-outlined text-sm">
-                                    folder
+                                    {f === currentPage.folder ? "folder_open" : "folder"}
                                   </span>
-                                  <span className="truncate max-w-[120px]">
-                                    {f}
-                                  </span>
+                                  <span className="truncate max-w-[90px]">{f}</span>
+                                  {f === currentPage.folder && (
+                                    <span className="material-symbols-outlined text-xs">check</span>
+                                  )}
+                                </button>
+                                {/* Edit + Delete icons */}
+                                <div className="flex items-center gap-1 ml-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleRenameFolder(f); }}
+                                    className="p-1 rounded hover:bg-white/10 text-silver/40 hover:text-white transition-colors"
+                                    title="Renombrar carpeta"
+                                  >
+                                    <span className="material-symbols-outlined text-[14px]">edit</span>
+                                  </button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleDeleteFolder(f); }}
+                                    className="p-1 rounded hover:bg-red-500/10 text-silver/40 hover:text-red-400 transition-colors"
+                                    title="Eliminar carpeta"
+                                  >
+                                    <span className="material-symbols-outlined text-[14px]">delete</span>
+                                  </button>
                                 </div>
-                                {f === folderFilter && (
-                                  <span className="material-symbols-outlined text-xs">
-                                    check
-                                  </span>
-                                )}
-                              </button>
+                              </div>
                             ))}
                           </div>
                         )}
@@ -1636,7 +1739,7 @@ export default function Links() {
                               <p className="text-xs text-silver/40">
                                 {t("dashboard.links.emptyLinkMsg", {
                                   defaultValue:
-                                    "Tu link está vacío. ¡Añade tu primer botón!",
+                                    "Tu link est� vac�o. �A�ade tu primer bot�n!",
                                 })}
                               </p>
                             </div>
@@ -1744,7 +1847,7 @@ export default function Links() {
                             <div>
                               <h2 className="text-lg font-bold">
                                 {t("dashboard.links.editButton", {
-                                  defaultValue: "Editar Botón",
+                                  defaultValue: "Editar Bot�n",
                                 })}
                               </h2>
                               <p className="text-[10px] text-silver/40 uppercase font-bold tracking-wider">
@@ -1926,19 +2029,19 @@ export default function Links() {
                                             "dashboard.links.deactivateRotatorConfirmTitle",
                                             {
                                               defaultValue:
-                                                "¿Desactivar Telegram Rotativo?",
+                                                "�Desactivar Telegram Rotativo?",
                                             },
                                           ),
                                           message: t(
                                             "dashboard.links.deactivateRotatorConfirmMsg",
                                             {
                                               defaultValue:
-                                                "Al desactivar el rotador, se eliminarán las URLs 2-5. Solo se mantendrá la primera URL.",
+                                                "Al desactivar el rotador, se eliminar�n las URLs 2-5. Solo se mantendr� la primera URL.",
                                             },
                                           ),
                                           confirmText: t(
                                             "common.yesDeactivate",
-                                            { defaultValue: "Sí, Desactivar" },
+                                            { defaultValue: "S�, Desactivar" },
                                           ),
                                           cancelText: t("common.cancel", {
                                             defaultValue: "Cancelar",
@@ -2037,7 +2140,7 @@ export default function Links() {
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-white/5 pb-4 gap-4">
                           <h2 className="text-xl font-bold">
                             {t("dashboard.links.pageConfigTitle", {
-                              defaultValue: "Configuración de la Página",
+                              defaultValue: "Configuraci�n de la P�gina",
                             })}
                           </h2>
 
@@ -2100,9 +2203,9 @@ export default function Links() {
                                         list="folder-suggestions"
                                       />
                                       <datalist id="folder-suggestions">
-                                        <option value="Mis Proyectos" />
-                                        <option value="Personal" />
-                                        <option value="Negocios" />
+                                        {folders.map((f) => (
+                                          <option key={f} value={f} />
+                                        ))}
                                       </datalist>
                                     </div>
                                   </div>
@@ -2121,10 +2224,8 @@ export default function Links() {
                                     <button
                                       onClick={() => {
                                         handleUpdatePage("template", "minimal");
-                                        handleUpdatePage(
-                                          "landingMode",
-                                          "circle",
-                                        );
+                                        handleUpdatePage("landingMode", "circle");
+                                        handleUpdatePage("profileImageSize", 100);
                                       }}
                                       className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${currentPage.template === "minimal" || currentPage.landingMode === "circle" ? "bg-white text-black shadow-lg" : "text-silver/60 hover:text-white"}`}
                                     >
@@ -2134,6 +2235,8 @@ export default function Links() {
                                       onClick={() => {
                                         handleUpdatePage("template", "full");
                                         handleUpdatePage("landingMode", "full");
+                                        handleUpdatePage("profileImageSize", 100);
+                                        handleUpdatePage("theme.backgroundType", "blur");
                                       }}
                                       className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${currentPage.template === "full" || currentPage.landingMode === "full" ? "bg-primary text-white shadow-lg" : "text-silver/60 hover:text-white"}`}
                                     >
@@ -2149,7 +2252,7 @@ export default function Links() {
                                       style={{
                                         backgroundColor:
                                           currentPage.theme.backgroundType ===
-                                          "solid"
+                                            "solid"
                                             ? currentPage.theme.backgroundStart
                                             : currentPage.theme.backgroundStart,
                                       }}
@@ -2177,14 +2280,14 @@ export default function Links() {
                                     <div className="space-y-1 w-24">
                                       <label className="text-[8px] font-bold text-silver/40 uppercase block text-center">
                                         {t("dashboard.links.size")} (
-                                        {currentPage.profileImageSize || 75}px)
+                                        {currentPage.profileImageSize || 100}px)
                                       </label>
                                       <input
                                         type="range"
                                         min="50"
                                         max="150"
                                         value={
-                                          currentPage.profileImageSize || 75
+                                          currentPage.profileImageSize || 100
                                         }
                                         onChange={(e) =>
                                           handleUpdatePage(
@@ -2205,29 +2308,17 @@ export default function Links() {
                                       <input
                                         type="text"
                                         value={currentPage.profileName}
-                                        onChange={(e) =>
+                                        onChange={(e) => {
                                           handleUpdatePage(
                                             "profileName",
                                             e.target.value,
-                                          )
-                                        }
-                                        className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-primary"
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <label className="text-[10px] font-bold text-silver/40 uppercase pl-1">
-                                        {t("dashboard.links.internalName")}
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={currentPage.name}
-                                        onChange={(e) =>
+                                          );
                                           handleUpdatePage(
                                             "name",
                                             e.target.value,
-                                          )
-                                        }
-                                        className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-silver focus:outline-none focus:border-primary"
+                                          );
+                                        }}
+                                        className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-primary"
                                       />
                                     </div>
                                   </div>
@@ -2239,45 +2330,66 @@ export default function Links() {
                                   {t("dashboard.links.pageBackground")}
                                 </label>
                                 <div className="flex gap-4 mb-4">
-                                  <div className="flex bg-[#0B0B0B] border border-border p-1 rounded-xl w-fit">
-                                    <button
-                                      onClick={() =>
-                                        handleUpdatePage(
-                                          "theme.backgroundType",
-                                          "solid",
-                                        )
-                                      }
-                                      className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "solid" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
-                                    >
-                                      {t("dashboard.links.solid")}
-                                    </button>
-                                    <button
-                                      onClick={() =>
-                                        handleUpdatePage(
-                                          "theme.backgroundType",
-                                          "gradient",
-                                        )
-                                      }
-                                      className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "gradient" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
-                                    >
-                                      {t("dashboard.links.gradient")}
-                                    </button>
-                                    <button
-                                      onClick={() =>
-                                        handleUpdatePage(
-                                          "theme.backgroundType",
-                                          "blur",
-                                        )
-                                      }
-                                      className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "blur" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
-                                    >
-                                      {t("dashboard.links.blurPhoto")}
-                                    </button>
-                                  </div>
+                                  {/* When Full mode is active, Solid and Gradient are locked */}
+                                  {currentPage.landingMode === "full" ? (
+                                    <div className="flex items-center gap-3">
+                                      <div className="flex bg-[#0B0B0B] border border-border p-1 rounded-xl w-fit opacity-40 pointer-events-none select-none" title="Solo disponible en modo Minimalista">
+                                        <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg text-silver/30 cursor-not-allowed">
+                                          {t("dashboard.links.solid")}
+                                        </button>
+                                        <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg text-silver/30 cursor-not-allowed">
+                                          {t("dashboard.links.gradient")}
+                                        </button>
+                                        <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg bg-primary/80 text-white shadow-lg rounded-lg cursor-not-allowed">
+                                          {t("dashboard.links.blurPhoto")}
+                                        </button>
+                                      </div>
+                                      <span className="text-[10px] text-primary/80 font-bold flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-sm">lock</span>
+                                        Blur obligatorio en modo Full
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <div className="flex bg-[#0B0B0B] border border-border p-1 rounded-xl w-fit">
+                                      <button
+                                        onClick={() =>
+                                          handleUpdatePage(
+                                            "theme.backgroundType",
+                                            "solid",
+                                          )
+                                        }
+                                        className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "solid" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
+                                      >
+                                        {t("dashboard.links.solid")}
+                                      </button>
+                                      <button
+                                        onClick={() =>
+                                          handleUpdatePage(
+                                            "theme.backgroundType",
+                                            "gradient",
+                                          )
+                                        }
+                                        className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "gradient" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
+                                      >
+                                        {t("dashboard.links.gradient")}
+                                      </button>
+                                      <button
+                                        onClick={() =>
+                                          handleUpdatePage(
+                                            "theme.backgroundType",
+                                            "blur",
+                                          )
+                                        }
+                                        className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "blur" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
+                                      >
+                                        {t("dashboard.links.blurPhoto")}
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
 
                                 {currentPage.theme.backgroundType ===
-                                "solid" ? (
+                                  "solid" ? (
                                   <div className="flex items-center gap-3 bg-black/20 p-3 rounded-xl border border-white/5">
                                     <input
                                       type="color"
@@ -2357,11 +2469,10 @@ export default function Links() {
                                   {t("dashboard.links.domainStatusTitle")}
                                 </h3>
                                 <div
-                                  className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                    currentPage.status === "active"
-                                      ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                                      : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
-                                  }`}
+                                  className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${currentPage.status === "active"
+                                    ? "bg-green-500/10 text-green-400 border border-green-500/20"
+                                    : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
+                                    }`}
                                 >
                                   {currentPage.status === "active"
                                     ? t("dashboard.links.published")
@@ -2370,7 +2481,7 @@ export default function Links() {
                               </div>
 
                               <div className="p-6 space-y-6">
-                                {/* Custom Domain Section — state-based flow */}
+                                {/* Custom Domain Section � state-based flow */}
                                 <div className="p-5 bg-black/40 border border-white/5 rounded-2xl relative overflow-hidden group">
                                   <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
@@ -2397,7 +2508,7 @@ export default function Links() {
                                           "dashboard.links.customDomainProDesc",
                                           {
                                             defaultValue:
-                                              "Debes contratar un plan para desbloquear la configuración de dominio personalizado.",
+                                              "Debes contratar un plan para desbloquear la configuraci�n de dominio personalizado.",
                                           },
                                         )}
                                       </p>
@@ -2410,7 +2521,7 @@ export default function Links() {
                                               "my_links_data",
                                               JSON.stringify(linkForCheckout),
                                             );
-                                          } catch {}
+                                          } catch { }
                                           navigate("/dashboard/checkout", {
                                             state: {
                                               pendingPurchase: {
@@ -2426,11 +2537,11 @@ export default function Links() {
                                     </div>
                                   )}
 
-                                  {/* STATE: none — choose domain flow */}
+                                  {/* STATE: none � choose domain flow */}
                                   {currentPage.status === "active" && (
                                     <div className="space-y-4">
                                       {currentPage.domainStatus ===
-                                      "pending" ? (
+                                        "pending" ? (
                                         /* Persistent Pending View */
                                         <div className="rounded-[2rem] border border-primary/20 bg-primary/5 p-8 text-center animate-pulse-slow">
                                           <div className="w-16 h-16 bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
@@ -2454,7 +2565,7 @@ export default function Links() {
                                               "dashboard.links.requestInProcessDesc",
                                               {
                                                 defaultValue:
-                                                  "Estamos procesando tu solicitud de dominio. Nuestro equipo se encargará de realizar la configuración necesaria.",
+                                                  "Estamos procesando tu solicitud de dominio. Nuestro equipo se encargar� de realizar la configuraci�n necesaria.",
                                               },
                                             )}
                                           </p>
@@ -2463,7 +2574,7 @@ export default function Links() {
                                             <p className="text-[10px] text-silver/40 uppercase tracking-widest font-black">
                                               Estado:{" "}
                                               <span className="text-primary">
-                                                Pendiente de Activación
+                                                Pendiente de Activaci�n
                                               </span>
                                             </p>
                                           </div>
@@ -2487,7 +2598,7 @@ export default function Links() {
                                       ) : (
                                         (!currentPage.domainStatus ||
                                           currentPage.domainStatus ===
-                                            "none") && (
+                                          "none") && (
                                           <div className="space-y-3 relative">
                                             <p className="text-[11px] text-silver/40 leading-relaxed">
                                               {t(
@@ -2605,9 +2716,9 @@ export default function Links() {
                                                           if (!res.ok) {
                                                             toast.error(
                                                               json.error ||
-                                                                t(
-                                                                  "common.errorSendingRequest",
-                                                                ),
+                                                              t(
+                                                                "common.errorSendingRequest",
+                                                              ),
                                                             );
                                                           } else {
                                                             handleUpdatePage(
@@ -2629,11 +2740,10 @@ export default function Links() {
                                                           );
                                                         }
                                                       }}
-                                                      className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                                                        currentPage.customDomain
-                                                          ? "bg-primary text-black hover:scale-105 active:scale-95"
-                                                          : "bg-white/5 text-white/20 cursor-not-allowed"
-                                                      }`}
+                                                      className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${currentPage.customDomain
+                                                        ? "bg-primary text-black hover:scale-105 active:scale-95"
+                                                        : "bg-white/5 text-white/20 cursor-not-allowed"
+                                                        }`}
                                                     >
                                                       {t(
                                                         "dashboard.links.reserve",
@@ -2682,163 +2792,161 @@ export default function Links() {
                                               </button>
                                               {domainFlowChoice ===
                                                 "connect" && (
-                                                <div className="border-t border-white/5 p-4 animate-fade-in relative z-20">
-                                                  <p className="text-[10px] text-silver/40 mb-3">
-                                                    {t(
-                                                      "dashboard.links.dnsInstruction",
-                                                    )}
-                                                  </p>
-                                                  <div className="relative">
-                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-silver/20 text-sm">
-                                                      language
-                                                    </span>
-                                                    <input
-                                                      type="text"
-                                                      placeholder="tudominio.com"
-                                                      value={
-                                                        currentPage.customDomain ||
-                                                        ""
-                                                      }
-                                                      onChange={(e) => {
-                                                        const val =
-                                                          e.target.value
-                                                            .toLowerCase()
-                                                            .replace(/\s/g, "")
-                                                            .replace(
-                                                              /https?:\/\//,
-                                                              "",
-                                                            );
-                                                        handleUpdatePage(
-                                                          "customDomain",
-                                                          val,
-                                                        );
-
-                                                        if (
-                                                          val &&
-                                                          !/\.[a-z]{2,}$/i.test(
-                                                            val,
-                                                          )
-                                                        ) {
-                                                          setOwnDomainError(
-                                                            t(
-                                                              "dashboard.links.invalidExtensionError",
-                                                              {
-                                                                defaultValue:
-                                                                  "Se requiere una extensión válida (.com, .net, .co, etc)",
-                                                              },
-                                                            ),
-                                                          );
-                                                        } else {
-                                                          setOwnDomainError(
-                                                            null,
-                                                          );
+                                                  <div className="border-t border-white/5 p-4 animate-fade-in relative z-20">
+                                                    <p className="text-[10px] text-silver/40 mb-3">
+                                                      {t(
+                                                        "dashboard.links.dnsInstruction",
+                                                      )}
+                                                    </p>
+                                                    <div className="relative">
+                                                      <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-silver/20 text-sm">
+                                                        language
+                                                      </span>
+                                                      <input
+                                                        type="text"
+                                                        placeholder="tudominio.com"
+                                                        value={
+                                                          currentPage.customDomain ||
+                                                          ""
                                                         }
-                                                      }}
-                                                      className={`w-full bg-[#0a0a0a] border rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder:text-silver/20 focus:outline-none transition-all font-mono ${
-                                                        ownDomainError
+                                                        onChange={(e) => {
+                                                          const val =
+                                                            e.target.value
+                                                              .toLowerCase()
+                                                              .replace(/\s/g, "")
+                                                              .replace(
+                                                                /https?:\/\//,
+                                                                "",
+                                                              );
+                                                          handleUpdatePage(
+                                                            "customDomain",
+                                                            val,
+                                                          );
+
+                                                          if (
+                                                            val &&
+                                                            !/\.[a-z]{2,}$/i.test(
+                                                              val,
+                                                            )
+                                                          ) {
+                                                            setOwnDomainError(
+                                                              t(
+                                                                "dashboard.links.invalidExtensionError",
+                                                                {
+                                                                  defaultValue:
+                                                                    "Se requiere una extensi�n v�lida (.com, .net, .co, etc)",
+                                                                },
+                                                              ),
+                                                            );
+                                                          } else {
+                                                            setOwnDomainError(
+                                                              null,
+                                                            );
+                                                          }
+                                                        }}
+                                                        className={`w-full bg-[#0a0a0a] border rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder:text-silver/20 focus:outline-none transition-all font-mono ${ownDomainError
                                                           ? "border-red-500/50"
                                                           : "border-white/10 focus:border-primary/50"
-                                                      }`}
-                                                    />
-                                                  </div>
+                                                          }`}
+                                                      />
+                                                    </div>
 
-                                                  {ownDomainError && (
-                                                    <p className="mt-2 text-[10px] text-red-500 font-bold">
-                                                      {ownDomainError}
-                                                    </p>
-                                                  )}
+                                                    {ownDomainError && (
+                                                      <p className="mt-2 text-[10px] text-red-500 font-bold">
+                                                        {ownDomainError}
+                                                      </p>
+                                                    )}
 
-                                                  <div className="mt-4 flex justify-end">
-                                                    <button
-                                                      disabled={
-                                                        !currentPage.customDomain ||
-                                                        !!ownDomainError
-                                                      }
-                                                      onClick={async () => {
-                                                        const loadingToast =
-                                                          toast.loading(
-                                                            t(
-                                                              "dashboard.links.sendingRequest",
-                                                            ),
-                                                          );
-                                                        try {
-                                                          const {
-                                                            supabase: sb,
-                                                          } =
-                                                            await import("@/services/supabase");
-                                                          const {
-                                                            data: { session },
-                                                          } =
-                                                            await sb.auth.getSession();
-                                                          const res =
-                                                            await fetch(
-                                                              `${API_URL}/domains/request`,
-                                                              {
-                                                                method: "POST",
-                                                                headers: {
-                                                                  "Content-Type":
-                                                                    "application/json",
-                                                                  Authorization: `Bearer ${session?.access_token}`,
-                                                                },
-                                                                body: JSON.stringify(
-                                                                  {
-                                                                    linkId:
-                                                                      currentPage.id,
-                                                                    domain:
-                                                                      currentPage.customDomain,
-                                                                    reservation_type:
-                                                                      "connect_own",
-                                                                  },
-                                                                ),
-                                                              },
+                                                    <div className="mt-4 flex justify-end">
+                                                      <button
+                                                        disabled={
+                                                          !currentPage.customDomain ||
+                                                          !!ownDomainError
+                                                        }
+                                                        onClick={async () => {
+                                                          const loadingToast =
+                                                            toast.loading(
+                                                              t(
+                                                                "dashboard.links.sendingRequest",
+                                                              ),
                                                             );
+                                                          try {
+                                                            const {
+                                                              supabase: sb,
+                                                            } =
+                                                              await import("@/services/supabase");
+                                                            const {
+                                                              data: { session },
+                                                            } =
+                                                              await sb.auth.getSession();
+                                                            const res =
+                                                              await fetch(
+                                                                `${API_URL}/domains/request`,
+                                                                {
+                                                                  method: "POST",
+                                                                  headers: {
+                                                                    "Content-Type":
+                                                                      "application/json",
+                                                                    Authorization: `Bearer ${session?.access_token}`,
+                                                                  },
+                                                                  body: JSON.stringify(
+                                                                    {
+                                                                      linkId:
+                                                                        currentPage.id,
+                                                                      domain:
+                                                                        currentPage.customDomain,
+                                                                      reservation_type:
+                                                                        "connect_own",
+                                                                    },
+                                                                  ),
+                                                                },
+                                                              );
 
-                                                          const json =
-                                                            await res.json();
-                                                          toast.dismiss(
-                                                            loadingToast,
-                                                          );
-                                                          if (!res.ok) {
-                                                            toast.error(
-                                                              json.error ||
+                                                            const json =
+                                                              await res.json();
+                                                            toast.dismiss(
+                                                              loadingToast,
+                                                            );
+                                                            if (!res.ok) {
+                                                              toast.error(
+                                                                json.error ||
                                                                 t(
                                                                   "common.errorSendingRequest",
                                                                 ),
+                                                              );
+                                                            } else {
+                                                              handleUpdatePage(
+                                                                "domainStatus",
+                                                                "pending",
+                                                              );
+                                                              setShowProcessingModal(
+                                                                true,
+                                                              );
+                                                            }
+                                                          } catch {
+                                                            toast.dismiss(
+                                                              loadingToast,
                                                             );
-                                                          } else {
-                                                            handleUpdatePage(
-                                                              "domainStatus",
-                                                              "pending",
-                                                            );
-                                                            setShowProcessingModal(
-                                                              true,
+                                                            toast.error(
+                                                              t(
+                                                                "common.errorSendingRequest",
+                                                              ),
                                                             );
                                                           }
-                                                        } catch {
-                                                          toast.dismiss(
-                                                            loadingToast,
-                                                          );
-                                                          toast.error(
-                                                            t(
-                                                              "common.errorSendingRequest",
-                                                            ),
-                                                          );
-                                                        }
-                                                      }}
-                                                      className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                                                        currentPage.customDomain &&
-                                                        !ownDomainError
+                                                        }}
+                                                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${currentPage.customDomain &&
+                                                          !ownDomainError
                                                           ? "bg-white text-black hover:scale-105 active:scale-95"
                                                           : "bg-white/5 text-white/20 cursor-not-allowed"
-                                                      }`}
-                                                    >
-                                                      {t(
-                                                        "dashboard.links.connect",
-                                                      )}
-                                                    </button>
+                                                          }`}
+                                                      >
+                                                        {t(
+                                                          "dashboard.links.connect",
+                                                        )}
+                                                      </button>
+                                                    </div>
                                                   </div>
-                                                </div>
-                                              )}
+                                                )}
                                             </div>
                                           </div>
                                         )
@@ -2846,7 +2954,7 @@ export default function Links() {
                                     </div>
                                   )}
 
-                                  {/* STATE: active — domain live */}
+                                  {/* STATE: active � domain live */}
                                   {currentPage.status === "active" &&
                                     currentPage.domainStatus === "active" && (
                                       <div className="space-y-4 relative">
@@ -3090,11 +3198,18 @@ export default function Links() {
             {/* SIGUIENTE PASO BUTTON */}
             <button
               onClick={() => {
-                if (draftPages.length > 0) {
+                if (allDraftPages.length > 0) {
+                  localStorage.setItem(
+                    "my_links_data_backup",
+                    JSON.stringify({
+                      timestamp: Date.now(),
+                      linksData: allDraftPages,
+                    }),
+                  );
                   navigate("/dashboard/checkout", {
                     state: {
                       pendingPurchase: {
-                        linksData: draftPages,
+                        linksData: allDraftPages,
                       },
                     },
                   });
@@ -3111,139 +3226,144 @@ export default function Links() {
               </span>
             </button>
           </div>
-        </div>
-      )}
+        </div >
+      )
+      }
 
       {/* DELETE CONFIRMATION MODAL */}
-      {showDeleteConfirm && deleteTarget && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in"
-          onClick={() => {
-            setShowDeleteConfirm(false);
-            setDeleteTarget(null);
-          }}
-        >
+      {
+        showDeleteConfirm && deleteTarget && (
           <div
-            className="w-full max-w-sm bg-[#0A0A0A] border border-white/10 rounded-2xl overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200"
-            onClick={(e) => e.stopPropagation()}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in"
+            onClick={() => {
+              setShowDeleteConfirm(false);
+              setDeleteTarget(null);
+            }}
           >
-            <div className="p-6 text-center">
-              <h2 className="text-lg font-bold text-white mb-2">
-                {deleteTarget.type === "page"
-                  ? t("dashboard.links.deletePageConfirmTitle")
-                  : t("dashboard.links.deleteButtonConfirmTitle")}
-              </h2>
-              <p className="text-silver/60 text-sm mb-6">
-                {deleteTarget.type === "page"
-                  ? t("dashboard.links.deletePageConfirmMsg")
-                  : t("dashboard.links.deleteButtonConfirmMsg")}
+            <div
+              className="w-full max-w-sm bg-[#0A0A0A] border border-white/10 rounded-2xl overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="p-6 text-center">
+                <h2 className="text-lg font-bold text-white mb-2">
+                  {deleteTarget.type === "page"
+                    ? t("dashboard.links.deletePageConfirmTitle")
+                    : t("dashboard.links.deleteButtonConfirmTitle")}
+                </h2>
+                <p className="text-silver/60 text-sm mb-6">
+                  {deleteTarget.type === "page"
+                    ? t("dashboard.links.deletePageConfirmMsg")
+                    : t("dashboard.links.deleteButtonConfirmMsg")}
+                </p>
+
+                <button
+                  onClick={async () => {
+                    if (deleteTarget.type === "page") {
+                      if (pages.length <= 1) {
+                        toast.error(t("dashboard.links.atLeastOnePageError"));
+                        setShowDeleteConfirm(false);
+                        setDeleteTarget(null);
+                        return;
+                      }
+
+                      // DELETE FROM DB (for active/paid links)
+                      const pageId = selectedPageId;
+                      if (pageId && user) {
+                        const { error } = await supabase
+                          .from("smart_links")
+                          .delete()
+                          .eq("id", pageId)
+                          .eq("user_id", user.id);
+                        if (error) {
+                          console.error("Error deleting page:", error);
+                        }
+                      }
+
+                      const newPages = pages.filter(
+                        (p) => p.id !== selectedPageId,
+                      );
+                      setPages(newPages);
+
+                      // SYNC localStorage: save only remaining drafts
+                      try {
+                        const remainingDrafts = newPages.filter(
+                          (p) => p.status === "draft",
+                        );
+                        localStorage.setItem(
+                          "my_links_data",
+                          JSON.stringify(remainingDrafts),
+                        );
+                      } catch (e) {
+                        console.error(
+                          "Error syncing localStorage after delete:",
+                          e,
+                        );
+                      }
+
+                      // Select next available page
+                      setSelectedPageId(newPages[0]?.id || "");
+                      toast.success(t("dashboard.links.pageDeletedSuccess"));
+                    } else if (
+                      deleteTarget.type === "button" &&
+                      deleteTarget.id
+                    ) {
+                      handleDeleteButton(deleteTarget.id);
+                    }
+                    setShowDeleteConfirm(false);
+                    setDeleteTarget(null);
+                  }}
+                  className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-500 transition-all uppercase tracking-wider shadow-lg shadow-blue-600/20"
+                >
+                  {t("common.yesDelete")}
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      }
+
+      {
+        showProcessingModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/80 backdrop-blur-xl animate-fade-in"
+              onClick={() => setShowProcessingModal(false)}
+            />
+            <div className="relative w-full max-w-sm bg-zinc-900 border border-white/10 rounded-[2.5rem] p-8 text-center shadow-2xl animate-scale-up">
+              <div className="w-20 h-20 bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="material-symbols-outlined text-primary text-4xl animate-pulse">
+                  verified
+                </span>
+              </div>
+
+              <h3 className="text-2xl font-black text-white mb-3 tracking-tight leading-tight">
+                {t("dashboard.links.requestInProcessTitle", {
+                  defaultValue: "Solicitud en proceso",
+                })}
+              </h3>
+
+              <p className="text-silver/60 text-sm leading-relaxed mb-8 px-2">
+                {t("dashboard.links.requestInProcessDesc", {
+                  defaultValue:
+                    "Estamos procesando tu solicitud de dominio. Nuestro equipo se encargar� de realizar la configuraci�n necesaria.",
+                })}
               </p>
 
               <button
-                onClick={async () => {
-                  if (deleteTarget.type === "page") {
-                    if (pages.length <= 1) {
-                      toast.error(t("dashboard.links.atLeastOnePageError"));
-                      setShowDeleteConfirm(false);
-                      setDeleteTarget(null);
-                      return;
-                    }
-
-                    // DELETE FROM DB (for active/paid links)
-                    const pageId = selectedPageId;
-                    if (pageId && user) {
-                      const { error } = await supabase
-                        .from("smart_links")
-                        .delete()
-                        .eq("id", pageId)
-                        .eq("user_id", user.id);
-                      if (error) {
-                        console.error("Error deleting page:", error);
-                      }
-                    }
-
-                    const newPages = pages.filter(
-                      (p) => p.id !== selectedPageId,
-                    );
-                    setPages(newPages);
-
-                    // SYNC localStorage: save only remaining drafts
-                    try {
-                      const remainingDrafts = newPages.filter(
-                        (p) => p.status === "draft",
-                      );
-                      localStorage.setItem(
-                        "my_links_data",
-                        JSON.stringify(remainingDrafts),
-                      );
-                    } catch (e) {
-                      console.error(
-                        "Error syncing localStorage after delete:",
-                        e,
-                      );
-                    }
-
-                    // Select next available page
-                    setSelectedPageId(newPages[0]?.id || "");
-                    toast.success(t("dashboard.links.pageDeletedSuccess"));
-                  } else if (
-                    deleteTarget.type === "button" &&
-                    deleteTarget.id
-                  ) {
-                    handleDeleteButton(deleteTarget.id);
-                  }
-                  setShowDeleteConfirm(false);
-                  setDeleteTarget(null);
+                onClick={() => {
+                  setShowProcessingModal(false);
+                  setDomainFlowChoice(null);
                 }}
-                className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-500 transition-all uppercase tracking-wider shadow-lg shadow-blue-600/20"
+                className="w-full py-4 bg-primary text-black font-black rounded-2xl hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest text-xs"
               >
-                {t("common.yesDelete")}
+                {t("dashboard.links.goToLinks", {
+                  defaultValue: "Ir a mis links",
+                })}
               </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {showProcessingModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/80 backdrop-blur-xl animate-fade-in"
-            onClick={() => setShowProcessingModal(false)}
-          />
-          <div className="relative w-full max-w-sm bg-zinc-900 border border-white/10 rounded-[2.5rem] p-8 text-center shadow-2xl animate-scale-up">
-            <div className="w-20 h-20 bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <span className="material-symbols-outlined text-primary text-4xl animate-pulse">
-                verified
-              </span>
-            </div>
-
-            <h3 className="text-2xl font-black text-white mb-3 tracking-tight leading-tight">
-              {t("dashboard.links.requestInProcessTitle", {
-                defaultValue: "Solicitud en proceso",
-              })}
-            </h3>
-
-            <p className="text-silver/60 text-sm leading-relaxed mb-8 px-2">
-              {t("dashboard.links.requestInProcessDesc", {
-                defaultValue:
-                  "Estamos procesando tu solicitud de dominio. Nuestro equipo se encargará de realizar la configuración necesaria.",
-              })}
-            </p>
-
-            <button
-              onClick={() => {
-                setShowProcessingModal(false);
-                setDomainFlowChoice(null);
-              }}
-              className="w-full py-4 bg-primary text-black font-black rounded-2xl hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest text-xs"
-            >
-              {t("dashboard.links.goToLinks", {
-                defaultValue: "Ir a mis links",
-              })}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+        )
+      }
+    </div >
   );
 }
