@@ -16,8 +16,8 @@ export default function Welcome() {
 
       // Check profile completion
       const meta = user.user_metadata;
-      const isComplete = profile?.profile_completed || meta?.profile_completed || (meta?.phone && meta?.country && meta?.full_name);
-      
+      const isComplete = profile?.profile_completed || meta?.profile_completed || (meta?.country && meta?.full_name);
+
       if (!isComplete && profile) {
         // Only redirect to complete-profile if we actually have the profile loaded
         // AND it's not complete.

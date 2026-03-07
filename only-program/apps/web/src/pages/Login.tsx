@@ -27,13 +27,13 @@ export default function Login() {
   const handleProfileRedirect = async (userId: string) => {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, profile_completed, full_name, phone, country')
+      .select('role, profile_completed, full_name, country')
       .eq('id', userId)
       .single();
 
     const isComplete =
       profile?.profile_completed ||
-      (profile?.full_name && profile?.phone && profile?.country);
+      (profile?.full_name && profile?.country);
 
     if (!isComplete) {
       navigate('/complete-profile');
