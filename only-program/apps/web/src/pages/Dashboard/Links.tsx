@@ -1234,7 +1234,31 @@ export default function Links() {
                             )}
                           </div>
 
-                          {/* Folder badge (read-only in list view — assign inside editor) */}
+                          {/* Domain row */}
+                          {page.status === 'active' && page.custom_domain ? (
+                            <div className="mt-1.5 flex justify-center">
+                              <a
+                                href={`https://${page.custom_domain}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-[9px] font-bold text-green-400 hover:bg-green-500/20 transition-all group"
+                              >
+                                <span className="material-symbols-outlined text-[10px]">language</span>
+                                {page.custom_domain}
+                                <span className="material-symbols-outlined text-[9px] opacity-0 group-hover:opacity-100 transition-opacity">open_in_new</span>
+                              </a>
+                            </div>
+                          ) : page.status !== 'active' && (
+                            <div className="mt-1.5 flex justify-center">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold text-silver/30">
+                                <span className="material-symbols-outlined text-[10px]">schedule</span>
+                                En espera de dominio
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Folder badge */}
                           {page.folder && (
                             <div className="mt-2 flex justify-center">
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-bold text-primary">

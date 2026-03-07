@@ -59,6 +59,8 @@ const DomainRequests = () => {
   const [rejectModal, setRejectModal] = useState<{ linkId: string; domain: string } | null>(null);
   const [rejectNote, setRejectNote] = useState('');
   const [filter, setFilter] = useState<'all' | 'pending' | 'active' | 'failed'>('all');
+  // Per-link editable domain inputs (admin can set/change domain before activating)
+  const [editDomains, setEditDomains] = useState<Record<string, string>>({});
 
   const fetchRequests = async () => {
     setLoading(true);
@@ -92,12 +94,16 @@ const DomainRequests = () => {
     }
   };
 
-  const handleActivate = async (linkId: string) => {
+  const handleActivate = async (linkId: string, domainOverride?: string) => {
     setActing(p => ({ ...p, [linkId]: true }));
     try {
       const headers = await getAuthHeader();
+      const body: any = {};
+      if (domainOverride) body.custom_domain = domainOverride;
       const res = await fetch(`${API_URL}/admin/domain-requests/${linkId}/activate`, {
-        method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: Object.keys(body).length ? JSON.stringify(body) : undefined,
       });
       if (!res.ok) throw new Error();
       toast.success(t('admin.domains.activateSuccess'));
@@ -289,11 +295,10 @@ const DomainRequests = () => {
                   <div className="flex flex-col items-end gap-2 shrink-0">
                     <StatusBadge status={req.domain_status} />
                     {req.domain_reservation_type && (
-                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg border uppercase tracking-wider ${
-                        req.domain_reservation_type === 'buy_new'
+                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-lg border uppercase tracking-wider ${req.domain_reservation_type === 'buy_new'
                           ? 'bg-primary/10 text-primary border-primary/20'
                           : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                      }`}>
+                        }`}>
                         {req.domain_reservation_type === 'buy_new' ? `🛒 ${t('admin.domains.buyNew')}` : `🔗 ${t('admin.domains.connectOwn')}`}
                       </span>
                     )}
@@ -304,9 +309,27 @@ const DomainRequests = () => {
                 <div className="bg-black/20 rounded-2xl p-4 space-y-3">
                   <div>
                     <span className="text-[10px] text-silver/40 uppercase tracking-widest block mb-1">{t('admin.domains.domain')}</span>
-                    <p className={`font-mono text-sm font-bold ${req.custom_domain ? 'text-primary' : 'text-yellow-500/40'}`}>
-                      {req.custom_domain || t('admin.domains.awaitingAssociation')}
-                    </p>
+                    {/* Editable domain field */}
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={editDomains[req.id] ?? (req.custom_domain || '')}
+                        onChange={(e) => setEditDomains(p => ({ ...p, [req.id]: e.target.value }))}
+                        placeholder="micliente.com"
+                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 font-mono text-sm text-primary placeholder:text-silver/20 focus:outline-none focus:border-primary/50 transition-all"
+                      />
+                      {(editDomains[req.id] ?? req.custom_domain) && (
+                        <a
+                          href={`https://${editDomains[req.id] ?? req.custom_domain}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-silver/40 hover:text-primary transition-colors"
+                          title="Ver landing"
+                        >
+                          <span className="material-symbols-outlined text-base">open_in_new</span>
+                        </a>
+                      )}
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
@@ -356,7 +379,10 @@ const DomainRequests = () => {
 
                   {req.domain_status !== 'active' && (
                     <button
-                      onClick={() => handleActivate(req.id)}
+                      onClick={() => {
+                        const domain = editDomains[req.id] ?? req.custom_domain ?? '';
+                        handleActivate(req.id, domain || undefined);
+                      }}
                       disabled={acting[req.id]}
                       className="flex items-center gap-2 flex-1 min-w-[120px] py-2.5 px-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-400 text-xs font-bold transition-all disabled:opacity-50"
                     >

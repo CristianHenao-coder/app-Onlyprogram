@@ -379,26 +379,33 @@ router.post(
 
 /**
  * POST /api/admin/domain-requests/:linkId/activate
- * Marca el dominio como activo
+ * Marca el dominio como activo, opcionalmente asignando o corrigiendo el custom_domain
  */
 router.post(
   "/domain-requests/:linkId/activate",
   async (req: AuthRequest, res: Response) => {
     try {
       const { linkId } = req.params;
+      const { custom_domain } = req.body;
+
+      const updates: any = {
+        domain_status: "active",
+        domain_activated_at: new Date().toISOString(),
+        domain_notes: null,
+      };
+
+      if (custom_domain) {
+        updates.custom_domain = custom_domain;
+      }
 
       const { error } = await supabase
         .from("smart_links")
-        .update({
-          domain_status: "active",
-          domain_activated_at: new Date().toISOString(),
-          domain_notes: null,
-        })
+        .update(updates)
         .eq("id", linkId);
 
       if (error) throw error;
 
-      console.log(`[Admin] Domain activated for link: ${linkId}`);
+      console.log(`[Admin] Domain activated for link: ${linkId} with domain: ${custom_domain || 'existing'}`);
       res.json({ success: true, message: "Dominio activado exitosamente" });
     } catch (err: any) {
       console.error("[Admin] domain activate error:", err);
