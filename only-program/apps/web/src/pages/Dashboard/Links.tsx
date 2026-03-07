@@ -3235,6 +3235,16 @@ export default function Links() {
             <button
               onClick={() => {
                 if (allDraftPages.length > 0) {
+                  // Validate each page has at least 1 button
+                  for (const page of allDraftPages) {
+                    if (!page.buttons || page.buttons.length === 0) {
+                      toast.error(
+                        `"${page.name}" no tiene ningún botón. Debes agregar al menos 1 botón para continuar.`,
+                        { duration: 5000 }
+                      );
+                      return;
+                    }
+                  }
                   // Validate that all buttons have valid URLs
                   for (const page of allDraftPages) {
                     for (const btn of page.buttons) {
