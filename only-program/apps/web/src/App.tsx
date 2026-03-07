@@ -21,6 +21,7 @@ import Pricing from './pages/Pricing';
 
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
+import VerifyDevice from '@/pages/VerifyDevice';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 
@@ -96,6 +97,7 @@ function App() {
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/welcome" element={<Welcome />} />
+              <Route path="/auth/verify" element={<VerifyDevice />} />
               <Route path="/complete-profile" element={<CompleteProfile />} />
 
               {/* Dashboard Protected Routes */}

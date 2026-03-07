@@ -1665,6 +1665,20 @@ export default function Links() {
                         )}
                       </div>
 
+                      {/* EDIT PROFILE BUTTON */}
+                      <button
+                        onClick={() => {
+                          setSelectedButtonId(null);
+                          setShowButtonCreator(false);
+                        }}
+                        className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all flex items-center justify-center gap-2 touch-manipulation"
+                      >
+                        <span className="material-symbols-outlined text-xl">
+                          settings
+                        </span>
+                        <span>{t("dashboard.links.editProfile", { defaultValue: "Editar Perfil" })}</span>
+                      </button>
+
                       {/* ADD BUTTON */}
                       <button
                         onClick={() => setShowButtonCreator(true)}
@@ -1680,7 +1694,19 @@ export default function Links() {
 
                   {/* COLLAPSED ADD BUTTON */}
                   {sidebarCollapsed && (
-                    <div className="px-2 pb-3 flex justify-center">
+                    <div className="px-2 pb-3 flex flex-col items-center gap-3">
+                      <button
+                        onClick={() => {
+                          setSelectedButtonId(null);
+                          setShowButtonCreator(false);
+                        }}
+                        className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all flex items-center justify-center"
+                        title={t("dashboard.links.editProfile", { defaultValue: "Editar Perfil" })}
+                      >
+                        <span className="material-symbols-outlined text-xl">
+                          settings
+                        </span>
+                      </button>
                       <button
                         onClick={() => setShowButtonCreator(true)}
                         className="w-10 h-10 rounded-xl bg-primary text-white shadow-lg shadow-primary/20 hover:scale-110 active:scale-95 transition-all flex items-center justify-center"
@@ -1752,47 +1778,27 @@ export default function Links() {
 
                 {/* STICKY BOTTOM ACTIONS */}
                 <div className="p-4 border-t border-white/5 bg-[#050505]">
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={() => {
-                        setDeleteTarget({
-                          type: "page",
-                          name: currentPage.name,
-                        });
-                        setShowDeleteConfirm(true);
-                      }}
-                      className={`py-2 px-3 rounded-lg flex items-center justify-center gap-2 text-xs font-bold text-red-500/60 hover:text-red-500 hover:bg-red-500/10 bg-white/5 transition-all ${sidebarCollapsed ? "flex-col" : ""}`}
-                      title={sidebarCollapsed ? "Borrar Link" : undefined}
+                  <button
+                    onClick={() => {
+                      setDeleteTarget({
+                        type: "page",
+                        name: currentPage.name,
+                      });
+                      setShowDeleteConfirm(true);
+                    }}
+                    className={`w-full py-2 px-3 rounded-lg flex items-center justify-center gap-2 text-xs font-bold text-red-500/60 hover:text-red-500 hover:bg-red-500/10 bg-white/5 transition-all ${sidebarCollapsed ? "flex-col" : ""}`}
+                    title={sidebarCollapsed ? "Borrar Link" : undefined}
+                  >
+                    <span
+                      className={`material-symbols-outlined ${sidebarCollapsed ? "text-lg" : "text-sm"}`}
                     >
-                      <span
-                        className={`material-symbols-outlined ${sidebarCollapsed ? "text-lg" : "text-sm"}`}
-                      >
-                        delete
-                      </span>
-                      {!sidebarCollapsed &&
-                        t("dashboard.links.deleteLink", {
-                          defaultValue: "Borrar Link",
-                        })}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelectedButtonId(null);
-                        setShowButtonCreator(false);
-                      }}
-                      className={`py-2 px-3 rounded-lg flex items-center justify-center gap-2 text-xs font-bold text-silver/40 hover:text-white hover:bg-white/5 bg-white/5 transition-all ${sidebarCollapsed ? "flex-col" : ""}`}
-                      title={sidebarCollapsed ? "Editar Perfil" : undefined}
-                    >
-                      <span
-                        className={`material-symbols-outlined ${sidebarCollapsed ? "text-lg" : "text-sm"}`}
-                      >
-                        settings
-                      </span>
-                      {!sidebarCollapsed &&
-                        t("dashboard.links.editProfile", {
-                          defaultValue: "Editar Perfil",
-                        })}
-                    </button>
-                  </div>
+                      delete
+                    </span>
+                    {!sidebarCollapsed &&
+                      t("dashboard.links.deleteLink", {
+                        defaultValue: "Borrar Link",
+                      })}
+                  </button>
                 </div>
               </div>
 
@@ -2145,7 +2151,7 @@ export default function Links() {
                             })}
                           </h2>
 
-                          <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
+                          <div className="flex bg-white/5 p-1 rounded-xl border border-white/10 hidden">
                             <button
                               onClick={() => setSettingsTab("profile")}
                               className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${settingsTab === "profile" ? "bg-primary text-white shadow-lg" : "text-silver/40 hover:text-white"}`}
@@ -2167,7 +2173,7 @@ export default function Links() {
                           </div>
                         </div>
 
-                        {settingsTab === "profile" ? (
+                        {true ? (
                           <div className="space-y-8 animate-fade-in">
                             <section className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
                               <div className="p-4 border-b border-white/5 bg-white/[0.02]">
@@ -3200,13 +3206,17 @@ export default function Links() {
             <button
               onClick={() => {
                 if (allDraftPages.length > 0) {
-                  localStorage.setItem(
-                    "my_links_data_backup",
-                    JSON.stringify({
-                      timestamp: Date.now(),
-                      linksData: allDraftPages,
-                    }),
-                  );
+                  try {
+                    localStorage.setItem(
+                      "my_links_data_backup",
+                      JSON.stringify({
+                        timestamp: Date.now(),
+                        linksData: allDraftPages,
+                      }),
+                    );
+                  } catch (e) {
+                    console.warn("Could not save backup to local storage due to quota limits");
+                  }
                   navigate("/dashboard/checkout", {
                     state: {
                       pendingPurchase: {
@@ -3218,8 +3228,7 @@ export default function Links() {
                   navigate("/dashboard/home");
                 }
               }}
-              className="w-[320px] py-3.5 px-6 bg-black border-2 border-blue-500 text-blue-500 font-bold text-sm rounded-xl hover:bg-blue-500 hover:text-white transition-all flex items-center justify-center gap-2 group animate-pulse"
-              style={{ animationDuration: "2s" }}
+              className="w-[320px] py-3.5 px-6 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 group touch-manipulation"
             >
               <span>{t("dashboard.links.nextStep")}</span>
               <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">

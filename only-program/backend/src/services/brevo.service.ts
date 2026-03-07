@@ -695,3 +695,70 @@ export async function sendLinkDeactivatedEmail(
     textContent: `Hola ${userName}, tu link ${linkSlug} ha expirado y ha sido desactivado. Reactívalo en ${frontendUrl}/dashboard/links`,
   });
 }
+
+/**
+ * Envía email notificando que la cuenta ha sido bloqueada temporalmente
+ */
+export async function sendAccountLockoutEmail(
+  email: string,
+  lockedUntil: string,
+): Promise<boolean> {
+  const lockedTime = lockedUntil
+    ? new Date(lockedUntil).toLocaleTimeString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+    : "10 minutos";
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Inter', Arial, sans-serif; background-color: #0B0B0B; color: #C9CCD1; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background: #161616; border: 1px solid #2A2A2A; border-radius: 24px; padding: 48px; text-align: center; }
+        .logo { margin-bottom: 32px; }
+        .logo h1 { color: #1DA1F2; font-size: 24px; margin: 0; font-weight: 900; letter-spacing: -0.05em; }
+        .icon { font-size: 64px; margin-bottom: 24px; }
+        .title { color: white; font-size: 22px; font-weight: 900; margin-bottom: 12px; }
+        .body-text { color: #888; font-size: 14px; line-height: 1.6; margin-bottom: 24px; }
+        .highlight { background: #EF444415; border: 1px solid #EF444430; border-radius: 12px; padding: 16px; color: #EF4444; font-weight: 700; margin: 24px 0; font-size: 15px; }
+        .info-box { background: #1DA1F210; border: 1px solid #1DA1F230; border-radius: 12px; padding: 16px; color: #1DA1F2; font-size: 13px; margin-top: 16px; }
+        .footer { font-size: 12px; color: #555; margin-top: 48px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="logo">
+          <h1>🛡️ ONLY PROGRAM</h1>
+        </div>
+        <div class="icon">🔒</div>
+        <div class="title">Acceso Temporalmente Bloqueado</div>
+        <div class="body-text">
+          Hemos detectado <strong>3 intentos fallidos consecutivos</strong> al ingresar el código de verificación 
+          en tu cuenta de Only Program.
+        </div>
+        <div class="highlight">
+          Tu acceso ha sido bloqueado hasta las <strong>${lockedTime}</strong>
+        </div>
+        <div class="info-box">
+          ℹ️ Si fuiste tú quien realizó estos intentos, simplemente espera los 10 minutos y solicita un nuevo código.
+          Si <strong>no reconoces esta actividad</strong>, te recomendamos cambiar tu contraseña.
+        </div>
+        <div class="footer">
+          <p>Si necesitas ayuda, contáctanos en support@onlyprogramlink.com</p>
+          <p>© ${new Date().getFullYear()} Only Program. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return await sendEmail({
+    to: email,
+    subject: "🔒 Acceso temporalmente bloqueado — Only Program",
+    htmlContent,
+    textContent: `Tu acceso a Only Program ha sido bloqueado hasta las ${lockedTime} por múltiples intentos fallidos. Si no fuiste tú, cambia tu contraseña.`,
+  });
+}
