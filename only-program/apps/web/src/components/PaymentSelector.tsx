@@ -18,13 +18,13 @@ interface PaymentSelectorProps {
 const POPULAR_CURRENCIES: { id: string; label: string; icon: string }[] = [
   { id: 'usdttrc20', label: 'USDT TRC20', icon: '💚' },
   { id: 'usdterc20', label: 'USDT ERC20', icon: '🔵' },
-  { id: 'btc',       label: 'Bitcoin',    icon: '🟠' },
-  { id: 'eth',       label: 'Ethereum',   icon: '🔷' },
-  { id: 'sol',       label: 'Solana',     icon: '🟣' },
-  { id: 'bnbbsc',    label: 'BNB',        icon: '🟡' },
-  { id: 'trx',       label: 'TRON',       icon: '🔴' },
-  { id: 'ltc',       label: 'Litecoin',   icon: '⚪' },
-  { id: 'doge',      label: 'Dogecoin',   icon: '🐶' },
+  { id: 'btc', label: 'Bitcoin', icon: '🟠' },
+  { id: 'eth', label: 'Ethereum', icon: '🔷' },
+  { id: 'sol', label: 'Solana', icon: '🟣' },
+  { id: 'bnbbsc', label: 'BNB', icon: '🟡' },
+  { id: 'trx', label: 'TRON', icon: '🔴' },
+  { id: 'ltc', label: 'Litecoin', icon: '⚪' },
+  { id: 'doge', label: 'Dogecoin', icon: '🐶' },
 ];
 
 type PaymentStatus = 'waiting' | 'confirming' | 'confirmed' | 'sending' | 'partially_paid' | 'finished' | 'failed' | 'refunded' | 'expired';
@@ -90,9 +90,6 @@ export default function PaymentSelector({
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'crypto'>(initialMethod);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
-  // ─── FREE TRIAL STATE ─────────────────────────────────────
-  const [isActivatingTrial, setIsActivatingTrial] = useState(false);
-  const [trialUsed, setTrialUsed] = useState(false);
 
   // ─── CRYPTO / NOWPAYMENTS STATE ───────────────────────────
   const [selectedCrypto, setSelectedCrypto] = useState<string>('usdttrc20');
@@ -131,27 +128,6 @@ export default function PaymentSelector({
     }, 10_000);
   }, [onSuccess]);
 
-  const handleActivateFreeTrial = async () => {
-    if (isActivatingTrial || trialUsed) return;
-    setIsActivatingTrial(true);
-    try {
-      await paymentsService.activateFreeTrial(linksData, customDomain);
-      setTrialUsed(true);
-      setPaymentSuccess(true);
-      if (onSuccess) onSuccess();
-      toast.success('¡Prueba gratuita activada! Revisa tu email para ver la factura.', { duration: 6000 });
-    } catch (error: any) {
-      const isAlreadyUsed = error.message?.includes('Ya utilizaste');
-      if (isAlreadyUsed) {
-        setTrialUsed(true);
-        toast.error('Ya usaste tu prueba gratuita anteriormente.');
-      } else {
-        toast.error(error.message || 'Error al activar la prueba gratuita.');
-      }
-    } finally {
-      setIsActivatingTrial(false);
-    }
-  };
 
   const handleSelect = (method: 'card' | 'paypal' | 'crypto') => {
     setPaymentMethod(method);
@@ -219,77 +195,36 @@ export default function PaymentSelector({
   }
 
   const statusLabels: Record<PaymentStatus, string> = {
-    waiting:       'Esperando pago...',
-    confirming:    'Confirmando transacción...',
-    confirmed:     'Confirmado',
-    sending:       'Procesando...',
-    partially_paid:'Pago parcial recibido',
-    finished:      '¡Completado!',
-    failed:        'Fallido',
-    refunded:      'Reembolsado',
-    expired:       'Expirado',
+    waiting: 'Esperando pago...',
+    confirming: 'Confirmando transacción...',
+    confirmed: 'Confirmado',
+    sending: 'Procesando...',
+    partially_paid: 'Pago parcial recibido',
+    finished: '¡Completado!',
+    failed: 'Fallido',
+    refunded: 'Reembolsado',
+    expired: 'Expirado',
   };
 
   return (
     <div className="space-y-8 animate-fade-in relative">
       <div className="absolute -top-4 right-0 text-[9px] text-silver/20 font-mono">v3.0-NP</div>
 
-      {/* ── FREE TRIAL BANNER ── */}
-      <div className="relative overflow-hidden rounded-3xl border border-emerald-500/30 bg-gradient-to-r from-emerald-950/60 via-teal-950/60 to-emerald-950/60 p-6 backdrop-blur-sm">
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-emerald-500/5" />
-        <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-lg shadow-emerald-500/30">
-              <span className="material-symbols-outlined text-3xl text-white">card_giftcard</span>
-            </div>
-            <div>
-              <div className="mb-1 flex flex-wrap items-center gap-2">
-                <span className="text-lg font-bold text-white">Prueba Gratuita</span>
-                <span className="rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-white">GRATIS · 3 DÍAS</span>
-                <span className="rounded-full bg-zinc-700/80 px-2 py-0.5 text-[10px] font-semibold text-zinc-300">Solo una vez</span>
-              </div>
-              <p className="text-sm text-zinc-400 leading-relaxed">
-                Activa la versión completa del sistema por 3 días. Incluye links activos, dominio personalizado y analíticas. Solo necesitas apuntar el DNS de tu dominio a nuestro servidor.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            disabled={isActivatingTrial || trialUsed}
-            onClick={handleActivateFreeTrial}
-            className={`flex-shrink-0 flex items-center justify-center gap-2 rounded-2xl px-6 py-4 text-sm font-bold transition-all ${
-              trialUsed
-                ? 'cursor-not-allowed bg-zinc-800 text-zinc-500'
-                : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105 active:scale-95'
-            }`}
-          >
-            {isActivatingTrial ? (
-              <><span className="material-symbols-outlined animate-spin text-lg">progress_activity</span> Activando...</>
-            ) : trialUsed ? (
-              <><span className="material-symbols-outlined text-lg">check_circle</span> Ya activada</>
-            ) : (
-              <><span className="material-symbols-outlined text-lg">rocket_launch</span> Activar gratis</>
-            )}
-          </button>
-        </div>
-      </div>
-
       {/* ── METHOD TABS ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { id: 'card',   label: 'Tarjeta de Crédito', icon: 'credit_card',            color: 'bg-blue-500' },
-          { id: 'paypal', label: 'PayPal',              icon: 'account_balance_wallet', color: 'bg-yellow-500' },
-          { id: 'crypto', label: 'Criptomonedas',       icon: 'currency_bitcoin',       color: 'bg-orange-500' },
+          { id: 'card', label: 'Tarjeta de Crédito', icon: 'credit_card', color: 'bg-blue-500' },
+          { id: 'paypal', label: 'PayPal', icon: 'account_balance_wallet', color: 'bg-yellow-500' },
+          { id: 'crypto', label: 'Criptomonedas', icon: 'currency_bitcoin', color: 'bg-orange-500' },
         ].map((m) => (
           <button
             key={m.id}
             type="button"
             onClick={() => handleSelect(m.id as any)}
-            className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-4 group ${
-              paymentMethod === m.id
-                ? 'bg-primary/5 border-primary shadow-xl shadow-primary/10'
-                : 'bg-background-dark/20 border-border/50 hover:border-silver/30'
-            }`}
+            className={`p-6 rounded-3xl border-2 transition-all flex flex-col items-center gap-4 group ${paymentMethod === m.id
+              ? 'bg-primary/5 border-primary shadow-xl shadow-primary/10'
+              : 'bg-background-dark/20 border-border/50 hover:border-silver/30'
+              }`}
           >
             <div className={`h-14 w-14 rounded-2xl ${m.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
               <span className="material-symbols-outlined text-white text-3xl">{m.icon}</span>
@@ -347,11 +282,22 @@ export default function PaymentSelector({
                     const toastId = toast.loading('Conectando con PayPal...');
                     try {
                       const order = await paymentsService.createPayPalOrder(amount || 0, undefined, linksData, customDomain);
+                      toast.dismiss(toastId);
                       const approvalLink = order.links?.find((l: any) => l.rel === 'approve')?.href;
-                      if (approvalLink) window.location.href = approvalLink;
-                      else throw new Error('No se pudo obtener el enlace de pago');
+                      if (approvalLink) {
+                        window.location.href = approvalLink;
+                      } else {
+                        throw new Error('No se pudo obtener el enlace de pago de PayPal.');
+                      }
                     } catch (error: any) {
-                      toast.error('Error al conectar con PayPal', { id: toastId });
+                      const msg = error?.response?.data?.error || error?.message || 'Error al conectar con PayPal';
+                      const isConfig = msg.toLowerCase().includes('credencial') || msg.toLowerCase().includes('not configured');
+                      toast.error(
+                        isConfig
+                          ? 'PayPal no está configurado. Usa otra forma de pago por ahora.'
+                          : msg,
+                        { id: toastId, duration: 5000 }
+                      );
                     }
                   }}
                   className="w-full bg-[#0070ba] hover:bg-[#003087] text-white font-black py-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-3 uppercase tracking-wider text-sm"
@@ -388,16 +334,14 @@ export default function PaymentSelector({
                       key={c.id}
                       type="button"
                       onClick={() => setSelectedCrypto(c.id)}
-                      className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all ${
-                        selectedCrypto === c.id
-                          ? 'border-orange-500 bg-orange-500/10'
-                          : 'border-border/40 bg-background-dark/20 hover:border-border'
-                      }`}
+                      className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all ${selectedCrypto === c.id
+                        ? 'border-orange-500 bg-orange-500/10'
+                        : 'border-border/40 bg-background-dark/20 hover:border-border'
+                        }`}
                     >
                       <span className="text-2xl">{c.icon}</span>
-                      <span className={`text-[10px] font-black text-center leading-tight ${
-                        selectedCrypto === c.id ? 'text-orange-400' : 'text-silver/50'
-                      }`}>
+                      <span className={`text-[10px] font-black text-center leading-tight ${selectedCrypto === c.id ? 'text-orange-400' : 'text-silver/50'
+                        }`}>
                         {c.label}
                       </span>
                     </button>
