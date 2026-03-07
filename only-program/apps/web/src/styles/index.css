@@ -1,5 +1,4 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -147,13 +146,38 @@
   }
 }
 
-/* Material Symbols Configuration */
+/* ============================================================
+   Material Symbols — previene que aparezcan como texto
+   ============================================================ */
 .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
   font-variation-settings:
-    "FILL" 0,
-    "wght" 400,
-    "GRAD" 0,
-    "opsz" 24;
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+  /* Oculta el texto durante la carga de la fuente */
+  font-display: block;
+}
+
+/* Mientras la fuente NO cargó, hace invisible el texto del icono */
+@supports (font-display: block) {
+  .material-symbols-outlined {
+    visibility: visible;
+  }
 }
 
 /* ===== Velada-like Scroll Reveal ===== */
