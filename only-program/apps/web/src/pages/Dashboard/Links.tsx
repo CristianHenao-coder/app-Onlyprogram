@@ -411,6 +411,7 @@ export default function Links() {
   const [showProcessingModal, setShowProcessingModal] = useState(false);
   const [ownDomainError, setOwnDomainError] = useState<string | null>(null);
   const [urlError, setUrlError] = useState<string | null>(null);
+  const [inactiveAlertPageId, setInactiveAlertPageId] = useState<string | null>(null);
 
   // Validates a URL string
   const isValidUrl = (value: string): boolean => {
@@ -1255,17 +1256,32 @@ export default function Links() {
                               {t("dashboard.links.config")}
                             </button>
                             {page.slug && (
-                              <a
-                                href={`/${page.slug}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-white transition-all flex items-center justify-center"
-                              >
-                                <span className="material-symbols-outlined text-sm">
-                                  open_in_new
-                                </span>
-                              </a>
+                              page.status === 'active' ? (
+                                <a
+                                  href={`/${page.slug}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-white transition-all flex items-center justify-center"
+                                >
+                                  <span className="material-symbols-outlined text-sm">
+                                    open_in_new
+                                  </span>
+                                </a>
+                              ) : (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setInactiveAlertPageId(page.id);
+                                  }}
+                                  className="py-2 px-3 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 border border-orange-500/20 text-xs font-bold text-orange-400 transition-all flex items-center justify-center"
+                                  title="Link no activo"
+                                >
+                                  <span className="material-symbols-outlined text-sm">
+                                    lock
+                                  </span>
+                                </button>
+                              )
                             )}
                           </div>
                         </div>
@@ -3297,6 +3313,57 @@ export default function Links() {
         </div >
       )
       }
+      {/* INACTIVE LINK ALERT MODAL */}
+      {inactiveAlertPageId && (() => {
+        const alertPage = pages.find(p => p.id === inactiveAlertPageId);
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            onClick={() => setInactiveAlertPageId(null)}
+          >
+            <div
+              className="w-full max-w-sm bg-[#0A0A0A] border border-orange-500/20 rounded-3xl overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Top glow */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-24 bg-orange-500/10 blur-3xl rounded-full pointer-events-none" />
+
+              <div className="p-8 text-center relative">
+                {/* Animated lock icon */}
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-4xl text-orange-400 animate-pulse">
+                    lock
+                  </span>
+                </div>
+
+                <h2 className="text-xl font-black text-white mb-2">
+                  Tu link aún no está activo
+                </h2>
+
+                {alertPage && (
+                  <p className="text-sm text-silver/40 font-medium mb-1">
+                    <span className="text-orange-400 font-bold">"{alertPage.name}"</span>
+                  </p>
+                )}
+
+                <p className="text-sm text-silver/40 leading-relaxed mb-6">
+                  Este link está en revisión o pendiente de activación. Una vez aprobado podrás visitarlo directamente.
+                </p>
+
+                <div className="flex flex-col gap-3">
+                  <button
+                    onClick={() => setInactiveAlertPageId(null)}
+                    className="w-full py-3 px-5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-bold text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-base">arrow_back</span>
+                    Volver a Mis Links
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* DELETE CONFIRMATION MODAL */}
       {
