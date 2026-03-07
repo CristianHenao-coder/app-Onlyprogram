@@ -410,6 +410,17 @@ export default function Links() {
   >(null);
   const [showProcessingModal, setShowProcessingModal] = useState(false);
   const [ownDomainError, setOwnDomainError] = useState<string | null>(null);
+  const [urlError, setUrlError] = useState<string | null>(null);
+
+  // Validates a URL string
+  const isValidUrl = (value: string): boolean => {
+    try {
+      const url = new URL(value);
+      return url.protocol === 'http:' || url.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  };
 
   // Deep linking: select page from URL ?id=...
   useEffect(() => {
@@ -1898,16 +1909,34 @@ export default function Links() {
                                 <input
                                   type="text"
                                   value={selectedButton.url}
-                                  onChange={(e) =>
-                                    handleUpdateButton("url", e.target.value)
-                                  }
-                                  className="flex-1 bg-transparent text-sm font-mono text-silver focus:outline-none"
+                                  onChange={(e) => {
+                                    handleUpdateButton("url", e.target.value);
+                                    setUrlError(null);
+                                  }}
+                                  onBlur={(e) => {
+                                    const val = e.target.value.trim();
+                                    if (!val) {
+                                      setUrlError('La URL es obligatoria para este botón.');
+                                    } else if (!isValidUrl(val)) {
+                                      setUrlError('Debe ser una URL válida que empiece con https://');
+                                    } else {
+                                      setUrlError(null);
+                                    }
+                                  }}
+                                  className={`flex-1 bg-transparent text-sm font-mono focus:outline-none ${urlError ? 'text-red-400' : 'text-silver'
+                                    }`}
                                   placeholder={
                                     SOCIAL_PRESETS[selectedButton.type]
                                       .placeholder || "https://..."
                                   }
                                 />
                               </div>
+                              {urlError && (
+                                <p className="text-xs text-red-400 font-medium flex items-center gap-1 mt-1 ml-1">
+                                  <span className="material-symbols-outlined text-sm">error</span>
+                                  {urlError}
+                                </p>
+                              )}
                             </div>
                           </div>
 
@@ -3206,6 +3235,25 @@ export default function Links() {
             <button
               onClick={() => {
                 if (allDraftPages.length > 0) {
+                  // Validate that all buttons have valid URLs
+                  for (const page of allDraftPages) {
+                    for (const btn of page.buttons) {
+                      if (!btn.url || !btn.url.trim()) {
+                        toast.error(
+                          `El botón "${btn.title}" en "${page.name}" no tiene URL. Agrégala antes de continuar.`,
+                          { duration: 4000 }
+                        );
+                        return;
+                      }
+                      if (!isValidUrl(btn.url.trim())) {
+                        toast.error(
+                          `La URL del botón "${btn.title}" en "${page.name}" no es válida. Debe empezar con https://`,
+                          { duration: 4000 }
+                        );
+                        return;
+                      }
+                    }
+                  }
                   try {
                     localStorage.setItem(
                       "my_links_data_backup",
