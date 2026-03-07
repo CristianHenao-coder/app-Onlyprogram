@@ -236,25 +236,28 @@ export default function Payments() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={couponCode}
-                        onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(""); }}
-                        onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
-                        placeholder="Ej: DESCUENTO50"
-                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-mono text-white placeholder:text-silver/20 focus:outline-none focus:border-primary/50 transition-all"
-                      />
-                      <button
-                        onClick={handleApplyCoupon}
-                        disabled={!couponCode.trim() || couponLoading}
-                        className="px-4 py-2.5 bg-primary text-white font-bold text-xs rounded-xl hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 shrink-0"
-                      >
-                        {couponLoading ? (
-                          <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
-                        ) : "Aplicar"}
-                      </button>
-                    </div>
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(""); }}
+                      onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
+                      placeholder="Ej: DESCUENTO50"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-mono text-white placeholder:text-silver/20 focus:outline-none focus:border-primary/50 transition-all"
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={!couponCode.trim() || couponLoading}
+                      className="w-full py-2.5 bg-primary text-white font-bold text-xs rounded-xl hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                    >
+                      {couponLoading ? (
+                        <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-sm">confirmation_number</span>
+                          Aplicar Cupón
+                        </>
+                      )}
+                    </button>
                     {couponError && (
                       <p className="text-xs text-red-400 flex items-center gap-1">
                         <span className="material-symbols-outlined text-sm">error</span>
