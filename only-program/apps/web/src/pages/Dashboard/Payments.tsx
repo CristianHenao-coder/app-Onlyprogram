@@ -304,15 +304,13 @@ export default function Payments() {
         <div className="space-y-8">
           {/* Header */}
           <div>
-            {isFromLinks && (
-              <button
-                onClick={() => setCurrentStep("cart")}
-                className="flex items-center gap-2 text-silver/40 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest mb-6"
-              >
-                <span className="material-symbols-outlined text-base">arrow_back</span>
-                Volver al Carrito
-              </button>
-            )}
+            <button
+              onClick={() => isFromLinks ? setCurrentStep("cart") : navigate("/dashboard/links")}
+              className="flex items-center gap-2 text-silver/40 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest mb-6"
+            >
+              <span className="material-symbols-outlined text-base">arrow_back</span>
+              {isFromLinks ? "Volver al Carrito" : "Volver a Mis Links"}
+            </button>
             <h1 className="text-4xl font-black text-white tracking-tight uppercase">Registra tu Pago</h1>
             <p className="text-silver/60 mt-1">Completa tu proceso para activar tus servicios.</p>
           </div>
