@@ -3291,10 +3291,12 @@ export default function Links() {
                   } catch (e) {
                     console.warn("Could not save backup to local storage due to quota limits");
                   }
-                  navigate("/dashboard/checkout", {
+                  navigate("/dashboard/payments", {
                     state: {
                       pendingPurchase: {
+                        type: "links_bundle",
                         linksData: allDraftPages,
+                        amount: null, // will be calculated in payments page
                       },
                     },
                   });
