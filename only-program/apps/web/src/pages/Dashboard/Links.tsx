@@ -907,7 +907,7 @@ export default function Links() {
         ...DEFAULTS.PAGE,
         id: newId,
         status: "draft",
-        name: `${t("dashboard.links.links")} ${prev.length + 1}`,
+        name: `Link ${prev.length + 1}`,
       },
     ]);
     setSelectedPageId(newId);
@@ -1067,7 +1067,7 @@ export default function Links() {
         ...DEFAULTS.PAGE,
         id: newId,
         status: "draft",
-        name: `${t("dashboard.links.links")} ${prev.filter((p) => !p.dbStatus).length + 1}`,
+        name: `Link ${prev.filter((p) => !p.dbStatus).length + 1}`,
       },
     ]);
     setSelectedPageId(newId);
@@ -1134,7 +1134,7 @@ export default function Links() {
                 </h2>
                 <p className="text-sm text-silver/40 mt-1">
                   {pages.filter((p) => p.dbStatus).length}{" "}
-                  {t("dashboard.links.links")} �{" "}
+                  {"links activos ◆ "}
                   {
                     pages.filter((p) => !p.dbStatus && p.status === "draft")
                       .length
