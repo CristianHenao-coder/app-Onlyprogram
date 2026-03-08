@@ -27,7 +27,7 @@ export default function Pricing() {
 
   const [qty, setQty] = useState(1);
   const [withTelegram, setWithTelegram] = useState(false);
-  const [withInstagram, setWithInstagram] = useState(false);
+  const [withCoupon, setWithCoupon] = useState(false);
   const [loadingPay, setLoadingPay] = useState(false);
 
   // Wompi Widget is global
@@ -67,9 +67,10 @@ export default function Pricing() {
         body: JSON.stringify({
           qty: qty,
           hasRotator: withTelegram,
-          hasInstagram: withInstagram,
+          hasInstagram: false,
           countRotator: withTelegram ? qty : 0,
-          countStandard: (!withTelegram && !withInstagram) ? qty : 0,
+          countStandard: (!withTelegram) ? qty : 0,
+          coupon: withCoupon ? 'DISCOUNT33' : undefined
         })
       });
 
@@ -118,8 +119,7 @@ export default function Pricing() {
   };
 
   const basePrice = pricingCfg.link.base
-    + (withTelegram ? pricingCfg.link.telegramAddon : 0)
-    + (withInstagram ? pricingCfg.link.instagramAddon : 0);
+    + (withTelegram ? pricingCfg.link.telegramAddon : 0);
 
   const discount = useMemo(() => {
     if (qty >= 20) return 0.25;
@@ -128,10 +128,12 @@ export default function Pricing() {
     return 0;
   }, [qty]);
 
-  const perLink = basePrice * (1 - discount);
+  const couponMultiplier = withCoupon ? 0.67 : 1; // 33% discount
+  const perLink = basePrice * (1 - discount) * couponMultiplier;
   const total = perLink * qty;
 
-  const discountLabel = discount === 0 ? t('pricingPage.discount') : `-${Math.round(discount * 100)}%`;
+  const discountVal = 1 - ((1 - discount) * couponMultiplier);
+  const discountLabel = discountVal === 0 ? t('pricingPage.discount') : `-${Math.round(discountVal * 100)}%`;
 
   const tiers = [
     { n: 1, label: `1 ${t('pricingPage.calculator.perLink')}`, d: 0 },
@@ -173,16 +175,17 @@ export default function Pricing() {
                         onClick={() => setWithTelegram((v) => !v)}
                         className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border transition-all font-semibold text-xs sm:text-sm ${withTelegram ? 'border-primary/60 bg-primary/10 text-white' : 'border-border bg-background-dark/40 text-silver/70 hover:text-white'}`}
                       >
-                        <span className="material-symbols-outlined align-middle text-sm sm:text-base mr-1.5">{withTelegram ? 'verified' : 'bolt'}</span>
-                        Telegram (+{pricingCfg.link.telegramAddon}$)
+                        <span className="material-symbols-outlined align-middle text-sm sm:text-base mr-1.5">{withTelegram ? 'verified' : 'send'}</span>
+                        Telegram
                       </button>
+
                       <button
                         type="button"
-                        onClick={() => setWithInstagram((v) => !v)}
-                        className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border transition-all font-semibold text-xs sm:text-sm ${withInstagram ? 'border-primary/60 bg-primary/10 text-white' : 'border-border bg-background-dark/40 text-silver/70 hover:text-white'}`}
+                        onClick={() => setWithCoupon((v) => !v)}
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border transition-all font-semibold text-xs sm:text-sm ${withCoupon ? 'border-green-500/60 bg-green-500/10 text-white' : 'border-border bg-background-dark/40 text-silver/70 hover:text-white'}`}
                       >
-                        <span className="material-symbols-outlined align-middle text-sm sm:text-base mr-1.5">{withInstagram ? 'camera_alt' : 'photo_camera'}</span>
-                        Instagram (+{pricingCfg.link.instagramAddon}$)
+                        <span className="material-symbols-outlined align-middle text-sm sm:text-base mr-1.5 text-green-400">local_offer</span>
+                        Con cupón 33%
                       </button>
                     </div>
                   </div>
@@ -288,13 +291,6 @@ export default function Pricing() {
                       </div>
                       <span className="material-symbols-outlined text-silver/20 text-3xl">send</span>
                     </div>
-                    <div className="rounded-2xl border border-border bg-background-dark/40 p-4 flex justify-between items-center">
-                      <div>
-                        <p className="text-xs text-silver/50">Instagram</p>
-                        <p className="text-xl font-extrabold text-white mt-1">{formatUSD(pricingCfg.link.instagramAddon)}</p>
-                      </div>
-                      <span className="material-symbols-outlined text-silver/20 text-3xl">camera</span>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -322,7 +318,56 @@ export default function Pricing() {
               </div>
             </div>
 
-            <div className="mt-14 text-center" data-reveal data-delay="3">
+            {/* REFERIDOS SECTION */}
+            <div className="mt-20 max-w-5xl mx-auto" data-reveal data-delay="3">
+              <div className="rounded-[2.5rem] border border-primary/30 bg-primary/5 p-8 sm:p-12 text-center relative overflow-hidden shadow-[0_0_50px_rgba(29,161,242,0.1)]">
+                <div className="absolute top-0 right-0 p-8 blur-3xl opacity-30 bg-primary w-64 h-64 rounded-full pointer-events-none" />
+                <div className="absolute bottom-0 left-0 p-8 blur-3xl opacity-20 bg-green-500 w-64 h-64 rounded-full pointer-events-none" />
+
+                <div className="relative z-10">
+                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest mb-6 border border-primary/20">
+                    <span className="material-symbols-outlined text-sm">payments</span>
+                    Programa de Afiliados
+                  </span>
+
+                  <h2 className="text-3xl sm:text-5xl font-extrabold text-white mb-6 leading-tight">
+                    Multiplica tus ingresos con referidos 💸
+                  </h2>
+
+                  <p className="text-lg text-silver/80 mb-10 max-w-2xl mx-auto leading-relaxed">
+                    ¿Conoces a alguien que necesite potenciar su marketing digital? Recomienda nuestro servicio y empieza a generar <strong>ingresos pasivos reales</strong> desde el primer día.
+                  </p>
+
+                  <div className="grid sm:grid-cols-3 gap-6 mb-10 text-left">
+                    <div className="bg-background-dark/80 border border-white/5 rounded-3xl p-6 hover:bg-white/5 transition-all relative overflow-hidden">
+                      <div className="w-12 h-12 rounded-xl bg-green-500/20 text-green-400 flex items-center justify-center mb-5 text-2xl font-bold border border-green-500/20">$</div>
+                      <h4 className="text-white text-lg font-bold mb-2">Comienza con $3 USD</h4>
+                      <p className="text-sm text-silver/60">Obtienes 3 dólares inmediatos y directos a tu bolsillo por <strong>cada persona</strong> que invite a adquirir un plan a través de ti.</p>
+                    </div>
+
+                    <div className="bg-background-dark/80 border border-white/5 rounded-3xl p-6 hover:bg-white/5 transition-all relative overflow-hidden">
+                      <div className="w-12 h-12 rounded-xl bg-primary/20 text-primary flex items-center justify-center mb-5 text-2xl font-bold border border-primary/20">∞</div>
+                      <h4 className="text-white text-lg font-bold mb-2">Renueva mes a mes</h4>
+                      <p className="text-sm text-silver/60">Nuestro servicio es por suscripción. Si tu cliente decide quedarse, <strong>tú ganas tu comisión todos los meses</strong>. Ingreso recurrente sin esfuerzo.</p>
+                    </div>
+
+                    <div className="bg-background-dark/80 border border-white/5 rounded-3xl p-6 hover:bg-white/5 transition-all relative overflow-hidden">
+                      <div className="w-12 h-12 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center mb-5 font-bold border border-purple-500/20">
+                        <span className="material-symbols-outlined text-2xl">trending_up</span>
+                      </div>
+                      <h4 className="text-white text-lg font-bold mb-2">Escala tu Capital</h4>
+                      <p className="text-sm text-silver/60">Los tres dólares son solo tu inicio. Entre más referidos sumes a tu red, el retorno pasivo puede hacer crecer tus ganancias hasta límites impensables.</p>
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-silver/50 max-w-2xl mx-auto">
+                    Construye un modelo de comisiones que trabaje por ti todos los meses y benefíciate de nuestro crecimiento compartiéndolo con tu círculo.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-14 text-center" data-reveal data-delay="4">
               <Link to="/" className="text-silver/60 hover:text-white transition-colors font-medium nav-underline">
                 {t('pricingPage.backHome')}
               </Link>
