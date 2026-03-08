@@ -279,7 +279,7 @@ router.get("/domain-requests", async (req: AuthRequest, res: Response) => {
         profiles!smart_links_user_id_fkey (full_name, id),
         smart_link_buttons (*)
       `)
-      .or('status.eq.pending,domain_status.in.(pending,active,failed)')
+      .or('status.eq.pending,domain_status.in.(pending,failed)')
       .order("created_at", { ascending: false });
 
     if (error) throw error;
@@ -322,6 +322,15 @@ router.post(
   async (req: AuthRequest, res: Response) => {
     try {
       const { linkId } = req.params;
+      const { custom_domain } = req.body;
+
+      // Update custom_domain if provided
+      if (custom_domain) {
+        await supabase
+          .from("smart_links")
+          .update({ custom_domain })
+          .eq("id", linkId);
+      }
 
       const { data: link, error } = await supabase
         .from("smart_links")

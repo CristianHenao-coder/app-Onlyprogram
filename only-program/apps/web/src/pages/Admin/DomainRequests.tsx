@@ -99,12 +99,19 @@ const DomainRequests = () => {
 
   useEffect(() => { fetchRequests(); }, []);
 
-  const handleTestDns = async (linkId: string) => {
+  const handleTestDns = async (linkId: string, customDomain: string | null) => {
+    const domainToTest = editDomains[linkId] ?? customDomain;
+    if (!domainToTest) {
+      toast.error("Ingresa un dominio para probar");
+      return;
+    }
     setTesting(p => ({ ...p, [linkId]: true }));
     try {
       const headers = await getAuthHeader();
       const res = await fetch(`${API_URL}/admin/domain-requests/${linkId}/test`, {
-        method: 'POST', headers,
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ custom_domain: domainToTest })
       });
       const json = await res.json();
       setDnsResults(p => ({ ...p, [linkId]: json }));
@@ -135,6 +142,7 @@ const DomainRequests = () => {
       setActing(p => ({ ...p, [linkId]: false }));
     }
   };
+
 
   const handleReject = async () => {
     if (!rejectModal) return;
@@ -358,7 +366,6 @@ const DomainRequests = () => {
                             </a>
                           )}
                         </div>
-
                         {req.domain_notes && (
                           <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 mt-3">
                             <p className="text-xs text-red-400">{req.domain_notes}</p>
@@ -396,7 +403,7 @@ const DomainRequests = () => {
                     {hasDomainRequest && (
                       <div className="flex gap-2 flex-wrap min-h-12 items-stretch">
                         <button
-                          onClick={() => handleTestDns(req.id)}
+                          onClick={() => handleTestDns(req.id, req.custom_domain)}
                           disabled={testing[req.id]}
                           className="flex items-center justify-center gap-2 flex-1 min-w-[120px] rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-silver hover:text-white text-xs font-bold transition-all disabled:opacity-50"
                         >
@@ -411,7 +418,7 @@ const DomainRequests = () => {
                             const domain = editDomains[req.id] ?? req.custom_domain ?? '';
                             handleActivate(req.id, domain || undefined);
                           }}
-                          disabled={acting[req.id]}
+                          disabled={acting[req.id] || !dnsResults[req.id]?.configured}
                           className="flex items-center justify-center gap-2 flex-1 min-w-[120px] rounded-xl bg-blue-500 hover:bg-blue-600 text-white border border-blue-600 shadow-[0_0_15px_rgba(59,130,246,0.5)] text-xs font-black uppercase tracking-wider transition-all disabled:opacity-50"
                         >
                           {acting[req.id]
