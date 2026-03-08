@@ -19,7 +19,7 @@ export default function Pricing() {
     let mounted = true;
     productPricingService.get().then((cfg) => {
       if (mounted) setPricingCfg(cfg);
-    }).catch(() => {});
+    }).catch(() => { });
     return () => {
       mounted = false;
     };
@@ -27,95 +27,99 @@ export default function Pricing() {
 
   const [qty, setQty] = useState(1);
   const [withTelegram, setWithTelegram] = useState(false);
+  const [withInstagram, setWithInstagram] = useState(false);
   const [loadingPay, setLoadingPay] = useState(false);
 
   // Wompi Widget is global
   const handleWompiPayment = async () => {
-      try {
-          setLoadingPay(true);
-          // 1. Get transaction data from backend
-          // We assume api.post is available or we use fetch with token.
-          // Let's use a simple fetch since I don't see api service imported yet.
-          // Wait, 'httpService' is a common pattern. Let me check imports.
-          // Since I can't browse now without interrupting, I'll assume I need to import api from somewhere or use fetch + token.
-          // I'll check imports in a second step if this fails, but for now standard fetch with localStorage token.
-          
-          // 1. Get user and session
-          const { data: { user } } = await import('@/services/supabase').then(m => m.supabase.auth.getUser());
-          
-          if (!user || !user.email) {
-             // Redirect to register
-             window.location.href = '/register';
-             return;
-          }
-          
-          const { data: { session } } = await import('@/services/supabase').then(m => m.supabase.auth.getSession());
-          const token = session?.access_token;
+    try {
+      setLoadingPay(true);
+      // 1. Get transaction data from backend
+      // We assume api.post is available or we use fetch with token.
+      // Let's use a simple fetch since I don't see api service imported yet.
+      // Wait, 'httpService' is a common pattern. Let me check imports.
+      // Since I can't browse now without interrupting, I'll assume I need to import api from somewhere or use fetch + token.
+      // I'll check imports in a second step if this fails, but for now standard fetch with localStorage token.
 
-          if (!token) {
-            console.error("No active session token found");
-            return;
-          }
+      // 1. Get user and session
+      const { data: { user } } = await import('@/services/supabase').then(m => m.supabase.auth.getUser());
 
-          const response = await fetch(`${API_URL}/wompi/transaction-init`, {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify({
-                qty: qty,
-                hasRotator: withTelegram,
-                countRotator: withTelegram ? qty : 0,
-                countStandard: withTelegram ? 0 : qty,
-              })
-          });
-
-          if (!response.ok) {
-              const err = await response.json();
-              alert("Error: " + (err.error || "Failed to init transaction"));
-              setLoadingPay(false);
-              return;
-          }
-
-          const txData = await response.json();
-
-          // 2. Open Wompi Widget with Customer Data (Enables Saved Cards)
-          const checkout = new (window as any).WidgetCheckout({
-              currency: txData.currency,
-              amountInCents: txData.amountInCents,
-              reference: txData.reference,
-              publicKey: txData.publicKey,
-              redirectUrl: txData.redirectUrl,
-              signature: { integrity: txData.signature },
-              customerData: {
-                  email: user.email,
-                  fullName: user.user_metadata?.full_name || 'Usuario OnlyProgram', // Fallback
-                  phoneNumber: user.user_metadata?.phone || '', // Optional
-                  phoneNumberPrefix: '+57', // Optional default
-                  legalId: '', // Optional
-                  legalIdType: 'CC' // Optional
-              }
-          });
-
-          checkout.open((result: any) => {
-              const transaction = result.transaction;
-              console.log('Transaction result:', transaction);
-              if (transaction.status === 'APPROVED') {
-                   window.location.href = '/dashboard/links?payment=success';
-              }
-          });
-          
-          setLoadingPay(false);
-
-      } catch (error) {
-          console.error(error);
-          alert("Error launching payment");
-          setLoadingPay(false);
+      if (!user || !user.email) {
+        // Redirect to register
+        window.location.href = '/register';
+        return;
       }
+
+      const { data: { session } } = await import('@/services/supabase').then(m => m.supabase.auth.getSession());
+      const token = session?.access_token;
+
+      if (!token) {
+        console.error("No active session token found");
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/wompi/transaction-init`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          qty: qty,
+          hasRotator: withTelegram,
+          hasInstagram: withInstagram,
+          countRotator: withTelegram ? qty : 0,
+          countStandard: (!withTelegram && !withInstagram) ? qty : 0,
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        alert("Error: " + (err.error || "Failed to init transaction"));
+        setLoadingPay(false);
+        return;
+      }
+
+      const txData = await response.json();
+
+      // 2. Open Wompi Widget with Customer Data (Enables Saved Cards)
+      const checkout = new (window as any).WidgetCheckout({
+        currency: txData.currency,
+        amountInCents: txData.amountInCents,
+        reference: txData.reference,
+        publicKey: txData.publicKey,
+        redirectUrl: txData.redirectUrl,
+        signature: { integrity: txData.signature },
+        customerData: {
+          email: user.email,
+          fullName: user.user_metadata?.full_name || 'Usuario OnlyProgram', // Fallback
+          phoneNumber: user.user_metadata?.phone || '', // Optional
+          phoneNumberPrefix: '+57', // Optional default
+          legalId: '', // Optional
+          legalIdType: 'CC' // Optional
+        }
+      });
+
+      checkout.open((result: any) => {
+        const transaction = result.transaction;
+        console.log('Transaction result:', transaction);
+        if (transaction.status === 'APPROVED') {
+          window.location.href = '/dashboard/links?payment=success';
+        }
+      });
+
+      setLoadingPay(false);
+
+    } catch (error) {
+      console.error(error);
+      alert("Error launching payment");
+      setLoadingPay(false);
+    }
   };
 
-  const basePrice = pricingCfg.link.standard + (withTelegram ? pricingCfg.link.telegramAddon : 0);
+  const basePrice = pricingCfg.link.base
+    + (withTelegram ? pricingCfg.link.telegramAddon : 0)
+    + (withInstagram ? pricingCfg.link.instagramAddon : 0);
 
   const discount = useMemo(() => {
     if (qty >= 20) return 0.25;
@@ -163,14 +167,24 @@ export default function Pricing() {
                       <p className="text-xs uppercase tracking-[0.2em] text-silver/40 font-bold">{t('pricingPage.calculator.title')}</p>
                       <h2 className="text-xl sm:text-2xl font-bold text-white mt-2">{t('pricingPage.calculator.subtitle')}</h2>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setWithTelegram((v) => !v)}
-                      className={`px-4 py-2 rounded-xl border transition-all font-semibold text-sm ${withTelegram ? 'border-primary/60 bg-primary/10 text-white' : 'border-border bg-background-dark/40 text-silver/70 hover:text-white'}`}
-                    >
-                      <span className="material-symbols-outlined align-middle text-base mr-2">{withTelegram ? 'verified' : 'bolt'}</span>
-                      {withTelegram ? t('pricingPage.calculator.withTelegram') : t('pricingPage.calculator.noTelegram')}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setWithTelegram((v) => !v)}
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border transition-all font-semibold text-xs sm:text-sm ${withTelegram ? 'border-primary/60 bg-primary/10 text-white' : 'border-border bg-background-dark/40 text-silver/70 hover:text-white'}`}
+                      >
+                        <span className="material-symbols-outlined align-middle text-sm sm:text-base mr-1.5">{withTelegram ? 'verified' : 'bolt'}</span>
+                        Telegram (+{pricingCfg.link.telegramAddon}$)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setWithInstagram((v) => !v)}
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border transition-all font-semibold text-xs sm:text-sm ${withInstagram ? 'border-primary/60 bg-primary/10 text-white' : 'border-border bg-background-dark/40 text-silver/70 hover:text-white'}`}
+                      >
+                        <span className="material-symbols-outlined align-middle text-sm sm:text-base mr-1.5">{withInstagram ? 'camera_alt' : 'photo_camera'}</span>
+                        Instagram (+{pricingCfg.link.instagramAddon}$)
+                      </button>
+                    </div>
                   </div>
 
                   <div className="mt-8">
@@ -261,15 +275,26 @@ export default function Pricing() {
 
                 <div className="rounded-3xl border border-border bg-surface/40 p-6">
                   <p className="text-white font-bold">
-                    {withTelegram ? t('pricingPage.telegramOrb.title') : t('pricingPage.telegramOrb.titleSolo')}
+                    Add-ons Adicionales
                   </p>
                   <p className="text-sm text-silver/60 mt-2">
-                    {withTelegram ? t('pricingPage.telegramOrb.desc') : t('pricingPage.telegramOrb.descSolo')}
+                    Potencia tus links con funciones extra.
                   </p>
-                  <div className="mt-4 rounded-2xl border border-border bg-background-dark/40 p-4">
-                    <p className="text-xs text-silver/50">{t('pricingPage.telegramOrb.priceLabel')}</p>
-                    <p className="text-xl font-extrabold text-white mt-1">{formatUSD(withTelegram ? pricingCfg.domain.buy + pricingCfg.link.telegramAddon : pricingCfg.domain.buy)}</p>
-                    <p className="text-xs text-silver/55 mt-2">{t('pricingPage.telegramOrb.billing')}</p>
+                  <div className="mt-4 space-y-3">
+                    <div className="rounded-2xl border border-border bg-background-dark/40 p-4 flex justify-between items-center">
+                      <div>
+                        <p className="text-xs text-silver/50">Telegram Rotativo</p>
+                        <p className="text-xl font-extrabold text-white mt-1">{formatUSD(pricingCfg.link.telegramAddon)}</p>
+                      </div>
+                      <span className="material-symbols-outlined text-silver/20 text-3xl">send</span>
+                    </div>
+                    <div className="rounded-2xl border border-border bg-background-dark/40 p-4 flex justify-between items-center">
+                      <div>
+                        <p className="text-xs text-silver/50">Instagram</p>
+                        <p className="text-xl font-extrabold text-white mt-1">{formatUSD(pricingCfg.link.instagramAddon)}</p>
+                      </div>
+                      <span className="material-symbols-outlined text-silver/20 text-3xl">camera</span>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -50,18 +50,33 @@ export default function Payments() {
       }
     };
     load();
+  }, [isFromLinks]);
+
+  // Si aplicaron cupón en checkout, lo iniciamos acá tmbn
+  useEffect(() => {
+    if (pendingPurchase?.coupon && !appliedCoupon) {
+      // Idealmente lo cargaríamos de la db para ver el %. 
+      // Por ahora usemos el finalTotal de Checkout si no queremos cargar de nuevo, 
+      // pero la forma correcta es recuperar el %.
+    }
   }, []);
 
   // Prices
-  const baseTotal = isFromLinks
-    ? pricingCfg.link.standard * linksData.length
-    : pendingPurchase?.amount || 0;
+  const perLinkBase = pricingCfg.link.base
+    + (pendingPurchase?.hasRotator ? pricingCfg.link.telegramAddon : 0)
+    + (pendingPurchase?.hasInstagram ? pricingCfg.link.instagramAddon : 0);
+
+  const baseTotal = pendingPurchase?.baseAmount || (
+    isFromLinks
+      ? perLinkBase * linksData.length
+      : pendingPurchase?.amount || 0
+  );
 
   const discountAmount = appliedCoupon
     ? baseTotal * (appliedCoupon.discount_percent / 100)
     : 0;
 
-  const finalTotal = baseTotal - discountAmount;
+  const finalTotal = appliedCoupon ? baseTotal - discountAmount : (pendingPurchase?.amount || baseTotal);
 
   // Coupon validation
   const handleApplyCoupon = async () => {
@@ -179,12 +194,13 @@ export default function Payments() {
                         <p className="font-bold text-white text-sm truncate">
                           {link.name || `Link ${i + 1}`}
                         </p>
-                        <p className="text-xs text-silver/40 truncate">
-                          {link.buttons?.length || 0} botón{link.buttons?.length !== 1 ? "es" : ""}
+                        <p className="text-[11px] text-silver/40 truncate flex gap-2">
+                          {pendingPurchase?.hasRotator && <span>+ Telegram</span>}
+                          {pendingPurchase?.hasInstagram && <span>+ Instagram</span>}
                         </p>
                       </div>
                       <span className="text-sm font-mono text-white shrink-0">
-                        {fmt(pricingCfg.link.standard)}
+                        {fmt(perLinkBase)}
                       </span>
                     </div>
                   ))}

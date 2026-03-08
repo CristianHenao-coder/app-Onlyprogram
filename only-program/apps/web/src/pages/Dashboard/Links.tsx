@@ -324,12 +324,7 @@ export default function Links() {
       mounted = false;
     };
   }, []);
-  const LINK_PRICE_STANDARD = pricingCfg.link.standard;
-  const LINK_PRICE_ROTATOR = pricingCfg.link.rotator;
-  const ROTATOR_SURCHARGE = Math.max(
-    0,
-    LINK_PRICE_ROTATOR - LINK_PRICE_STANDARD,
-  );
+  const ROTATOR_SURCHARGE = pricingCfg.link.telegramAddon;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
