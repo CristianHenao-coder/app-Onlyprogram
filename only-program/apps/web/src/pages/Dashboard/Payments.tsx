@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { paymentsService, Payment } from "../../services/payments.service";
+import { paymentsService } from "../../services/payments.service";
 import { productPricingService, DEFAULT_PRODUCT_PRICING, type ProductPricingConfig } from "@/services/productPricing.service";
 import { supabase } from "../../services/supabase";
 import PaymentSelector from "@/components/PaymentSelector";
@@ -14,7 +14,6 @@ interface CouponResult {
 export default function Payments() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [pricingCfg, setPricingCfg] = useState<ProductPricingConfig>(DEFAULT_PRODUCT_PRICING);
   const [currentStep, setCurrentStep] = useState<"cart" | "payment" | "success">("cart");
@@ -32,11 +31,10 @@ export default function Payments() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [data, pricing] = await Promise.all([
+        const [_, pricing] = await Promise.all([
           paymentsService.getHistory(),
           productPricingService.get(),
         ]);
-        setPayments(data.payments || []);
         setPricingCfg(pricing);
 
         // If coming from links editor, show cart step first
@@ -103,7 +101,7 @@ export default function Payments() {
     setCouponError("");
   };
 
-  const handlePaymentSuccess = async (data?: any) => {
+  const handlePaymentSuccess = async () => {
     const toastId = toast.loading("Finalizando tu configuración...");
     try {
       localStorage.removeItem("my_links_data");

@@ -50,10 +50,9 @@ const NavLinkWrapper = ({
     className={({ isActive }) => `
       flex items-center gap-3 rounded-xl transition-all duration-300 group
       ${isCollapsed ? "p-3 justify-center" : "px-4 py-3"}
-      ${
-        isActive
-          ? "bg-primary/10 text-primary border border-primary/20 shadow-lg shadow-primary/5"
-          : "text-silver/40 hover:text-white hover:bg-white/5 border border-transparent"
+      ${isActive
+        ? "bg-primary/10 text-primary border border-primary/20 shadow-lg shadow-primary/5"
+        : "text-silver/40 hover:text-white hover:bg-white/5 border border-transparent"
       }
     `}
   >
@@ -154,33 +153,21 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
           isCollapsed={isCollapsed}
         />
         <NavItem
-          to="/admin/links"
-          icon="link"
-          label={t("admin.menu.links")}
-          isCollapsed={isCollapsed}
-        />
-        <NavItem
           to="/admin/coupons"
           icon="confirmation_number"
           label={t("admin.menu.coupons")}
           isCollapsed={isCollapsed}
         />
         <NavItem
-          to="/admin/audit-logs"
-          icon="history"
-          label={t("admin.menu.auditLogs")}
-          isCollapsed={isCollapsed}
-        />
-        <NavItem
-          to="/admin/moderation"
-          icon="verified_user"
-          label={t("admin.menu.moderation")}
-          isCollapsed={isCollapsed}
-        />
-        <NavItem
           to="/admin/domains"
-          icon="dns"
-          label={t("admin.menu.domains")}
+          icon="admin_panel_settings"
+          label="Gestión Dominios"
+          isCollapsed={isCollapsed}
+        />
+        <NavItem
+          to="/admin/settings"
+          icon="settings"
+          label={t("admin.menu.settings")}
           isCollapsed={isCollapsed}
         />
       </nav>

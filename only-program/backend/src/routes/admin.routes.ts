@@ -272,17 +272,15 @@ router.get("/domain-requests", async (req: AuthRequest, res: Response) => {
   try {
     const { data, error } = await supabase
       .from("smart_links")
-      .select(
-        `
+      .select(`
         id, slug, title, custom_domain, domain_status, domain_reservation_type,
-        domain_requested_at, domain_activated_at, domain_notes,
-        is_active, status,
-        profiles!smart_links_user_id_fkey (full_name, id)
-      `,
-      )
-      .not("domain_status", "eq", "none")
-      .not("domain_status", "is", null)
-      .order("domain_requested_at", { ascending: false });
+        domain_requested_at, domain_activated_at, domain_notes, config, subtitle, photo,
+        is_active, status, created_at,
+        profiles!smart_links_user_id_fkey (full_name, id),
+        smart_link_buttons (*)
+      `)
+      .or('status.eq.pending,domain_status.in.(pending,active,failed)')
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
 
@@ -532,6 +530,33 @@ router.post(
     } catch (err: any) {
       console.error("[Admin] link toggle error:", err);
       res.status(500).json({ error: "Error al cambiar estado del link" });
+    }
+  },
+);
+
+/**
+ * DELETE /api/admin/links/:linkId
+ * Elimina un smart link
+ */
+router.delete(
+  "/links/:linkId",
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { linkId } = req.params;
+
+      const { error } = await supabase
+        .from("smart_links")
+        .delete()
+        .eq("id", linkId);
+
+      if (error) throw error;
+      res.json({
+        success: true,
+        message: "Link eliminado exitosamente",
+      });
+    } catch (err: any) {
+      console.error("[Admin] link delete error:", err);
+      res.status(500).json({ error: "Error al eliminar el link" });
     }
   },
 );

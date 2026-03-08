@@ -1235,17 +1235,17 @@ export default function Links() {
                           </div>
 
                           {/* Domain row */}
-                          {page.status === 'active' && page.custom_domain ? (
+                          {page.status === 'active' && page.customDomain ? (
                             <div className="mt-1.5 flex justify-center">
                               <a
-                                href={`https://${page.custom_domain}`}
+                                href={`https://${page.customDomain}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 onClick={(e) => e.stopPropagation()}
                                 className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-[9px] font-bold text-green-400 hover:bg-green-500/20 transition-all group"
                               >
                                 <span className="material-symbols-outlined text-[10px]">language</span>
-                                {page.custom_domain}
+                                {page.customDomain}
                                 <span className="material-symbols-outlined text-[9px] opacity-0 group-hover:opacity-100 transition-opacity">open_in_new</span>
                               </a>
                             </div>
