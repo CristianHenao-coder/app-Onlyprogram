@@ -159,6 +159,12 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
           isCollapsed={isCollapsed}
         />
         <NavItem
+          to="/admin/inbox"
+          icon="inbox"
+          label="Buzón"
+          isCollapsed={isCollapsed}
+        />
+        <NavItem
           to="/admin/domains"
           icon="admin_panel_settings"
           label="Gestión Dominios"

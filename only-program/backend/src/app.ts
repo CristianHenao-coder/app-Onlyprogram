@@ -17,6 +17,7 @@ import challengeRoutes from "./routes/challenge.routes";
 import domainsRoutes from "./routes/domains.routes";
 
 import linkProfilesRoutes from "./routes/linkProfiles.routes";
+import contactRoutes from "./routes/contact.routes";
 import { startBillingCron } from "./cron/billing.cron";
 
 const app = express();
@@ -77,6 +78,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/config", configRoutes);
 app.use("/api/wompi", wompiRoutes);
 app.use("/api/link-profiles", linkProfilesRoutes);
+app.use("/api/contact", contactRoutes); // Formulario de contacto público
 
 // Ruta 404
 app.use((req: Request, res: Response) => {

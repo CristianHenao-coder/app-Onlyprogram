@@ -167,13 +167,37 @@ router.delete("/users/:userId", async (req: AuthRequest, res: Response) => {
 
 /**
  * GET /api/admin/users
- * Obtiene lista de usuarios (solo admin)
+ * Obtiene lista de usuarios con email (service role bypasses RLS en auth.users)
  */
 router.get("/users", async (req: AuthRequest, res) => {
-  res.json({
-    message: "Endpoint de administración",
-    admin: req.user,
-  });
+  try {
+    // 1. Traer perfiles con sus smart_links
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("*, smart_links!smart_links_user_id_fkey(*, smart_link_buttons(*))")
+      .order("created_at", { ascending: false });
+
+    if (profilesError) throw profilesError;
+
+    // 2. Enriquecer con emails desde auth.users
+    const enriched = await Promise.all(
+      (profiles || []).map(async (profile: any) => {
+        let email: string | null = null;
+        try {
+          const { data: authUser } = await supabase.auth.admin.getUserById(profile.id);
+          email = authUser?.user?.email || null;
+        } catch {
+          // ignore
+        }
+        return { ...profile, email };
+      })
+    );
+
+    res.json({ success: true, data: enriched });
+  } catch (err: any) {
+    console.error("[Admin] users error:", err);
+    res.status(500).json({ error: "Error al obtener usuarios" });
+  }
 });
 
 /**
@@ -356,8 +380,11 @@ router.post(
 
       // Use dns module to do lookup
       const dns = await import("dns/promises");
+      // Force fresh DNS lookup bypassing local cache by using Google's resolver
+      const resolver = new dns.Resolver();
+      resolver.setServers(['8.8.8.8', '1.1.1.1']);
       try {
-        const addresses = await dns.resolve4(domain);
+        const addresses = await resolver.resolve4(domain);
         const hasCorrectIp = addresses.includes(expectedIp);
         res.json({
           success: true,
@@ -366,15 +393,18 @@ router.post(
           expectedIp,
           configured: hasCorrectIp,
           message: hasCorrectIp
-            ? `✅ DNS correcto. ${domain} apunta a ${expectedIp}`
-            : `❌ DNS incorrecto. ${domain} apunta a ${addresses.join(", ")}, se esperaba ${expectedIp}`,
+            ? `✅ DNS correcto. ${domain} apunta correctamente a ${expectedIp}. ¡Puedes activar el servicio!`
+            : `❌ Corrige tu DNS. El dominio ${domain} está apuntando a ${addresses.join(", ")} pero debe apuntar a ${expectedIp}. Verifica tu registro A en el panel de tu proveedor de dominio.`,
         });
       } catch (dnsErr: any) {
+        const isNotFound = dnsErr.code === 'ENOTFOUND' || dnsErr.code === 'ENODATA' || dnsErr.code === 'NXDOMAIN';
         res.json({
           success: false,
           domain,
           configured: false,
-          message: `❌ No se pudo resolver ${domain}: ${dnsErr.code || dnsErr.message}`,
+          message: isNotFound
+            ? `⚠️ El dominio ${domain} aún no apunta a ningún servidor. Si acabas de configurar tu DNS, puede tardar entre 15 minutos y 48 horas en propagarse. Asegúrate de haber creado un registro A con valor ${expectedIp}.`
+            : `❌ No se pudo verificar ${domain}. Error: ${dnsErr.code || dnsErr.message}. Intenta de nuevo en unos minutos.`,
         });
       }
     } catch (err: any) {
@@ -399,6 +429,8 @@ router.post(
         domain_status: "active",
         domain_activated_at: new Date().toISOString(),
         domain_notes: null,
+        is_active: true,   // ← también activar el link
+        status: "active",  // ← marcar como activo en moderación
       };
 
       if (custom_domain) {
@@ -570,4 +602,47 @@ router.delete(
   },
 );
 
+
+/**
+ * GET /api/admin/contact-messages
+ * Lista todos los mensajes del formulario de contacto, ordenados por fecha
+ */
+router.get("/contact-messages", async (req: AuthRequest, res: Response) => {
+  try {
+    const { data, error } = await supabase
+      .from("contact_messages")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    res.json({ success: true, data });
+  } catch (err: any) {
+    console.error("[Admin] contact-messages GET error:", err);
+    res.status(500).json({ error: "Error al obtener los mensajes." });
+  }
+});
+
+/**
+ * PATCH /api/admin/contact-messages/:id
+ * Actualiza el estado 'contacted' de un mensaje
+ */
+router.patch("/contact-messages/:id", async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { contacted } = req.body;
+
+    const { error } = await supabase
+      .from("contact_messages")
+      .update({ contacted: !!contacted, updated_at: new Date().toISOString() })
+      .eq("id", id);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (err: any) {
+    console.error("[Admin] contact-messages PATCH error:", err);
+    res.status(500).json({ error: "Error al actualizar el mensaje." });
+  }
+});
+
 export default router;
+

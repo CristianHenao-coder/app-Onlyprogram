@@ -343,36 +343,58 @@ const DomainRequests = () => {
                     </div>
 
                     {/* Domain Info (If applicable) */}
-                    {hasDomainRequest && (
-                      <div className="pt-3 border-t border-white/5">
-                        <span className="text-[10px] text-silver/40 uppercase tracking-widest block mb-1">{t('admin.domains.domain')} Solicitado</span>
-                        <div className="flex gap-2 items-center">
-                          <input
-                            type="text"
-                            value={editDomains[req.id] ?? (req.custom_domain || '')}
-                            onChange={(e) => setEditDomains(p => ({ ...p, [req.id]: e.target.value }))}
-                            placeholder="micliente.com"
-                            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-3 py-2 font-mono text-sm text-primary placeholder:text-silver/20 focus:outline-none focus:border-primary/50 transition-all"
-                          />
-                          {(editDomains[req.id] ?? req.custom_domain) && (
-                            <a
-                              href={`https://${editDomains[req.id] ?? req.custom_domain}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-silver/40 hover:text-primary transition-colors"
-                              title="Ver landing"
-                            >
-                              <span className="material-symbols-outlined text-base">open_in_new</span>
-                            </a>
+                    {hasDomainRequest && (() => {
+                      const currentDomainValue = (editDomains[req.id] ?? (req.custom_domain || '')).trim().toLowerCase();
+                      const isDuplicate = currentDomainValue.length > 0 && requests.some(
+                        other => other.id !== req.id &&
+                          (other.custom_domain?.trim().toLowerCase() === currentDomainValue ||
+                            (editDomains[other.id]?.trim().toLowerCase() === currentDomainValue))
+                      );
+                      return (
+                        <div className="pt-3 border-t border-white/5">
+                          <span className="text-[10px] text-silver/40 uppercase tracking-widest block mb-1">{t('admin.domains.domain')} Solicitado</span>
+                          <div className="flex gap-2 items-center">
+                            <input
+                              type="text"
+                              value={editDomains[req.id] ?? (req.custom_domain || '')}
+                              onChange={(e) => setEditDomains(p => ({ ...p, [req.id]: e.target.value }))}
+                              placeholder="micliente.com"
+                              className={`flex-1 bg-white/5 border rounded-xl px-3 py-2 font-mono text-sm placeholder:text-silver/20 focus:outline-none transition-all ${isDuplicate
+                                  ? 'border-yellow-500/60 text-yellow-300 focus:border-yellow-400'
+                                  : 'border-white/10 text-primary focus:border-primary/50'
+                                }`}
+                            />
+                            {(editDomains[req.id] ?? req.custom_domain) && (
+                              <a
+                                href={`https://${editDomains[req.id] ?? req.custom_domain}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-silver/40 hover:text-primary transition-colors"
+                                title="Ver landing"
+                              >
+                                <span className="material-symbols-outlined text-base">open_in_new</span>
+                              </a>
+                            )}
+                          </div>
+
+                          {/* ⚠️ Advertencia de dominio duplicado */}
+                          {isDuplicate && (
+                            <div className="flex items-center gap-2 mt-2 bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-3 py-2">
+                              <span className="material-symbols-outlined text-yellow-400 text-base shrink-0">warning</span>
+                              <p className="text-xs text-yellow-400 font-bold">
+                                ⚠️ Este dominio ya está siendo utilizado en otro link. Verifica antes de activar.
+                              </p>
+                            </div>
+                          )}
+
+                          {req.domain_notes && (
+                            <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 mt-3">
+                              <p className="text-xs text-red-400">{req.domain_notes}</p>
+                            </div>
                           )}
                         </div>
-                        {req.domain_notes && (
-                          <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 mt-3">
-                            <p className="text-xs text-red-400">{req.domain_notes}</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                      );
+                    })()}
                   </div>
 
                   {/* DNS test result */}

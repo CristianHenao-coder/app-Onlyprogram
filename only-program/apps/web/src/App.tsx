@@ -54,6 +54,7 @@ import UserManager from '@/pages/Admin/UserManager';
 import CouponManager from '@/pages/Admin/CouponManager';
 import AdminSettings from '@/pages/Admin/Settings';
 import DomainRequests from '@/pages/Admin/DomainRequests';
+import Inbox from '@/pages/Admin/Inbox';
 
 import '@/styles/index.css';
 
@@ -137,6 +138,7 @@ function App() {
                   <Route path="coupons" element={<CouponManager />} />
                   <Route path="settings" element={<AdminSettings />} />
                   <Route path="domains" element={<DomainRequests />} />
+                  <Route path="inbox" element={<Inbox />} />
                 </Route>
               </Route>
             </Routes>

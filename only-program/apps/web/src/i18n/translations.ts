@@ -912,10 +912,11 @@ export const translations = {
       skip: "Saltar tour",
     },
     footer: {
-      contactTitle: "¿Tienes preguntas?",
-      contactSubtitle: "Escríbenos directamente o usa el formulario.",
+      contactTitle: "Contáctanos",
+      contactSubtitle: "Déjanos tu mensaje y nosotros nos contactaremos contigo.",
       labelName: "Nombre",
       labelEmail: "Email",
+      labelPhone: "Celular",
       labelMessage: "Mensaje",
       btnSend: "Enviar mensaje",
       success: "¡Mensaje enviado con éxito!",
