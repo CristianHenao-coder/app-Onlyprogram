@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -21,7 +21,7 @@ export default function Home({
 }) {
 
   const { t } = useTranslation();
-  const {  } = useAuth();
+  const { } = useAuth();
 
   // ✅ Velada-like reveal: aparece en foco y se atenúa si sale (sin borrar nada, solo agrega)
   useEffect(() => {
@@ -326,36 +326,71 @@ export default function Home({
 
 function FloatingScrollButton() {
   const [isVisible, setIsVisible] = useState(false);
-
+  const clickTimeoutRef = useRef<any>(null);
   useEffect(() => {
     const handleScroll = () => {
-      // Show button when scrolled down more than 400px
-      if (window.scrollY > 400) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
+      const currentScroll = window.scrollY || window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      setIsVisible(currentScroll > 400);
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    // Also listen to body and root in case the overflow container is different
+    document.body.addEventListener('scroll', handleScroll, { passive: true });
+
+    handleScroll(); // Check on mount
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      document.body.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.body.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const scrollToBottom = () => {
+    const bottom = document.documentElement.scrollHeight || document.body.scrollHeight;
+    window.scrollTo({ top: bottom, behavior: 'smooth' });
+    document.body.scrollTo({ top: bottom, behavior: 'smooth' });
   };
 
   const scrollToNextSection = () => {
     const sections = document.querySelectorAll('section');
-    const scrollPosition = window.scrollY + window.innerHeight / 3;
+    let found = false;
 
     for (const section of sections) {
-      if (section.offsetTop > scrollPosition) {
-        section.scrollIntoView({ behavior: 'smooth' });
-        return;
+      const rect = section.getBoundingClientRect();
+      // Find the first section whose top is below the viewport's top margin
+      // Meaning it hasn't been scrolled past yet
+      if (rect.top > window.innerHeight * 0.15) {
+        // Scroll relative to current viewport position
+        window.scrollBy({ top: rect.top - 20, behavior: 'smooth' });
+        document.body.scrollBy({ top: rect.top - 20, behavior: 'smooth' });
+        found = true;
+        break;
       }
     }
-    scrollToTop();
+
+    if (!found) {
+      // If no next section, just scroll down a viewport amount
+      const scrollAmount = window.innerHeight * 0.8;
+      window.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+      document.body.scrollBy({ top: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const handleDownClick = (e: React.MouseEvent) => {
+    if (e.detail === 1) {
+      clickTimeoutRef.current = setTimeout(() => {
+        scrollToNextSection();
+      }, 250);
+    } else if (e.detail === 2) {
+      if (clickTimeoutRef.current) {
+        clearTimeout(clickTimeoutRef.current);
+      }
+      scrollToBottom();
+    }
   };
 
   return (
@@ -363,19 +398,20 @@ function FloatingScrollButton() {
       {/* Scroll to Top */}
       <button
         onClick={scrollToTop}
-        className={`scroll-to-top bg-white/10 hover:bg-white/20 text-white p-4 rounded-full shadow-2xl backdrop-blur-md border border-white/20 transition-all hover:scale-110 active:scale-95 ${
-          isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none translate-y-4'
-        }`}
-        aria-label="Scroll to Top"
+        className={`scroll-to-top bg-white/10 hover:bg-white/20 text-white p-4 rounded-full shadow-2xl backdrop-blur-md border border-white/20 transition-all hover:scale-110 active:scale-95 flex items-center justify-center ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none translate-y-4'
+          }`}
+        aria-label="Volver arriba"
+        title="Volver arriba"
       >
         <span className="material-symbols-outlined text-2xl">arrow_upward</span>
       </button>
 
       {/* Next Section Button */}
       <button
-        onClick={scrollToNextSection}
-        className="bg-primary hover:bg-primary-dark text-white p-4 rounded-full shadow-2xl shadow-primary/40 transition-all hover:scale-110 active:scale-95 animate-bounce"
-        aria-label="Next Section"
+        onClick={handleDownClick}
+        className="bg-primary hover:bg-primary-dark text-white p-4 rounded-full shadow-[0_0_20px_rgba(29,161,242,0.5)] flex items-center justify-center transition-all hover:scale-110 active:scale-95 animate-bounce"
+        aria-label="Bajar"
+        title="1 clic: bajar | 2 clics: ir al fondo"
       >
         <span className="material-symbols-outlined text-2xl">arrow_downward</span>
       </button>
