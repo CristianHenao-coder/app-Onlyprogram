@@ -14,7 +14,7 @@ interface CouponResult {
 export default function Payments() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [_, setPayments] = useState<Payment[]>([]);
+  const [_payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [pricingCfg, setPricingCfg] = useState<ProductPricingConfig>(DEFAULT_PRODUCT_PRICING);
   const [currentStep, setCurrentStep] = useState<"cart" | "payment" | "success">("cart");
