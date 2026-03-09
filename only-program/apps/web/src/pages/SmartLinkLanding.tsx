@@ -94,9 +94,8 @@ const LegacySafetyGate = () => {
 
 // 3. INSTAGRAM VIP BYPASS (Basado en igBypass.ejs)
 const InstagramVIPBypass = ({ slug }: { slug: string }) => {
-  const { t } = useTranslation();
   const [targetUrl, setTargetUrl] = useState<string | null>(null);
-  const [status, setStatus] = useState<"verifying" | "escaping">("verifying");
+  const [status, setStatus] = useState<"verifying" | "ready" | "escaping">("verifying");
 
   useEffect(() => {
     const init = async () => {
@@ -114,75 +113,85 @@ const InstagramVIPBypass = ({ slug }: { slug: string }) => {
 
         if (resolved) {
           setTargetUrl(resolved);
-          setTimeout(() => setStatus("escaping"), 1500);
+          // Marketing CL delay exacto: 1.5s antes de mostrar el botón
+          setTimeout(() => setStatus("ready"), 1500);
         }
       } catch (e) {
         console.error("IG Bypass Error:", e);
+        setStatus("ready"); // MCLC fail-safe
       }
     };
     init();
   }, [slug]);
 
-  useEffect(() => {
-    if (status === "escaping" && targetUrl) {
-      const ua = navigator.userAgent.toLowerCase();
-      const isIOS = /iphone|ipad|ipod/i.test(ua);
-      const isAndroid = /android/i.test(ua);
+  const doEscape = () => {
+    if (!targetUrl) return;
+    setStatus("escaping");
 
-      const doAutoEscape = () => {
-        if (isAndroid) {
-          // Android: Try intent URI first via location.replace to avoid history stack issues
-          const intentUri = `intent://${targetUrl.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end`;
-          window.location.replace(intentUri);
+    const ua = navigator.userAgent.toLowerCase();
+    const isIOS = /iphone|ipad|ipod/i.test(ua);
+    const isAndroid = /android/i.test(ua);
 
-          // Fallback if Chrome is not present
-          setTimeout(() => {
-            window.location.replace(`intent://${targetUrl.replace(/^https?:\/\//, "")}#Intent;scheme=https;end`);
-          }, 500);
-        } else if (isIOS) {
-          // iOS: Use a hidden iframe approach to bypass Safari's strict user gesture requirement for window.location changes
-          const schemeUrl = targetUrl.replace(/^https?:\/\//, "googlechromes://");
-          const iframe = document.createElement("iframe");
-          iframe.style.display = "none";
-          iframe.src = schemeUrl;
-          document.body.appendChild(iframe);
+    if (isAndroid) {
+      // Android: Intent a Chrome (El método más estable en 2025)
+      const intentUri = `intent://${targetUrl.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end`;
+      window.location.href = intentUri;
 
-          // Fallback to x-safari-https if Chrome fails
-          setTimeout(() => {
-            const fallbackIframe = document.createElement("iframe");
-            fallbackIframe.style.display = "none";
-            fallbackIframe.src = targetUrl.replace(/^https?:\/\//, "x-safari-https://");
-            document.body.appendChild(fallbackIframe);
-          }, 800);
-        } else {
-          // Desktop or other
-          window.location.replace(targetUrl);
-        }
-      };
+      // Fallback: Si no tiene Chrome, intentamos con el navegador por defecto (esquema https)
+      setTimeout(() => {
+        window.location.href = `intent://${targetUrl.replace(/^https?:\/\//, "")}#Intent;scheme=https;end`;
+      }, 1500);
+    } else if (isIOS) {
+      // iOS: Un solo protocolo a la vez para evitar el "bucle" de avisos en iPhone
+      // Intentamos Chrome primero (googlechromes://)
+      const chromeUrl = targetUrl.replace(/^https?:\/\//, "googlechromes://");
+      window.location.href = chromeUrl;
 
-      doAutoEscape();
+      // Fallback para Safari (esperamos 1.5s para que el sistema reaccione)
+      setTimeout(() => {
+        window.location.href = targetUrl.replace(/^https?:\/\//, "x-safari-https://");
+      }, 1500);
+    } else {
+      // Desktop o casos raros: Redirect normal
+      window.location.href = targetUrl;
     }
-  }, [status, targetUrl]);
+  };
 
   return (
-    <div className="fixed inset-0 z-[10002] flex flex-col items-center justify-center p-6 text-center text-white"
+    <div className="fixed inset-0 z-[10002] flex flex-col items-center justify-center p-6 text-center text-white font-['Poppins',sans-serif]"
       style={{ background: "radial-gradient(circle at top, #2a001a, #0a0a0a, #000)" }}>
 
-      {/* Loader */}
-      <div className="relative w-24 h-24 mb-10">
-        <div className="absolute inset-0 rounded-full border-4 border-pink-500/10 border-t-pink-500 animate-spin"></div>
-        <div className="absolute inset-0 flex items-center justify-center font-black text-[10px] tracking-[0.2em] text-pink-500 drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]">
-          VIP
-        </div>
-      </div>
+      {/* Contenedor adaptado de MCLC */}
+      <div className="relative w-full max-w-[400px] flex flex-col items-center gap-[30px] z-10 px-5 py-10">
 
-      <div className="space-y-2 mb-10">
-        <h1 className="text-2xl font-black uppercase tracking-widest bg-gradient-to-r from-white to-pink-500 bg-clip-text text-transparent">
-          {t("landing.vipAccess")}
-        </h1>
-        <p className="text-white/40 text-sm font-medium">
-          {status === "verifying" ? t("landing.verifyingSecure") : t("landing.escapingInstagram")}
-        </p>
+        {/* Spinner Elegante MCLC */}
+        <div className="relative w-[80px] h-[80px]">
+          <div className="absolute inset-0 rounded-full border-[3px] border-pink-500/10 border-t-[#ff3888] animate-[spin_1s_cubic-bezier(0.68,-0.55,0.27,1.55)_infinite]"></div>
+          <div className="absolute inset-0 flex items-center justify-center text-[0.7rem] font-bold tracking-[2px] text-[#ff3888]" style={{ textShadow: "0 0 10px rgba(255, 56, 136, 0.5)" }}>
+            VIP
+          </div>
+        </div>
+
+        <div className="mb-2">
+          <h1 className="text-[1.5rem] font-bold mb-[10px] tracking-[1px] bg-gradient-to-r from-white to-[#ff3888] bg-clip-text text-transparent">
+            Acceso VIP
+          </h1>
+          <p className="text-[0.95rem] text-white/60 leading-[1.5]">
+            {status === "verifying" ? "Verificando conexión segura..." :
+              status === "escaping" ? "Conectando fuera de Instagram..." :
+                "Conexión segura lista."}
+          </p>
+        </div>
+
+        {/* Botón Fallback Premium MCLC */}
+        {status === "ready" && targetUrl && (
+          <button
+            onClick={doEscape}
+            className="px-[40px] py-[16px] rounded-[12px] bg-gradient-to-br from-[#ff3888] to-[#c0206a] text-white text-[0.9rem] font-bold uppercase tracking-[1.5px] cursor-pointer shadow-[0_10px_30px_rgba(255,56,136,0.3)] animate-in fade-in slide-in-from-bottom-5 duration-500 border-none hover:scale-105 active:scale-95 transition-all w-max"
+          >
+            Entrar a mi Perfil ↗
+          </button>
+        )}
       </div>
 
     </div>
