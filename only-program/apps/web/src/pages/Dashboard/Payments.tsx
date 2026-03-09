@@ -14,6 +14,7 @@ interface CouponResult {
 export default function Payments() {
   const location = useLocation();
   const navigate = useNavigate();
+
   const [loading, setLoading] = useState(true);
   const [pricingCfg, setPricingCfg] = useState<ProductPricingConfig>(DEFAULT_PRODUCT_PRICING);
   const [currentStep, setCurrentStep] = useState<"cart" | "payment" | "success">("cart");
@@ -51,7 +52,6 @@ export default function Payments() {
     };
     load();
   }, [isFromLinks]);
-
   // Si aplicaron cupón en checkout, lo iniciamos acá tmbn
   useEffect(() => {
     if (pendingPurchase?.coupon && !appliedCoupon) {
@@ -116,7 +116,7 @@ export default function Payments() {
     setCouponError("");
   };
 
-  const handlePaymentSuccess = async () => {
+  const handlePaymentSuccess = async (_data?: any) => {
     const toastId = toast.loading("Finalizando tu configuración...");
     try {
       localStorage.removeItem("my_links_data");

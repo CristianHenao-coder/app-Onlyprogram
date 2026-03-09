@@ -19,6 +19,9 @@ interface SmartLink {
   subtitle: string;
   photo: string;
   is_active: boolean;
+  telegram_max_capacity: number;
+  telegram_rotation_limit: number;
+  current_bot_index: number;
   telegram_bots: TelegramBot[];
 }
 
@@ -31,6 +34,8 @@ export default function Telegram() {
   const [editUrl, setEditUrl] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [botToDelete, setBotToDelete] = useState<TelegramBot | null>(null);
+  const [savingCapacity, setSavingCapacity] = useState(false);
+  const [capacityForm, setCapacityForm] = useState({ max: 2000, limit: 1 });
 
   // Fetch links with Telegram Rotativo
   useEffect(() => {
@@ -41,10 +46,10 @@ export default function Telegram() {
 
   const fetchLinksWithRotator = async () => {
     if (!user) return;
-    
+
     try {
       setLoading(true);
-      
+
       // Fetch smart_links that belong to current user, are active, and have telegram_bots
       const { data: linksData, error: linksError } = await supabase
         .from('smart_links')
@@ -55,6 +60,9 @@ export default function Telegram() {
           subtitle,
           photo,
           is_active,
+          telegram_max_capacity,
+          telegram_rotation_limit,
+          current_bot_index,
           telegram_bots (
             id,
             smart_link_id,
@@ -75,7 +83,7 @@ export default function Telegram() {
         (link: any) => link.telegram_bots && link.telegram_bots.length > 0
       );
 
-      setLinks(filteredLinks);
+      setLinks(filteredLinks as SmartLink[]);
     } catch (error: any) {
       console.error('Error fetching links:', error);
       toast.error('Error al cargar los links con Telegram');
@@ -134,9 +142,33 @@ export default function Telegram() {
     }
   };
 
+  const handleSaveCapacity = async () => {
+    if (!selectedLink) return;
+    setSavingCapacity(true);
+    try {
+      const { error } = await supabase
+        .from('smart_links')
+        .update({
+          telegram_max_capacity: capacityForm.max,
+          telegram_rotation_limit: capacityForm.limit,
+        })
+        .eq('id', selectedLink.id);
+
+      if (error) throw error;
+
+      toast.success('Configuración guardada');
+      fetchLinksWithRotator();
+    } catch (err: any) {
+      toast.error('Error al guardar: ' + err.message);
+    } finally {
+      setSavingCapacity(false);
+    }
+  };
+
   const getTotalClicks = (bots: TelegramBot[]) => {
     return bots.reduce((sum, bot) => sum + (bot.clicks_current || 0), 0);
   };
+
 
   if (loading) {
     return (
@@ -183,7 +215,13 @@ export default function Telegram() {
             <div
               key={link.id}
               className="bg-surface border border-border rounded-2xl overflow-hidden hover:border-primary/30 transition-all cursor-pointer group"
-              onClick={() => setSelectedLink(link)}
+              onClick={() => {
+                setSelectedLink(link);
+                setCapacityForm({
+                  max: (link as any).telegram_max_capacity || 2000,
+                  limit: (link as any).telegram_rotation_limit || 1,
+                });
+              }}
             >
               <div className="p-6">
                 <div className="flex items-start gap-4 mb-4">
@@ -275,10 +313,13 @@ export default function Telegram() {
                   >
                     <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 font-bold text-sm shrink-0">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${index === selectedLink.current_bot_index
+                          ? 'bg-primary/20 text-primary'
+                          : 'bg-blue-500/20 text-blue-400'
+                          }`}>
                           {index + 1}
                         </div>
-                        
+
                         {editingBot?.id === bot.id ? (
                           <input
                             type="text"
@@ -291,10 +332,27 @@ export default function Telegram() {
                         ) : (
                           <div className="flex-1 min-w-0">
                             <p className="text-white text-sm font-mono truncate">{bot.url}</p>
-                            <p className="text-silver/40 text-xs mt-1">
-                              Clics: <span className="text-green-400 font-bold">{bot.clicks_current || 0}</span>
-                              {!bot.is_active && <span className="text-red-400 ml-2">• Inactivo</span>}
-                            </p>
+                            {/* Barra de capacidad */}
+                            {(() => {
+                              const max = selectedLink.telegram_max_capacity || 2000;
+                              const pct = Math.min(100, Math.round((bot.clicks_current || 0) / max * 100));
+                              return (
+                                <div className="mt-1.5">
+                                  <div className="flex justify-between text-[9px] mb-0.5">
+                                    <span className="text-silver/40">{bot.clicks_current || 0} / {max} clicks</span>
+                                    <span className={pct >= 90 ? 'text-red-400' : pct >= 60 ? 'text-yellow-400' : 'text-green-400'}>{pct}%</span>
+                                  </div>
+                                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                                    <div
+                                      className={`h-full rounded-full transition-all ${pct >= 90 ? 'bg-red-500' : pct >= 60 ? 'bg-yellow-500' : 'bg-green-500'
+                                        }`}
+                                      style={{ width: `${pct}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                            {!bot.is_active && <span className="text-red-400 text-[9px] mt-1 block">• Inactivo</span>}
                           </div>
                         )}
                       </div>
@@ -345,6 +403,46 @@ export default function Telegram() {
                     </div>
                   </div>
                 ))}
+              </div>
+
+              {/* Capacity Configuration */}
+              <div className="mt-6 p-4 bg-purple-500/5 border border-purple-500/20 rounded-xl">
+                <h4 className="text-white font-bold text-sm mb-4 flex items-center gap-2">
+                  <span className="material-symbols-outlined text-purple-400 text-sm">settings</span>
+                  Configuración de Rotación
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-black text-silver/40 uppercase mb-1.5">Capacidad máx. por bot</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={capacityForm.max}
+                      onChange={e => setCapacityForm(p => ({ ...p, max: Number(e.target.value) }))}
+                      className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500/50"
+                    />
+                    <p className="text-[9px] text-silver/30 mt-1">Clicks antes de marcar bot como lleno</p>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-silver/40 uppercase mb-1.5">Límite de batch (clicks)</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={capacityForm.limit}
+                      onChange={e => setCapacityForm(p => ({ ...p, limit: Number(e.target.value) }))}
+                      className="w-full bg-black/40 border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500/50"
+                    />
+                    <p className="text-[9px] text-silver/30 mt-1">Rota al siguiente cada N clicks (1 = round robin puro)</p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleSaveCapacity}
+                  disabled={savingCapacity}
+                  className="mt-4 w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-black text-xs rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {savingCapacity && <span className="animate-spin material-symbols-outlined text-sm">progress_activity</span>}
+                  {savingCapacity ? 'Guardando...' : 'Guardar configuración'}
+                </button>
               </div>
 
               {/* Statistics Summary */}

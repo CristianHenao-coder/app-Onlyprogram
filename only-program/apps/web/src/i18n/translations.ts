@@ -682,12 +682,10 @@ export const translations = {
       },
       domains: {
         title: "Solicitudes de Dominio",
-        subtitle:
-          "Gestiona las solicitudes de vinculación de dominios personalizados.",
+        subtitle: "Gestiona las solicitudes de vinculación de dominios personalizados.",
         refresh: "Actualizar",
-        dnsRequired: "Configuración DNS Requerida",
-        dnsDesc:
-          "Estos son los valores que los usuarios deben configurar en su proveedor de dominio.",
+        dnsConfigTitle: "Configuración DNS Requerida",
+        dnsConfigSubtitle: "Estos son los valores que los usuarios deben configurar en su proveedor de dominio.",
         dnsType: "Tipo",
         dnsHost: "Nombre (Host)",
         dnsValue: "Valor (Punta a)",
@@ -787,6 +785,16 @@ export const translations = {
       directAccess: "Acceso Directo a Galería",
       joinChannel: "Unirse al canal",
       followMe: "Sígueme",
+      // Instagram VIP flow
+      vipAccess: "ACCESO VIP",
+      verifyingSecure: "Verificando conexión segura...",
+      secureConnectionReady: "Conexión segura lista.",
+      enterProfile: "Entrar a mi Perfil ↗",
+      escapingInstagram: "Conectando fuera de Instagram...",
+      // Upgrade required
+      upgradeRequired: "SERVICIO NO ACTIVO",
+      upgradeMsg: "Esta función de protección avanzada no está activa para este enlace.",
+      getShield: "Activar Escudo Protector",
     },
 
     featuresPage: {
@@ -1703,6 +1711,16 @@ export const translations = {
       directAccess: "Direct Gallery Access",
       joinChannel: "Join Channel",
       followMe: "Follow Me",
+      // Instagram VIP flow
+      vipAccess: "VIP ACCESS",
+      verifyingSecure: "Verifying secure connection...",
+      secureConnectionReady: "Secure connection ready.",
+      enterProfile: "Enter my Profile ↗",
+      escapingInstagram: "Connecting outside Instagram...",
+      // Upgrade required
+      upgradeRequired: "SERVICE NOT ACTIVE",
+      upgradeMsg: "This advanced protection feature is not active for this link.",
+      getShield: "Activate Protective Shield",
     },
 
     featuresPage: {

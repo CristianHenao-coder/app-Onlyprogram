@@ -226,15 +226,29 @@ router.post("/approve-link", async (req: AuthRequest, res: Response) => {
       return res.status(409).json({ error: "El slug ya está en uso" });
     }
 
+    // Obtener info actual del link para ver si tiene dominio
+    const { data: currentLink } = await supabase
+      .from("smart_links")
+      .select("custom_domain, domain_status")
+      .eq("id", linkId)
+      .single();
+
     // Actualizar el link
+    const updateData: any = {
+      slug: slug,
+      status: "active",
+      is_active: true,
+    };
+
+    // Si tiene dominio pero no está en estado pending/active, ponerlo en pending
+    if (currentLink?.custom_domain && currentLink.custom_domain.trim() !== "" && (!currentLink.domain_status || currentLink.domain_status === "none")) {
+      updateData.domain_status = "pending";
+      updateData.domain_requested_at = new Date().toISOString();
+    }
+
     const { data: link, error } = await supabase
       .from("smart_links")
-      .update({
-        slug: slug,
-        status: "active",
-        is_active: true,
-        // Eliminado updated_at porque la columna no existe en la tabla
-      })
+      .update(updateData)
       .eq("id", linkId)
       .select()
       .single();
@@ -449,6 +463,44 @@ router.post(
     } catch (err: any) {
       console.error("[Admin] domain activate error:", err);
       res.status(500).json({ error: "Error al activar dominio" });
+    }
+  },
+);
+
+/**
+ * PATCH /api/admin/domain-requests/:linkId/assign-domain
+ * El admin asigna un custom_domain a un link
+ */
+router.patch(
+  "/domain-requests/:linkId/assign-domain",
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { linkId } = req.params;
+      const { custom_domain } = req.body;
+
+      if (typeof custom_domain !== "string") {
+        return res.status(400).json({ error: "Formato de dominio inválido" });
+      }
+
+      const domain = custom_domain.trim().toLowerCase().replace(/^https?:\/\//i, "");
+      const isClearing = domain === "";
+
+      const { error } = await supabase
+        .from("smart_links")
+        .update(isClearing
+          ? { custom_domain: null, domain_status: null, domain_requested_at: null }
+          : { custom_domain: domain, domain_status: "pending", domain_requested_at: new Date().toISOString() }
+        )
+        .eq("id", linkId);
+
+      if (error) throw error;
+
+      const msg = isClearing ? "Dominio eliminado" : `Dominio asignado: ${domain}`;
+      console.log(`[Admin] ${msg} → link ${linkId}`);
+      res.json({ success: true, message: msg, domain: domain || null });
+    } catch (err: any) {
+      console.error("[Admin] assign-domain error:", err);
+      res.status(500).json({ error: "Error al asignar dominio" });
     }
   },
 );
