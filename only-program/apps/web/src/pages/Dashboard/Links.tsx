@@ -55,15 +55,32 @@ const UNIQUE_SOCIAL_TYPES: SocialType[] = [
  * Utility to deduplicate buttons by type for specific social networks.
  * Keeps only the first occurrence of each unique social type.
  */
-const cleanButtons = (buttons: ButtonLink[]): ButtonLink[] => {
+const cleanButtons = (buttons: any[]): ButtonLink[] => {
   const seenTypes = new Set<SocialType>();
-  return buttons.filter((btn) => {
-    if (UNIQUE_SOCIAL_TYPES.includes(btn.type)) {
-      if (seenTypes.has(btn.type)) return false;
-      seenTypes.add(btn.type);
-    }
-    return true;
-  });
+  return buttons
+    .filter((btn) => {
+      if (UNIQUE_SOCIAL_TYPES.includes(btn.type)) {
+        if (seenTypes.has(btn.type)) return false;
+        seenTypes.add(btn.type);
+      }
+      return true;
+    })
+    .map((btn) => ({
+      id: btn.id,
+      type: btn.type,
+      title: btn.title,
+      subtitle: btn.subtitle || "",
+      url: btn.url || "",
+      color: btn.color,
+      textColor: btn.text_color || btn.textColor,
+      font: btn.font || "sans",
+      borderRadius: btn.border_radius ?? btn.borderRadius ?? 12,
+      opacity: btn.opacity ?? 100,
+      isActive: btn.is_active ?? btn.isActive ?? true,
+      metaShield: btn.meta_shield ?? btn.metaShield ?? false,
+      rotatorActive: btn.rotator_active ?? btn.rotatorActive ?? false,
+      rotatorLinks: btn.rotator_links || btn.rotatorLinks || ["", "", "", "", ""],
+    }));
 };
 
 interface ButtonLink {
@@ -646,36 +663,8 @@ export default function Links() {
                 // Telegram Rotator capacity settings
                 telegramMaxCapacity: link.telegram_max_capacity || undefined,
                 telegramRotationLimit: link.telegram_rotation_limit || undefined,
-                buttons:
-                  link.smart_link_buttons &&
-                    link.smart_link_buttons.length > 0
-                    ? link.smart_link_buttons
-                      .sort((a: any, b: any) => a.order - b.order)
-                      .map((b: any) => ({
-                        id: b.id,
-                        type: b.type,
-                        title: b.title,
-                        subtitle: b.subtitle,
-                        url: b.url,
-                        color: b.color,
-                        textColor: b.text_color,
-                        font: b.font,
-                        borderRadius: b.border_radius,
-                        opacity: b.opacity,
-                        isActive: b.is_active,
-                        metaShield: b.meta_shield,
-                        rotatorActive: b.rotator_active,
-                        rotatorLinks: b.rotator_links || [
-                          "",
-                          "",
-                          "",
-                          "",
-                          "",
-                        ],
-                      }))
-                    : [],
+                buttons: cleanButtons(link.smart_link_buttons || []),
               }))
-              .map((p) => ({ ...p, buttons: cleanButtons(p.buttons) }))
             : [];
 
         // Get drafts from localStorage

@@ -166,7 +166,7 @@ export const linkProfilesService = {
         order: btn.order ?? index,
         rotator_active: btn.rotator_active ?? btn.rotatorActive ?? false,
         rotator_links: btn.rotator_links || btn.rotatorLinks || [],
-        meta_shield: btn.meta_shield ?? btn.metaShield ?? false,
+        meta_shield: btn.metaShield ?? btn.meta_shield ?? false,
       }));
 
       const { error: insertError } = await supabase
