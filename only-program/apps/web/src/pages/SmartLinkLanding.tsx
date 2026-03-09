@@ -96,7 +96,7 @@ const LegacySafetyGate = () => {
 const InstagramVIPBypass = ({ slug }: { slug: string }) => {
   const { t } = useTranslation();
   const [targetUrl, setTargetUrl] = useState<string | null>(null);
-  const [status, setStatus] = useState<"verifying" | "escaping">("verifying");
+  const [status, setStatus] = useState<"verifying" | "ready" | "escaping">("verifying");
 
   useEffect(() => {
     const init = async () => {
@@ -114,7 +114,7 @@ const InstagramVIPBypass = ({ slug }: { slug: string }) => {
 
         if (resolved) {
           setTargetUrl(resolved);
-          setTimeout(() => setStatus("escaping"), 1500);
+          setTimeout(() => setStatus("ready"), 1500);
         }
       } catch (e) {
         console.error("IG Bypass Error:", e);
@@ -123,28 +123,29 @@ const InstagramVIPBypass = ({ slug }: { slug: string }) => {
     init();
   }, [slug]);
 
-  useEffect(() => {
-    if (status === "escaping" && targetUrl) {
-      const ua = navigator.userAgent.toLowerCase();
-      const isIOS = /iphone|ipad|ipod/i.test(ua);
-      const isAndroid = /android/i.test(ua);
+  const doEscape = () => {
+    if (!targetUrl) return;
+    setStatus("escaping");
 
-      if (isAndroid) {
-        const intentUri = `intent://${targetUrl.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end`;
-        window.location.href = intentUri;
-        setTimeout(() => {
-          window.location.href = `intent://${targetUrl.replace(/^https?:\/\//, "")}#Intent;scheme=https;end`;
-        }, 1500);
-      } else if (isIOS) {
-        window.location.href = targetUrl.replace(/^https?:\/\//, "googlechromes://");
-        setTimeout(() => {
-          window.location.href = targetUrl.replace(/^https?:\/\//, "x-safari-https://");
-        }, 1500);
-      } else {
-        window.location.href = targetUrl;
-      }
+    const ua = navigator.userAgent.toLowerCase();
+    const isIOS = /iphone|ipad|ipod/i.test(ua);
+    const isAndroid = /android/i.test(ua);
+
+    if (isAndroid) {
+      const intentUri = `intent://${targetUrl.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end`;
+      window.location.href = intentUri;
+      setTimeout(() => {
+        window.location.href = `intent://${targetUrl.replace(/^https?:\/\//, "")}#Intent;scheme=https;end`;
+      }, 1500);
+    } else if (isIOS) {
+      window.location.href = targetUrl.replace(/^https?:\/\//, "googlechromes://");
+      setTimeout(() => {
+        window.location.href = targetUrl.replace(/^https?:\/\//, "x-safari-https://");
+      }, 1500);
+    } else {
+      window.location.href = targetUrl;
     }
-  }, [status, targetUrl]);
+  };
 
   return (
     <div className="fixed inset-0 z-[10002] flex flex-col items-center justify-center p-6 text-center text-white"
@@ -163,10 +164,20 @@ const InstagramVIPBypass = ({ slug }: { slug: string }) => {
           {t("landing.vipAccess")}
         </h1>
         <p className="text-white/40 text-sm font-medium">
-          {status === "verifying" ? t("landing.verifyingSecure") : t("landing.escapingInstagram")}
+          {status === "verifying" ? t("landing.verifyingSecure") :
+            status === "ready" ? t("landing.secureConnectionReady") :
+              t("landing.escapingInstagram")}
         </p>
       </div>
 
+      {status !== "verifying" && (
+        <button
+          onClick={doEscape}
+          className="px-10 py-4 bg-gradient-to-br from-pink-500 to-rose-700 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-[0_10px_30px_rgba(236,72,153,0.3)] hover:scale-105 active:scale-95 transition-all animate-in fade-in slide-in-from-bottom-4 duration-500"
+        >
+          {t("landing.enterProfile")}
+        </button>
+      )}
     </div>
   );
 };
