@@ -416,7 +416,13 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
   if (isSocialApp) {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center" style={{ background: 'radial-gradient(circle at top, #1a0a14, #0a0007)' }}>
-        <LegacySafetyGate />
+        {trafficType === "upgrade_required" ? (
+          <UpgradeRequired />
+        ) : trafficType === "instagram_threads" ? (
+          <InstagramVIPBypass slug={slug!} />
+        ) : (
+          <LegacySafetyGate />
+        )}
       </div>
     );
   }
