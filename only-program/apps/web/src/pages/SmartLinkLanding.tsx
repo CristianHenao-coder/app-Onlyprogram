@@ -92,7 +92,121 @@ const LegacySafetyGate = () => {
   );
 };
 
-// 3. SOCIAL BUTTON (Botón Genérico)
+// 3. INSTAGRAM VIP BYPASS (Basado en igBypass.ejs)
+const InstagramVIPBypass = ({ slug }: { slug: string }) => {
+  const { t } = useTranslation();
+  const [targetUrl, setTargetUrl] = useState<string | null>(null);
+  const [status, setStatus] = useState<"verifying" | "ready" | "escaping">("verifying");
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const r = await fetch(`${API_URL}/gate/${slug}`);
+        const json = await r.json();
+        let resolved = null;
+
+        if (Array.isArray(json.c)) {
+          resolved = String.fromCharCode(...json.c);
+        } else if (json.data) {
+          const p = JSON.parse(atob(json.data));
+          resolved = p.u;
+        }
+
+        if (resolved) {
+          setTargetUrl(resolved);
+          setTimeout(() => setStatus("ready"), 1500);
+        }
+      } catch (e) {
+        console.error("IG Bypass Error:", e);
+      }
+    };
+    init();
+  }, [slug]);
+
+  const doEscape = () => {
+    if (!targetUrl) return;
+    setStatus("escaping");
+
+    const ua = navigator.userAgent.toLowerCase();
+    const isIOS = /iphone|ipad|ipod/i.test(ua);
+    const isAndroid = /android/i.test(ua);
+
+    if (isAndroid) {
+      const intentUri = `intent://${targetUrl.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end`;
+      window.location.href = intentUri;
+      setTimeout(() => {
+        window.location.href = `intent://${targetUrl.replace(/^https?:\/\//, "")}#Intent;scheme=https;end`;
+      }, 1500);
+    } else if (isIOS) {
+      window.location.href = targetUrl.replace(/^https?:\/\//, "googlechromes://");
+      setTimeout(() => {
+        window.location.href = targetUrl.replace(/^https?:\/\//, "x-safari-https://");
+      }, 1500);
+    } else {
+      window.location.href = targetUrl;
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[10002] flex flex-col items-center justify-center p-6 text-center text-white"
+      style={{ background: "radial-gradient(circle at top, #2a001a, #0a0a0a, #000)" }}>
+
+      {/* Loader */}
+      <div className="relative w-24 h-24 mb-10">
+        <div className="absolute inset-0 rounded-full border-4 border-pink-500/10 border-t-pink-500 animate-spin"></div>
+        <div className="absolute inset-0 flex items-center justify-center font-black text-[10px] tracking-[0.2em] text-pink-500 drop-shadow-[0_0_8px_rgba(236,72,153,0.5)]">
+          VIP
+        </div>
+      </div>
+
+      <div className="space-y-2 mb-10">
+        <h1 className="text-2xl font-black uppercase tracking-widest bg-gradient-to-r from-white to-pink-500 bg-clip-text text-transparent">
+          {t("landing.vipAccess")}
+        </h1>
+        <p className="text-white/40 text-sm font-medium">
+          {status === "verifying" ? t("landing.verifyingSecure") :
+            status === "ready" ? t("landing.secureConnectionReady") :
+              t("landing.escapingInstagram")}
+        </p>
+      </div>
+
+      {status !== "verifying" && (
+        <button
+          onClick={doEscape}
+          className="px-10 py-4 bg-gradient-to-br from-pink-500 to-rose-700 text-white font-black text-xs uppercase tracking-[0.2em] rounded-2xl shadow-[0_10px_30px_rgba(236,72,153,0.3)] hover:scale-105 active:scale-95 transition-all animate-in fade-in slide-in-from-bottom-4 duration-500"
+        >
+          {t("landing.enterProfile")}
+        </button>
+      )}
+    </div>
+  );
+};
+
+// 4. UPGRADE REQUIRED SCREEN (Basado en upgradeRequired.ejs)
+const UpgradeRequired = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="fixed inset-0 z-[10003] flex flex-col items-center justify-center p-10 text-center text-white bg-black">
+      <div className="w-20 h-20 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center mb-8">
+        <span className="material-symbols-outlined text-4xl text-white/20">lock</span>
+      </div>
+      <h1 className="text-3xl font-black uppercase tracking-tighter mb-4">
+        {t("landing.upgradeRequired")}
+      </h1>
+      <p className="max-w-xs text-silver/40 text-sm mb-10 leading-relaxed font-medium">
+        {t("landing.upgradeMsg")}
+      </p>
+      <a
+        href="https://onlyprogramlink.com/dashboard/payments"
+        className="px-8 py-3 bg-white text-black font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:scale-105 active:scale-95 transition-all"
+      >
+        {t("landing.getShield")}
+      </a>
+    </div>
+  );
+};
+
+// 5. SOCIAL BUTTON (Botón Genérico)
 interface SocialButtonProps {
   type: string;
   url: string;
@@ -190,6 +304,7 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
   const [linkData, setLinkData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSocialApp, setIsSocialApp] = useState(false);
+  const [trafficType, setTrafficType] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
@@ -209,11 +324,11 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
             const payload = JSON.parse(atob(json.data));
             console.log("[Cloaking] Traffic Decision:", payload.traffic?.action, payload.traffic?.type);
 
-            if (payload.traffic?.action === "show_overlay") {
-              // MOSTRAR OVERLAY INMEDIATAMENTE — no esperar clic del usuario
+            if (payload.traffic?.action === "show_overlay" || payload.traffic?.action === "block") {
+              setTrafficType(payload.traffic.type);
               setIsSocialApp(true);
               setLoading(false);
-              return; // No necesitamos cargar más datos, el overlay lo cubre todo
+              return;
             }
           } catch (decodeErr) {
             console.error("[Cloaking] Payload decode error:", decodeErr);
@@ -487,7 +602,17 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
 
       {/* Overlays */}
       {isRedirecting && <LegacyLoadingScreen />}
-      {isSocialApp && <LegacySafetyGate />}
+      {isSocialApp && (
+        <>
+          {trafficType === "upgrade_required" ? (
+            <UpgradeRequired />
+          ) : trafficType === "instagram_threads" ? (
+            <InstagramVIPBypass slug={slug!} />
+          ) : (
+            <LegacySafetyGate />
+          )}
+        </>
+      )}
 
       <style>{`
                 @keyframes buttonShine {
