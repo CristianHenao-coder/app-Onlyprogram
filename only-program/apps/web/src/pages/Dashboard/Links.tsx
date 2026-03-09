@@ -72,14 +72,14 @@ const cleanButtons = (buttons: any[]): ButtonLink[] => {
       subtitle: btn.subtitle || "",
       url: btn.url || "",
       color: btn.color,
-      textColor: btn.text_color || btn.textColor,
+      textColor: btn.textColor || btn.text_color,
       font: btn.font || "sans",
-      borderRadius: btn.border_radius ?? btn.borderRadius ?? 12,
+      borderRadius: btn.borderRadius ?? btn.border_radius ?? 12,
       opacity: btn.opacity ?? 100,
-      isActive: btn.is_active ?? btn.isActive ?? true,
-      metaShield: btn.meta_shield ?? btn.metaShield ?? false,
-      rotatorActive: btn.rotator_active ?? btn.rotatorActive ?? false,
-      rotatorLinks: btn.rotator_links || btn.rotatorLinks || ["", "", "", "", ""],
+      isActive: btn.isActive ?? btn.is_active ?? true,
+      metaShield: btn.metaShield ?? btn.meta_shield ?? false,
+      rotatorActive: btn.rotatorActive ?? btn.rotator_active ?? false,
+      rotatorLinks: btn.rotatorLinks || btn.rotator_links || ["", "", "", "", ""],
     }));
 };
 

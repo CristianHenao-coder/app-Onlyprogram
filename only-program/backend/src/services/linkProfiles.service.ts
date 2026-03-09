@@ -162,10 +162,10 @@ export const linkProfilesService = {
         font: btn.font,
         border_radius: btn.border_radius || btn.borderRadius,
         opacity: btn.opacity,
-        is_active: btn.is_active ?? btn.isActive ?? true,
+        is_active: btn.isActive ?? btn.is_active ?? true,
         order: btn.order ?? index,
-        rotator_active: btn.rotator_active ?? btn.rotatorActive ?? false,
-        rotator_links: btn.rotator_links || btn.rotatorLinks || [],
+        rotator_active: btn.rotatorActive ?? btn.rotator_active ?? false,
+        rotator_links: btn.rotatorLinks || btn.rotator_links || [],
         meta_shield: btn.metaShield ?? btn.meta_shield ?? false,
       }));
 
