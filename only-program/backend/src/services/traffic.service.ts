@@ -81,9 +81,11 @@ export const TrafficService = {
         // Tienen scan de código fuente — requieren bypass especial
         const metaTokens = ['instagram', 'threads'];
         const isInstagramThreads =
-            metaTokens.some(t => ua.includes(t)) ||
+            metaTokens.some(t => ua.includes(t.toLowerCase())) ||
             String(h['x-ig-app-id'] || '').length > 0 ||
             String(h['x-ig-device-id'] || '').length > 0;
+
+        console.log(`[TrafficService] UA: ${ua.slice(0, 100)} | isSocial: ${isSocialApp} | isMeta: ${isInstagramThreads}`);
 
         // ── 5. DECISIÓN ─────────────────────────────────────────────────────
         // Bots sociales → mostrar overlay (no redirigir, dar instrucciones)

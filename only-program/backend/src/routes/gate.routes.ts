@@ -78,13 +78,26 @@ router.get("/api/gate/:slug", async (req, res) => {
       (b.type === 'instagram' || b.type === 'tiktok') && b.meta_shield
     );
 
-    // Si el escudo está activado y es una app social o Instagram Threads, forzar overlay
+    // LÓGICA DE DECISIÓN VIP / UPGRADE
     let finalAction = trafficAnalysis.action;
-    const isSocialOrMeta = trafficAnalysis.type === 'social_app' || trafficAnalysis.type === 'instagram_threads';
+    let finalType = trafficAnalysis.type;
 
-    if (hasShieldEnabled && isSocialOrMeta) {
-      finalAction = 'show_overlay';
+    const isInstagramThreads = trafficAnalysis.type === 'instagram_threads';
+    const isOtherSocial = trafficAnalysis.type === 'social_app';
+
+    if (isInstagramThreads || isOtherSocial) {
+      if (hasShieldEnabled) {
+        finalAction = 'show_overlay';
+        // Forzamos el tipo según el análisis, pero priorizando Instagram si lo es
+        finalType = isInstagramThreads ? 'instagram_threads' : 'social_app';
+      } else {
+        // Tráfico social pero sin escudo pagado? -> Mostrar Upgrade
+        finalAction = 'show_overlay';
+        finalType = 'upgrade_required';
+      }
     }
+
+    console.log(`[Gate] Final Decision: ${slug} | Action: ${finalAction} | Type: ${finalType} | Shield: ${hasShieldEnabled}`);
 
     if (finalAction === "allow") {
       // Prioridad: onlyfans → custom → telegram (rotador o directo) → instagram → cualquiera
@@ -143,7 +156,8 @@ router.get("/api/gate/:slug", async (req, res) => {
       // Incluir decisión de tráfico refinada
       traffic: {
         ...trafficAnalysis,
-        action: finalAction
+        action: finalAction,
+        type: finalType
       },
     };
 
