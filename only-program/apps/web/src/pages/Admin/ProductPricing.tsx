@@ -45,11 +45,10 @@ export default function ProductPricing() {
     setError(null);
     setOk(null);
 
-    // validaciones simples
-    if (form.link.standard <= 0) return setError(t('admin.pricing.validationPositive'));
-    if (form.link.rotator <= 0) return setError(t('admin.pricing.validationPositive'));
-    if (form.domain.connect <= 0) return setError(t('admin.pricing.validationPositive'));
-    if (form.domain.buy <= 0) return setError(t('admin.pricing.validationPositive'));
+    // Validaciones simples
+    if (form.link.base <= 0) return setError("El precio base debe ser mayor a 0");
+    if (form.link.telegramAddon < 0) return setError("El precio del add-on no puede ser negativo");
+    if (form.link.instagramAddon < 0) return setError("El precio del add-on no puede ser negativo");
 
     try {
       setSaving(true);
@@ -63,113 +62,101 @@ export default function ProductPricing() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">{t('admin.pricing.title')}</h1>
+          <h1 className="text-2xl font-semibold">Configuración de Precios</h1>
           <p className="text-sm text-white/70 mt-1">
-            {t('admin.pricing.subtitle')}
+            Revisa y actualiza los precios oficiales de la plataforma ({currencyLabel}). Se reflejarán instantáneamente.
           </p>
         </div>
 
         <button
           onClick={onSave}
           disabled={loading || saving}
-          className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 disabled:opacity-60"
+          className="px-6 py-2.5 rounded-xl bg-primary text-black font-bold hover:bg-primary-light disabled:opacity-60 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
         >
+          {saving && <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>}
           {saving ? t('common.saving') : t('common.save')}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Link pricing */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-          <h2 className="text-lg font-medium">{t('admin.menu.links')}</h2>
-          <p className="text-sm text-white/60 mt-1">{t('admin.pricing.linksDesc')}</p>
-
-          <div className="mt-4 space-y-4">
+      <div className="max-w-3xl">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-8 shadow-2xl">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="material-symbols-outlined text-primary text-3xl">request_quote</span>
             <div>
-              <label className="text-sm text-white/70">{t('admin.pricing.currency')}</label>
-              <input
+              <h2 className="text-lg font-bold text-white">Esquema de Precios</h2>
+              <p className="text-sm text-white/50">Valores en {currencyLabel}.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Moneda */}
+            <div className="md:col-span-3">
+              <label className="text-xs font-black text-white/40 uppercase tracking-widest mb-2 block">Moneda de visualización</label>
+              <select
                 value={form.currency}
                 onChange={(e) => setForm((p) => ({ ...p, currency: e.target.value }))}
-                className="mt-1 w-full px-3 py-2 rounded-xl bg-black/30 border border-white/10"
-                placeholder="USD"
-              />
+                className="w-full md:w-1/3 px-4 py-3 rounded-xl bg-black/40 border border-white/10 text-white focus:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary/20"
+              >
+                <option value="USD">Dólares (USD)</option>
+                <option value="COP">Pesos Colombianos (COP)</option>
+              </select>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div>
-                <label className="text-sm text-white/70">{t('admin.pricing.standardPrice')} ({currencyLabel})</label>
+            {/* Base Link */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+              <label className="text-xs font-black text-white/40 uppercase tracking-widest mb-1 block">Precio 1 Link</label>
+              <div className="flex items-center border border-white/10 rounded-xl overflow-hidden bg-black/40 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
+                <span className="pl-4 text-white/50 font-mono">$</span>
                 <input
                   type="number"
                   step="0.01"
-                  value={form.link.standard}
-                  onChange={(e) => setForm((p) => ({ ...p, link: { ...p.link, standard: toNumber(e.target.value) } }))}
-                  className="mt-1 w-full px-3 py-2 rounded-xl bg-black/30 border border-white/10"
+                  value={form.link.base}
+                  onChange={(e) => setForm((p) => ({ ...p, link: { ...p.link, base: toNumber(e.target.value) } }))}
+                  className="w-full px-2 py-3 bg-transparent text-white focus:outline-none font-black text-lg"
                 />
               </div>
+            </div>
 
-              <div>
-                <label className="text-sm text-white/70">{t('admin.pricing.rotatorPrice')} ({currencyLabel})</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={form.link.rotator}
-                  onChange={(e) => setForm((p) => ({ ...p, link: { ...p.link, rotator: toNumber(e.target.value) } }))}
-                  className="mt-1 w-full px-3 py-2 rounded-xl bg-black/30 border border-white/10"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm text-white/70">{t('admin.pricing.telegramAddon')} ({currencyLabel})</label>
+            {/* Telegram Addon */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+              <label className="text-xs font-black text-white/40 uppercase tracking-widest mb-1 block">+ Telegram Rotativo</label>
+              <div className="flex items-center border border-white/10 rounded-xl overflow-hidden bg-black/40 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
+                <span className="pl-4 text-white/50 font-mono">$</span>
                 <input
                   type="number"
                   step="0.01"
                   value={form.link.telegramAddon}
                   onChange={(e) => setForm((p) => ({ ...p, link: { ...p.link, telegramAddon: toNumber(e.target.value) } }))}
-                  className="mt-1 w-full px-3 py-2 rounded-xl bg-black/30 border border-white/10"
+                  className="w-full px-2 py-3 bg-transparent text-white focus:outline-none font-black text-lg"
                 />
               </div>
             </div>
 
-            <div className="text-xs text-white/55">
-              {t('admin.pricing.linksNote')}
-            </div>
-          </div>
-        </div>
-
-        {/* Domain pricing */}
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
-          <h2 className="text-lg font-medium">{t('admin.menu.domains')}</h2>
-          <p className="text-sm text-white/60 mt-1">{t('admin.pricing.domainsDesc')}</p>
-
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label className="text-sm text-white/70">{t('admin.pricing.connectDomain')} ({currencyLabel})</label>
-              <input
-                type="number"
-                step="0.01"
-                value={form.domain.connect}
-                onChange={(e) => setForm((p) => ({ ...p, domain: { ...p.domain, connect: toNumber(e.target.value) } }))}
-                className="mt-1 w-full px-3 py-2 rounded-xl bg-black/30 border border-white/10"
-              />
+            {/* Instagram Addon */}
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4">
+              <label className="text-xs font-black text-white/40 uppercase tracking-widest mb-1 block">+ Instagram</label>
+              <div className="flex items-center border border-white/10 rounded-xl overflow-hidden bg-black/40 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/20">
+                <span className="pl-4 text-white/50 font-mono">$</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={form.link.instagramAddon}
+                  onChange={(e) => setForm((p) => ({ ...p, link: { ...p.link, instagramAddon: toNumber(e.target.value) } }))}
+                  className="w-full px-2 py-3 bg-transparent text-white focus:outline-none font-black text-lg"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="text-sm text-white/70">{t('admin.pricing.buyDomain')} ({currencyLabel})</label>
-              <input
-                type="number"
-                step="0.01"
-                value={form.domain.buy}
-                onChange={(e) => setForm((p) => ({ ...p, domain: { ...p.domain, buy: toNumber(e.target.value) } }))}
-                className="mt-1 w-full px-3 py-2 rounded-xl bg-black/30 border border-white/10"
-              />
-            </div>
           </div>
 
-          <div className="mt-4 text-xs text-white/55">
-            {t('admin.pricing.domainsNote')}
+          <div className="mt-8 pt-6 border-t border-white/5 text-xs text-white/30 flex items-start gap-2 max-w-xl">
+            <span className="material-symbols-outlined text-[14px]">info</span>
+            <p>
+              Estos precios se aplican al calcular el total de los links de tus clientes y en los add-ons que seleccionen al finalizar su pago (Checkout). Los dominios ya no son cobrados separadamente en esta interfaz.
+            </p>
           </div>
         </div>
       </div>

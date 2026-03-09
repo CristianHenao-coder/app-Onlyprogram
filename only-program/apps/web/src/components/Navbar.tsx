@@ -25,14 +25,59 @@ export default function Navbar({ previewData }: { previewData?: any }) {
   );
 
   const [scrolled, setScrolled] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll as any);
+    let lastY = window.scrollY;
+    let ticking = false;
+
+    const onScroll = (e?: Event) => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          let currentY = window.scrollY || document.documentElement.scrollTop || 0;
+
+          // Si el evento de scroll viene de un contenedor distinto, usamos su scrollTop
+          if (e && e.target && e.target !== document && e.target !== window) {
+            const target = e.target as HTMLElement;
+            // Solo considerar contenedores con un scroll grande (ignorar mini-scrolls de modales)
+            if (target.scrollHeight > window.innerHeight) {
+              currentY = target.scrollTop;
+            }
+          }
+
+          // Hide when scrolling down strongly, show when scrolling up
+          if (currentY > lastY && currentY > 60) {
+            setIsVisible(false);
+          } else if (currentY < lastY || currentY <= 60) {
+            setIsVisible(true);
+          }
+
+          setScrolled(currentY > 8);
+          lastY = currentY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      // Re-show navbar if mouse comes to the top 50px of the screen
+      if (e.clientY < 50) {
+        setIsVisible(true);
+      }
+    };
+
+    onScroll(); // initial check
+    // Listen for scroll events in the capture phase to target all scroll elements
+    window.addEventListener("scroll", onScroll, true);
+    window.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
   }, []);
 
   // cerrar dropdown al click afuera
@@ -60,7 +105,8 @@ export default function Navbar({ previewData }: { previewData?: any }) {
     <header
       className={[
         "fixed top-0 w-full z-50",
-        "transition-all duration-300",
+        "transition-all duration-300 ease-in-out",
+        isVisible ? "translate-y-0" : "-translate-y-full",
         scrolled ? "bg-[#0B0B0B]/70 backdrop-blur-xl border-b border-border" : "bg-transparent",
       ].join(" ")}
     >

@@ -349,12 +349,7 @@ export default function Links() {
       mounted = false;
     };
   }, []);
-  const LINK_PRICE_STANDARD = pricingCfg.link.standard;
-  const LINK_PRICE_ROTATOR = pricingCfg.link.rotator;
-  const ROTATOR_SURCHARGE = Math.max(
-    0,
-    LINK_PRICE_ROTATOR - LINK_PRICE_STANDARD,
-  );
+  const ROTATOR_SURCHARGE = pricingCfg.link.telegramAddon;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -1242,7 +1237,31 @@ export default function Links() {
                             )}
                           </div>
 
-                          {/* Folder badge (read-only in list view — assign inside editor) */}
+                          {/* Domain row */}
+                          {page.status === 'active' && page.customDomain ? (
+                            <div className="mt-1.5 flex justify-center">
+                              <a
+                                href={`https://${page.customDomain}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-[9px] font-bold text-green-400 hover:bg-green-500/20 transition-all group"
+                              >
+                                <span className="material-symbols-outlined text-[10px]">language</span>
+                                {page.customDomain}
+                                <span className="material-symbols-outlined text-[9px] opacity-0 group-hover:opacity-100 transition-opacity">open_in_new</span>
+                              </a>
+                            </div>
+                          ) : page.status !== 'active' && (
+                            <div className="mt-1.5 flex justify-center">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold text-silver/30">
+                                <span className="material-symbols-outlined text-[10px]">schedule</span>
+                                En espera de dominio
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Folder badge */}
                           {page.folder && (
                             <div className="mt-2 flex justify-center">
                               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-bold text-primary">

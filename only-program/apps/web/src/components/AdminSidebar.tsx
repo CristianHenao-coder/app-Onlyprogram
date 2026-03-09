@@ -153,28 +153,28 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
           isCollapsed={isCollapsed}
         />
         <NavItem
-          to="/admin/links"
-          icon="link"
-          label={t("admin.menu.links")}
-          isCollapsed={isCollapsed}
-        />
-        <NavItem
           to="/admin/coupons"
           icon="confirmation_number"
           label={t("admin.menu.coupons")}
           isCollapsed={isCollapsed}
         />
         <NavItem
-          to="/admin/audit-logs"
-          icon="history"
-          label={t("admin.menu.auditLogs")}
+          to="/admin/inbox"
+          icon="inbox"
+          label="Buzón"
           isCollapsed={isCollapsed}
         />
 
         <NavItem
           to="/admin/domains"
-          icon="dns"
-          label={t("admin.menu.domains")}
+          icon="admin_panel_settings"
+          label="Gestión Dominios"
+          isCollapsed={isCollapsed}
+        />
+        <NavItem
+          to="/admin/settings"
+          icon="settings"
+          label={t("admin.menu.settings")}
           isCollapsed={isCollapsed}
         />
       </nav>
