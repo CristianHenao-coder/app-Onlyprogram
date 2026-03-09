@@ -50,10 +50,9 @@ const NavLinkWrapper = ({
     className={({ isActive }) => `
       flex items-center gap-3 rounded-xl transition-all duration-300 group
       ${isCollapsed ? "p-3 justify-center" : "px-4 py-3"}
-      ${
-        isActive
-          ? "bg-primary/10 text-primary border border-primary/20 shadow-lg shadow-primary/5"
-          : "text-silver/40 hover:text-white hover:bg-white/5 border border-transparent"
+      ${isActive
+        ? "bg-primary/10 text-primary border border-primary/20 shadow-lg shadow-primary/5"
+        : "text-silver/40 hover:text-white hover:bg-white/5 border border-transparent"
       }
     `}
   >
@@ -171,12 +170,7 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
           label={t("admin.menu.auditLogs")}
           isCollapsed={isCollapsed}
         />
-        <NavItem
-          to="/admin/moderation"
-          icon="verified_user"
-          label={t("admin.menu.moderation")}
-          isCollapsed={isCollapsed}
-        />
+
         <NavItem
           to="/admin/domains"
           icon="dns"

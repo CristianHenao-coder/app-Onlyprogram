@@ -205,27 +205,43 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
         const json = await response.json().catch(() => null);
 
         if (json?.data) {
-          const payload = JSON.parse(atob(json.data));
-          if (payload.traffic?.action === "show_overlay") {
-            setIsSocialApp(true);
+          try {
+            const payload = JSON.parse(atob(json.data));
+            console.log("[Cloaking] Traffic Decision:", payload.traffic?.action, payload.traffic?.type);
+
+            if (payload.traffic?.action === "show_overlay") {
+              // MOSTRAR OVERLAY INMEDIATAMENTE — no esperar clic del usuario
+              setIsSocialApp(true);
+              setLoading(false);
+              return; // No necesitamos cargar más datos, el overlay lo cubre todo
+            }
+          } catch (decodeErr) {
+            console.error("[Cloaking] Payload decode error:", decodeErr);
           }
         }
       } catch (err) {
-        console.error("Traffic check error:", err);
+        console.error("[Cloaking] Traffic check network error:", err);
       }
 
       // Cargar data visual
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+      console.log("[Landing] Processing slug:", slug, "isUUID:", isUUID);
+
       let query = supabase.from("smart_links").select(`
                 *,
                 smart_link_buttons (*)
             `);
-      if (slug.length > 20 && slug.includes("-")) {
+
+      if (isUUID) {
         query = query.or(`slug.eq.${slug},id.eq.${slug}`);
       } else {
         query = query.eq("slug", slug);
       }
 
-      const { data } = await query.single();
+      const { data, error } = await query.single();
+      if (error) {
+        console.error("[Landing] Fetch Error:", error.message);
+      }
       if (data) setLinkData(data);
       setLoading(false);
     };
@@ -281,7 +297,16 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
     }, 2000);
   };
 
-  if (loading) return null; // El loader legacy se encarga de OF, para el perfil general usamos nada o un mini spinner
+  // PRIORIDAD: Si es app social, mostrar overlay SIN IMPORTAR si cargó el link
+  if (isSocialApp) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center" style={{ background: 'radial-gradient(circle at top, #1a0a14, #0a0007)' }}>
+        <LegacySafetyGate />
+      </div>
+    );
+  }
+
+  if (loading) return null;
   if (!linkData)
     return (
       <div className="bg-black text-white h-screen flex items-center justify-center">
@@ -314,11 +339,11 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
       ? { background: `linear-gradient(to bottom, ${bgStart}, ${bgEnd})` }
       : bgType === "blur"
         ? {
-            backgroundColor: bgStart,
-            backgroundImage: displayPhoto ? `url(${displayPhoto})` : undefined,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }
+          backgroundColor: bgStart,
+          backgroundImage: displayPhoto ? `url(${displayPhoto})` : undefined,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }
         : { backgroundColor: bgStart };
 
   const renderButtons = () => {
@@ -332,7 +357,7 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
       const isActive = btn.is_active ?? btn.isActive ?? true;
       if (!isActive) return null;
 
-      // Especial OnlyFans -> Redirect Flow
+      // Especial OnlyFans → Redirect Flow con estilo custom del usuario
       if (btn.type === "onlyfans") {
         return (
           <SocialButton
@@ -342,6 +367,12 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
             label={btn.title || t("landing.unlockPremium")}
             sub={btn.subtitle || btn.sub || t("landing.directAccess")}
             onClick={handleUnlockPremium}
+            style={btn.color ? {
+              backgroundColor: btn.color,
+              color: btn.text_color || btn.textColor || "#FFFFFF",
+              borderRadius: btn.border_radius ? `${btn.border_radius}px` : undefined,
+              opacity: (btn.opacity || 100) / 100,
+            } : undefined}
           />
         );
       }
@@ -352,6 +383,14 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
         btn.type === "telegram" && rotatorActive
           ? `${API_URL}/t/${slug}`
           : btn.url;
+
+      // Usar estilos del usuario si existen, o fallback a los defaults por tipo
+      const customStyle = {
+        backgroundColor: btn.color,
+        color: btn.text_color || btn.textColor,
+        borderRadius: (btn.border_radius || btn.borderRadius || 28) + 'px',
+        opacity: (btn.opacity || 100) / 100,
+      };
 
       return (
         <SocialButton
@@ -366,12 +405,7 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
               ? t("landing.joinChannel")
               : t("landing.followMe"))
           }
-          style={{
-            backgroundColor: btn.color,
-            color: btn.text_color || btn.textColor,
-            borderRadius: btn.border_radius || btn.borderRadius,
-            opacity: (btn.opacity || 100) / 100,
-          }}
+          style={customStyle}
         />
       );
     });

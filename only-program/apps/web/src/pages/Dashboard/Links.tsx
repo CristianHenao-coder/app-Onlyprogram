@@ -81,6 +81,8 @@ interface ButtonLink {
   // Rotator Features
   rotatorActive?: boolean;
   rotatorLinks?: string[]; // Up to 5
+  // Shield Features
+  metaShield?: boolean;
 }
 
 interface LinkPage {
@@ -106,6 +108,8 @@ interface LinkPage {
   domainNotes?: string;
   slug?: string;
   dbStatus?: string; // Real status from DB (pending, active, etc.)
+  telegramMaxCapacity?: number; // Max clicks per rotator link before rotating
+  telegramRotationLimit?: number; // Rotate every N clicks (1 = round robin)
 }
 
 // Icons Components
@@ -639,6 +643,9 @@ export default function Links() {
                 slug: link.slug,
                 // Store pending status to show badge in UI
                 dbStatus: link.status || "pending",
+                // Telegram Rotator capacity settings
+                telegramMaxCapacity: link.telegram_max_capacity || undefined,
+                telegramRotationLimit: link.telegram_rotation_limit || undefined,
                 buttons:
                   link.smart_link_buttons &&
                     link.smart_link_buttons.length > 0
@@ -800,6 +807,13 @@ export default function Links() {
               landingMode: currentPageToSave.landingMode,
               profileImageSize: currentPageToSave.profileImageSize,
             },
+            // Telegram Rotator capacity persisted as dedicated columns
+            ...(currentPageToSave.telegramMaxCapacity !== undefined
+              ? { telegram_max_capacity: currentPageToSave.telegramMaxCapacity }
+              : {}),
+            ...(currentPageToSave.telegramRotationLimit !== undefined
+              ? { telegram_rotation_limit: currentPageToSave.telegramRotationLimit }
+              : {}),
           };
 
           const { error } = await supabase
@@ -2045,7 +2059,49 @@ export default function Links() {
                             </div>
                           </div>
 
+
+                          {/* META / TIKTOK SHIELD */}
+                          {(selectedButton.type === "instagram" || selectedButton.type === "tiktok") && (
+                            <div className="p-5 bg-gradient-to-br from-orange-500/5 to-red-600/5 border border-orange-500/20 rounded-2xl">
+                              <div className="flex justify-between items-start gap-4">
+                                <div>
+                                  <div className="flex items-center gap-2 text-orange-400 mb-1">
+                                    <span className="material-symbols-outlined">
+                                      security
+                                    </span>
+                                    <span className="text-sm font-bold">
+                                      {selectedButton.type === "instagram" ? "Escudo Meta" : "Escudo TikTok"}
+                                    </span>
+                                  </div>
+                                  <p className="text-[10px] text-silver/50 max-w-[250px]">
+                                    Protege tu link de la moderación de {selectedButton.type === "instagram" ? "Meta (Instagram/Facebook)" : "TikTok"}. Activa el sistema de cloaking anti-rastreo.
+                                  </p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={(selectedButton as any).metaShield || false}
+                                    onChange={(e) =>
+                                      handleUpdateButton("metaShield", e.target.checked)
+                                    }
+                                    className="sr-only peer"
+                                  />
+                                  <div className="w-11 h-6 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                                </label>
+                              </div>
+                              {(selectedButton as any).metaShield && (
+                                <div className="mt-3 p-3 bg-orange-500/10 rounded-xl border border-orange-500/20 flex items-start gap-2 animate-fade-in">
+                                  <span className="material-symbols-outlined text-orange-400 text-sm mt-0.5">info</span>
+                                  <p className="text-[10px] text-orange-300/80">
+                                    Cuando un visitante que viene de {selectedButton.type === "instagram" ? "Instagram" : "TikTok"} haga clic, verá instrucciones para abrir el link en el navegador externo, protegiendo tu link de detección.
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
                           {/* TELEGRAM ROTATOR */}
+
                           {selectedButton.type === "telegram" && (
                             <div className="p-5 bg-gradient-to-br from-blue-500/5 to-blue-600/5 border border-blue-500/20 rounded-2xl">
                               <div className="flex justify-between items-start gap-4 mb-4">
@@ -2178,6 +2234,42 @@ export default function Links() {
                                       />
                                     </div>
                                   ))}
+
+                                  {/* Configuración de capacidad — portado de Marketing-CL */}
+                                  <div className="mt-4 pt-4 border-t border-white/5 grid grid-cols-2 gap-3">
+                                    <div>
+                                      <label className="text-[9px] font-black text-blue-400/60 uppercase tracking-widest block mb-1.5">
+                                        Capacidad máx. por link
+                                      </label>
+                                      <input
+                                        type="number"
+                                        min={1}
+                                        placeholder="2000"
+                                        value={currentPage.telegramMaxCapacity || ""}
+                                        onChange={(e) =>
+                                          handleUpdatePage("telegramMaxCapacity", Number(e.target.value))
+                                        }
+                                        className="w-full bg-black/40 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-blue-500/50 focus:outline-none"
+                                      />
+                                      <p className="text-[8px] text-silver/30 mt-1">Clicks antes de pasar al siguiente link</p>
+                                    </div>
+                                    <div>
+                                      <label className="text-[9px] font-black text-blue-400/60 uppercase tracking-widest block mb-1.5">
+                                        Rotar cada N clicks
+                                      </label>
+                                      <input
+                                        type="number"
+                                        min={1}
+                                        placeholder="1"
+                                        value={currentPage.telegramRotationLimit || ""}
+                                        onChange={(e) =>
+                                          handleUpdatePage("telegramRotationLimit", Number(e.target.value))
+                                        }
+                                        className="w-full bg-black/40 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:border-blue-500/50 focus:outline-none"
+                                      />
+                                      <p className="text-[8px] text-silver/30 mt-1">1 = round robin puro (recomendado)</p>
+                                    </div>
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -3251,52 +3343,64 @@ export default function Links() {
             <button
               onClick={() => {
                 if (allDraftPages.length > 0) {
-                  // Validate each page has at least 1 button
-                  for (const page of allDraftPages) {
-                    if (!page.buttons || page.buttons.length === 0) {
+                  // 1. VALIDATE ONLY CURRENT PAGE (if it's a draft)
+                  if (currentPage.status === "draft") {
+                    if (!currentPage.buttons || currentPage.buttons.length === 0) {
                       toast.error(
-                        `"${page.name}" no tiene ningún botón. Debes agregar al menos 1 botón para continuar.`,
+                        `"${currentPage.name}" no tiene ningún botón. Debes agregar al menos 1 botón para continuar.`,
                         { duration: 5000 }
                       );
                       return;
                     }
-                  }
-                  // Validate that all buttons have valid URLs
-                  for (const page of allDraftPages) {
-                    for (const btn of page.buttons) {
+                    for (const btn of currentPage.buttons) {
                       if (!btn.url || !btn.url.trim()) {
                         toast.error(
-                          `El botón "${btn.title}" en "${page.name}" no tiene URL. Agrégala antes de continuar.`,
+                          `El botón "${btn.title}" en "${currentPage.name}" no tiene URL. Agrégala antes de continuar.`,
                           { duration: 4000 }
                         );
                         return;
                       }
                       if (!isValidUrl(btn.url.trim())) {
                         toast.error(
-                          `La URL del botón "${btn.title}" en "${page.name}" no es válida. Debe empezar con https://`,
+                          `La URL del botón "${btn.title}" en "${currentPage.name}" no es válida. Debe empezar con https://`,
                           { duration: 4000 }
                         );
                         return;
                       }
                     }
                   }
+
+                  // 2. FILTER OTHER DRAFTS (Include only those that are complete)
+                  const validDrafts = allDraftPages.filter(page => {
+                    const hasButtons = page.buttons && page.buttons.length > 0;
+                    const allUrlsValid = page.buttons.every(btn => btn.url && btn.url.trim() && isValidUrl(btn.url.trim()));
+                    return hasButtons && allUrlsValid;
+                  });
+
+                  if (validDrafts.length === 0) {
+                    // This should only happen if the user manually tries to advance an empty state
+                    // and somehow bypassed the current page check above.
+                    return;
+                  }
+
                   try {
                     localStorage.setItem(
                       "my_links_data_backup",
                       JSON.stringify({
                         timestamp: Date.now(),
-                        linksData: allDraftPages,
+                        linksData: validDrafts,
                       }),
                     );
                   } catch (e) {
                     console.warn("Could not save backup to local storage due to quota limits");
                   }
-                  navigate("/dashboard/payments", {
+
+                  navigate("/dashboard/checkout", {
                     state: {
                       pendingPurchase: {
                         type: "links_bundle",
-                        linksData: allDraftPages,
-                        amount: null, // will be calculated in payments page
+                        linksData: validDrafts,
+                        amount: null,
                       },
                     },
                   });

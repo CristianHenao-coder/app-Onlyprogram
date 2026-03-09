@@ -682,12 +682,10 @@ export const translations = {
       },
       domains: {
         title: "Solicitudes de Dominio",
-        subtitle:
-          "Gestiona las solicitudes de vinculación de dominios personalizados.",
+        subtitle: "Gestiona las solicitudes de vinculación de dominios personalizados.",
         refresh: "Actualizar",
-        dnsRequired: "Configuración DNS Requerida",
-        dnsDesc:
-          "Estos son los valores que los usuarios deben configurar en su proveedor de dominio.",
+        dnsConfigTitle: "Configuración DNS Requerida",
+        dnsConfigSubtitle: "Estos son los valores que los usuarios deben configurar en su proveedor de dominio.",
         dnsType: "Tipo",
         dnsHost: "Nombre (Host)",
         dnsValue: "Valor (Punta a)",

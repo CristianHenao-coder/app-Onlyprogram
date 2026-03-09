@@ -70,8 +70,22 @@ export default function Analytics() {
   // Countries skeleton
   const countries: any[] = [];
 
-  // Sources skeleton
-  const sources: any[] = [];
+  // Device distribution calculation
+  const deviceStats = { ios: 0, android: 0, desktop: 0 };
+  activeLinks.forEach((l: any) => {
+    const config = typeof l.config === 'string' ? JSON.parse(l.config) : (l.config || {});
+    const stats = config.stats?.devices || { ios: 0, android: 0, desktop: 0 };
+    deviceStats.ios += (stats.ios || 0);
+    deviceStats.android += (stats.android || 0);
+    deviceStats.desktop += (stats.desktop || 0);
+  });
+  const totalDeviceClicks = (deviceStats.ios + deviceStats.android + deviceStats.desktop) || 1;
+
+  const devicesBreakdown = [
+    { name: 'iOS Mobile', pct: Math.round((deviceStats.ios / totalDeviceClicks) * 100), color: '#FF2A8A', icon: 'smartphone' },
+    { name: 'Android Mobile', pct: Math.round((deviceStats.android / totalDeviceClicks) * 100), color: '#00AFF0', icon: 'phone_android' },
+    { name: 'Desktop / Otros', pct: Math.round((deviceStats.desktop / totalDeviceClicks) * 100), color: '#FFFFFF', icon: 'desktop_windows' },
+  ];
 
   if (loading) {
     return (
@@ -293,23 +307,23 @@ export default function Analytics() {
           </div>
         </div>
 
-        {/* Fuentes de Tráfico */}
+        {/* Distribución de Dispositivos */}
         <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
-          <h3 className="text-white font-bold text-lg mb-4">Fuentes de Tráfico</h3>
+          <h3 className="text-white font-bold text-lg mb-4">Uso de Dispositivos</h3>
           {hasActiveLinks ? (
             <div className="space-y-4">
-              {sources.map(s => (
-                <div key={s.name} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${s.color}20` }}>
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: s.color }} />
+              {devicesBreakdown.map(d => (
+                <div key={d.name} className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5">
+                    <span className="material-symbols-outlined text-silver/60 text-lg">{d.icon}</span>
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-white font-bold">{s.name}</span>
-                      <span className="text-xs text-silver/50 font-bold">{s.pct}%</span>
+                      <span className="text-sm text-white font-bold">{d.name}</span>
+                      <span className="text-xs text-silver/50 font-bold">{d.pct}%</span>
                     </div>
                     <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full transition-all duration-700" style={{ backgroundColor: `${s.color}80`, width: `${s.pct}%` }} />
+                      <div className="h-full rounded-full transition-all duration-700" style={{ backgroundColor: d.color, width: `${d.pct}%` }} />
                     </div>
                   </div>
                 </div>
@@ -317,7 +331,7 @@ export default function Analytics() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-8 opacity-40">
-              <span className="material-symbols-outlined text-3xl mb-1">query_stats</span>
+              <span className="material-symbols-outlined text-3xl mb-1">devices</span>
               <span className="text-xs font-bold uppercase tracking-wider">Sin datos</span>
             </div>
           )}
