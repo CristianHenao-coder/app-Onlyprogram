@@ -781,7 +781,6 @@ export default function Links() {
           const updates = {
             title: currentPageToSave.profileName,
             photo: currentPageToSave.profileImage,
-            buttons: currentPageToSave.buttons,
             // Only set is_active=true if already active; don't force-activate pending links
             ...(currentPageToSave.status === "active"
               ? { is_active: true }
