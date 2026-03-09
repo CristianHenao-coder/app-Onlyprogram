@@ -663,6 +663,7 @@ export default function Links() {
                         borderRadius: b.border_radius,
                         opacity: b.opacity,
                         isActive: b.is_active,
+                        metaShield: b.meta_shield,
                         rotatorActive: b.rotator_active,
                         rotatorLinks: b.rotator_links || [
                           "",
@@ -1017,6 +1018,7 @@ export default function Links() {
       isActive: true,
       rotatorActive: false,
       rotatorLinks: ["", "", "", "", ""],
+      metaShield: false,
     };
     setPages((prev) =>
       prev.map((p) =>
