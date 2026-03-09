@@ -198,26 +198,54 @@ const InstagramVIPBypass = ({ slug }: { slug: string }) => {
   );
 };
 
-// 4. UPGRADE REQUIRED SCREEN (Basado en upgradeRequired.ejs)
+// 4. UPGRADE REQUIRED SCREEN (Basado en upgradeRequired.ejs - Tema Black Pro)
 const UpgradeRequired = () => {
-  const { t } = useTranslation();
   return (
-    <div className="fixed inset-0 z-[10003] flex flex-col items-center justify-center p-10 text-center text-white bg-black">
-      <div className="w-20 h-20 bg-white/5 border border-white/10 rounded-3xl flex items-center justify-center mb-8">
-        <span className="material-symbols-outlined text-4xl text-white/20">lock</span>
+    <div className="fixed inset-0 z-[10003] flex flex-col items-center justify-center p-5 text-center text-white font-['Inter',sans-serif]"
+      style={{
+        backgroundColor: "#050505",
+        backgroundImage: `
+          radial-gradient(circle at 20% 20%, rgba(225, 48, 108, 0.05) 0%, transparent 40%),
+          radial-gradient(circle at 80% 80%, rgba(0, 255, 136, 0.05) 0%, transparent 40%)
+        `
+      }}
+    >
+      <div className="relative w-full max-w-[450px] px-5 py-10 z-10 flex flex-col items-center">
+
+        {/* Box Icon con Animación Pulse */}
+        <div
+          className="text-[80px] mb-[30px] animate-[pulse_2s_infinite_ease-in-out]"
+          style={{ filter: "drop-shadow(0 0 15px #e1306c)" }}
+        >
+          🛡️
+        </div>
+
+        <h1 className="font-['Orbitron',sans-serif] text-[24px] tracking-[2px] mb-[15px] uppercase text-white">
+          Protección Requerida
+        </h1>
+
+        <div className="bg-[#e1306c]/10 border border-[#e1306c]/30 p-[15px] rounded-[12px] mb-[30px] text-[13px] text-[#ff6ba8] w-full">
+          Atención: El dueño de este enlace debe activar el servicio de protección para continuar.
+        </div>
+
+        <p className="text-[#888] leading-[1.6] mb-[40px] text-[15px]">
+          Este Smart Link está intentando utilizar funciones avanzadas de seguridad que no se encuentran activas en este momento.
+        </p>
+
+        <a
+          href="https://t.me/blackproonlyfans"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block bg-gradient-to-tr from-[#e1306c] to-[#ff6ba8] text-white no-underline px-[32px] py-[16px] rounded-[50px] font-bold text-[14px] tracking-[1px] uppercase shadow-[0_10px_20px_rgba(225,48,108,0.3)] hover:-translate-y-[3px] hover:shadow-[0_15px_30px_rgba(225,48,108,0.5)] transition-all duration-300"
+        >
+          Contactar Soporte
+        </a>
+
+        <div className="mt-[50px] text-[11px] text-[#444] tracking-[1px] uppercase">
+          BLACK PRO © 2026 | SECURE TRAFFIC SYSTEM
+        </div>
+
       </div>
-      <h1 className="text-3xl font-black uppercase tracking-tighter mb-4">
-        {t("landing.upgradeRequired")}
-      </h1>
-      <p className="max-w-xs text-silver/40 text-sm mb-10 leading-relaxed font-medium">
-        {t("landing.upgradeMsg")}
-      </p>
-      <a
-        href="https://onlyprogramlink.com/dashboard/payments"
-        className="px-8 py-3 bg-white text-black font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:scale-105 active:scale-95 transition-all"
-      >
-        {t("landing.getShield")}
-      </a>
     </div>
   );
 };
