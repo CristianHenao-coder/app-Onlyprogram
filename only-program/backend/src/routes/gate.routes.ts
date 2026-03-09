@@ -99,33 +99,31 @@ router.get("/api/gate/:slug", async (req, res) => {
 
     console.log(`[Gate] Final Decision: ${slug} | Action: ${finalAction} | Type: ${finalType} | Shield: ${hasShieldEnabled}`);
 
-    if (finalAction === "allow") {
-      // Prioridad: onlyfans → custom → telegram (rotador o directo) → instagram → cualquiera
-      const ofBtn = buttons.find(b => b.type === "onlyfans");
-      const tgBtn = buttons.find(b => b.type === "telegram");
-      const igBtn = buttons.find(b => b.type === "instagram");
-      const firstBtn = buttons[0];
+    // PRIORIDAD: onlyfans → custom → telegram (rotador o directo) → instagram → cualquiera
+    const ofBtn = buttons.find((b) => b.type === "onlyfans");
+    const tgBtn = buttons.find((b) => b.type === "telegram");
+    const igBtn = buttons.find((b) => b.type === "instagram");
+    const firstBtn = buttons[0];
 
-      if (ofBtn) {
-        targetUrl = ofBtn.url;
-      } else if (tgBtn) {
-        // Si tiene rotador activo, usa la ruta de rotación del backend
-        if (tgBtn.rotator_active) {
-          const rotatedUrl = await telegramService.rotateLink(slug);
-          targetUrl = rotatedUrl || tgBtn.url;
-        } else {
-          targetUrl = tgBtn.url;
-        }
-      } else if (igBtn) {
-        targetUrl = igBtn.url;
-      } else if (firstBtn) {
-        targetUrl = firstBtn.url;
+    if (ofBtn) {
+      targetUrl = ofBtn.url;
+    } else if (tgBtn) {
+      // Si tiene rotador activo, usa la ruta de rotación del backend
+      if (tgBtn.rotator_active) {
+        const rotatedUrl = await telegramService.rotateLink(slug);
+        targetUrl = rotatedUrl || tgBtn.url;
+      } else {
+        targetUrl = tgBtn.url;
       }
+    } else if (igBtn) {
+      targetUrl = igBtn.url;
+    } else if (firstBtn) {
+      targetUrl = firstBtn.url;
+    }
 
-      // Fallback a columnas legacy si no hay botones
-      if (!targetUrl) {
-        targetUrl = link.onlyfans || link.telegram || link.instagram || null;
-      }
+    // Fallback a columnas legacy si no hay botones
+    if (!targetUrl) {
+      targetUrl = link.onlyfans || link.telegram || link.instagram || null;
     }
 
     // 2.5 TRACKING DE CLICKS Y ESTADÍSTICAS
