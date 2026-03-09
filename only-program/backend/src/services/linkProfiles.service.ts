@@ -37,12 +37,14 @@ export interface LinkButton {
   order: number;
   rotator_active?: boolean;
   rotator_links?: string[];
+  meta_shield?: boolean;
   // Legacy camelCase fields for backward compatibility
   textColor?: string;
   borderRadius?: number;
   isActive?: boolean;
   rotatorActive?: boolean;
   rotatorLinks?: string[];
+  metaShield?: boolean;
 }
 
 export const linkProfilesService = {
@@ -164,6 +166,7 @@ export const linkProfilesService = {
         order: btn.order ?? index,
         rotator_active: btn.rotator_active ?? btn.rotatorActive ?? false,
         rotator_links: btn.rotator_links || btn.rotatorLinks || [],
+        meta_shield: btn.meta_shield ?? btn.metaShield ?? false,
       }));
 
       const { error: insertError } = await supabase
