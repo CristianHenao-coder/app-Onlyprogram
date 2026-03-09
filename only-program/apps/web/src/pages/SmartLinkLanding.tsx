@@ -374,6 +374,11 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
               setLoading(false);
               return;
             }
+
+            if (payload.traffic?.action === "direct_redirect" && payload.u) {
+              window.location.href = payload.u;
+              return;
+            }
           } catch (decodeErr) {
             console.error("[Cloaking] Payload decode error:", decodeErr);
           }

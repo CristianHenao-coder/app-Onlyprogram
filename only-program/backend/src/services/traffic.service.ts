@@ -25,7 +25,7 @@ const BOT_CHALLENGE_THRESHOLD = 7;
 const uaMatches = (list: string[], ua: string) => list.some(t => ua.includes(t));
 
 export interface TrafficAnalysisResult {
-    action: 'allow' | 'show_overlay' | 'block';
+    action: 'allow' | 'show_overlay' | 'block' | 'direct_redirect';
     type?: string;
     device?: 'ios' | 'android' | 'desktop';
     flags?: Record<string, boolean>;

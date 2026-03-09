@@ -110,7 +110,8 @@ interface LinkPage {
   profileImage: string;
   profileImageSize?: number; // 0-100 scale
   template: TemplateType;
-  landingMode?: "circle" | "full"; // Circle (default) or Full Photo Background
+  landingMode?: "circle" | "full" | "direct";
+  directUrl?: string;
   theme: {
     pageBorderColor: string;
     overlayOpacity: number; // 0-100
@@ -128,6 +129,8 @@ interface LinkPage {
   telegramMaxCapacity?: number; // Max clicks per rotator link before rotating
   telegramRotationLimit?: number; // Rotate every N clicks (1 = round robin)
 }
+
+export type PageData = LinkPage;
 
 // Icons Components
 const Icons = {
@@ -206,6 +209,7 @@ const getDefaults = (t: any) => ({
     profileImageSize: 100,
     template: "minimal" as TemplateType,
     landingMode: "circle" as const,
+    directUrl: "",
     theme: {
       pageBorderColor: "#333333",
       overlayOpacity: 40,
@@ -2376,218 +2380,253 @@ export default function Links() {
                                     >
                                       {t("dashboard.links.fullMode")}
                                     </button>
+                                    <button
+                                      onClick={() => {
+                                        handleUpdatePage("landingMode", "direct");
+                                      }}
+                                      className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all flex items-center gap-1 ${currentPage.landingMode === "direct" ? "bg-red-500 text-white shadow-lg" : "text-silver/60 hover:text-white"}`}
+                                    >
+                                      <span className="material-symbols-outlined text-[10px]">bolt</span>
+                                      Directo
+                                    </button>
                                   </div>
                                 </div>
 
-                                <div className="flex gap-6 items-start">
-                                  <div className="space-y-3 shrink-0">
-                                    <div
-                                      className="group relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-white/20 hover:border-primary transition-colors"
-                                      style={{
-                                        backgroundColor:
-                                          currentPage.theme.backgroundType ===
-                                            "solid"
-                                            ? currentPage.theme.backgroundStart
-                                            : currentPage.theme.backgroundStart,
-                                      }}
-                                    >
-                                      <img
-                                        src={currentPage.profileImage}
-                                        className="w-full h-full object-cover"
+                                {currentPage.landingMode === "direct" ? (
+                                  <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-2xl animate-fade-in text-center">
+                                    <span className="material-symbols-outlined text-4xl text-red-500 mb-4 block animate-bounce-subtle">
+                                      rocket_launch
+                                    </span>
+                                    <h3 className="text-lg font-bold text-white mb-2">Modo Escudo Directo Activado</h3>
+                                    <p className="text-sm text-silver/60 mb-6 max-w-md mx-auto">
+                                      En este modo, tu link no mostrará botones ni apariencia visual. Al hacer clic desde Instagram o Facebook, el escudo se activará y el usuario será <b>redirigido automáticamente</b> al enlace que ingreses abajo.
+                                    </p>
+                                    <div className="space-y-2 max-w-lg mx-auto text-left">
+                                      <label className="text-[10px] font-bold text-red-400 uppercase pl-1">
+                                        URL de Destino Final (OnlyFans / Telegram, etc.)
+                                      </label>
+                                      <input
+                                        type="url"
+                                        placeholder="https://onlyfans.com/tu_perfil"
+                                        value={currentPage.directUrl || ""}
+                                        onChange={(e) => handleUpdatePage("directUrl", e.target.value)}
+                                        className="w-full bg-[#050505] border border-red-500/30 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.1)] transition-all placeholder:text-silver/20"
                                       />
-                                      <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer">
-                                        <span className="material-symbols-outlined text-white text-sm mb-1">
-                                          upload
-                                        </span>
-                                        <span className="text-[8px] text-white font-bold uppercase">
-                                          {t("common.change")}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <div className="flex gap-6 items-start">
+                                      <div className="space-y-3 shrink-0">
+                                        <div
+                                          className="group relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-white/20 hover:border-primary transition-colors"
+                                          style={{
+                                            backgroundColor:
+                                              currentPage.theme.backgroundType ===
+                                                "solid"
+                                                ? currentPage.theme.backgroundStart
+                                                : currentPage.theme.backgroundStart,
+                                          }}
+                                        >
+                                          <img
+                                            src={currentPage.profileImage}
+                                            className="w-full h-full object-cover"
+                                          />
+                                          <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer">
+                                            <span className="material-symbols-outlined text-white text-sm mb-1">
+                                              upload
+                                            </span>
+                                            <span className="text-[8px] text-white font-bold uppercase">
+                                              {t("common.change")}
+                                            </span>
+                                          </div>
+                                          <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleImageUpload}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                            accept="image/*"
+                                          />
+                                        </div>
+                                        <div className="space-y-1 w-24">
+                                          <label className="text-[8px] font-bold text-silver/40 uppercase block text-center">
+                                            {t("dashboard.links.size")} (
+                                            {currentPage.profileImageSize || 100}px)
+                                          </label>
+                                          <input
+                                            type="range"
+                                            min="50"
+                                            max="150"
+                                            value={
+                                              currentPage.profileImageSize || 100
+                                            }
+                                            onChange={(e) =>
+                                              handleUpdatePage(
+                                                "profileImageSize",
+                                                parseInt(e.target.value),
+                                              )
+                                            }
+                                            className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                                          />
+                                        </div>
+                                      </div>
+
+                                      <div className="flex-1 space-y-4">
+                                        <div className="space-y-1">
+                                          <label className="text-[10px] font-bold text-silver/40 uppercase pl-1">
+                                            {t("dashboard.links.visibleName")}
+                                          </label>
+                                          <input
+                                            type="text"
+                                            value={currentPage.profileName}
+                                            onChange={(e) => {
+                                              handleUpdatePage(
+                                                "profileName",
+                                                e.target.value,
+                                              );
+                                              handleUpdatePage(
+                                                "name",
+                                                e.target.value,
+                                              );
+                                            }}
+                                            className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-primary"
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </>
+                                )}
+
+                                <div className="pt-6 mt-6 border-t border-white/5">
+                                  <label className="text-[10px] font-bold text-silver/40 uppercase mb-3 block">
+                                    {t("dashboard.links.pageBackground")}
+                                  </label>
+                                  <div className="flex gap-4 mb-4">
+                                    {/* When Full mode is active, Solid and Gradient are locked */}
+                                    {currentPage.landingMode === "full" ? (
+                                      <div className="flex items-center gap-3">
+                                        <div className="flex bg-[#0B0B0B] border border-border p-1 rounded-xl w-fit opacity-40 pointer-events-none select-none" title="Solo disponible en modo Minimalista">
+                                          <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg text-silver/30 cursor-not-allowed">
+                                            {t("dashboard.links.solid")}
+                                          </button>
+                                          <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg text-silver/30 cursor-not-allowed">
+                                            {t("dashboard.links.gradient")}
+                                          </button>
+                                          <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg bg-primary/80 text-white shadow-lg rounded-lg cursor-not-allowed">
+                                            {t("dashboard.links.blurPhoto")}
+                                          </button>
+                                        </div>
+                                        <span className="text-[10px] text-primary/80 font-bold flex items-center gap-1">
+                                          <span className="material-symbols-outlined text-sm">lock</span>
+                                          Blur obligatorio en modo Full
                                         </span>
                                       </div>
-                                      <input
-                                        type="file"
-                                        ref={fileInputRef}
-                                        onChange={handleImageUpload}
-                                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                        accept="image/*"
-                                      />
-                                    </div>
-                                    <div className="space-y-1 w-24">
-                                      <label className="text-[8px] font-bold text-silver/40 uppercase block text-center">
-                                        {t("dashboard.links.size")} (
-                                        {currentPage.profileImageSize || 100}px)
-                                      </label>
-                                      <input
-                                        type="range"
-                                        min="50"
-                                        max="150"
-                                        value={
-                                          currentPage.profileImageSize || 100
-                                        }
-                                        onChange={(e) =>
-                                          handleUpdatePage(
-                                            "profileImageSize",
-                                            parseInt(e.target.value),
-                                          )
-                                        }
-                                        className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
-                                      />
-                                    </div>
-                                  </div>
-
-                                  <div className="flex-1 space-y-4">
-                                    <div className="space-y-1">
-                                      <label className="text-[10px] font-bold text-silver/40 uppercase pl-1">
-                                        {t("dashboard.links.visibleName")}
-                                      </label>
-                                      <input
-                                        type="text"
-                                        value={currentPage.profileName}
-                                        onChange={(e) => {
-                                          handleUpdatePage(
-                                            "profileName",
-                                            e.target.value,
-                                          );
-                                          handleUpdatePage(
-                                            "name",
-                                            e.target.value,
-                                          );
-                                        }}
-                                        className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-primary"
-                                      />
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="pt-6 mt-6 border-t border-white/5">
-                                <label className="text-[10px] font-bold text-silver/40 uppercase mb-3 block">
-                                  {t("dashboard.links.pageBackground")}
-                                </label>
-                                <div className="flex gap-4 mb-4">
-                                  {/* When Full mode is active, Solid and Gradient are locked */}
-                                  {currentPage.landingMode === "full" ? (
-                                    <div className="flex items-center gap-3">
-                                      <div className="flex bg-[#0B0B0B] border border-border p-1 rounded-xl w-fit opacity-40 pointer-events-none select-none" title="Solo disponible en modo Minimalista">
-                                        <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg text-silver/30 cursor-not-allowed">
+                                    ) : (
+                                      <div className="flex bg-[#0B0B0B] border border-border p-1 rounded-xl w-fit">
+                                        <button
+                                          onClick={() =>
+                                            handleUpdatePage(
+                                              "theme.backgroundType",
+                                              "solid",
+                                            )
+                                          }
+                                          className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "solid" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
+                                        >
                                           {t("dashboard.links.solid")}
                                         </button>
-                                        <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg text-silver/30 cursor-not-allowed">
+                                        <button
+                                          onClick={() =>
+                                            handleUpdatePage(
+                                              "theme.backgroundType",
+                                              "gradient",
+                                            )
+                                          }
+                                          className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "gradient" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
+                                        >
                                           {t("dashboard.links.gradient")}
                                         </button>
-                                        <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg bg-primary/80 text-white shadow-lg rounded-lg cursor-not-allowed">
+                                        <button
+                                          onClick={() =>
+                                            handleUpdatePage(
+                                              "theme.backgroundType",
+                                              "blur",
+                                            )
+                                          }
+                                          className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "blur" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
+                                        >
                                           {t("dashboard.links.blurPhoto")}
                                         </button>
                                       </div>
-                                      <span className="text-[10px] text-primary/80 font-bold flex items-center gap-1">
-                                        <span className="material-symbols-outlined text-sm">lock</span>
-                                        Blur obligatorio en modo Full
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    <div className="flex bg-[#0B0B0B] border border-border p-1 rounded-xl w-fit">
-                                      <button
-                                        onClick={() =>
-                                          handleUpdatePage(
-                                            "theme.backgroundType",
-                                            "solid",
-                                          )
-                                        }
-                                        className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "solid" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
-                                      >
-                                        {t("dashboard.links.solid")}
-                                      </button>
-                                      <button
-                                        onClick={() =>
-                                          handleUpdatePage(
-                                            "theme.backgroundType",
-                                            "gradient",
-                                          )
-                                        }
-                                        className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "gradient" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
-                                      >
-                                        {t("dashboard.links.gradient")}
-                                      </button>
-                                      <button
-                                        onClick={() =>
-                                          handleUpdatePage(
-                                            "theme.backgroundType",
-                                            "blur",
-                                          )
-                                        }
-                                        className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "blur" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
-                                      >
-                                        {t("dashboard.links.blurPhoto")}
-                                      </button>
-                                    </div>
-                                  )}
-                                </div>
-
-                                {currentPage.theme.backgroundType ===
-                                  "solid" ? (
-                                  <div className="flex items-center gap-3 bg-black/20 p-3 rounded-xl border border-white/5">
-                                    <input
-                                      type="color"
-                                      value={currentPage.theme.backgroundStart}
-                                      onChange={(e) =>
-                                        handleUpdatePage(
-                                          "theme.backgroundStart",
-                                          e.target.value,
-                                        )
-                                      }
-                                      className="h-10 w-10 rounded-lg cursor-pointer border-none bg-transparent"
-                                    />
-                                    <span className="text-xs font-mono text-silver/50 uppercase">
-                                      {currentPage.theme.backgroundStart}
-                                    </span>
+                                    )}
                                   </div>
-                                ) : currentPage.theme.backgroundType ===
-                                  "gradient" ? (
-                                  <div className="grid grid-cols-2 gap-3">
-                                    <div className="bg-black/20 p-3 rounded-xl border border-white/5">
-                                      <p className="text-[9px] text-silver/30 font-bold uppercase mb-2">
-                                        Inicio
-                                      </p>
+
+                                  {currentPage.theme.backgroundType ===
+                                    "solid" ? (
+                                    <div className="flex items-center gap-3 bg-black/20 p-3 rounded-xl border border-white/5">
                                       <input
                                         type="color"
-                                        value={
-                                          currentPage.theme.backgroundStart
-                                        }
+                                        value={currentPage.theme.backgroundStart}
                                         onChange={(e) =>
                                           handleUpdatePage(
                                             "theme.backgroundStart",
                                             e.target.value,
                                           )
                                         }
-                                        className="h-10 w-full rounded-lg cursor-pointer border-none bg-transparent"
+                                        className="h-10 w-10 rounded-lg cursor-pointer border-none bg-transparent"
                                       />
+                                      <span className="text-xs font-mono text-silver/50 uppercase">
+                                        {currentPage.theme.backgroundStart}
+                                      </span>
                                     </div>
-                                    <div className="bg-black/20 p-3 rounded-xl border border-white/5">
-                                      <p className="text-[9px] text-silver/30 font-bold uppercase mb-2">
-                                        Fin
+                                  ) : currentPage.theme.backgroundType ===
+                                    "gradient" ? (
+                                    <div className="grid grid-cols-2 gap-3">
+                                      <div className="bg-black/20 p-3 rounded-xl border border-white/5">
+                                        <p className="text-[9px] text-silver/30 font-bold uppercase mb-2">
+                                          Inicio
+                                        </p>
+                                        <input
+                                          type="color"
+                                          value={
+                                            currentPage.theme.backgroundStart
+                                          }
+                                          onChange={(e) =>
+                                            handleUpdatePage(
+                                              "theme.backgroundStart",
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="h-10 w-full rounded-lg cursor-pointer border-none bg-transparent"
+                                        />
+                                      </div>
+                                      <div className="bg-black/20 p-3 rounded-xl border border-white/5">
+                                        <p className="text-[9px] text-silver/30 font-bold uppercase mb-2">
+                                          Fin
+                                        </p>
+                                        <input
+                                          type="color"
+                                          value={currentPage.theme.backgroundEnd}
+                                          onChange={(e) =>
+                                            handleUpdatePage(
+                                              "theme.backgroundEnd",
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="h-10 w-full rounded-lg cursor-pointer border-none bg-transparent"
+                                        />
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <div className="bg-black/20 p-3 rounded-xl border border-white/5 flex items-center gap-3">
+                                      <span className="material-symbols-outlined text-silver/40">
+                                        blur_on
+                                      </span>
+                                      <p className="text-[10px] text-silver/50">
+                                        {t("dashboard.links.blurPhotoDesc")}
                                       </p>
-                                      <input
-                                        type="color"
-                                        value={currentPage.theme.backgroundEnd}
-                                        onChange={(e) =>
-                                          handleUpdatePage(
-                                            "theme.backgroundEnd",
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="h-10 w-full rounded-lg cursor-pointer border-none bg-transparent"
-                                      />
                                     </div>
-                                  </div>
-                                ) : (
-                                  <div className="bg-black/20 p-3 rounded-xl border border-white/5 flex items-center gap-3">
-                                    <span className="material-symbols-outlined text-silver/40">
-                                      blur_on
-                                    </span>
-                                    <p className="text-[10px] text-silver/50">
-                                      {t("dashboard.links.blurPhotoDesc")}
-                                    </p>
-                                  </div>
-                                )}
+                                  )}
+                                </div>
                               </div>
                             </section>
                           </div>
@@ -3209,124 +3248,136 @@ export default function Links() {
                 setShowButtonCreator(false);
               }}
             >
-              <div
-                className={`flex-1 overflow-y-auto custom-scrollbar relative flex flex-col ${currentPage.template === "full" ? "" : "transition-all duration-500"}`}
-                style={{
-                  background: getBackgroundStyle(currentPage).background,
-                  backgroundImage:
-                    getBackgroundStyle(currentPage).backgroundImage,
-                  backgroundSize:
-                    getBackgroundStyle(currentPage).backgroundSize,
-                  backgroundPosition:
-                    getBackgroundStyle(currentPage).backgroundPosition,
-                }}
-              >
-                {currentPage.theme.backgroundType === "blur" && (
-                  <div className="absolute inset-0 z-0 backdrop-blur-3xl bg-black/40 pointer-events-none"></div>
-                )}
-                {currentPage.template === "full" && (
-                  <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
-                    <div
-                      className="relative transition-all duration-300 shadow-2xl"
-                      style={{
-                        width: `${currentPage.profileImageSize || 100}%`,
-                        height: `${currentPage.profileImageSize || 100}%`,
-                      }}
-                    >
+              {currentPage.landingMode === "direct" ? (
+                <div className="flex-1 bg-[#050505] flex flex-col items-center justify-center px-6 text-center z-20 relative">
+                  <span className="material-symbols-outlined text-6xl text-red-500 mb-6 animate-[bounce_2s_infinite]">rocket_launch</span>
+                  <h3 className="text-white font-bold text-lg mb-2">Escudo Directo</h3>
+                  <p className="text-silver/60 text-xs mb-8 leading-relaxed">El usuario no verá un perfil público ni botones, el sistema intentará abrir la app destino de manera instantánea.</p>
+                  <div className="w-full bg-black/40 border border-red-500/20 rounded-xl p-3 text-left shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+                    <span className="text-[9px] font-black text-red-500 uppercase tracking-wider block mb-1">Destino Final</span>
+                    <p className="text-white text-xs truncate opacity-80">{currentPage.directUrl || "Configura el link a la izquierda..."}</p>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  className={`flex-1 overflow-y-auto custom-scrollbar relative flex flex-col ${currentPage.template === "full" ? "" : "transition-all duration-500"}`}
+                  style={{
+                    background: getBackgroundStyle(currentPage).background,
+                    backgroundImage:
+                      getBackgroundStyle(currentPage).backgroundImage,
+                    backgroundSize:
+                      getBackgroundStyle(currentPage).backgroundSize,
+                    backgroundPosition:
+                      getBackgroundStyle(currentPage).backgroundPosition,
+                  }}
+                >
+                  {currentPage.theme.backgroundType === "blur" && (
+                    <div className="absolute inset-0 z-0 backdrop-blur-3xl bg-black/40 pointer-events-none"></div>
+                  )}
+                  {currentPage.template === "full" && (
+                    <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
+                      <div
+                        className="relative transition-all duration-300 shadow-2xl"
+                        style={{
+                          width: `${currentPage.profileImageSize || 100}%`,
+                          height: `${currentPage.profileImageSize || 100}%`,
+                        }}
+                      >
+                        <img
+                          src={currentPage.profileImage}
+                          className="w-full h-full object-cover"
+                        />
+                        <div
+                          className="absolute inset-0 bg-black transition-all"
+                          style={{
+                            opacity: currentPage.theme.overlayOpacity / 100,
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  )}
+                  {currentPage.template === "split" && (
+                    <div className="h-1/2 w-full relative z-0 shrink-0">
                       <img
                         src={currentPage.profileImage}
                         className="w-full h-full object-cover"
                       />
-                      <div
-                        className="absolute inset-0 bg-black transition-all"
-                        style={{
-                          opacity: currentPage.theme.overlayOpacity / 100,
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                )}
-                {currentPage.template === "split" && (
-                  <div className="h-1/2 w-full relative z-0 shrink-0">
-                    <img
-                      src={currentPage.profileImage}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                )}
-                <div
-                  className={`min-h-full p-6 pt-12 flex flex-col relative z-20 ${currentPage.template === "split" ? "" : "items-center"} ${currentPage.template === "minimal" ? "justify-center" : ""} ${currentPage.template === "full" ? "justify-end pb-12" : ""}`}
-                >
-                  {currentPage.template !== "full" && (
-                    <div
-                      className={`mb-8 relative z-10 ${currentPage.template === "split" ? "mt-4 text-left" : "text-center"}`}
-                    >
-                      {currentPage.template === "minimal" && (
-                        <div
-                          className="rounded-full bg-gray-800 mb-4 overflow-hidden border-4 shadow-xl mx-auto transition-all"
-                          style={{
-                            borderColor: currentPage.theme.pageBorderColor,
-                            width: `${currentPage.profileImageSize || 96}px`,
-                            height: `${currentPage.profileImageSize || 96}px`,
-                          }}
-                        >
-                          <img
-                            src={currentPage.profileImage}
-                            alt="Avatar"
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-                      <h2 className="text-white font-bold text-xl leading-tight drop-shadow-lg px-4">
-                        {currentPage.profileName}
-                      </h2>
-                      <p className="text-white/70 text-xs mt-1 drop-shadow-md">
-                        @{currentPage.name.toLowerCase().replace(/\s/g, "")}
-                      </p>
-                    </div>
-                  )}
-                  {currentPage.template === "full" && (
-                    <div className="text-center mb-6">
-                      <h2 className="text-white font-bold text-2xl leading-tight drop-shadow-lg px-4">
-                        {currentPage.profileName}
-                      </h2>
                     </div>
                   )}
                   <div
-                    className={`w-full space-y-3 relative z-10 ${currentPage.template === "minimal" ? "max-w-[260px]" : ""}`}
+                    className={`min-h-full p-6 pt-12 flex flex-col relative z-20 ${currentPage.template === "split" ? "" : "items-center"} ${currentPage.template === "minimal" ? "justify-center" : ""} ${currentPage.template === "full" ? "justify-end pb-12" : ""}`}
                   >
-                    {currentPage.buttons.map((btn) => (
-                      <a
-                        key={btn.id}
-                        href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setSelectedButtonId(btn.id);
-                          setShowButtonCreator(false);
-                        }}
-                        className={`block w-full py-3.5 px-6 font-bold text-sm transition-transform active:scale-95 shadow-lg flex items-center justify-center gap-2 group backdrop-blur-sm cursor-pointer ${FONT_MAP[btn.font || "sans"]} ${selectedButtonId === btn.id ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-black" : ""}`}
-                        style={{
-                          backgroundColor:
-                            currentPage.template === "full"
-                              ? `${btn.color}CC`
-                              : btn.color,
-                          color: btn.textColor,
-                          borderRadius: `${btn.borderRadius}px`,
-                          opacity: btn.opacity / 100,
-                        }}
+                    {currentPage.template !== "full" && (
+                      <div
+                        className={`mb-8 relative z-10 ${currentPage.template === "split" ? "mt-4 text-left" : "text-center"}`}
                       >
-                        {btn.type !== "custom" && (
-                          <div className="w-5 h-5 fill-current">
-                            {SOCIAL_PRESETS[btn.type].icon}
+                        {currentPage.template === "minimal" && (
+                          <div
+                            className="rounded-full bg-gray-800 mb-4 overflow-hidden border-4 shadow-xl mx-auto transition-all"
+                            style={{
+                              borderColor: currentPage.theme.pageBorderColor,
+                              width: `${currentPage.profileImageSize || 96}px`,
+                              height: `${currentPage.profileImageSize || 96}px`,
+                            }}
+                          >
+                            <img
+                              src={currentPage.profileImage}
+                              alt="Avatar"
+                              className="w-full h-full object-cover"
+                            />
                           </div>
                         )}
-                        {btn.title}
-                      </a>
-                    ))}
+                        <h2 className="text-white font-bold text-xl leading-tight drop-shadow-lg px-4">
+                          {currentPage.profileName}
+                        </h2>
+                        <p className="text-white/70 text-xs mt-1 drop-shadow-md">
+                          @{currentPage.name.toLowerCase().replace(/\s/g, "")}
+                        </p>
+                      </div>
+                    )}
+                    {currentPage.template === "full" && (
+                      <div className="text-center mb-6">
+                        <h2 className="text-white font-bold text-2xl leading-tight drop-shadow-lg px-4">
+                          {currentPage.profileName}
+                        </h2>
+                      </div>
+                    )}
+                    <div
+                      className={`w-full space-y-3 relative z-10 ${currentPage.template === "minimal" ? "max-w-[260px]" : ""}`}
+                    >
+                      {currentPage.buttons.map((btn) => (
+                        <a
+                          key={btn.id}
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setSelectedButtonId(btn.id);
+                            setShowButtonCreator(false);
+                          }}
+                          className={`block w-full py-3.5 px-6 font-bold text-sm transition-transform active:scale-95 shadow-lg flex items-center justify-center gap-2 group backdrop-blur-sm cursor-pointer ${FONT_MAP[btn.font || "sans"]} ${selectedButtonId === btn.id ? "ring-2 ring-blue-500 ring-offset-2 ring-offset-black" : ""}`}
+                          style={{
+                            backgroundColor:
+                              currentPage.template === "full"
+                                ? `${btn.color}CC`
+                                : btn.color,
+                            color: btn.textColor,
+                            borderRadius: `${btn.borderRadius}px`,
+                            opacity: btn.opacity / 100,
+                          }}
+                        >
+                          {btn.type !== "custom" && (
+                            <div className="w-5 h-5 fill-current">
+                              {SOCIAL_PRESETS[btn.type].icon}
+                            </div>
+                          )}
+                          {btn.title}
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* SIGUIENTE PASO BUTTON */}
@@ -3335,27 +3386,44 @@ export default function Links() {
                 if (allDraftPages.length > 0) {
                   // 1. VALIDATE ONLY CURRENT PAGE (if it's a draft)
                   if (currentPage.status === "draft") {
-                    if (!currentPage.buttons || currentPage.buttons.length === 0) {
-                      toast.error(
-                        `"${currentPage.name}" no tiene ningún botón. Debes agregar al menos 1 botón para continuar.`,
-                        { duration: 5000 }
-                      );
-                      return;
-                    }
-                    for (const btn of currentPage.buttons) {
-                      if (!btn.url || !btn.url.trim()) {
+                    if (currentPage.landingMode === "direct") {
+                      if (!currentPage.directUrl || !currentPage.directUrl.trim()) {
                         toast.error(
-                          `El botón "${btn.title}" en "${currentPage.name}" no tiene URL. Agrégala antes de continuar.`,
+                          `"${currentPage.name}" no tiene URL de destino. Agrégala antes de continuar.`,
+                          { duration: 5000 }
+                        );
+                        return;
+                      }
+                      if (!isValidUrl(currentPage.directUrl.trim())) {
+                        toast.error(
+                          `La URL de destino en "${currentPage.name}" no es válida. Debe empezar con https://`,
                           { duration: 4000 }
                         );
                         return;
                       }
-                      if (!isValidUrl(btn.url.trim())) {
+                    } else {
+                      if (!currentPage.buttons || currentPage.buttons.length === 0) {
                         toast.error(
-                          `La URL del botón "${btn.title}" en "${currentPage.name}" no es válida. Debe empezar con https://`,
-                          { duration: 4000 }
+                          `"${currentPage.name}" no tiene ningún botón. Debes agregar al menos 1 botón para continuar.`,
+                          { duration: 5000 }
                         );
                         return;
+                      }
+                      for (const btn of currentPage.buttons) {
+                        if (!btn.url || !btn.url.trim()) {
+                          toast.error(
+                            `El botón "${btn.title}" en "${currentPage.name}" no tiene URL. Agrégala antes de continuar.`,
+                            { duration: 4000 }
+                          );
+                          return;
+                        }
+                        if (!isValidUrl(btn.url.trim())) {
+                          toast.error(
+                            `La URL del botón "${btn.title}" en "${currentPage.name}" no es válida. Debe empezar con https://`,
+                            { duration: 4000 }
+                          );
+                          return;
+                        }
                       }
                     }
                   }

@@ -67,68 +67,77 @@ router.get("/api/gate/:slug", async (req, res) => {
       return res.status(404).json({ data: secureData, error: "Node Offline" });
     }
 
+    // 1.5. Extraer configuración actual para leer el modo
+    const currentConfig = typeof link.config === 'string' ? JSON.parse(link.config) : (link.config || {});
+    const isDirectMode = currentConfig.landingMode === 'direct';
+
     // 2. Determinar destino (SOLO si está permitido)
     let targetUrl: string | null = null;
-    const buttons: any[] = (link.smart_link_buttons || [])
-      .filter((b: any) => b.is_active !== false)
-      .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
-
-    // Determinar si algún botón relevante tiene el escudo activado
-    const hasShieldEnabled = buttons.some(b =>
-      (b.type === 'instagram' || b.type === 'tiktok') && b.meta_shield
-    );
-
-    // LÓGICA DE DECISIÓN VIP / UPGRADE
     let finalAction = trafficAnalysis.action;
     let finalType = trafficAnalysis.type;
 
     const isInstagramThreads = trafficAnalysis.type === 'instagram_threads';
     const isOtherSocial = trafficAnalysis.type === 'social_app';
 
-    if (isInstagramThreads || isOtherSocial) {
-      if (hasShieldEnabled) {
+    if (isDirectMode) {
+      targetUrl = currentConfig.directUrl || null;
+
+      if (isInstagramThreads || isOtherSocial) {
         finalAction = 'show_overlay';
-        // Forzamos el tipo según el análisis, pero priorizando Instagram si lo es
         finalType = isInstagramThreads ? 'instagram_threads' : 'social_app';
       } else {
-        // Tráfico social pero sin escudo pagado? -> Mostrar Upgrade
-        finalAction = 'show_overlay';
-        finalType = 'upgrade_required';
+        finalAction = 'direct_redirect';
+      }
+    } else {
+      const buttons: any[] = (link.smart_link_buttons || [])
+        .filter((b: any) => b.is_active !== false)
+        .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+
+      const hasShieldEnabled = buttons.some(b =>
+        (b.type === 'instagram' || b.type === 'tiktok') && b.meta_shield
+      );
+
+      if (isInstagramThreads || isOtherSocial) {
+        if (hasShieldEnabled) {
+          finalAction = 'show_overlay';
+          finalType = isInstagramThreads ? 'instagram_threads' : 'social_app';
+        } else {
+          finalAction = 'show_overlay';
+          finalType = 'upgrade_required';
+        }
+      }
+
+      // PRIORIDAD: onlyfans → custom → telegram (rotador o directo) → instagram → cualquiera
+      const ofBtn = buttons.find((b) => b.type === "onlyfans");
+      const tgBtn = buttons.find((b) => b.type === "telegram");
+      const igBtn = buttons.find((b) => b.type === "instagram");
+      const firstBtn = buttons[0];
+
+      if (ofBtn) {
+        targetUrl = ofBtn.url;
+      } else if (tgBtn) {
+        if (tgBtn.rotator_active) {
+          const rotatedUrl = await telegramService.rotateLink(slug);
+          targetUrl = rotatedUrl || tgBtn.url;
+        } else {
+          targetUrl = tgBtn.url;
+        }
+      } else if (igBtn) {
+        targetUrl = igBtn.url;
+      } else if (firstBtn) {
+        targetUrl = firstBtn.url;
+      }
+
+      // Fallback a columnas legacy si no hay botones
+      if (!targetUrl) {
+        targetUrl = link.onlyfans || link.telegram || link.instagram || null;
       }
     }
 
-    console.log(`[Gate] Final Decision: ${slug} | Action: ${finalAction} | Type: ${finalType} | Shield: ${hasShieldEnabled}`);
-
-    // PRIORIDAD: onlyfans → custom → telegram (rotador o directo) → instagram → cualquiera
-    const ofBtn = buttons.find((b) => b.type === "onlyfans");
-    const tgBtn = buttons.find((b) => b.type === "telegram");
-    const igBtn = buttons.find((b) => b.type === "instagram");
-    const firstBtn = buttons[0];
-
-    if (ofBtn) {
-      targetUrl = ofBtn.url;
-    } else if (tgBtn) {
-      // Si tiene rotador activo, usa la ruta de rotación del backend
-      if (tgBtn.rotator_active) {
-        const rotatedUrl = await telegramService.rotateLink(slug);
-        targetUrl = rotatedUrl || tgBtn.url;
-      } else {
-        targetUrl = tgBtn.url;
-      }
-    } else if (igBtn) {
-      targetUrl = igBtn.url;
-    } else if (firstBtn) {
-      targetUrl = firstBtn.url;
-    }
-
-    // Fallback a columnas legacy si no hay botones
-    if (!targetUrl) {
-      targetUrl = link.onlyfans || link.telegram || link.instagram || null;
-    }
+    console.log(`[Gate] Final Decision: ${slug} | Action: ${finalAction} | Type: ${finalType} | Direct: ${isDirectMode}`);
 
     // 2.5 TRACKING DE CLICKS Y ESTADÍSTICAS
     try {
-      const currentConfig = typeof link.config === 'string' ? JSON.parse(link.config) : (link.config || {});
       const stats = currentConfig.stats || { devices: { ios: 0, android: 0, desktop: 0 } };
       const device = trafficAnalysis.device || 'desktop';
 
