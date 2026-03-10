@@ -3400,98 +3400,103 @@ export default function Links() {
             </div>
 
             {/* SIGUIENTE PASO BUTTON */}
-            <button
-              onClick={() => {
-                if (allDraftPages.length > 0) {
-                  // 1. VALIDATE ONLY CURRENT PAGE (if it's a draft)
-                  if (currentPage.status === "draft") {
-                    if (currentPage.landingMode === "direct") {
-                      if (!currentPage.directUrl || !currentPage.directUrl.trim()) {
-                        toast.error(
-                          `"${currentPage.name}" no tiene URL de destino. Agrégala antes de continuar.`,
-                          { duration: 5000 }
-                        );
-                        return;
-                      }
-                      if (!isValidUrl(currentPage.directUrl.trim())) {
-                        toast.error(
-                          `La URL de destino en "${currentPage.name}" no es válida. Debe empezar con https://`,
-                          { duration: 4000 }
-                        );
-                        return;
-                      }
-                    } else {
-                      if (!currentPage.buttons || currentPage.buttons.length === 0) {
-                        toast.error(
-                          `"${currentPage.name}" no tiene ningún botón. Debes agregar al menos 1 botón para continuar.`,
-                          { duration: 5000 }
-                        );
-                        return;
-                      }
-                      for (const btn of currentPage.buttons) {
-                        if (!btn.url || !btn.url.trim()) {
+            {currentPage?.status === "draft" && (
+              <button
+                onClick={() => {
+                  if (allDraftPages.length > 0) {
+                    // 1. VALIDATE ONLY CURRENT PAGE (if it's a draft)
+                    if (currentPage.status === "draft") {
+                      if (currentPage.landingMode === "direct") {
+                        if (!currentPage.directUrl || !currentPage.directUrl.trim()) {
                           toast.error(
-                            `El botón "${btn.title}" en "${currentPage.name}" no tiene URL. Agrégala antes de continuar.`,
+                            `"${currentPage.name}" no tiene URL de destino. Agrégala antes de continuar.`,
+                            { duration: 5000 }
+                          );
+                          return;
+                        }
+                        if (!isValidUrl(currentPage.directUrl.trim())) {
+                          toast.error(
+                            `La URL de destino en "${currentPage.name}" no es válida. Debe empezar con https://`,
                             { duration: 4000 }
                           );
                           return;
                         }
-                        if (!isValidUrl(btn.url.trim())) {
+                      } else {
+                        if (!currentPage.buttons || currentPage.buttons.length === 0) {
                           toast.error(
-                            `La URL del botón "${btn.title}" en "${currentPage.name}" no es válida. Debe empezar con https://`,
-                            { duration: 4000 }
+                            `"${currentPage.name}" no tiene ningún botón. Debes agregar al menos 1 botón para continuar.`,
+                            { duration: 5000 }
                           );
                           return;
+                        }
+                        for (const btn of currentPage.buttons) {
+                          if (!btn.url || !btn.url.trim()) {
+                            toast.error(
+                              `El botón "${btn.title}" en "${currentPage.name}" no tiene URL. Agrégala antes de continuar.`,
+                              { duration: 4000 }
+                            );
+                            return;
+                          }
+                          if (!isValidUrl(btn.url.trim())) {
+                            toast.error(
+                              `La URL del botón "${btn.title}" en "${currentPage.name}" no es válida. Debe empezar con https://`,
+                              { duration: 4000 }
+                            );
+                            return;
+                          }
                         }
                       }
                     }
-                  }
 
-                  // 2. FILTER OTHER DRAFTS (Include only those that are complete)
-                  const validDrafts = allDraftPages.filter(page => {
-                    const hasButtons = page.buttons && page.buttons.length > 0;
-                    const allUrlsValid = page.buttons.every(btn => btn.url && btn.url.trim() && isValidUrl(btn.url.trim()));
-                    return hasButtons && allUrlsValid;
-                  });
+                    // 2. FILTER OTHER DRAFTS (Include only those that are complete)
+                    const validDrafts = allDraftPages.filter((page: any) => {
+                      if (page.landingMode === "direct") {
+                         return page.directUrl && page.directUrl.trim() && isValidUrl(page.directUrl.trim());
+                      }
+                      const hasButtons = page.buttons && page.buttons.length > 0;
+                      const allUrlsValid = page.buttons.every((btn: any) => btn.url && btn.url.trim() && isValidUrl(btn.url.trim()));
+                      return hasButtons && allUrlsValid;
+                    });
 
-                  if (validDrafts.length === 0) {
-                    // This should only happen if the user manually tries to advance an empty state
-                    // and somehow bypassed the current page check above.
-                    return;
-                  }
+                    if (validDrafts.length === 0) {
+                      // This should only happen if the user manually tries to advance an empty state
+                      // and somehow bypassed the current page check above.
+                      return;
+                    }
 
-                  try {
-                    localStorage.setItem(
-                      "my_links_data_backup",
-                      JSON.stringify({
-                        timestamp: Date.now(),
-                        linksData: validDrafts,
-                      }),
-                    );
-                  } catch (e) {
-                    console.warn("Could not save backup to local storage due to quota limits");
-                  }
+                    try {
+                      localStorage.setItem(
+                        "my_links_data_backup",
+                        JSON.stringify({
+                          timestamp: Date.now(),
+                          linksData: validDrafts,
+                        }),
+                      );
+                    } catch (e) {
+                      console.warn("Could not save backup to local storage due to quota limits");
+                    }
 
-                  navigate("/dashboard/checkout", {
-                    state: {
-                      pendingPurchase: {
-                        type: "links_bundle",
-                        linksData: validDrafts,
-                        amount: null,
+                    navigate("/dashboard/checkout", {
+                      state: {
+                        pendingPurchase: {
+                          type: "links_bundle",
+                          linksData: validDrafts,
+                          amount: null,
+                        },
                       },
-                    },
-                  });
-                } else {
-                  navigate("/dashboard/home");
-                }
-              }}
-              className="w-[320px] py-3.5 px-6 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 group touch-manipulation"
-            >
-              <span>{t("dashboard.links.nextStep")}</span>
-              <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
-                arrow_forward
-              </span>
-            </button>
+                    });
+                  } else {
+                    navigate("/dashboard/home");
+                  }
+                }}
+                className="w-[320px] py-3.5 px-6 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 group touch-manipulation"
+              >
+                <span>{t("dashboard.links.nextStep")}</span>
+                <span className="material-symbols-outlined text-lg group-hover:translate-x-1 transition-transform">
+                  arrow_forward
+                </span>
+              </button>
+            )}
           </div>
         </div >
       )

@@ -29,6 +29,7 @@ export default function Pricing() {
   const [withTelegram, setWithTelegram] = useState(false);
   const [withCoupon, setWithCoupon] = useState(false);
   const [loadingPay, setLoadingPay] = useState(false);
+  const [showCouponGuide, setShowCouponGuide] = useState(false);
 
   // Wompi Widget is global
   const handleWompiPayment = async () => {
@@ -293,6 +294,32 @@ export default function Pricing() {
                     </div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* ANUNCIO CUPÓN */}
+            <div className="mt-12 max-w-4xl mx-auto" data-reveal>
+              <div className="rounded-[2rem] border border-primary/30 bg-primary/10 p-6 sm:p-8 text-center cursor-pointer transition-all hover:bg-primary/20 hover:border-primary/50 shadow-[0_0_30px_rgba(29,161,242,0.1)]" onClick={() => setShowCouponGuide(!showCouponGuide)}>
+                <div className="flex items-center justify-center gap-3 mb-2">
+                  <span className="material-symbols-outlined text-primary text-3xl">local_offer</span>
+                  <h3 className="text-xl sm:text-2xl font-black text-white">¿Cómo conseguir un cupón del 33% OFF?</h3>
+                </div>
+                <p className="text-silver/70 font-medium text-sm sm:text-base">Haz clic aquí para descubrir cómo obtener un descuento especial para tu primera compra.</p>
+                
+                {showCouponGuide && (
+                  <div className="mt-8 pt-8 border-t border-primary/20 text-left animate-fade-in">
+                    <h4 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                      <span className="material-symbols-outlined text-primary">stars</span>
+                      Sigue estos sencillos pasos:
+                    </h4>
+                    <ol className="list-decimal list-outside ml-6 space-y-4 text-silver/80 font-medium">
+                      <li>Síguenos en nuestra cuenta oficial de Instagram: <a href="http://instagram.com/blackonlypro/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-white transition-colors underline font-bold">@blackonlypro</a>.</li>
+                      <li>Busca nuestra <strong className="text-white">última publicación fijada</strong> relacionada con el cupón.</li>
+                      <li>Comenta la palabra <span className="text-primary font-extrabold uppercase bg-primary/20 px-2 py-0.5 rounded text-[13px]">"CUPON"</span> en esa publicación.</li>
+                      <li>¡Listo! Recibirás inmediatamente tu cupón del <strong className="text-green-400">33% de descuento</strong> por mensaje directo para aplicarlo en tu primera compra en la plataforma.</li>
+                    </ol>
+                  </div>
+                )}
               </div>
             </div>
 

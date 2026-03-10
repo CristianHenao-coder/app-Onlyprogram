@@ -106,52 +106,103 @@ export const translations = {
       goTo: "Ir a testimonio {{n}}",
       items: {
         t1: {
-          label: "-Zara blonde",
-          name: "Zara",
-          role: "Creadora Premium",
-          quote:
-            "Desde que uso Only Program, mis links están blindados. Se siente profesional.",
-          badge: "Anti-bot",
+          label: "Dana",
+          name: "Dana",
+          role: "Creadora",
+          quote: "Agradecida total con el sistema. Puse el link en todas mis redes y nadie me ha bajado la cuenta. ¡Por primera vez estoy trabajando en paz!",
+          badge: "Agradecida",
         },
         t2: {
-          label: "Sunnsine",
-          name: "Sun2",
-          role: "Creadora",
-          quote:
-            "Me encanta poder usar mi dominio y que todo se vea de marca y seguro.",
-          badge: "Dominios",
+          label: "Marisol",
+          name: "Marisol",
+          role: "Top Creator",
+          quote: "Mis suscriptores entran más fácil que nunca. No he vuelto a ver el cartel de cuenta bloqueada. ¡Una bendición enorme!",
+          badge: "Bendición",
         },
         t3: {
-          label: "Mia",
-          name: "Mia",
-          role: "Creadora",
+          label: "Maria",
+          name: "Maria",
+          role: "Modelo",
           quote:
-            "Las analíticas me muestran exactamente qué funciona y desde dónde llega mi tráfico.",
-          badge: "Analytics",
+            "Desde que uso esto, hago mis envivos tranquila porque sé que ya no me van a tumbar la cuenta por dirigir a mi link de OF. ¡Un alivio total!",
+          badge: "Anti-bloqueos",
         },
         t4: {
-          label: "Helen",
-          name: "Helen",
+          label: "Valentina",
+          name: "Valentina",
           role: "Creadora",
           quote:
-            "Me siento tranquila porque el acceso está verificado y el bot-shield trabaja solo.",
-          badge: "Seguridad",
+            "¡Por fin dejé de perder perfiles! Mis enlaces no tienen nada sospechoso y mi Instagram ya no me limita el alcance por poner el link en mi perfil.",
+          badge: "Sin Limitaciones",
         },
         t5: {
-          label: "Sarasuuun",
-          name: "Sarasuuun",
-          role: "Creadora",
+          label: "Sara",
+          name: "Sara",
+          role: "Creadora Premium",
           quote:
-            "Puedo pausar o ajustar todo. Es un sistema serio, no un link cualquiera.",
-          badge: "Control",
+            "Antes me aterraba poner cualquier link porque me bloqueaban de la nada. Ahora mis suscripciones subieron y la gente llega sin problemas a mi contenido.",
+          badge: "Tranquilidad",
         },
         t6: {
-          label: "Rocioo",
-          name: "Rocioo",
+          label: "Andrea",
+          name: "Andrea",
+          role: "Top Creator",
+          quote:
+            "Súper recomendado. Promociono mi perfil por todas partes y nunca me han detectado nada raro. Cero bajas de cuenta desde entonces.",
+          badge: "Seguridad",
+        },
+        t7: {
+          label: "Camila",
+          name: "Camila",
+          role: "Influencer",
+          quote:
+            "Este sistema me salvó la vida. Estaba cansada de perder cuentas de TikTok, ahora todo es tan seguro que las plataformas me dejan en paz.",
+          badge: "Protección",
+        },
+        t8: {
+          label: "Karla",
+          name: "Karla",
+          role: "Modelo Elite",
+          quote: "Cero fricción, cero bans. Mi manager me lo recomendó y mis ingresos se dispararon al no tener el alcance limitado. ¡Gracias por esto!",
+          badge: "Cero Bans",
+        },
+        t9: {
+          label: "Luz",
+          name: "Luz",
+          role: "Creadora VIP",
+          quote:
+            "Súper feliz con esto. No más shadowbans ni bloqueos por spam, mis fans entran rapidísimo y mi rendimiento no hace más que subir.",
+          badge: "Rendimiento",
+        },
+        t10: {
+          label: "Karen",
+          name: "Karen",
+          role: "Influencer",
+          quote: "Antes perdía seguidores por links feos que marcaban como spam. Ahora duermo tranquila sabiendo todo está seguro y bonito.",
+          badge: "Alivio",
+        },
+        t11: {
+          label: "Vale",
+          name: "Vale",
+          role: "Modelo Exclusiva",
+          quote:
+            "Es increíble poder trabajar sin miedo. Conecto mi perfil en todos lados y mis fans logran llegar a mi OF con total confianza.",
+          badge: "Confianza",
+        },
+        t12: {
+          label: "Daniela",
+          name: "Daniela",
           role: "Creadora",
           quote:
-            "La experiencia del usuario es limpia y mis fans llegan sin fricción. Se nota premium.",
-          badge: "Conversión",
+            "Mis lives en Insta por fin duran lo que deben durar. Les dejo mi link, van directo a verme y sigo transmitiendo como si nada.",
+          badge: "Lives Seguros",
+        },
+        t13: {
+          label: "Yuli",
+          name: "Yuli",
+          role: "VIP Creator",
+          quote: "He hecho miles de lives redirigiendo mi tráfico y nada pasa, todo seguro. ¡Recomendado a todas las chicas que sufrían como yo con los bans!",
+          badge: "Sin Riesgo",
         },
       },
 
@@ -869,6 +920,30 @@ export const translations = {
         comment:
           "Mis modelos están encantadas con el diseño de sus perfiles. Y yo con los datos que recibo.",
       },
+      r9: {
+        name: "Fernando T.",
+        role: "Head of Marketing",
+        comment:
+          "El soporte técnico siempre nos salva. Y lo principal: cero estrés por baneos masivos de links.",
+      },
+      r10: {
+        name: "Victoria C.",
+        role: "CEO Agency",
+        comment:
+          "Mis clientas están súper agradecidas por este sistema. Es muy intuitivo y funciona exactamente como promete.",
+      },
+      r11: {
+        name: "Daniela O.",
+        role: "Community Manager",
+        comment:
+          "Agradezco muchísimo no tener que cambiar perfiles a diario. Ahora nuestros enlaces son realmente estables.",
+      },
+      r12: {
+        name: "Lucas M.",
+        role: "Traffic Specialist",
+        comment:
+          "Resultados espectaculares desde el primer mes. Las funciones anti-bot superan a cualquier plataforma que haya usado.",
+      },
     },
     linkControlCenter: {
       title: "Beneficios y evolución tecnológica",
@@ -1036,52 +1111,103 @@ export const translations = {
       goTo: "Go to testimonial {{n}}",
       items: {
         t1: {
-          label: "-Zara blonde",
-          name: "Zara",
-          role: "Premium Creator",
-          quote:
-            "Since using Only Program, my links are armored. It feels professional.",
-          badge: "Anti-bot",
+          label: "Dana",
+          name: "Dana",
+          role: "Creator",
+          quote: "Totally grateful for this system. Put the link everywhere and no one has taken my account down. Working in peace for the first time!",
+          badge: "Grateful",
         },
         t2: {
-          label: "Sunnsine",
-          name: "Sun2",
-          role: "Creator",
-          quote:
-            "I love using my own domain—everything looks branded and secure.",
-          badge: "Domains",
+          label: "Marisol",
+          name: "Marisol",
+          role: "Top Creator",
+          quote: "My subs join easier than ever. Haven't seen a 'blocked account' warning again. An absolute blessing!",
+          badge: "Blessing",
         },
         t3: {
-          label: "Mia",
-          name: "Mia",
-          role: "Creator",
+          label: "Maria",
+          name: "Maria",
+          role: "Model",
           quote:
-            "Analytics show me exactly what works and where my traffic comes from.",
-          badge: "Analytics",
+            "Since using this, I do my livestreams in peace because I know they won't shut down my account for sharing my OF link anymore. Total relief!",
+          badge: "Anti-ban",
         },
         t4: {
-          label: "Helen",
-          name: "Helen",
+          label: "Valentina",
+          name: "Valentina",
           role: "Creator",
           quote:
-            "I feel calm because access is verified and the bot-shield works automatically.",
-          badge: "Security",
+            "I finally stopped losing profiles! My links have nothing suspicious, and Instagram no longer limits my reach for putting it in my bio.",
+          badge: "No Limits",
         },
         t5: {
-          label: "Sarasuuun",
-          name: "Sarasuuun",
-          role: "Creator",
+          label: "Sara",
+          name: "Sara",
+          role: "Premium Creator",
           quote:
-            "I can pause or adjust everything. It’s a real system, not just a link.",
-          badge: "Control",
+            "I used to be terrified of posting any link because I'd get blocked randomly. Now my subs are up and people reach my content smoothly.",
+          badge: "Peace of Mind",
         },
         t6: {
-          label: "Rocioo",
-          name: "Rocioo",
+          label: "Andrea",
+          name: "Andrea",
+          role: "Top Creator",
+          quote:
+            "Highly recommended. I promote my profile everywhere and nothing weird gets detected. Zero disabled accounts since then.",
+          badge: "Security",
+        },
+        t7: {
+          label: "Camila",
+          name: "Camila",
+          role: "Influencer",
+          quote:
+            "This system saved my life. I was tired of losing TikTok accounts, now everything is so safe the platforms leave me alone.",
+          badge: "Protection",
+        },
+        t8: {
+          label: "Karla",
+          name: "Karla",
+          role: "Elite Model",
+          quote: "Zero friction, zero bans. My manager recommended it and my income skyrocketed since my reach isn't limited. Thank you!",
+          badge: "Zero Bans",
+        },
+        t9: {
+          label: "Luz",
+          name: "Luz",
+          role: "VIP Creator",
+          quote:
+            "Super happy with this. No more shadowbans or spam blocks, my fans get in super fast, and my performance keeps climbing.",
+          badge: "Performance",
+        },
+        t10: {
+          label: "Karen",
+          name: "Karen",
+          role: "Influencer",
+          quote: "I used to lose followers because ugly links got flagged as spam. Now I sleep well knowing everything is safe and pretty.",
+          badge: "Relief",
+        },
+        t11: {
+          label: "Vale",
+          name: "Vale",
+          role: "Exclusive Model",
+          quote:
+            "It's amazing to work without fear. I connect my profile everywhere and my fans can reach my OF with complete confidence.",
+          badge: "Trust",
+        },
+        t12: {
+          label: "Daniela",
+          name: "Daniela",
           role: "Creator",
           quote:
-            "The user experience is clean and my fans arrive without friction. It feels premium.",
-          badge: "Conversion",
+            "My Insta lives finally last as long as they should. I drop my link, they go straight to see me, and I just keep streaming.",
+          badge: "Safe Lives",
+        },
+        t13: {
+          label: "Yuli",
+          name: "Yuli",
+          role: "VIP Creator",
+          quote: "Done thousands of lives redirecting my traffic, totally safe. Highly recommended to all girls who suffered from bans like me!",
+          badge: "Risk-Free",
         },
       },
 
@@ -1795,6 +1921,30 @@ export const translations = {
         comment:
           "My models are delighted with their profile designs. And I am with the data I receive.",
       },
+      r9: {
+        name: "Fernando T.",
+        role: "Head of Marketing",
+        comment:
+          "Tech support always saves us. Most importantly: zero stress about mass link bans.",
+      },
+      r10: {
+        name: "Victoria C.",
+        role: "Agency CEO",
+        comment:
+          "My clients are super thankful for this system. It's highly intuitive and works exactly as promised.",
+      },
+      r11: {
+        name: "Daniela O.",
+        role: "Community Manager",
+        comment:
+          "I greatly appreciate not having to swap profiles daily. Our links are genuinely stable, finally.",
+      },
+      r12: {
+        name: "Lucas M.",
+        role: "Traffic Specialist",
+        comment:
+          "Spectacular results from month one. The anti-bot tools surpass any other platform I've used.",
+      },
     },
     linkControlCenter: {
       title: "Benefits & Technological Evolution",
@@ -1958,49 +2108,103 @@ export const translations = {
       goTo: "Aller au témoignage {{n}}",
       items: {
         t1: {
-          label: "-Zara blonde",
-          name: "Zara",
-          role: "Créatrice Premium",
-          quote: "Depuis Only Program, mes liens sont blindés. C’est très pro.",
-          badge: "Anti-bot",
+          label: "Dana",
+          name: "Dana",
+          role: "Créatrice",
+          quote: "Tellement reconnaissante de ce système. J'ai mis le lien partout et aucun compte n'a sauté. Enfin, je travaille en paix !",
+          badge: "Reconnaissante",
         },
         t2: {
-          label: "Sunnsine",
-          name: "Sun2",
-          role: "Créatrice",
-          quote:
-            "J’adore utiliser mon domaine : tout est cohérent, de marque et sécurisé.",
-          badge: "Domaines",
+          label: "Marisol",
+          name: "Marisol",
+          role: "Top Creator",
+          quote: "Mes fans s'inscrivent plus facilement que jamais. Plus aucun avertissement de blocage. Une véritable bénédiction !",
+          badge: "Bénédiction",
         },
         t3: {
-          label: "Mia",
-          name: "Mia",
-          role: "Créatrice",
+          label: "Maria",
+          name: "Maria",
+          role: "Modèle",
           quote:
-            "Les analytiques montrent exactement ce qui marche et d’où vient le trafic.",
-          badge: "Analytiques",
+            "Depuis que j'utilise ça, je fais mes directs sereinement car je sais qu'on ne va plus bannir mon compte pour mon lien OF. Quel soulagement !",
+          badge: "Anti-blocages",
         },
         t4: {
-          label: "Helen",
-          name: "Helen",
-          role: "Créatrice",
-          quote: "Je suis rassurée : accès vérifié et bot-shield automatique.",
-          badge: "Sécurité",
-        },
-        t5: {
-          label: "Sarasuuun",
-          name: "Sarasuuun",
+          label: "Valentina",
+          name: "Valentina",
           role: "Créatrice",
           quote:
-            "Je peux tout ajuster. C’est un vrai système, pas un simple lien.",
-          badge: "Contrôle",
+            "J'ai enfin arrêté de perdre des profils ! Mes liens n'ont rien de suspect, et Instagram ne limite plus ma portée.",
+          badge: "Sans Limites",
+        },
+        t5: {
+          label: "Sara",
+          name: "Sara",
+          role: "Créatrice Premium",
+          quote:
+            "Avant, j'avais peur de poster un lien car je me faisais bloquer. Maintenant, mes abonnements augmentent naturellement.",
+          badge: "Tranquillité",
         },
         t6: {
-          label: "Rocioo",
-          name: "Rocioo",
+          label: "Andrea",
+          name: "Andrea",
+          role: "Top Creator",
+          quote:
+            "Très recommandé. Je fais la promo de mon profil partout et rien n'est signalé. Zéro bannissement depuis.",
+          badge: "Sécurité",
+        },
+        t7: {
+          label: "Camila",
+          name: "Camila",
+          role: "Influenceuse",
+          quote:
+            "Ce système m’a sauvée. J'en avais marre de perdre mes comptes TikTok, maintenant on me laisse tranquille.",
+          badge: "Protection",
+        },
+        t8: {
+          label: "Karla",
+          name: "Karla",
+          role: "Modèle Élite",
+          quote: "Zéro friction, zéro ban. Mon manager me l'a recommandé et mes revenus ont explosé car ma portée n'est plus limitée. Merci !",
+          badge: "Zéro Bans",
+        },
+        t9: {
+          label: "Luz",
+          name: "Luz",
+          role: "Créatrice VIP",
+          quote:
+            "Super contente. Plus de shadowbans, mes fans accèdent super vite et mes perfs décollent.",
+          badge: "Performance",
+        },
+        t10: {
+          label: "Karen",
+          name: "Karen",
+          role: "Influenceuse",
+          quote: "Avant je perdais des abonnés à cause de liens jugés spam. Maintenant je dors tranquille, tout est beau et sécurisé.",
+          badge: "Soulagement",
+        },
+        t11: {
+          label: "Vale",
+          name: "Vale",
+          role: "Modèle Exclusive",
+          quote:
+            "Incroyable de travailler sans peur. Je mets mon profil partout et mes fans arrivent sur mon OF en confiance.",
+          badge: "Confiance",
+        },
+        t12: {
+          label: "Daniela",
+          name: "Daniela",
           role: "Créatrice",
-          quote: "Les fans arrivent sans friction. L’expérience est premium.",
-          badge: "Conversion",
+          quote:
+            "Mes lives durent enfin le temps qu'il faut. Je donne mon lien et je continue à diffuser calmement.",
+          badge: "Lives Sûrs",
+        },
+        t13: {
+          label: "Yuli",
+          name: "Yuli",
+          role: "Créatrice VIP",
+          quote: "J'ai fait des milliers de lives en redirigeant mon trafic, tout est sûr. Recommandé à toutes les filles qui souffraient de bans comme moi !",
+          badge: "Sans Risque",
         },
       },
 
@@ -2715,6 +2919,30 @@ export const translations = {
         role: "Account Manager",
         comment:
           "Mes modèles sont ravies du design de leurs profils. Et moi des données que je reçois.",
+      },
+      r9: {
+        name: "Fernando T.",
+        role: "Head of Marketing",
+        comment:
+          "Le support technique nous sauve toujours. Le plus important : plus aucun stress pour les bannissements en masse.",
+      },
+      r10: {
+        name: "Victoria C.",
+        role: "CEO Agence",
+        comment:
+          "Mes clientes sont super reconnaissantes pour ce système. Intuitif et efficace comme promis.",
+      },
+      r11: {
+        name: "Daniela O.",
+        role: "Community Manager",
+        comment:
+          "J'apprécie tellement de ne plus avoir à changer de profil tous les jours. Nos liens sont très stables.",
+      },
+      r12: {
+        name: "Lucas M.",
+        role: "Traffic Specialist",
+        comment:
+          "Résultats spectaculaires dès le premier mois. Les outils anti-bot surpassent de loin la concurrence.",
       },
     },
     linkControlCenter: {

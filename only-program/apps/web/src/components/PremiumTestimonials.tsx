@@ -3,6 +3,19 @@ import { useTranslation } from "@/contexts/I18nContext";
 import { cmsService } from "@/services/cmsService";
 import ManagerReviews from "./ManagerReviews";
 import errorImage from "../assets/error/error.png";
+import creator1 from "../assets/creators/creator1.png";
+import creator2 from "../assets/creators/creator2.png";
+import creator3 from "../assets/creators/creator3.png";
+import creator4 from "../assets/creators/creator4.png";
+import creator5 from "../assets/creators/creator5.png";
+import creator6 from "../assets/creators/creator6.png";
+import creator7 from "../assets/creators/creator7.png";
+import creator8 from "../assets/creators/creator8.png";
+import creator9 from "../assets/creators/creator9.png";
+import creator10 from "../assets/creators/creator10.png";
+import creator11 from "../assets/creators/creator11.png";
+import creator12 from "../assets/creators/creator12.png";
+import creator13 from "../assets/creators/yuli.png";
 
 type Testimonial = {
   id: string;
@@ -46,37 +59,34 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
   const staticTestimonials: Testimonial[] = useMemo(
     () => [
       {
-        id: "t1",
-        label: t('testimonials.items.t1.label'),
-        name: t('testimonials.items.t1.name'),
-        role: t('testimonials.items.t1.role'),
-        quote: t('testimonials.items.t1.quote'),
-        badge: t('testimonials.items.t1.badge'),
-        image: errorImage,
+        id: "t12",
+        label: t('testimonials.items.t12.label'),
+        name: t('testimonials.items.t12.name'),
+        role: t('testimonials.items.t12.role'),
+        quote: t('testimonials.items.t12.quote'),
+        badge: t('testimonials.items.t12.badge'),
+        image: creator12,
         tint: "rgba(29,161,242,.08)",
-        videoSrc: "https://cdn.coverr.co/videos/coverr-young-woman-working-on-laptop-1570/1080p.mp4",
       },
       {
-        id: "t2",
-        label: t('testimonials.items.t2.label'),
-        name: t('testimonials.items.t2.name'),
-        role: t('testimonials.items.t2.role'),
-        quote: t('testimonials.items.t2.quote'),
-        badge: t('testimonials.items.t2.badge'),
-        image: errorImage,
+        id: "t11",
+        label: t('testimonials.items.t11.label'),
+        name: t('testimonials.items.t11.name'),
+        role: t('testimonials.items.t11.role'),
+        quote: t('testimonials.items.t11.quote'),
+        badge: t('testimonials.items.t11.badge'),
+        image: creator11,
         tint: "rgba(29,161,242,.08)",
-        videoSrc: "https://cdn.coverr.co/videos/coverr-businesswoman-typing-on-a-laptop-9714/1080p.mp4",
       },
       {
-        id: "t3",
-        label: t('testimonials.items.t3.label'),
-        name: t('testimonials.items.t3.name'),
-        role: t('testimonials.items.t3.role'),
-        quote: t('testimonials.items.t3.quote'),
-        badge: t('testimonials.items.t3.badge'),
-        image: errorImage,
+        id: "t7",
+        label: t('testimonials.items.t7.label'),
+        name: t('testimonials.items.t7.name'),
+        role: t('testimonials.items.t7.role'),
+        quote: t('testimonials.items.t7.quote'),
+        badge: t('testimonials.items.t7.badge'),
+        image: creator7,
         tint: "rgba(29,161,242,.08)",
-        videoSrc: "https://cdn.coverr.co/videos/coverr-freelancer-working-at-home-5697/1080p.mp4",
       },
       {
         id: "t4",
@@ -85,20 +95,28 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
         role: t('testimonials.items.t4.role'),
         quote: t('testimonials.items.t4.quote'),
         badge: t('testimonials.items.t4.badge'),
-        image: errorImage,
+        image: creator4,
         tint: "rgba(29,161,242,.08)",
-        videoSrc: "https://cdn.coverr.co/videos/coverr-young-woman-working-on-laptop-1570/1080p.mp4",
       },
       {
-        id: "t5",
-        label: t('testimonials.items.t5.label'),
-        name: t('testimonials.items.t5.name'),
-        role: t('testimonials.items.t5.role'),
-        quote: t('testimonials.items.t5.quote'),
-        badge: t('testimonials.items.t5.badge'),
-        image: errorImage,
+        id: "t9",
+        label: t('testimonials.items.t9.label'),
+        name: t('testimonials.items.t9.name'),
+        role: t('testimonials.items.t9.role'),
+        quote: t('testimonials.items.t9.quote'),
+        badge: t('testimonials.items.t9.badge'),
+        image: creator9,
         tint: "rgba(29,161,242,.08)",
-        videoSrc: "https://cdn.coverr.co/videos/coverr-businesswoman-typing-on-a-laptop-9714/1080p.mp4",
+      },
+      {
+        id: "t3",
+        label: t('testimonials.items.t3.label'),
+        name: t('testimonials.items.t3.name'),
+        role: t('testimonials.items.t3.role'),
+        quote: t('testimonials.items.t3.quote'),
+        badge: t('testimonials.items.t3.badge'),
+        image: creator3,
+        tint: "rgba(29,161,242,.08)",
       },
       {
         id: "t6",
@@ -107,9 +125,68 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
         role: t('testimonials.items.t6.role'),
         quote: t('testimonials.items.t6.quote'),
         badge: t('testimonials.items.t6.badge'),
-        image: errorImage,
+        image: creator6,
         tint: "rgba(29,161,242,.08)",
-        videoSrc: "https://cdn.coverr.co/videos/coverr-freelancer-working-at-home-5697/1080p.mp4",
+      },
+      {
+        id: "t5",
+        label: t('testimonials.items.t5.label'),
+        name: t('testimonials.items.t5.name'),
+        role: t('testimonials.items.t5.role'),
+        quote: t('testimonials.items.t5.quote'),
+        badge: t('testimonials.items.t5.badge'),
+        image: creator5,
+        tint: "rgba(29,161,242,.08)",
+      },
+      {
+        id: "t10",
+        label: t('testimonials.items.t10.label'),
+        name: t('testimonials.items.t10.name'),
+        role: t('testimonials.items.t10.role'),
+        quote: t('testimonials.items.t10.quote'),
+        badge: t('testimonials.items.t10.badge'),
+        image: creator10,
+        tint: "rgba(29,161,242,.08)",
+      },
+      {
+        id: "t8",
+        label: t('testimonials.items.t8.label'),
+        name: t('testimonials.items.t8.name'),
+        role: t('testimonials.items.t8.role'),
+        quote: t('testimonials.items.t8.quote'),
+        badge: t('testimonials.items.t8.badge'),
+        image: creator8,
+        tint: "rgba(29,161,242,.08)",
+      },
+      {
+        id: "t2",
+        label: t('testimonials.items.t2.label'),
+        name: t('testimonials.items.t2.name'),
+        role: t('testimonials.items.t2.role'),
+        quote: t('testimonials.items.t2.quote'),
+        badge: t('testimonials.items.t2.badge'),
+        image: creator2,
+        tint: "rgba(29,161,242,.08)",
+      },
+      {
+        id: "t1",
+        label: t('testimonials.items.t1.label'),
+        name: t('testimonials.items.t1.name'),
+        role: t('testimonials.items.t1.role'),
+        quote: t('testimonials.items.t1.quote'),
+        badge: t('testimonials.items.t1.badge'),
+        image: creator1,
+        tint: "rgba(29,161,242,.08)",
+      },
+      {
+        id: "t13",
+        label: t('testimonials.items.t13.label'),
+        name: t('testimonials.items.t13.name'),
+        role: t('testimonials.items.t13.role'),
+        quote: t('testimonials.items.t13.quote'),
+        badge: t('testimonials.items.t13.badge'),
+        image: creator13,
+        tint: "rgba(29,161,242,.08)",
       }
     ],
     [t]
@@ -118,7 +195,7 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
   const testimonials = useMemo(() => {
     let base = staticTestimonials;
     if (cmsTestimonials && cmsTestimonials.length > 0) {
-      base = cmsTestimonials.map((ct, i) => ({
+      const cmsMapped = cmsTestimonials.map((ct, i) => ({
         id: `cms-${i}`,
         label: "Creator",
         name: ct.name,
@@ -126,9 +203,10 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
         quote: ct.content || ct.quote,
         badge: ct.badge || "Verified",
         image: ct.avatar || errorImage,
-        tint: staticTestimonials[i % staticTestimonials.length].tint,
-        videoSrc: ct.videoSrc || staticTestimonials[i % staticTestimonials.length].videoSrc
+        tint: staticTestimonials[i % staticTestimonials.length]?.tint || "rgba(29,161,242,.08)",
+        videoSrc: ct.videoSrc
       }));
+      base = [...cmsMapped, ...staticTestimonials];
     }
     return base;
   }, [cmsTestimonials, staticTestimonials]);
@@ -277,11 +355,6 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
         </div>
 
         <div className="relative" data-reveal>
-          <div className="hidden md:flex absolute -top-2 right-0 gap-2 z-10">
-            <button onClick={goLeft} className="h-10 w-10 rounded-full bg-surface border border-border hover:border-primary/50 text-silver/70 hover:text-white transition-all" type="button"><span className="material-symbols-outlined text-lg">chevron_left</span></button>
-            <button onClick={goRight} className="h-10 w-10 rounded-full bg-surface border border-border hover:border-primary/50 text-silver/70 hover:text-white transition-all" type="button"><span className="material-symbols-outlined text-lg">chevron_right</span></button>
-          </div>
-
           <div ref={carouselRef} className="carousel-guard no-scrollbar snap-safe flex gap-5 md:gap-6 overflow-x-auto pb-6 scroll-smooth snap-x snap-mandatory pr-0 w-full max-w-full">
             {testimonials.map((t, idx) => {
               const isActive = idx === activeIndex;
@@ -309,10 +382,19 @@ export default function PremiumTestimonials({ previewData }: { previewData?: any
             })}
           </div>
 
-          <div className="flex justify-center gap-2 mt-6">
-            {testimonials.map((_, idx) => (
-              <button key={idx} type="button" onClick={() => { setActiveIndex(idx); scrollToIndex(idx); }} className={["h-2.5 rounded-full transition-all", idx === activeIndex ? "w-8 bg-primary" : "w-2.5 bg-white/15 hover:bg-white/25"].join(" ")} />
-            ))}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-6">
+            <button onClick={goLeft} className="hidden sm:flex items-center justify-center h-10 w-10 rounded-full bg-surface border border-border hover:border-primary/50 text-silver/70 hover:text-white transition-all pointer-events-auto" type="button"><span className="material-symbols-outlined text-lg">chevron_left</span></button>
+            <div className="flex items-center gap-2">
+              {testimonials.map((_, idx) => (
+                <button key={idx} type="button" onClick={() => { setActiveIndex(idx); scrollToIndex(idx); }} className={["h-2.5 rounded-full transition-all", idx === activeIndex ? "w-8 bg-primary" : "w-2.5 bg-white/15 hover:bg-white/25"].join(" ")} />
+              ))}
+            </div>
+            <button onClick={goRight} className="hidden sm:flex items-center justify-center h-10 w-10 rounded-full bg-surface border border-border hover:border-primary/50 text-silver/70 hover:text-white transition-all pointer-events-auto" type="button"><span className="material-symbols-outlined text-lg">chevron_right</span></button>
+          </div>
+          
+          <div className="flex sm:hidden items-center justify-center gap-4 mt-4">
+            <button onClick={goLeft} className="flex items-center justify-center h-12 w-12 rounded-full bg-surface border border-border hover:border-primary/50 text-silver/70 hover:text-white transition-all" type="button"><span className="material-symbols-outlined text-xl">chevron_left</span></button>
+            <button onClick={goRight} className="flex items-center justify-center h-12 w-12 rounded-full bg-surface border border-border hover:border-primary/50 text-silver/70 hover:text-white transition-all" type="button"><span className="material-symbols-outlined text-xl">chevron_right</span></button>
           </div>
         </div>
       </div>
