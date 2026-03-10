@@ -145,6 +145,16 @@ export default function Navbar({ previewData }: { previewData?: any }) {
                   <a
                     key={it.href}
                     href={targetHref}
+                    onClick={(e) => {
+                      if (targetHref.startsWith("#")) {
+                        e.preventDefault();
+                        const element = document.getElementById(targetHref.replace('#', ''));
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth' });
+                          window.history.pushState(null, "", targetHref);
+                        }
+                      }
+                    }}
                     className="text-sm font-semibold text-silver/70 hover:text-white transition-colors"
                   >
                     {it.label}

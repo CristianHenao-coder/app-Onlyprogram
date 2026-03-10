@@ -14,56 +14,84 @@ export default function ManagerReviews() {
       role: t("managerReviews.r1.role"),
       comment: t("managerReviews.r1.comment"),
       icon: "admin_panel_settings",
-      image: "https://i.pravatar.cc/150?u=CarlosR"
+      image: "https://i.pravatar.cc/150?img=11"
     },
     {
       name: "Ana M.",
       role: t("managerReviews.r2.role"),
       comment: t("managerReviews.r2.comment"),
       icon: "supervisor_account",
-      image: "https://i.pravatar.cc/150?u=AnaM"
+      image: "https://i.pravatar.cc/150?img=5"
     },
     {
       name: "Elite Agency",
       role: t("managerReviews.r3.role"),
       comment: t("managerReviews.r3.comment"),
       icon: "verified_user",
-      image: "https://i.pravatar.cc/150?u=EliteAgency"
+      image: "https://i.pravatar.cc/150?img=12"
     },
     {
       name: "Luis G.",
       role: t("managerReviews.r4.role"),
       comment: t("managerReviews.r4.comment"),
       icon: "speed",
-      image: "https://i.pravatar.cc/150?u=LuisG"
+      image: "https://i.pravatar.cc/150?img=14"
     },
     {
       name: "Sofía L.",
       role: t("managerReviews.r5.role"),
       comment: t("managerReviews.r5.comment"),
       icon: "chat",
-      image: "https://i.pravatar.cc/150?u=SofiaL"
+      image: "https://i.pravatar.cc/150?img=32"
     },
     {
       name: "Digital Growth",
       role: t("managerReviews.r6.role"),
       comment: t("managerReviews.r6.comment"),
       icon: "trending_up",
-      image: "https://i.pravatar.cc/150?u=DigitalGrowth"
+      image: "https://i.pravatar.cc/150?img=33"
     },
     {
       name: "Jorge B.",
       role: t("managerReviews.r7.role"),
       comment: t("managerReviews.r7.comment"),
       icon: "shield",
-      image: "https://i.pravatar.cc/150?u=JorgeB"
+      image: "https://i.pravatar.cc/150?img=68"
     },
     {
       name: "Laura P.",
       role: t("managerReviews.r8.role"),
       comment: t("managerReviews.r8.comment"),
       icon: "favorite",
-      image: "https://i.pravatar.cc/150?u=LauraP"
+      image: "https://i.pravatar.cc/150?img=44"
+    },
+    {
+      name: "Fernando T.",
+      role: t("managerReviews.r9.role"),
+      comment: t("managerReviews.r9.comment"),
+      icon: "trending_up",
+      image: "https://i.pravatar.cc/150?img=53"
+    },
+    {
+      name: "Victoria C.",
+      role: t("managerReviews.r10.role"),
+      comment: t("managerReviews.r10.comment"),
+      icon: "verified_user",
+      image: "https://i.pravatar.cc/150?img=47"
+    },
+    {
+      name: "Daniela O.",
+      role: t("managerReviews.r11.role"),
+      comment: t("managerReviews.r11.comment"),
+      icon: "favorite",
+      image: "https://i.pravatar.cc/150?img=45"
+    },
+    {
+      name: "Lucas M.",
+      role: t("managerReviews.r12.role"),
+      comment: t("managerReviews.r12.comment"),
+      icon: "speed",
+      image: "https://i.pravatar.cc/150?img=60"
     }
   ], [t]);
 
@@ -84,12 +112,14 @@ export default function ManagerReviews() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const maxIndex = Math.max(0, reviews.length - itemsPerPage);
+
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % reviews.length);
+    setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + reviews.length) % reviews.length);
+    setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
   };
 
   // Auto-play
@@ -175,8 +205,7 @@ export default function ManagerReviews() {
 
           {/* Dots */}
           <div className="flex justify-center gap-2 mt-8">
-            {reviews.map((_, i) => (
-              // Logic to show dots? Showing 8 dots is fine.
+            {Array.from({ length: maxIndex + 1 }).map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrentIndex(i)}
