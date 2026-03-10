@@ -3449,9 +3449,12 @@ export default function Links() {
                     }
 
                     // 2. FILTER OTHER DRAFTS (Include only those that are complete)
-                    const validDrafts = allDraftPages.filter(page => {
+                    const validDrafts = allDraftPages.filter((page: any) => {
+                      if (page.landingMode === "direct") {
+                         return page.directUrl && page.directUrl.trim() && isValidUrl(page.directUrl.trim());
+                      }
                       const hasButtons = page.buttons && page.buttons.length > 0;
-                      const allUrlsValid = page.buttons.every(btn => btn.url && btn.url.trim() && isValidUrl(btn.url.trim()));
+                      const allUrlsValid = page.buttons.every((btn: any) => btn.url && btn.url.trim() && isValidUrl(btn.url.trim()));
                       return hasButtons && allUrlsValid;
                     });
 
