@@ -1719,35 +1719,40 @@ export default function Links() {
                         )}
                       </div>
 
-                      {/* EDIT PROFILE BUTTON */}
-                      <button
-                        onClick={() => {
-                          setSelectedButtonId(null);
-                          setShowButtonCreator(false);
-                        }}
-                        className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all flex items-center justify-center gap-2 touch-manipulation"
-                      >
-                        <span className="material-symbols-outlined text-xl">
-                          settings
-                        </span>
-                        <span>{t("dashboard.links.editProfile", { defaultValue: "Editar Perfil" })}</span>
-                      </button>
+                      {/* ACTIONS: Only show if NOT in Direct Mode */}
+                      {currentPage.landingMode !== "direct" && (
+                        <>
+                          {/* EDIT PROFILE BUTTON */}
+                          <button
+                            onClick={() => {
+                              setSelectedButtonId(null);
+                              setShowButtonCreator(false);
+                            }}
+                            className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all flex items-center justify-center gap-2 touch-manipulation"
+                          >
+                            <span className="material-symbols-outlined text-xl">
+                              settings
+                            </span>
+                            <span>{t("dashboard.links.editProfile", { defaultValue: "Editar Perfil" })}</span>
+                          </button>
 
-                      {/* ADD BUTTON */}
-                      <button
-                        onClick={() => setShowButtonCreator(true)}
-                        className="w-full py-3 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 touch-manipulation"
-                      >
-                        <span className="material-symbols-outlined text-xl">
-                          add_circle
-                        </span>
-                        <span>{t("dashboard.links.addButton")}</span>
-                      </button>
+                          {/* ADD BUTTON */}
+                          <button
+                            onClick={() => setShowButtonCreator(true)}
+                            className="w-full py-3 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 touch-manipulation"
+                          >
+                            <span className="material-symbols-outlined text-xl">
+                              add_circle
+                            </span>
+                            <span>{t("dashboard.links.addButton")}</span>
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
 
-                  {/* COLLAPSED ADD BUTTON */}
-                  {sidebarCollapsed && (
+                  {/* COLLAPSED ACTIONS: Only show if NOT in Direct Mode */}
+                  {sidebarCollapsed && currentPage.landingMode !== "direct" && (
                     <div className="px-2 pb-3 flex flex-col items-center gap-3">
                       <button
                         onClick={() => {
@@ -1775,59 +1780,73 @@ export default function Links() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-3 relative z-0">
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                  >
-                    <SortableContext
-                      items={currentPage.buttons}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      <div className="space-y-2">
-                        {currentPage.buttons.map((btn) => (
-                          <div key={btn.id} className="relative group">
-                            <SortableButton
-                              btn={btn}
-                              isSelected={selectedButtonId === btn.id}
-                              onClick={() => {
-                                setSelectedButtonId(btn.id);
-                                setShowButtonCreator(false);
-                              }}
-                              collapsed={sidebarCollapsed}
-                              rotatorSurcharge={ROTATOR_SURCHARGE}
-                              socialPresets={SOCIAL_PRESETS}
-                            />
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteButton(btn.id);
-                              }}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-silver/20 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all z-10"
-                            >
-                              <span className="material-symbols-outlined text-sm">
-                                delete
-                              </span>
-                            </button>
-                          </div>
-                        ))}
-                        {currentPage.buttons.length === 0 &&
-                          !showButtonCreator && (
-                            <div className="text-center py-10 px-4 border-2 border-dashed border-white/5 rounded-xl">
-                              <span className="material-symbols-outlined text-3xl text-silver/20 mb-2">
-                                touch_app
-                              </span>
-                              <p className="text-xs text-silver/40">
-                                {t("dashboard.links.emptyLinkMsg", {
-                                  defaultValue:
-                                    "Tu link est� vac�o. �A�ade tu primer bot�n!",
-                                })}
-                              </p>
-                            </div>
-                          )}
+                  {currentPage.landingMode === "direct" ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4 animate-fade-in">
+                      <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-red-500 text-2xl">rocket_launch</span>
                       </div>
-                    </SortableContext>
-                  </DndContext>
+                      {!sidebarCollapsed && (
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold text-white uppercase tracking-wider">Modo Directo Activo</p>
+                          <p className="text-[10px] text-silver/40 leading-relaxed">No se requieren botones para este tipo de enlace.</p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext
+                        items={currentPage.buttons}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        <div className="space-y-2">
+                          {currentPage.buttons.map((btn) => (
+                            <div key={btn.id} className="relative group">
+                              <SortableButton
+                                btn={btn}
+                                isSelected={selectedButtonId === btn.id}
+                                onClick={() => {
+                                  setSelectedButtonId(btn.id);
+                                  setShowButtonCreator(false);
+                                }}
+                                collapsed={sidebarCollapsed}
+                                rotatorSurcharge={ROTATOR_SURCHARGE}
+                                socialPresets={SOCIAL_PRESETS}
+                              />
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteButton(btn.id);
+                                }}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-silver/20 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all z-10"
+                              >
+                                <span className="material-symbols-outlined text-sm">
+                                  delete
+                                </span>
+                              </button>
+                            </div>
+                          ))}
+                          {currentPage.buttons.length === 0 &&
+                            !showButtonCreator && (
+                              <div className="text-center py-10 px-4 border-2 border-dashed border-white/5 rounded-xl">
+                                <span className="material-symbols-outlined text-3xl text-silver/20 mb-2">
+                                  touch_app
+                                </span>
+                                <p className="text-xs text-silver/40">
+                                  {t("dashboard.links.emptyLinkMsg", {
+                                    defaultValue:
+                                      "Tu link está vacío. ¡Añade tu primer botón!",
+                                  })}
+                                </p>
+                              </div>
+                            )}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
+                  )}
                 </div>
 
                 {/* STICKY BOTTOM ACTIONS */}
@@ -2516,136 +2535,138 @@ export default function Links() {
                                   </>
                                 )}
 
-                                <div className="pt-6 mt-6 border-t border-white/5">
-                                  <label className="text-[10px] font-bold text-silver/40 uppercase mb-3 block">
-                                    {t("dashboard.links.pageBackground")}
-                                  </label>
-                                  <div className="flex gap-4 mb-4">
-                                    {/* When Full mode is active, Solid and Gradient are locked */}
-                                    {currentPage.landingMode === "full" ? (
-                                      <div className="flex items-center gap-3">
-                                        <div className="flex bg-[#0B0B0B] border border-border p-1 rounded-xl w-fit opacity-40 pointer-events-none select-none" title="Solo disponible en modo Minimalista">
-                                          <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg text-silver/30 cursor-not-allowed">
+                                {currentPage.landingMode !== "direct" && (
+                                  <div className="pt-6 mt-6 border-t border-white/5">
+                                    <label className="text-[10px] font-bold text-silver/40 uppercase mb-3 block">
+                                      {t("dashboard.links.pageBackground")}
+                                    </label>
+                                    <div className="flex gap-4 mb-4">
+                                      {/* When Full mode is active, Solid and Gradient are locked */}
+                                      {currentPage.landingMode === "full" ? (
+                                        <div className="flex items-center gap-3">
+                                          <div className="flex bg-[#0B0B0B] border border-border p-1 rounded-xl w-fit opacity-40 pointer-events-none select-none" title="Solo disponible en modo Minimalista">
+                                            <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg text-silver/30 cursor-not-allowed">
+                                              {t("dashboard.links.solid")}
+                                            </button>
+                                            <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg text-silver/30 cursor-not-allowed">
+                                              {t("dashboard.links.gradient")}
+                                            </button>
+                                            <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg bg-primary/80 text-white shadow-lg rounded-lg cursor-not-allowed">
+                                              {t("dashboard.links.blurPhoto")}
+                                            </button>
+                                          </div>
+                                          <span className="text-[10px] text-primary/80 font-bold flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-sm">lock</span>
+                                            Blur obligatorio en modo Full
+                                          </span>
+                                        </div>
+                                      ) : (
+                                        <div className="flex bg-[#0B0B0B] border border-border p-1 rounded-xl w-fit">
+                                          <button
+                                            onClick={() =>
+                                              handleUpdatePage(
+                                                "theme.backgroundType",
+                                                "solid",
+                                              )
+                                            }
+                                            className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "solid" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
+                                          >
                                             {t("dashboard.links.solid")}
                                           </button>
-                                          <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg text-silver/30 cursor-not-allowed">
+                                          <button
+                                            onClick={() =>
+                                              handleUpdatePage(
+                                                "theme.backgroundType",
+                                                "gradient",
+                                              )
+                                            }
+                                            className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "gradient" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
+                                          >
                                             {t("dashboard.links.gradient")}
                                           </button>
-                                          <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg bg-primary/80 text-white shadow-lg rounded-lg cursor-not-allowed">
+                                          <button
+                                            onClick={() =>
+                                              handleUpdatePage(
+                                                "theme.backgroundType",
+                                                "blur",
+                                              )
+                                            }
+                                            className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "blur" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
+                                          >
                                             {t("dashboard.links.blurPhoto")}
                                           </button>
                                         </div>
-                                        <span className="text-[10px] text-primary/80 font-bold flex items-center gap-1">
-                                          <span className="material-symbols-outlined text-sm">lock</span>
-                                          Blur obligatorio en modo Full
-                                        </span>
-                                      </div>
-                                    ) : (
-                                      <div className="flex bg-[#0B0B0B] border border-border p-1 rounded-xl w-fit">
-                                        <button
-                                          onClick={() =>
-                                            handleUpdatePage(
-                                              "theme.backgroundType",
-                                              "solid",
-                                            )
-                                          }
-                                          className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "solid" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
-                                        >
-                                          {t("dashboard.links.solid")}
-                                        </button>
-                                        <button
-                                          onClick={() =>
-                                            handleUpdatePage(
-                                              "theme.backgroundType",
-                                              "gradient",
-                                            )
-                                          }
-                                          className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "gradient" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
-                                        >
-                                          {t("dashboard.links.gradient")}
-                                        </button>
-                                        <button
-                                          onClick={() =>
-                                            handleUpdatePage(
-                                              "theme.backgroundType",
-                                              "blur",
-                                            )
-                                          }
-                                          className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "blur" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
-                                        >
-                                          {t("dashboard.links.blurPhoto")}
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {currentPage.theme.backgroundType ===
-                                    "solid" ? (
-                                    <div className="flex items-center gap-3 bg-black/20 p-3 rounded-xl border border-white/5">
-                                      <input
-                                        type="color"
-                                        value={currentPage.theme.backgroundStart}
-                                        onChange={(e) =>
-                                          handleUpdatePage(
-                                            "theme.backgroundStart",
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="h-10 w-10 rounded-lg cursor-pointer border-none bg-transparent"
-                                      />
-                                      <span className="text-xs font-mono text-silver/50 uppercase">
-                                        {currentPage.theme.backgroundStart}
-                                      </span>
+                                      )}
                                     </div>
-                                  ) : currentPage.theme.backgroundType ===
-                                    "gradient" ? (
-                                    <div className="grid grid-cols-2 gap-3">
-                                      <div className="bg-black/20 p-3 rounded-xl border border-white/5">
-                                        <p className="text-[9px] text-silver/30 font-bold uppercase mb-2">
-                                          Inicio
-                                        </p>
+
+                                    {currentPage.theme.backgroundType ===
+                                      "solid" ? (
+                                      <div className="flex items-center gap-3 bg-black/20 p-3 rounded-xl border border-white/5">
                                         <input
                                           type="color"
-                                          value={
-                                            currentPage.theme.backgroundStart
-                                          }
+                                          value={currentPage.theme.backgroundStart}
                                           onChange={(e) =>
                                             handleUpdatePage(
                                               "theme.backgroundStart",
                                               e.target.value,
                                             )
                                           }
-                                          className="h-10 w-full rounded-lg cursor-pointer border-none bg-transparent"
+                                          className="h-10 w-10 rounded-lg cursor-pointer border-none bg-transparent"
                                         />
+                                        <span className="text-xs font-mono text-silver/50 uppercase">
+                                          {currentPage.theme.backgroundStart}
+                                        </span>
                                       </div>
-                                      <div className="bg-black/20 p-3 rounded-xl border border-white/5">
-                                        <p className="text-[9px] text-silver/30 font-bold uppercase mb-2">
-                                          Fin
+                                    ) : currentPage.theme.backgroundType ===
+                                      "gradient" ? (
+                                      <div className="grid grid-cols-2 gap-3">
+                                        <div className="bg-black/20 p-3 rounded-xl border border-white/5">
+                                          <p className="text-[9px] text-silver/30 font-bold uppercase mb-2">
+                                            Inicio
+                                          </p>
+                                          <input
+                                            type="color"
+                                            value={
+                                              currentPage.theme.backgroundStart
+                                            }
+                                            onChange={(e) =>
+                                              handleUpdatePage(
+                                                "theme.backgroundStart",
+                                                e.target.value,
+                                              )
+                                            }
+                                            className="h-10 w-full rounded-lg cursor-pointer border-none bg-transparent"
+                                          />
+                                        </div>
+                                        <div className="bg-black/20 p-3 rounded-xl border border-white/5">
+                                          <p className="text-[9px] text-silver/30 font-bold uppercase mb-2">
+                                            Fin
+                                          </p>
+                                          <input
+                                            type="color"
+                                            value={currentPage.theme.backgroundEnd}
+                                            onChange={(e) =>
+                                              handleUpdatePage(
+                                                "theme.backgroundEnd",
+                                                e.target.value,
+                                              )
+                                            }
+                                            className="h-10 w-full rounded-lg cursor-pointer border-none bg-transparent"
+                                          />
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="bg-black/20 p-3 rounded-xl border border-white/5 flex items-center gap-3">
+                                        <span className="material-symbols-outlined text-silver/40">
+                                          blur_on
+                                        </span>
+                                        <p className="text-[10px] text-silver/50">
+                                          {t("dashboard.links.blurPhotoDesc")}
                                         </p>
-                                        <input
-                                          type="color"
-                                          value={currentPage.theme.backgroundEnd}
-                                          onChange={(e) =>
-                                            handleUpdatePage(
-                                              "theme.backgroundEnd",
-                                              e.target.value,
-                                            )
-                                          }
-                                          className="h-10 w-full rounded-lg cursor-pointer border-none bg-transparent"
-                                        />
                                       </div>
-                                    </div>
-                                  ) : (
-                                    <div className="bg-black/20 p-3 rounded-xl border border-white/5 flex items-center gap-3">
-                                      <span className="material-symbols-outlined text-silver/40">
-                                        blur_on
-                                      </span>
-                                      <p className="text-[10px] text-silver/50">
-                                        {t("dashboard.links.blurPhotoDesc")}
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </section>
                           </div>
