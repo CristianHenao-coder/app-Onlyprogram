@@ -80,6 +80,7 @@ const cleanButtons = (buttons: any[]): ButtonLink[] => {
       metaShield: btn.metaShield ?? btn.meta_shield ?? false,
       rotatorActive: btn.rotatorActive ?? btn.rotator_active ?? false,
       rotatorLinks: btn.rotatorLinks || btn.rotator_links || ["", "", "", "", ""],
+      deviceRedirects: btn.deviceRedirects || btn.device_redirects || { ios: "", android: "" },
     }));
 };
 
@@ -100,6 +101,11 @@ interface ButtonLink {
   rotatorLinks?: string[]; // Up to 5
   // Shield Features
   metaShield?: boolean;
+  // Device Redirection
+  deviceRedirects?: {
+    ios: string;
+    android: string;
+  };
 }
 
 interface LinkPage {
@@ -111,6 +117,14 @@ interface LinkPage {
   profileImageSize?: number; // 0-100 scale
   template: TemplateType;
   landingMode?: "circle" | "full" | "direct";
+  security_config?: {
+    geoblocking?: string[];
+    device_redirections?: {
+      ios?: string;
+      android?: string;
+      desktop?: string;
+    };
+  };
   directUrl?: string;
   theme: {
     pageBorderColor: string;
@@ -1720,7 +1734,7 @@ export default function Links() {
                       </div>
 
                       {/* ACTIONS: Only show if NOT in Direct Mode */}
-                      {currentPage.landingMode !== "direct" && (
+                      {(currentPage.landingMode as string) !== "direct" && (
                         <>
                           {/* EDIT PROFILE BUTTON */}
                           <button
@@ -1752,7 +1766,7 @@ export default function Links() {
                   )}
 
                   {/* COLLAPSED ACTIONS: Only show if NOT in Direct Mode */}
-                  {sidebarCollapsed && currentPage.landingMode !== "direct" && (
+                  {sidebarCollapsed && (currentPage.landingMode as string) !== "direct" && (
                     <div className="px-2 pb-3 flex flex-col items-center gap-3">
                       <button
                         onClick={() => {
@@ -1780,7 +1794,7 @@ export default function Links() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-3 relative z-0">
-                  {currentPage.landingMode === "direct" ? (
+                  {(currentPage.landingMode as string) === "direct" ? (
                     <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4 animate-fade-in">
                       <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
                         <span className="material-symbols-outlined text-red-500 text-2xl">rocket_launch</span>
@@ -2091,6 +2105,57 @@ export default function Links() {
                             </div>
                           </div>
 
+                          {/* SMART REDIRECT (iOS/Android URLs) */}
+                          <div className="p-5 bg-gradient-to-br from-indigo-500/5 to-purple-600/5 border border-indigo-500/20 rounded-2xl space-y-4">
+                            <div className="flex items-center gap-2 text-indigo-400">
+                              <span className="material-symbols-outlined text-lg">
+                                devices
+                              </span>
+                              <span className="text-sm font-bold">
+                                Smart Redirect (Device targeting)
+                              </span>
+                            </div>
+
+                            <p className="text-[10px] text-silver/40 leading-relaxed">
+                              Opcional: Define links específicos para sistemas operativos. Si un campo queda vacío, se usará el link principal normal del botón.
+                            </p>
+
+                            <div className="grid grid-cols-1 gap-4">
+                              <div className="space-y-2">
+                                <label className="text-[9px] font-black text-white/40 uppercase tracking-widest pl-1 flex items-center gap-1">
+                                  <span className="material-symbols-outlined text-sm">apple</span>
+                                  Link para iOS (iPhone/iPad)
+                                </label>
+                                <input
+                                  type="url"
+                                  placeholder="https://onlyfans.com/perfil_ios"
+                                  value={selectedButton.deviceRedirects?.ios || ""}
+                                  onChange={(e) => {
+                                    const current = selectedButton.deviceRedirects || { ios: "", android: "" };
+                                    handleUpdateButton("deviceRedirects", { ...current, ios: e.target.value });
+                                  }}
+                                  className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500/50"
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-[9px] font-black text-white/40 uppercase tracking-widest pl-1 flex items-center gap-1">
+                                  <span className="material-symbols-outlined text-sm">android</span>
+                                  Link para Android
+                                </label>
+                                <input
+                                  type="url"
+                                  placeholder="https://onlyfans.com/perfil_android"
+                                  value={selectedButton.deviceRedirects?.android || ""}
+                                  onChange={(e) => {
+                                    const current = selectedButton.deviceRedirects || { ios: "", android: "" };
+                                    handleUpdateButton("deviceRedirects", { ...current, android: e.target.value });
+                                  }}
+                                  className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500/50"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
 
                           {/* META / TIKTOK SHIELD */}
                           {(selectedButton.type === "instagram" || selectedButton.type === "tiktok") && (
@@ -2348,15 +2413,15 @@ export default function Links() {
                           </div>
                         </div>
 
-                        {true ? (
+                        {true && (
                           <div className="space-y-8 animate-fade-in">
                             <section className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
                               <div className="p-4 border-b border-white/5 bg-white/[0.02]">
                                 <h3 className="text-sm font-bold flex items-center gap-2">
                                   <span className="material-symbols-outlined text-silver/40">
-                                    {currentPage.landingMode === "direct" ? "settings" : "person"}
+                                    {(currentPage.landingMode as string) === "direct" ? "settings" : "person"}
                                   </span>
-                                  {currentPage.landingMode === "direct"
+                                  {(currentPage.landingMode as string) === "direct"
                                     ? "Configuración del Enlace Directo"
                                     : t("dashboard.links.profileIdentity")}
                                 </h3>
@@ -2396,7 +2461,7 @@ export default function Links() {
                                 </div>
 
                                 {/* LANDING MODE SELECTOR: Hide if already in Direct Mode to avoid confusion */}
-                                {currentPage.landingMode !== "direct" && (
+                                {(currentPage.landingMode as string) !== "direct" && (
                                   <div className="mb-6 flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
                                     <div>
                                       <span className="text-xs font-bold text-white block">
@@ -2430,12 +2495,12 @@ export default function Links() {
                                       </button>
                                       {/* Only show 'Direct' option if the link is ALREADY in direct mode. 
                                           Otherwise, users should stay within Landing Page types. */}
-                                      {currentPage.landingMode === "direct" && (
+                                      {(currentPage.landingMode as string) === "direct" && (
                                         <button
                                           onClick={() => {
                                             handleUpdatePage("landingMode", "direct");
                                           }}
-                                          className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all flex items-center gap-1 ${currentPage.landingMode === "direct" ? "bg-red-500 text-white shadow-lg" : "text-silver/60 hover:text-white"}`}
+                                          className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all flex items-center gap-1 ${(currentPage.landingMode as string) === "direct" ? "bg-red-500 text-white shadow-lg" : "text-silver/60 hover:text-white"}`}
                                         >
                                           <span className="material-symbols-outlined text-[10px]">bolt</span>
                                           Directo
@@ -2445,7 +2510,7 @@ export default function Links() {
                                   </div>
                                 )}
 
-                                {currentPage.landingMode === "direct" ? (
+                                {(currentPage.landingMode as string) === "direct" ? (
                                   <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-2xl animate-fade-in text-center">
                                     <span className="material-symbols-outlined text-4xl text-red-500 mb-4 block animate-bounce-subtle">
                                       rocket_launch
@@ -2550,7 +2615,7 @@ export default function Links() {
                                   </>
                                 )}
 
-                                {currentPage.landingMode !== "direct" && (
+                                {(currentPage.landingMode as string) !== "direct" && (
                                   <div className="pt-6 mt-6 border-t border-white/5">
                                     <label className="text-[10px] font-bold text-silver/40 uppercase mb-3 block">
                                       {t("dashboard.links.pageBackground")}
@@ -2684,8 +2749,82 @@ export default function Links() {
                                 )}
                               </div>
                             </section>
+
+                            {/* SECCIÓN DE SEGURIDAD E INTELIGENCIA (PREMIUM) */}
+                            <section className="bg-white/5 border border-primary/20 rounded-2xl overflow-hidden shadow-[0_0_20px_rgba(37,99,235,0.05)] mt-8">
+                              <div className="p-4 border-b border-primary/10 bg-primary/5">
+                                <h3 className="text-sm font-bold flex items-center gap-2 text-primary">
+                                  <span className="material-symbols-outlined text-primary">
+                                    shield
+                                  </span>
+                                  Seguridad e Inteligencia Predictiva
+                                </h3>
+                              </div>
+                              <div className="p-6 space-y-8">
+
+                                {/* GEO-BLOCKING */}
+                                <div className="space-y-4">
+                                  <div>
+                                    <h4 className="text-xs font-bold text-white mb-1">Geofiltering: Bloqueo de Países</h4>
+                                    <p className="text-[10px] text-silver/40">Bloquea el acceso a este link desde países específicos (ej: auditores, competidores).</p>
+                                  </div>
+                                  <div className="flex flex-wrap gap-2 mb-3">
+                                    {(currentPage.security_config?.geoblocking || []).map((code: string) => (
+                                      <div key={code} className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 px-3 py-1.5 rounded-xl">
+                                        <span className="text-[10px] font-black text-red-100 uppercase">{code}</span>
+                                        <button
+                                          onClick={() => {
+                                            const current = currentPage.security_config?.geoblocking || [];
+                                            handleUpdatePage("security_config", {
+                                              ...currentPage.security_config,
+                                              geoblocking: current.filter((c: string) => c !== code)
+                                            });
+                                          }}
+                                          className="material-symbols-outlined text-sm text-red-500 hover:text-red-400 transition-colors"
+                                        >
+                                          close
+                                        </button>
+                                      </div>
+                                    ))}
+                                    {(!currentPage.security_config?.geoblocking || currentPage.security_config.geoblocking.length === 0) && (
+                                      <p className="text-[10px] text-silver/20 italic">No hay países bloqueados. Acceso global permitido.</p>
+                                    )}
+                                  </div>
+                                  <div className="relative">
+                                    <select
+                                      onChange={(e) => {
+                                        if (!e.target.value) return;
+                                        const current = currentPage.security_config?.geoblocking || [];
+                                        if (current.includes(e.target.value)) return;
+                                        handleUpdatePage("security_config", {
+                                          ...currentPage.security_config,
+                                          geoblocking: [...current, e.target.value]
+                                        });
+                                        e.target.value = "";
+                                      }}
+                                      className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-xs font-bold text-silver focus:outline-none focus:border-red-500/50"
+                                    >
+                                      <option value="">+ Añadir país a la lista negra (ISO)...</option>
+                                      <option value="US">US - Estados Unidos</option>
+                                      <option value="CO">CO - Colombia</option>
+                                      <option value="ES">ES - España</option>
+                                      <option value="MX">MX - México</option>
+                                      <option value="AR">AR - Argentina</option>
+                                      <option value="BR">BR - Brasil</option>
+                                      <option value="CL">CL - Chile</option>
+                                      <option value="PE">PE - Perú</option>
+                                      <option value="VE">VE - Venezuela</option>
+                                      <option value="RU">RU - Rusia</option>
+                                      <option value="CN">CN - China</option>
+                                    </select>
+                                  </div>
+                                </div>
+
+                              </div>
+                            </section>
                           </div>
-                        ) : (
+                        )}
+                        {true && (
                           <div className="space-y-8 animate-fade-in">
                             {/* DOMAIN CONFIGURATION SECTION */}
                             <section className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
@@ -3303,7 +3442,7 @@ export default function Links() {
                 setShowButtonCreator(false);
               }}
             >
-              {currentPage.landingMode === "direct" ? (
+              {(currentPage.landingMode as string) === "direct" ? (
                 <div className="flex-1 bg-[#050505] flex flex-col items-center justify-center px-6 text-center z-20 relative">
                   <span className="material-symbols-outlined text-6xl text-red-500 mb-6 animate-[bounce_2s_infinite]">rocket_launch</span>
                   <h3 className="text-white font-bold text-lg mb-2">Escudo Directo</h3>
@@ -3442,7 +3581,7 @@ export default function Links() {
                   if (allDraftPages.length > 0) {
                     // 1. VALIDATE ONLY CURRENT PAGE (if it's a draft)
                     if (currentPage.status === "draft") {
-                      if (currentPage.landingMode === "direct") {
+                      if ((currentPage.landingMode as string) === "direct") {
                         if (!currentPage.directUrl || !currentPage.directUrl.trim()) {
                           toast.error(
                             `"${currentPage.name}" no tiene URL de destino. Agrégala antes de continuar.`,
@@ -3540,60 +3679,62 @@ export default function Links() {
               </button>
             )}
           </div>
-        </div >
-      )
-      }
+        </div>
+      )}
+
       {/* INACTIVE LINK ALERT MODAL */}
-      {inactiveAlertPageId && (() => {
-        const alertPage = pages.find(p => p.id === inactiveAlertPageId);
-        return (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-            onClick={() => setInactiveAlertPageId(null)}
-          >
+      {
+        inactiveAlertPageId && (() => {
+          const alertPage = pages.find(p => p.id === inactiveAlertPageId);
+          return (
             <div
-              className="w-full max-w-sm bg-[#0A0A0A] border border-orange-500/20 rounded-3xl overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200"
-              onClick={(e) => e.stopPropagation()}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+              onClick={() => setInactiveAlertPageId(null)}
             >
-              {/* Top glow */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-24 bg-orange-500/10 blur-3xl rounded-full pointer-events-none" />
+              <div
+                className="w-full max-w-sm bg-[#0A0A0A] border border-orange-500/20 rounded-3xl overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Top glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-24 bg-orange-500/10 blur-3xl rounded-full pointer-events-none" />
 
-              <div className="p-8 text-center relative">
-                {/* Animated lock icon */}
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-4xl text-orange-400 animate-pulse">
-                    lock
-                  </span>
-                </div>
+                <div className="p-8 text-center relative">
+                  {/* Animated lock icon */}
+                  <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-4xl text-orange-400 animate-pulse">
+                      lock
+                    </span>
+                  </div>
 
-                <h2 className="text-xl font-black text-white mb-2">
-                  Tu link aún no está activo
-                </h2>
+                  <h2 className="text-xl font-black text-white mb-2">
+                    Tu link aún no está activo
+                  </h2>
 
-                {alertPage && (
-                  <p className="text-sm text-silver/40 font-medium mb-1">
-                    <span className="text-orange-400 font-bold">"{alertPage.name}"</span>
+                  {alertPage && (
+                    <p className="text-sm text-silver/40 font-medium mb-1">
+                      <span className="text-orange-400 font-bold">"{alertPage.name}"</span>
+                    </p>
+                  )}
+
+                  <p className="text-sm text-silver/40 leading-relaxed mb-6">
+                    Este link está en revisión o pendiente de activación. Una vez aprobado podrás visitarlo directamente.
                   </p>
-                )}
 
-                <p className="text-sm text-silver/40 leading-relaxed mb-6">
-                  Este link está en revisión o pendiente de activación. Una vez aprobado podrás visitarlo directamente.
-                </p>
-
-                <div className="flex flex-col gap-3">
-                  <button
-                    onClick={() => setInactiveAlertPageId(null)}
-                    className="w-full py-3 px-5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-bold text-white transition-all flex items-center justify-center gap-2"
-                  >
-                    <span className="material-symbols-outlined text-base">arrow_back</span>
-                    Volver a Mis Links
-                  </button>
+                  <div className="flex flex-col gap-3">
+                    <button
+                      onClick={() => setInactiveAlertPageId(null)}
+                      className="w-full py-3 px-5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-bold text-white transition-all flex items-center justify-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-base">arrow_back</span>
+                      Volver a Mis Links
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()
+      }
 
       {/* DELETE CONFIRMATION MODAL */}
       {
@@ -3731,71 +3872,74 @@ export default function Links() {
       }
 
       {/* SELECTOR DE TIPO DE LINK */}
-      {showLinkTypeSelector && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/90 backdrop-blur-xl animate-fade-in"
-            onClick={() => setShowLinkTypeSelector(false)}
-          />
-          <div className="relative w-full max-w-2xl bg-zinc-900 border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl animate-scale-up overflow-hidden">
-            {/* Background Decorations */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -mr-32 -mt-32" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] -ml-32 -mb-32" />
-
-            <div className="relative z-10 text-center mb-10">
-              <h3 className="text-3xl font-black text-white mb-2 tracking-tight">
-                ¿Qué tipo de link quieres crear?
-              </h3>
-              <p className="text-silver/40 text-sm">
-                Escoge el flujo que mejor se adapte a tu publicidad
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
-              {/* Opción 1: Enlace Directo */}
-              <button
-                onClick={() => confirmCreation("direct")}
-                className="group relative flex flex-col text-left p-6 rounded-[2rem] bg-white/5 border border-white/10 hover:border-red-500/50 hover:bg-red-500/5 transition-all duration-300"
-              >
-                <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-red-500 text-3xl">rocket_launch</span>
-                </div>
-                <h4 className="text-xl font-bold text-white mb-2">Escudo Directo</h4>
-                <p className="text-silver/60 text-xs leading-relaxed mb-6">
-                  Redirección instantánea a OnlyFans con <b>Protección de Meta activa</b> por defecto. Ideal para anuncios directos.
-                </p>
-                <div className="mt-auto flex items-center gap-2 text-red-400 text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                  Seleccionar <span className="material-symbols-outlined text-xs">arrow_forward</span>
-                </div>
-              </button>
-
-              {/* Opción 2: Landing Page */}
-              <button
-                onClick={() => confirmCreation("landing")}
-                className="group relative flex flex-col text-left p-6 rounded-[2rem] bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300"
-              >
-                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-primary text-3xl">view_list</span>
-                </div>
-                <h4 className="text-xl font-bold text-white mb-2">Landing Page</h4>
-                <p className="text-silver/60 text-xs leading-relaxed mb-6">
-                  Página personalizada con múltiples botones. Incluye <b>Protección de TikTok</b> por defecto.
-                </p>
-                <div className="mt-auto flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                  Seleccionar <span className="material-symbols-outlined text-xs">arrow_forward</span>
-                </div>
-              </button>
-            </div>
-
-            <button
+      {
+        showLinkTypeSelector && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-black/90 backdrop-blur-xl animate-fade-in"
               onClick={() => setShowLinkTypeSelector(false)}
-              className="mt-10 mx-auto block text-[10px] font-bold text-silver/30 uppercase tracking-widest hover:text-white transition-colors"
-            >
-              Cancelar
-            </button>
+            />
+            <div className="relative w-full max-w-2xl bg-zinc-900 border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl animate-scale-up overflow-hidden">
+              {/* Background Decorations */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -mr-32 -mt-32" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] -ml-32 -mb-32" />
+
+              <div className="relative z-10 text-center mb-10">
+                <h3 className="text-3xl font-black text-white mb-2 tracking-tight">
+                  ¿Qué tipo de link quieres crear?
+                </h3>
+                <p className="text-silver/40 text-sm">
+                  Escoge el flujo que mejor se adapte a tu publicidad
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                {/* Opción 1: Enlace Directo */}
+                <button
+                  onClick={() => confirmCreation("direct")}
+                  className="group relative flex flex-col text-left p-6 rounded-[2rem] bg-white/5 border border-white/10 hover:border-red-500/50 hover:bg-red-500/5 transition-all duration-300"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-red-500 text-3xl">rocket_launch</span>
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-2">Escudo Directo</h4>
+                  <p className="text-silver/60 text-xs leading-relaxed mb-6">
+                    Redirección instantánea a OnlyFans con <b>Protección de Meta activa</b> por defecto. Ideal para anuncios directos.
+                  </p>
+                  <div className="mt-auto flex items-center gap-2 text-red-400 text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                    Seleccionar <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                  </div>
+                </button>
+
+                {/* Opción 2: Landing Page */}
+                <button
+                  onClick={() => confirmCreation("landing")}
+                  className="group relative flex flex-col text-left p-6 rounded-[2rem] bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-primary text-3xl">view_list</span>
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-2">Landing Page</h4>
+                  <p className="text-silver/60 text-xs leading-relaxed mb-6">
+                    Página personalizada con múltiples botones. Incluye <b>Protección de TikTok</b> por defecto.
+                  </p>
+                  <div className="mt-auto flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                    Seleccionar <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                  </div>
+                </button>
+              </div>
+
+              <button
+                onClick={() => setShowLinkTypeSelector(false)}
+                className="mt-10 mx-auto block text-[10px] font-bold text-silver/30 uppercase tracking-widest hover:text-white transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      }
+
     </div >
   );
 }

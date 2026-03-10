@@ -4,33 +4,33 @@ import { getAnalyticsOverview, AnalyticsOverview } from '@/services/analytics.se
 // Map: source name → display color
 const SOURCE_COLORS: Record<string, string> = {
   instagram: '#E1306C',
-  tiktok:    '#010101',
-  whatsapp:  '#25D366',
-  telegram:  '#0088cc',
-  twitter:   '#1DA1F2',
-  facebook:  '#1877F2',
-  youtube:   '#FF0000',
-  google:    '#4285F4',
-  direct:    '#6366f1',
-  other:     '#64748b',
+  tiktok: '#010101',
+  whatsapp: '#25D366',
+  telegram: '#0088cc',
+  twitter: '#1DA1F2',
+  facebook: '#1877F2',
+  youtube: '#FF0000',
+  google: '#4285F4',
+  direct: '#6366f1',
+  other: '#64748b',
 };
 
 const BUTTON_COLORS: Record<string, string> = {
   instagram: '#E1306C',
-  tiktok:    '#69C9D0',
-  onlyfans:  '#00AFF0',
-  telegram:  '#0088cc',
-  custom:    '#8b5cf6',
+  tiktok: '#69C9D0',
+  onlyfans: '#00AFF0',
+  telegram: '#0088cc',
+  custom: '#8b5cf6',
   page_view: '#94a3b8',
-  other:     '#64748b',
+  other: '#64748b',
 };
 
 const BUTTON_LABELS: Record<string, string> = {
   instagram: 'Instagram',
-  tiktok:    'TikTok',
-  onlyfans:  'OnlyFans',
-  telegram:  'Telegram',
-  custom:    'Botón customizado',
+  tiktok: 'TikTok',
+  onlyfans: 'OnlyFans',
+  telegram: 'Telegram',
+  custom: 'Botón customizado',
   page_view: 'Vista de página',
 };
 
@@ -46,7 +46,7 @@ const COUNTRY_FLAGS: Record<string, string> = {
 };
 
 const dateRangeOptions = [
-  { value: '7',  label: 'Últimos 7 días' },
+  { value: '7', label: 'Últimos 7 días' },
   { value: '30', label: 'Últimos 30 días' },
   { value: '90', label: 'Últimos 90 días' },
   { value: '365', label: 'Último año' },
@@ -55,15 +55,19 @@ const dateRangeOptions = [
 // Normaliza la respuesta para garantizar que los arrays nunca sean undefined
 function normalizeData(raw: any): AnalyticsOverview {
   return {
-    totalClicks:    raw?.totalClicks    ?? 0,
-    totalUnique:    raw?.totalUnique    ?? 0,
-    botsBlocked:    raw?.botsBlocked    ?? 0,
+    totalClicks: raw?.totalClicks ?? 0,
+    totalUnique: raw?.totalUnique ?? 0,
+    botsBlocked: raw?.botsBlocked ?? 0,
     conversionRate: raw?.conversionRate ?? 0,
     countries: Array.isArray(raw?.countries) ? raw.countries : [],
-    sources:   Array.isArray(raw?.sources)   ? raw.sources   : [],
-    byMonth:   Array.isArray(raw?.byMonth)   ? raw.byMonth   : [],
-    byButton:  Array.isArray(raw?.byButton)  ? raw.byButton  : [],
-    links:     Array.isArray(raw?.links)     ? raw.links     : [],
+    sources: Array.isArray(raw?.sources) ? raw.sources : [],
+    byMonth: Array.isArray(raw?.byMonth) ? raw.byMonth : [],
+    byButton: Array.isArray(raw?.byButton) ? raw.byButton : [],
+    byOS: Array.isArray(raw?.byOS) ? raw.byOS : [],
+    byBrowser: Array.isArray(raw?.byBrowser) ? raw.byBrowser : [],
+    byDevice: Array.isArray(raw?.byDevice) ? raw.byDevice : [],
+    hourlyHeatmap: Array.isArray(raw?.hourlyHeatmap) ? raw.hourlyHeatmap : [],
+    links: Array.isArray(raw?.links) ? raw.links : [],
   };
 }
 
@@ -317,6 +321,106 @@ export default function Analytics() {
               <span className="text-xs font-bold uppercase tracking-wider">Sin datos</span>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* HEATMAP Y DISPOSITIVOS */}
+      <div className="grid lg:grid-cols-3 gap-4">
+
+        {/* HEATMAP HORARIO */}
+        <div className="lg:col-span-2 bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-white font-bold text-lg">Actividad por Hora</h3>
+            <span className="text-[10px] uppercase font-bold text-silver/30 tracking-widest">Heatmap 24hs</span>
+          </div>
+          <div className="flex items-end gap-1 h-32">
+            {d.hourlyHeatmap.map((item, i) => {
+              const maxVal = Math.max(...d.hourlyHeatmap.map(h => h.count), 1);
+              const pct = (item.count / maxVal) * 100;
+              return (
+                <div key={i} className="flex-1 group relative flex flex-col items-center gap-2">
+                  <div className="absolute bottom-full mb-2 bg-white text-black text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                    {item.hour}:00 - {item.count} clicks
+                  </div>
+                  <div
+                    className="w-full bg-blue-500/20 rounded-t-sm group-hover:bg-blue-500/40 transition-colors"
+                    style={{ height: `${Math.max(pct, 5)}%` }}
+                  />
+                  <span className={`text-[8px] font-bold ${item.hour % 4 === 0 ? 'text-silver/40' : 'text-transparent'}`}>
+                    {item.hour}h
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* DEVICE BREAKDOWN */}
+        <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
+          <h3 className="text-white font-bold text-lg mb-6">Dispositivos</h3>
+          <div className="space-y-6">
+            {d.byDevice.map(dev => (
+              <div key={dev.name} className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center">
+                  <span className="material-symbols-outlined text-silver/40">
+                    {dev.name === 'mobile' ? 'smartphone' : dev.name === 'tablet' ? 'tablet' : 'desktop_windows'}
+                  </span>
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm text-white font-bold capitalize">{dev.name}</span>
+                    <span className="text-xs text-silver/50 font-bold">{dev.pct}%</span>
+                  </div>
+                  <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 rounded-full" style={{ width: `${dev.pct}%` }} />
+                  </div>
+                </div>
+              </div>
+            ))}
+            {d.byDevice.length === 0 && (
+              <div className="py-10 text-center opacity-20">
+                <span className="material-symbols-outlined text-4xl">devices</span>
+                <p className="text-xs font-bold mt-2">SIN DATOS</p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* OS & BROWSERS */}
+      <div className="grid md:grid-cols-2 gap-4">
+        {/* OS */}
+        <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
+          <h3 className="text-white font-bold text-lg mb-5">Sistemas Operativos</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {d.byOS.map(os => (
+              <div key={os.name} className="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                <p className="text-xs font-bold text-silver/40 uppercase tracking-tighter mb-1">{os.name}</p>
+                <div className="flex items-end justify-between">
+                  <p className="text-xl font-black text-white">{os.pct}%</p>
+                  <p className="text-[10px] text-silver/30 font-bold mb-1">{os.count} clicks</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* BROWSERS */}
+        <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
+          <h3 className="text-white font-bold text-lg mb-5">Navegadores Pro</h3>
+          <div className="space-y-3">
+            {d.byBrowser.slice(0, 4).map(br => (
+              <div key={br.name} className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-gradient-to-r from-white/[0.03] to-transparent">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.5)]" />
+                  <span className="text-sm text-white font-bold">{br.name}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-sm font-black text-white">{br.pct}%</span>
+                  <p className="text-[9px] text-silver/30 font-bold">TOP PERFORMANCE</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 

@@ -2,6 +2,8 @@ import { Router } from "express";
 import { telegramService } from "../services/telegram.service";
 import { supabase } from "../services/supabase.service";
 import crypto from "crypto";
+import * as geoip from "geoip-lite";
+import { parseUA } from "../utils/ua-parser";
 
 const router = Router();
 
@@ -37,6 +39,8 @@ import { TrafficService } from "../services/traffic.service";
 router.get("/api/gate/:slug", async (req, res) => {
   try {
     const { slug } = req.params;
+    const userAgent = req.headers["user-agent"] || "";
+    const ip = req.headers["x-forwarded-for"]?.toString().split(",")[0].trim() || req.socket.remoteAddress || "";
 
     // 1. Obtener Link con sus botones
     const { data: link, error } = await supabase
@@ -48,26 +52,33 @@ router.get("/api/gate/:slug", async (req, res) => {
       .eq("slug", slug)
       .single();
 
-    // 1.5 ANALIZAR TRÁFICO (lógica interna portada de Marketing-CL)
-    const userAgent = req.headers["user-agent"] || "";
+    // 1.5 ANALIZAR TRÁFICO
     const trafficAnalysis = TrafficService.analyzeVisitor(
       userAgent,
       req.headers as Record<string, any>,
     );
 
-    console.log(`[Gate] Traffic: ${slug} | Action: ${trafficAnalysis.action} | Type: ${trafficAnalysis.type} | UA: ${userAgent.slice(0, 50)}...`);
+    // 1.6 SEGURIDAD PREMIUM: GEO-BLOCKING
+    const geo = geoip.lookup(ip);
+    const visitorCountry = geo?.country || null;
+    const securityConfig = link.security_config || {};
+    const blockedCountries = Array.isArray(securityConfig.geoblocking) ? securityConfig.geoblocking : [];
 
-    if (error || !link) {
-      // Si el link no existe, devolvemos info de tráfico cifrada de todos modos
+    if (visitorCountry && blockedCountries.includes(visitorCountry)) {
+      console.log(`[Gate] Geo-Blocked: ${slug} | Country: ${visitorCountry}`);
       const payload = {
-        error: "Node Offline",
-        traffic: trafficAnalysis,
+        u: null,
+        traffic: { ...trafficAnalysis, action: 'block', type: 'geo_blocked' }
       };
-      const secureData = Buffer.from(JSON.stringify(payload)).toString("base64");
-      return res.status(404).json({ data: secureData, error: "Node Offline" });
+      return res.json({ data: Buffer.from(JSON.stringify(payload)).toString("base64") });
     }
 
-    // 1.5. Extraer configuración actual para leer el modo
+    // 1.7 ANALIZAR DISPOSITIVO (UA Parser)
+    const uaDetails = parseUA(userAgent);
+
+    console.log(`[Gate] Traffic: ${slug} | Action: ${trafficAnalysis.action} | Device: ${uaDetails.device} | OS: ${uaDetails.os}`);
+
+    // 1.8 Extraer configuración actual para leer el modo
     const currentConfig = typeof link.config === 'string' ? JSON.parse(link.config) : (link.config || {});
     const isDirectMode = currentConfig.landingMode === 'direct';
 
@@ -81,6 +92,15 @@ router.get("/api/gate/:slug", async (req, res) => {
 
     if (isDirectMode) {
       targetUrl = currentConfig.directUrl || null;
+
+      // 2.1 SMART REDIRECTION (Device-based)
+      const deviceRedirections = securityConfig.device_redirections || {};
+      const deviceKey = uaDetails.device === 'desktop' ? 'desktop' : (uaDetails.os === 'iOS' ? 'ios' : 'android');
+
+      if (deviceRedirections[deviceKey]) {
+        targetUrl = deviceRedirections[deviceKey];
+        console.log(`[Gate] Device-Redirect: ${slug} | Device: ${deviceKey} | URL: ${targetUrl}`);
+      }
 
       if (isInstagramThreads || isOtherSocial) {
         finalAction = 'show_overlay';
