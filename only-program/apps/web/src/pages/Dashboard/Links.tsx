@@ -2348,9 +2348,11 @@ export default function Links() {
                               <div className="p-4 border-b border-white/5 bg-white/[0.02]">
                                 <h3 className="text-sm font-bold flex items-center gap-2">
                                   <span className="material-symbols-outlined text-silver/40">
-                                    person
+                                    {currentPage.landingMode === "direct" ? "settings" : "person"}
                                   </span>
-                                  {t("dashboard.links.profileIdentity")}
+                                  {currentPage.landingMode === "direct"
+                                    ? "Configuración del Enlace Directo"
+                                    : t("dashboard.links.profileIdentity")}
                                 </h3>
                               </div>
                               <div className="p-6">
@@ -2387,48 +2389,51 @@ export default function Links() {
                                   </div>
                                 </div>
 
-                                <div className="mb-6 flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
-                                  <div>
-                                    <span className="text-xs font-bold text-white block">
-                                      {t("dashboard.links.landingMode")}
-                                    </span>
-                                    <span className="text-[10px] text-silver/40">
-                                      {t("dashboard.links.landingModeDesc")}
-                                    </span>
+                                {/* LANDING MODE SELECTOR: Hide if already in Direct Mode to avoid confusion */}
+                                {currentPage.landingMode !== "direct" && (
+                                  <div className="mb-6 flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+                                    <div>
+                                      <span className="text-xs font-bold text-white block">
+                                        {t("dashboard.links.landingMode")}
+                                      </span>
+                                      <span className="text-[10px] text-silver/40">
+                                        {t("dashboard.links.landingModeDesc")}
+                                      </span>
+                                    </div>
+                                    <div className="flex bg-black/40 p-1 rounded-lg border border-white/5">
+                                      <button
+                                        onClick={() => {
+                                          handleUpdatePage("template", "minimal");
+                                          handleUpdatePage("landingMode", "circle");
+                                          handleUpdatePage("profileImageSize", 100);
+                                        }}
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${currentPage.template === "minimal" || currentPage.landingMode === "circle" ? "bg-white text-black shadow-lg" : "text-silver/60 hover:text-white"}`}
+                                      >
+                                        {t("dashboard.links.minimalist")}
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          handleUpdatePage("template", "full");
+                                          handleUpdatePage("landingMode", "full");
+                                          handleUpdatePage("profileImageSize", 100);
+                                          handleUpdatePage("theme.backgroundType", "blur");
+                                        }}
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${currentPage.template === "full" || currentPage.landingMode === "full" ? "bg-primary text-white shadow-lg" : "text-silver/60 hover:text-white"}`}
+                                      >
+                                        {t("dashboard.links.fullMode")}
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          handleUpdatePage("landingMode", "direct");
+                                        }}
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all flex items-center gap-1 ${currentPage.landingMode === "direct" ? "bg-red-500 text-white shadow-lg" : "text-silver/60 hover:text-white"}`}
+                                      >
+                                        <span className="material-symbols-outlined text-[10px]">bolt</span>
+                                        Directo
+                                      </button>
+                                    </div>
                                   </div>
-                                  <div className="flex bg-black/40 p-1 rounded-lg border border-white/5">
-                                    <button
-                                      onClick={() => {
-                                        handleUpdatePage("template", "minimal");
-                                        handleUpdatePage("landingMode", "circle");
-                                        handleUpdatePage("profileImageSize", 100);
-                                      }}
-                                      className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${currentPage.template === "minimal" || currentPage.landingMode === "circle" ? "bg-white text-black shadow-lg" : "text-silver/60 hover:text-white"}`}
-                                    >
-                                      {t("dashboard.links.minimalist")}
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        handleUpdatePage("template", "full");
-                                        handleUpdatePage("landingMode", "full");
-                                        handleUpdatePage("profileImageSize", 100);
-                                        handleUpdatePage("theme.backgroundType", "blur");
-                                      }}
-                                      className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${currentPage.template === "full" || currentPage.landingMode === "full" ? "bg-primary text-white shadow-lg" : "text-silver/60 hover:text-white"}`}
-                                    >
-                                      {t("dashboard.links.fullMode")}
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        handleUpdatePage("landingMode", "direct");
-                                      }}
-                                      className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all flex items-center gap-1 ${currentPage.landingMode === "direct" ? "bg-red-500 text-white shadow-lg" : "text-silver/60 hover:text-white"}`}
-                                    >
-                                      <span className="material-symbols-outlined text-[10px]">bolt</span>
-                                      Directo
-                                    </button>
-                                  </div>
-                                </div>
+                                )}
 
                                 {currentPage.landingMode === "direct" ? (
                                   <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-2xl animate-fade-in text-center">
