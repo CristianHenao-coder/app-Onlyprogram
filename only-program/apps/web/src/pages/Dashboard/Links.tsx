@@ -523,6 +523,9 @@ export default function Links() {
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
 
+  // --- NEW CREATE FLOW STATE ---
+  const [showLinkTypeSelector, setShowLinkTypeSelector] = useState(false);
+
   const handleCreateFolder = () => {
     const name = window.prompt(t("dashboard.links.newFolderPrompt"));
     if (name && name.trim()) {
@@ -913,18 +916,27 @@ export default function Links() {
 
   // --- HANDLERS ---
   const handleAddPage = () => {
+    setShowLinkTypeSelector(true);
+  };
+
+  const confirmCreation = (type: "direct" | "landing") => {
+    setShowLinkTypeSelector(false);
     const newId = `page${Date.now()}`;
-    // New pages are DRAFTS by default, and named "Link X" or similar
-    setPages((prev) => [
-      ...prev,
-      {
-        ...DEFAULTS.PAGE,
-        id: newId,
-        status: "draft",
-        name: `Link ${prev.length + 1}`,
-      },
-    ]);
+    const newPage: LinkPage = {
+      ...DEFAULTS.PAGE,
+      id: newId,
+      status: "draft",
+      name:
+        type === "direct"
+          ? `Directo ${allDraftPages.length + 1}`
+          : `Landing ${allDraftPages.length + 1}`,
+      landingMode: type === "direct" ? "direct" : "circle",
+      directUrl: "",
+    };
+
+    setPages((prev) => [...prev, newPage]);
     setSelectedPageId(newId);
+    setView("editor");
     toast.success(t("dashboard.links.designStartedToast"));
   };
 
@@ -1075,19 +1087,7 @@ export default function Links() {
   };
 
   const handleCreateNew = () => {
-    const newId = `page${Date.now()}`;
-    setPages((prev) => [
-      ...prev,
-      {
-        ...DEFAULTS.PAGE,
-        id: newId,
-        status: "draft",
-        name: `Link ${prev.filter((p) => !p.dbStatus).length + 1}`,
-      },
-    ]);
-    setSelectedPageId(newId);
-    setView("editor");
-    toast.success(t("dashboard.links.designStartedToast"));
+    setShowLinkTypeSelector(true);
   };
 
   return (
@@ -3451,7 +3451,7 @@ export default function Links() {
                     // 2. FILTER OTHER DRAFTS (Include only those that are complete)
                     const validDrafts = allDraftPages.filter((page: any) => {
                       if (page.landingMode === "direct") {
-                         return page.directUrl && page.directUrl.trim() && isValidUrl(page.directUrl.trim());
+                        return page.directUrl && page.directUrl.trim() && isValidUrl(page.directUrl.trim());
                       }
                       const hasButtons = page.buttons && page.buttons.length > 0;
                       const allUrlsValid = page.buttons.every((btn: any) => btn.url && btn.url.trim() && isValidUrl(btn.url.trim()));
@@ -3476,12 +3476,18 @@ export default function Links() {
                       console.warn("Could not save backup to local storage due to quota limits");
                     }
 
+                    const hasMetaShield = validDrafts.some((p: any) => {
+                      if (p.landingMode === "direct") return true;
+                      return p.buttons?.some((b: any) => b.metaShield);
+                    });
+
                     navigate("/dashboard/checkout", {
                       state: {
                         pendingPurchase: {
                           type: "links_bundle",
                           linksData: validDrafts,
                           amount: null,
+                          hasInstagram: hasMetaShield,
                         },
                       },
                     });
@@ -3668,7 +3674,7 @@ export default function Links() {
               <p className="text-silver/60 text-sm leading-relaxed mb-8 px-2">
                 {t("dashboard.links.requestInProcessDesc", {
                   defaultValue:
-                    "Estamos procesando tu solicitud de dominio. Nuestro equipo se encargar� de realizar la configuraci�n necesaria.",
+                    "Estamos procesando tu solicitud de dominio. Nuestro equipo se encargará de realizar la configuración necesaria.",
                 })}
               </p>
 
@@ -3687,6 +3693,73 @@ export default function Links() {
           </div>
         )
       }
+
+      {/* SELECTOR DE TIPO DE LINK */}
+      {showLinkTypeSelector && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/90 backdrop-blur-xl animate-fade-in"
+            onClick={() => setShowLinkTypeSelector(false)}
+          />
+          <div className="relative w-full max-w-2xl bg-zinc-900 border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl animate-scale-up overflow-hidden">
+            {/* Background Decorations */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -mr-32 -mt-32" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] -ml-32 -mb-32" />
+
+            <div className="relative z-10 text-center mb-10">
+              <h3 className="text-3xl font-black text-white mb-2 tracking-tight">
+                ¿Qué tipo de link quieres crear?
+              </h3>
+              <p className="text-silver/40 text-sm">
+                Escoge el flujo que mejor se adapte a tu publicidad
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+              {/* Opción 1: Enlace Directo */}
+              <button
+                onClick={() => confirmCreation("direct")}
+                className="group relative flex flex-col text-left p-6 rounded-[2rem] bg-white/5 border border-white/10 hover:border-red-500/50 hover:bg-red-500/5 transition-all duration-300"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-red-500 text-3xl">rocket_launch</span>
+                </div>
+                <h4 className="text-xl font-bold text-white mb-2">Escudo Directo</h4>
+                <p className="text-silver/60 text-xs leading-relaxed mb-6">
+                  Redirección instantánea a OnlyFans con <b>Protección de Meta activa</b> por defecto. Ideal para anuncios directos.
+                </p>
+                <div className="mt-auto flex items-center gap-2 text-red-400 text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                  Seleccionar <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                </div>
+              </button>
+
+              {/* Opción 2: Landing Page */}
+              <button
+                onClick={() => confirmCreation("landing")}
+                className="group relative flex flex-col text-left p-6 rounded-[2rem] bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-primary text-3xl">view_list</span>
+                </div>
+                <h4 className="text-xl font-bold text-white mb-2">Landing Page</h4>
+                <p className="text-silver/60 text-xs leading-relaxed mb-6">
+                  Página personalizada con múltiples botones. Incluye <b>Protección de TikTok</b> por defecto.
+                </p>
+                <div className="mt-auto flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                  Seleccionar <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                </div>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowLinkTypeSelector(false)}
+              className="mt-10 mx-auto block text-[10px] font-bold text-silver/30 uppercase tracking-widest hover:text-white transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
     </div >
   );
 }
