@@ -2196,7 +2196,8 @@ export default function Links() {
                                         const firstUrl = selectedButton.rotatorLinks?.[0] || "";
                                         handleUpdateButton("rotatorLinks", [firstUrl, "", "", "", ""]);
                                         handleUpdateButton("rotatorActive", false);
-                                        toast.success(t("dashboard.links.rotatorDeactivatedSuccess", { defaultValue: "Rotador desactivado." })); else {
+                                        toast.success(t("dashboard.links.rotatorDeactivatedSuccess", { defaultValue: "Rotador desactivado." }));
+                                      } else {
                                         // Activating rotator
                                         handleUpdateButton(
                                           "rotatorActive",
