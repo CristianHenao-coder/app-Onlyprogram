@@ -10,7 +10,7 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'profile' | 'billing' | 'security'>('profile');
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'crypto'>('card');
+  const [paymentMethod, setPaymentMethod] = useState<'qr' | 'paypal' | 'crypto'>('qr');
 
   const [profile, setProfile] = useState({
     full_name: '',
