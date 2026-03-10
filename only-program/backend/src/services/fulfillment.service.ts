@@ -61,10 +61,11 @@ export class FulfillmentService {
               slug: slugToUse,
               title: draft.profileName,
               photo: draft.profileImage,
-              is_active: false,
-              status: "pending",
+              is_active: true,
+              status: "active",
               expires_at: expiresAt.toISOString(),
               custom_domain: (customDomain && customDomain.trim() !== "") ? customDomain.toLowerCase() : null,
+              domain_status: (customDomain && customDomain.trim() !== "") ? "pending" : "none",
               config: {
                 template: draft.template,
                 theme: draft.theme,
@@ -125,8 +126,8 @@ export class FulfillmentService {
         const { data: activatedLinks, error: updateError } = await supabase
           .from("smart_links")
           .update({
-            is_active: false,
-            status: "pending",
+            is_active: true,
+            status: "active",
             expires_at: expiresAt.toISOString(),
           })
           .eq("user_id", userId)

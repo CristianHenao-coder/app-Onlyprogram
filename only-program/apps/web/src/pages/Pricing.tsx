@@ -19,7 +19,7 @@ export default function Pricing() {
     let mounted = true;
     productPricingService.get().then((cfg) => {
       if (mounted) setPricingCfg(cfg);
-    }).catch(() => {});
+    }).catch(() => { });
     return () => {
       mounted = false;
     };
@@ -27,95 +27,99 @@ export default function Pricing() {
 
   const [qty, setQty] = useState(1);
   const [withTelegram, setWithTelegram] = useState(false);
+  const [withCoupon, setWithCoupon] = useState(false);
   const [loadingPay, setLoadingPay] = useState(false);
 
   // Wompi Widget is global
   const handleWompiPayment = async () => {
-      try {
-          setLoadingPay(true);
-          // 1. Get transaction data from backend
-          // We assume api.post is available or we use fetch with token.
-          // Let's use a simple fetch since I don't see api service imported yet.
-          // Wait, 'httpService' is a common pattern. Let me check imports.
-          // Since I can't browse now without interrupting, I'll assume I need to import api from somewhere or use fetch + token.
-          // I'll check imports in a second step if this fails, but for now standard fetch with localStorage token.
-          
-          // 1. Get user and session
-          const { data: { user } } = await import('@/services/supabase').then(m => m.supabase.auth.getUser());
-          
-          if (!user || !user.email) {
-             // Redirect to register
-             window.location.href = '/register';
-             return;
-          }
-          
-          const { data: { session } } = await import('@/services/supabase').then(m => m.supabase.auth.getSession());
-          const token = session?.access_token;
+    try {
+      setLoadingPay(true);
+      // 1. Get transaction data from backend
+      // We assume api.post is available or we use fetch with token.
+      // Let's use a simple fetch since I don't see api service imported yet.
+      // Wait, 'httpService' is a common pattern. Let me check imports.
+      // Since I can't browse now without interrupting, I'll assume I need to import api from somewhere or use fetch + token.
+      // I'll check imports in a second step if this fails, but for now standard fetch with localStorage token.
 
-          if (!token) {
-            console.error("No active session token found");
-            return;
-          }
+      // 1. Get user and session
+      const { data: { user } } = await import('@/services/supabase').then(m => m.supabase.auth.getUser());
 
-          const response = await fetch(`${API_URL}/wompi/transaction-init`, {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify({
-                qty: qty,
-                hasRotator: withTelegram,
-                countRotator: withTelegram ? qty : 0,
-                countStandard: withTelegram ? 0 : qty,
-              })
-          });
-
-          if (!response.ok) {
-              const err = await response.json();
-              alert("Error: " + (err.error || "Failed to init transaction"));
-              setLoadingPay(false);
-              return;
-          }
-
-          const txData = await response.json();
-
-          // 2. Open Wompi Widget with Customer Data (Enables Saved Cards)
-          const checkout = new (window as any).WidgetCheckout({
-              currency: txData.currency,
-              amountInCents: txData.amountInCents,
-              reference: txData.reference,
-              publicKey: txData.publicKey,
-              redirectUrl: txData.redirectUrl,
-              signature: { integrity: txData.signature },
-              customerData: {
-                  email: user.email,
-                  fullName: user.user_metadata?.full_name || 'Usuario OnlyProgram', // Fallback
-                  phoneNumber: user.user_metadata?.phone || '', // Optional
-                  phoneNumberPrefix: '+57', // Optional default
-                  legalId: '', // Optional
-                  legalIdType: 'CC' // Optional
-              }
-          });
-
-          checkout.open((result: any) => {
-              const transaction = result.transaction;
-              console.log('Transaction result:', transaction);
-              if (transaction.status === 'APPROVED') {
-                   window.location.href = '/dashboard/links?payment=success';
-              }
-          });
-          
-          setLoadingPay(false);
-
-      } catch (error) {
-          console.error(error);
-          alert("Error launching payment");
-          setLoadingPay(false);
+      if (!user || !user.email) {
+        // Redirect to register
+        window.location.href = '/register';
+        return;
       }
+
+      const { data: { session } } = await import('@/services/supabase').then(m => m.supabase.auth.getSession());
+      const token = session?.access_token;
+
+      if (!token) {
+        console.error("No active session token found");
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/wompi/transaction-init`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          qty: qty,
+          hasRotator: withTelegram,
+          hasInstagram: false,
+          countRotator: withTelegram ? qty : 0,
+          countStandard: (!withTelegram) ? qty : 0,
+          coupon: withCoupon ? 'DISCOUNT33' : undefined
+        })
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        alert("Error: " + (err.error || "Failed to init transaction"));
+        setLoadingPay(false);
+        return;
+      }
+
+      const txData = await response.json();
+
+      // 2. Open Wompi Widget with Customer Data (Enables Saved Cards)
+      const checkout = new (window as any).WidgetCheckout({
+        currency: txData.currency,
+        amountInCents: txData.amountInCents,
+        reference: txData.reference,
+        publicKey: txData.publicKey,
+        redirectUrl: txData.redirectUrl,
+        signature: { integrity: txData.signature },
+        customerData: {
+          email: user.email,
+          fullName: user.user_metadata?.full_name || 'Usuario OnlyProgram', // Fallback
+          phoneNumber: user.user_metadata?.phone || '', // Optional
+          phoneNumberPrefix: '+57', // Optional default
+          legalId: '', // Optional
+          legalIdType: 'CC' // Optional
+        }
+      });
+
+      checkout.open((result: any) => {
+        const transaction = result.transaction;
+        console.log('Transaction result:', transaction);
+        if (transaction.status === 'APPROVED') {
+          window.location.href = '/dashboard/links?payment=success';
+        }
+      });
+
+      setLoadingPay(false);
+
+    } catch (error) {
+      console.error(error);
+      alert("Error launching payment");
+      setLoadingPay(false);
+    }
   };
 
-  const basePrice = pricingCfg.link.standard + (withTelegram ? pricingCfg.link.telegramAddon : 0);
+  const basePrice = pricingCfg.link.base
+    + (withTelegram ? pricingCfg.link.telegramAddon : 0);
 
   const discount = useMemo(() => {
     if (qty >= 20) return 0.25;
@@ -124,10 +128,12 @@ export default function Pricing() {
     return 0;
   }, [qty]);
 
-  const perLink = basePrice * (1 - discount);
+  const couponMultiplier = withCoupon ? 0.67 : 1; // 33% discount
+  const perLink = basePrice * (1 - discount) * couponMultiplier;
   const total = perLink * qty;
 
-  const discountLabel = discount === 0 ? t('pricingPage.discount') : `-${Math.round(discount * 100)}%`;
+  const discountVal = 1 - ((1 - discount) * couponMultiplier);
+  const discountLabel = discountVal === 0 ? t('pricingPage.discount') : `-${Math.round(discountVal * 100)}%`;
 
   const tiers = [
     { n: 1, label: `1 ${t('pricingPage.calculator.perLink')}`, d: 0 },
@@ -163,14 +169,25 @@ export default function Pricing() {
                       <p className="text-xs uppercase tracking-[0.2em] text-silver/40 font-bold">{t('pricingPage.calculator.title')}</p>
                       <h2 className="text-xl sm:text-2xl font-bold text-white mt-2">{t('pricingPage.calculator.subtitle')}</h2>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setWithTelegram((v) => !v)}
-                      className={`px-4 py-2 rounded-xl border transition-all font-semibold text-sm ${withTelegram ? 'border-primary/60 bg-primary/10 text-white' : 'border-border bg-background-dark/40 text-silver/70 hover:text-white'}`}
-                    >
-                      <span className="material-symbols-outlined align-middle text-base mr-2">{withTelegram ? 'verified' : 'bolt'}</span>
-                      {withTelegram ? t('pricingPage.calculator.withTelegram') : t('pricingPage.calculator.noTelegram')}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setWithTelegram((v) => !v)}
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border transition-all font-semibold text-xs sm:text-sm ${withTelegram ? 'border-primary/60 bg-primary/10 text-white' : 'border-border bg-background-dark/40 text-silver/70 hover:text-white'}`}
+                      >
+                        <span className="material-symbols-outlined align-middle text-sm sm:text-base mr-1.5">{withTelegram ? 'verified' : 'send'}</span>
+                        Telegram
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setWithCoupon((v) => !v)}
+                        className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border transition-all font-semibold text-xs sm:text-sm ${withCoupon ? 'border-green-500/60 bg-green-500/10 text-white' : 'border-border bg-background-dark/40 text-silver/70 hover:text-white'}`}
+                      >
+                        <span className="material-symbols-outlined align-middle text-sm sm:text-base mr-1.5 text-green-400">local_offer</span>
+                        Con cupón 33%
+                      </button>
+                    </div>
                   </div>
 
                   <div className="mt-8">
@@ -261,15 +278,19 @@ export default function Pricing() {
 
                 <div className="rounded-3xl border border-border bg-surface/40 p-6">
                   <p className="text-white font-bold">
-                    {withTelegram ? t('pricingPage.telegramOrb.title') : t('pricingPage.telegramOrb.titleSolo')}
+                    Add-ons Adicionales
                   </p>
                   <p className="text-sm text-silver/60 mt-2">
-                    {withTelegram ? t('pricingPage.telegramOrb.desc') : t('pricingPage.telegramOrb.descSolo')}
+                    Potencia tus links con funciones extra.
                   </p>
-                  <div className="mt-4 rounded-2xl border border-border bg-background-dark/40 p-4">
-                    <p className="text-xs text-silver/50">{t('pricingPage.telegramOrb.priceLabel')}</p>
-                    <p className="text-xl font-extrabold text-white mt-1">{formatUSD(withTelegram ? pricingCfg.domain.buy + pricingCfg.link.telegramAddon : pricingCfg.domain.buy)}</p>
-                    <p className="text-xs text-silver/55 mt-2">{t('pricingPage.telegramOrb.billing')}</p>
+                  <div className="mt-4 space-y-3">
+                    <div className="rounded-2xl border border-border bg-background-dark/40 p-4 flex justify-between items-center">
+                      <div>
+                        <p className="text-xs text-silver/50">Telegram Rotativo</p>
+                        <p className="text-xl font-extrabold text-white mt-1">{formatUSD(pricingCfg.link.telegramAddon)}</p>
+                      </div>
+                      <span className="material-symbols-outlined text-silver/20 text-3xl">send</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -297,7 +318,56 @@ export default function Pricing() {
               </div>
             </div>
 
-            <div className="mt-14 text-center" data-reveal data-delay="3">
+            {/* REFERIDOS SECTION */}
+            <div className="mt-20 max-w-5xl mx-auto" data-reveal data-delay="3">
+              <div className="rounded-[2.5rem] border border-primary/30 bg-primary/5 p-8 sm:p-12 text-center relative overflow-hidden shadow-[0_0_50px_rgba(29,161,242,0.1)]">
+                <div className="absolute top-0 right-0 p-8 blur-3xl opacity-30 bg-primary w-64 h-64 rounded-full pointer-events-none" />
+                <div className="absolute bottom-0 left-0 p-8 blur-3xl opacity-20 bg-green-500 w-64 h-64 rounded-full pointer-events-none" />
+
+                <div className="relative z-10">
+                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest mb-6 border border-primary/20">
+                    <span className="material-symbols-outlined text-sm">payments</span>
+                    Programa de Afiliados
+                  </span>
+
+                  <h2 className="text-3xl sm:text-5xl font-extrabold text-white mb-6 leading-tight">
+                    Multiplica tus ingresos con referidos 💸
+                  </h2>
+
+                  <p className="text-lg text-silver/80 mb-10 max-w-2xl mx-auto leading-relaxed">
+                    ¿Conoces a alguien que necesite potenciar su marketing digital? Recomienda nuestro servicio y empieza a generar <strong>ingresos pasivos reales</strong> desde el primer día.
+                  </p>
+
+                  <div className="grid sm:grid-cols-3 gap-6 mb-10 text-left">
+                    <div className="bg-background-dark/80 border border-white/5 rounded-3xl p-6 hover:bg-white/5 transition-all relative overflow-hidden">
+                      <div className="w-12 h-12 rounded-xl bg-green-500/20 text-green-400 flex items-center justify-center mb-5 text-2xl font-bold border border-green-500/20">$</div>
+                      <h4 className="text-white text-lg font-bold mb-2">Comienza con $3 USD</h4>
+                      <p className="text-sm text-silver/60">Obtienes 3 dólares inmediatos y directos a tu bolsillo por <strong>cada persona</strong> que invite a adquirir un plan a través de ti.</p>
+                    </div>
+
+                    <div className="bg-background-dark/80 border border-white/5 rounded-3xl p-6 hover:bg-white/5 transition-all relative overflow-hidden">
+                      <div className="w-12 h-12 rounded-xl bg-primary/20 text-primary flex items-center justify-center mb-5 text-2xl font-bold border border-primary/20">∞</div>
+                      <h4 className="text-white text-lg font-bold mb-2">Renueva mes a mes</h4>
+                      <p className="text-sm text-silver/60">Nuestro servicio es por suscripción. Si tu cliente decide quedarse, <strong>tú ganas tu comisión todos los meses</strong>. Ingreso recurrente sin esfuerzo.</p>
+                    </div>
+
+                    <div className="bg-background-dark/80 border border-white/5 rounded-3xl p-6 hover:bg-white/5 transition-all relative overflow-hidden">
+                      <div className="w-12 h-12 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center mb-5 font-bold border border-purple-500/20">
+                        <span className="material-symbols-outlined text-2xl">trending_up</span>
+                      </div>
+                      <h4 className="text-white text-lg font-bold mb-2">Escala tu Capital</h4>
+                      <p className="text-sm text-silver/60">Los tres dólares son solo tu inicio. Entre más referidos sumes a tu red, el retorno pasivo puede hacer crecer tus ganancias hasta límites impensables.</p>
+                    </div>
+                  </div>
+
+                  <p className="text-sm text-silver/50 max-w-2xl mx-auto">
+                    Construye un modelo de comisiones que trabaje por ti todos los meses y benefíciate de nuestro crecimiento compartiéndolo con tu círculo.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-14 text-center" data-reveal data-delay="4">
               <Link to="/" className="text-silver/60 hover:text-white transition-colors font-medium nav-underline">
                 {t('pricingPage.backHome')}
               </Link>

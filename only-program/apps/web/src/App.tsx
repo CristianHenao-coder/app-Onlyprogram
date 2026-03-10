@@ -51,12 +51,10 @@ import AdminDashboard from '@/pages/Admin/Dashboard';
 import CmsEditor from '@/pages/Admin/CmsEditor';
 import ProductPricing from '@/pages/Admin/ProductPricing';
 import UserManager from '@/pages/Admin/UserManager';
-import GlobalLinks from '@/pages/Admin/GlobalLinks';
 import CouponManager from '@/pages/Admin/CouponManager';
 import AdminSettings from '@/pages/Admin/Settings';
-import AuditLogs from './pages/Admin/AuditLogs';
-import LinksModeration from '@/pages/Admin/LinksModeration';
 import DomainRequests from '@/pages/Admin/DomainRequests';
+import Inbox from '@/pages/Admin/Inbox';
 
 import '@/styles/index.css';
 
@@ -137,12 +135,10 @@ function App() {
                   <Route path="cms" element={<CmsEditor />} />
                   <Route path="pricing" element={<ProductPricing />} />
                   <Route path="users" element={<UserManager />} />
-                  <Route path="links" element={<GlobalLinks />} />
                   <Route path="coupons" element={<CouponManager />} />
                   <Route path="settings" element={<AdminSettings />} />
-                  <Route path="audit-logs" element={<AuditLogs />} />
-                  <Route path="moderation" element={<LinksModeration />} />
                   <Route path="domains" element={<DomainRequests />} />
+                  <Route path="inbox" element={<Inbox />} />
                 </Route>
               </Route>
             </Routes>

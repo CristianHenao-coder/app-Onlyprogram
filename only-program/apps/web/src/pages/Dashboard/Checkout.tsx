@@ -23,8 +23,10 @@ export default function Checkout() {
   const [appliedCoupon, setAppliedCoupon] = useState<CouponResult | null>(null);
   const [couponError, setCouponError] = useState('');
 
-  // Selected plan
-  const [selectedPlan, setSelectedPlan] = useState<'free-trial' | 'standard' | 'premium' | null>(null);
+  // Selected plan & addons
+  const [selectedPlan, setSelectedPlan] = useState<'free-trial' | 'standard' | null>(null);
+  const [withTelegram, setWithTelegram] = useState(false);
+  const [withInstagram, setWithInstagram] = useState(false);
 
   // Extract linksData from navigation state, fall back to localStorage
   const linksDataFromState = location.state?.pendingPurchase?.linksData || [];
@@ -51,16 +53,18 @@ export default function Checkout() {
   }, [linksData.length, navigate]);
 
   // Price calculations
-  const baseStandard = pricingCfg.link.standard * linksData.length;
-  const basePremium = pricingCfg.domain.connect;
+  const perLinkBase = pricingCfg.link.base
+    + (withTelegram ? pricingCfg.link.telegramAddon : 0)
+    + (withInstagram ? pricingCfg.link.instagramAddon : 0);
+
+  const baseTotal = perLinkBase * linksData.length;
 
   const applyDiscount = (base: number) => {
     if (!appliedCoupon) return base;
     return base * (1 - appliedCoupon.discount_percent / 100);
   };
 
-  const priceStandard = applyDiscount(baseStandard);
-  const pricePremium = applyDiscount(basePremium);
+  const finalPrice = applyDiscount(baseTotal);
 
   // Coupon validation
   const handleApplyCoupon = async () => {
@@ -105,19 +109,21 @@ export default function Checkout() {
     setCouponError('');
   };
 
-  const handleProductSelect = async (type: 'standard' | 'premium' | 'free-trial') => {
+  const handleProductSelect = async (type: 'standard' | 'free-trial') => {
     if (type === 'free-trial') {
       await handleFreeTrial();
       return;
     }
-    const amount = type === 'premium' ? pricePremium : priceStandard;
     navigate('/dashboard/payments', {
       state: {
         pendingPurchase: {
-          type: type === 'premium' ? 'link_with_domain' : 'links_bundle',
+          type: 'links_bundle',
           linksData,
-          amount,
+          amount: finalPrice,
+          baseAmount: baseTotal,
           coupon: appliedCoupon?.code || null,
+          hasRotator: withTelegram,
+          hasInstagram: withInstagram
         }
       }
     });
@@ -173,8 +179,8 @@ export default function Checkout() {
           <div
             onClick={() => setSelectedPlan('free-trial')}
             className={`relative rounded-2xl border p-6 cursor-pointer transition-all group ${selectedPlan === 'free-trial'
-                ? 'border-green-500/60 bg-green-500/5 shadow-lg shadow-green-500/10'
-                : 'border-white/10 bg-white/[0.02] hover:border-green-500/30'
+              ? 'border-green-500/60 bg-green-500/5 shadow-lg shadow-green-500/10'
+              : 'border-white/10 bg-white/[0.02] hover:border-green-500/30'
               }`}
           >
             <div className="absolute top-4 right-4">
@@ -204,8 +210,8 @@ export default function Checkout() {
           <div
             onClick={() => setSelectedPlan('standard')}
             className={`relative rounded-2xl border p-6 cursor-pointer transition-all ${selectedPlan === 'standard'
-                ? 'border-primary/60 bg-primary/5 shadow-lg shadow-primary/10'
-                : 'border-white/10 bg-white/[0.02] hover:border-primary/30'
+              ? 'border-primary/60 bg-primary/5 shadow-lg shadow-primary/10'
+              : 'border-white/10 bg-white/[0.02] hover:border-primary/30'
               }`}
           >
             <div className="flex items-start gap-4">
@@ -217,13 +223,52 @@ export default function Checkout() {
                 <p className="text-sm text-silver/40 mt-0.5">Un solo pago, activo para siempre.</p>
                 <div className="mt-3 flex items-baseline gap-2">
                   {appliedCoupon && (
-                    <span className="text-sm text-silver/30 line-through">{fmt(baseStandard)}</span>
+                    <span className="text-sm text-silver/30 line-through">{fmt(baseTotal)}</span>
                   )}
-                  <span className="text-2xl font-black text-white">{fmt(priceStandard)}</span>
+                  <span className="text-2xl font-black text-white">{fmt(finalPrice)}</span>
                   <span className="text-xs text-silver/40">
                     × {linksData.length} link{linksData.length !== 1 ? 's' : ''}
                   </span>
                 </div>
+
+                {/* Add-ons for Standard Plan */}
+                {selectedPlan === 'standard' && (
+                  <div className="mt-6 pt-5 border-t border-white/5" onClick={(e) => e.stopPropagation()}>
+                    <p className="text-xs font-bold text-silver/50 uppercase tracking-widest mb-3">Add-ons disponibles</p>
+                    <div className="space-y-3">
+                      <label className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-black/20 hover:bg-black/40 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={withTelegram}
+                            onChange={(e) => setWithTelegram(e.target.checked)}
+                            className="w-4 h-4 rounded border-white/20 text-primary accent-primary"
+                          />
+                          <span className="text-sm font-medium text-white flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-silver/50 text-[18px]">send</span>
+                            Telegram Rotativo
+                          </span>
+                        </div>
+                        <span className="text-xs font-bold text-white">+{fmt(pricingCfg.link.telegramAddon)}/u</span>
+                      </label>
+                      <label className="flex items-center justify-between p-3 rounded-xl border border-white/5 bg-black/20 hover:bg-black/40 cursor-pointer transition-all">
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={withInstagram}
+                            onChange={(e) => setWithInstagram(e.target.checked)}
+                            className="w-4 h-4 rounded border-white/20 text-primary accent-primary"
+                          />
+                          <span className="text-sm font-medium text-white flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-silver/50 text-[18px]">camera_alt</span>
+                            Instagram
+                          </span>
+                        </div>
+                        <span className="text-xs font-bold text-white">+{fmt(pricingCfg.link.instagramAddon)}/u</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
               </div>
               <div className={`w-5 h-5 rounded-full border-2 shrink-0 mt-1 transition-all ${selectedPlan === 'standard' ? 'border-primary bg-primary' : 'border-white/20'
                 }`}>
@@ -234,36 +279,6 @@ export default function Checkout() {
             </div>
           </div>
 
-          {/* PREMIUM */}
-          <div
-            onClick={() => setSelectedPlan('premium')}
-            className={`relative rounded-2xl border p-6 cursor-pointer transition-all ${selectedPlan === 'premium'
-                ? 'border-purple-500/60 bg-purple-500/5 shadow-lg shadow-purple-500/10'
-                : 'border-white/10 bg-white/[0.02] hover:border-purple-500/30'
-              }`}
-          >
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
-                <span className="material-symbols-outlined text-2xl text-purple-400">language</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-black text-white text-lg">Dominio Pro</h3>
-                <p className="text-sm text-silver/40 mt-0.5">Usa tu propio dominio personalizado.</p>
-                <div className="mt-3 flex items-baseline gap-2">
-                  {appliedCoupon && (
-                    <span className="text-sm text-silver/30 line-through">{fmt(basePremium)}</span>
-                  )}
-                  <span className="text-2xl font-black text-white">{fmt(pricePremium)}</span>
-                </div>
-              </div>
-              <div className={`w-5 h-5 rounded-full border-2 shrink-0 mt-1 transition-all ${selectedPlan === 'premium' ? 'border-purple-500 bg-purple-500' : 'border-white/20'
-                }`}>
-                {selectedPlan === 'premium' && (
-                  <span className="material-symbols-outlined text-white text-sm flex items-center justify-center h-full">check</span>
-                )}
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* RIGHT: Order Summary */}
@@ -281,34 +296,41 @@ export default function Checkout() {
             <div className="px-6 py-4 space-y-3">
               {/* Links in cart */}
               {linksData.map((link: any, i: number) => (
-                <div key={link.id || i} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-sm text-primary">link</span>
+                <div key={link.id || i} className="flex flex-col gap-1.5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-sm text-primary">link</span>
+                    </div>
+                    <p className="text-sm text-white font-bold truncate flex-1">{link.name || `Link ${i + 1}`}</p>
+                    <span className="text-xs text-silver/40 font-mono shrink-0">
+                      {fmt(pricingCfg.link.base)}
+                    </span>
                   </div>
-                  <p className="text-sm text-white font-bold truncate flex-1">{link.name || `Link ${i + 1}`}</p>
-                  <span className="text-xs text-silver/40 font-mono shrink-0">
-                    {selectedPlan === 'premium' ? '' : fmt(pricingCfg.link.standard)}
-                  </span>
+                  {/* Show selected add-ons per link if standard plan */}
+                  {selectedPlan === 'standard' && (withTelegram || withInstagram) && (
+                    <div className="pl-11 pr-2 flex flex-col gap-1 text-[11px] text-silver/50">
+                      {withTelegram && <div className="flex justify-between"><span>+ Telegram Rotativo</span><span>{fmt(pricingCfg.link.telegramAddon)}</span></div>}
+                      {withInstagram && <div className="flex justify-between"><span>+ Instagram</span><span>{fmt(pricingCfg.link.instagramAddon)}</span></div>}
+                    </div>
+                  )}
                 </div>
               ))}
 
               <div className="border-t border-white/5 pt-3 mt-3 space-y-1.5">
                 <div className="flex justify-between text-xs text-silver/40">
                   <span>Subtotal ({linksData.length} link{linksData.length !== 1 ? 's' : ''})</span>
-                  <span>{selectedPlan === 'premium' ? fmt(basePremium) : fmt(baseStandard)}</span>
+                  <span>{fmt(baseTotal)}</span>
                 </div>
                 {appliedCoupon && (
                   <div className="flex justify-between text-xs text-green-400">
                     <span>Descuento ({appliedCoupon.code} · -{appliedCoupon.discount_percent}%)</span>
-                    <span>-{fmt((selectedPlan === 'premium' ? basePremium : baseStandard) * appliedCoupon.discount_percent / 100)}</span>
+                    <span>-{fmt(baseTotal * appliedCoupon.discount_percent / 100)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-base font-black text-white pt-1 border-t border-white/5">
                   <span>Total</span>
                   <span className={appliedCoupon ? 'text-green-400' : 'text-white'}>
-                    {selectedPlan === 'free-trial' ? '$0.00' :
-                      selectedPlan === 'premium' ? fmt(pricePremium) :
-                        selectedPlan === 'standard' ? fmt(priceStandard) : '—'}
+                    {selectedPlan === 'free-trial' ? '$0.00' : fmt(finalPrice)}
                   </span>
                 </div>
               </div>
@@ -377,12 +399,10 @@ export default function Checkout() {
             onClick={() => selectedPlan && handleProductSelect(selectedPlan)}
             disabled={!selectedPlan || isActivating}
             className={`w-full py-4 rounded-xl font-black text-sm uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${!selectedPlan
-                ? 'bg-white/5 text-silver/30 cursor-not-allowed border border-white/10'
-                : selectedPlan === 'free-trial'
-                  ? 'bg-green-500 text-white hover:bg-green-400 shadow-lg shadow-green-500/20 hover:scale-[1.02] active:scale-95'
-                  : selectedPlan === 'premium'
-                    ? 'bg-purple-600 text-white hover:bg-purple-500 shadow-lg shadow-purple-500/20 hover:scale-[1.02] active:scale-95'
-                    : 'bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95'
+              ? 'bg-white/5 text-silver/30 cursor-not-allowed border border-white/10'
+              : selectedPlan === 'free-trial'
+                ? 'bg-green-500 text-white hover:bg-green-400 shadow-lg shadow-green-500/20 hover:scale-[1.02] active:scale-95'
+                : 'bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95'
               }`}
           >
             {isActivating ? (
@@ -400,7 +420,7 @@ export default function Checkout() {
             ) : (
               <>
                 <span className="material-symbols-outlined text-base">payment</span>
-                Pagar {selectedPlan === 'premium' ? fmt(pricePremium) : fmt(priceStandard)}
+                Pagar {fmt(finalPrice)}
               </>
             )}
           </button>
@@ -432,3 +452,4 @@ export default function Checkout() {
     </div>
   );
 }
+

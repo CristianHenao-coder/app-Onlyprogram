@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { paymentsService, Payment } from "../../services/payments.service";
+import { paymentsService } from "../../services/payments.service";
 import { productPricingService, DEFAULT_PRODUCT_PRICING, type ProductPricingConfig } from "@/services/productPricing.service";
 import { supabase } from "../../services/supabase";
 import PaymentSelector from "@/components/PaymentSelector";
@@ -14,7 +14,7 @@ interface CouponResult {
 export default function Payments() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [_payments, setPayments] = useState<Payment[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [pricingCfg, setPricingCfg] = useState<ProductPricingConfig>(DEFAULT_PRODUCT_PRICING);
   const [currentStep, setCurrentStep] = useState<"cart" | "payment" | "success">("cart");
@@ -32,11 +32,10 @@ export default function Payments() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [data, pricing] = await Promise.all([
+        const [_, pricing] = await Promise.all([
           paymentsService.getHistory(),
           productPricingService.get(),
         ]);
-        setPayments(data.payments || []);
         setPricingCfg(pricing);
 
         // If coming from links editor, show cart step first
@@ -52,18 +51,32 @@ export default function Payments() {
       }
     };
     load();
+  }, [isFromLinks]);
+  // Si aplicaron cupón en checkout, lo iniciamos acá tmbn
+  useEffect(() => {
+    if (pendingPurchase?.coupon && !appliedCoupon) {
+      // Idealmente lo cargaríamos de la db para ver el %. 
+      // Por ahora usemos el finalTotal de Checkout si no queremos cargar de nuevo, 
+      // pero la forma correcta es recuperar el %.
+    }
   }, []);
 
   // Prices
-  const baseTotal = isFromLinks
-    ? pricingCfg.link.standard * linksData.length
-    : pendingPurchase?.amount || 0;
+  const perLinkBase = pricingCfg.link.base
+    + (pendingPurchase?.hasRotator ? pricingCfg.link.telegramAddon : 0)
+    + (pendingPurchase?.hasInstagram ? pricingCfg.link.instagramAddon : 0);
+
+  const baseTotal = pendingPurchase?.baseAmount || (
+    isFromLinks
+      ? perLinkBase * linksData.length
+      : pendingPurchase?.amount || 0
+  );
 
   const discountAmount = appliedCoupon
     ? baseTotal * (appliedCoupon.discount_percent / 100)
     : 0;
 
-  const finalTotal = baseTotal - discountAmount;
+  const finalTotal = appliedCoupon ? baseTotal - discountAmount : (pendingPurchase?.amount || baseTotal);
 
   // Coupon validation
   const handleApplyCoupon = async () => {
@@ -181,12 +194,13 @@ export default function Payments() {
                         <p className="font-bold text-white text-sm truncate">
                           {link.name || `Link ${i + 1}`}
                         </p>
-                        <p className="text-xs text-silver/40 truncate">
-                          {link.buttons?.length || 0} botón{link.buttons?.length !== 1 ? "es" : ""}
+                        <p className="text-[11px] text-silver/40 truncate flex gap-2">
+                          {pendingPurchase?.hasRotator && <span>+ Telegram</span>}
+                          {pendingPurchase?.hasInstagram && <span>+ Instagram</span>}
                         </p>
                       </div>
                       <span className="text-sm font-mono text-white shrink-0">
-                        {fmt(pricingCfg.link.standard)}
+                        {fmt(perLinkBase)}
                       </span>
                     </div>
                   ))}
@@ -236,25 +250,28 @@ export default function Payments() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={couponCode}
-                        onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(""); }}
-                        onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
-                        placeholder="Ej: DESCUENTO50"
-                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-mono text-white placeholder:text-silver/20 focus:outline-none focus:border-primary/50 transition-all"
-                      />
-                      <button
-                        onClick={handleApplyCoupon}
-                        disabled={!couponCode.trim() || couponLoading}
-                        className="px-4 py-2.5 bg-primary text-white font-bold text-xs rounded-xl hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 shrink-0"
-                      >
-                        {couponLoading ? (
-                          <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
-                        ) : "Aplicar"}
-                      </button>
-                    </div>
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(""); }}
+                      onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
+                      placeholder="Ej: DESCUENTO50"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-mono text-white placeholder:text-silver/20 focus:outline-none focus:border-primary/50 transition-all"
+                    />
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={!couponCode.trim() || couponLoading}
+                      className="w-full py-2.5 bg-primary text-white font-bold text-xs rounded-xl hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                    >
+                      {couponLoading ? (
+                        <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-sm">confirmation_number</span>
+                          Aplicar Cupón
+                        </>
+                      )}
+                    </button>
                     {couponError && (
                       <p className="text-xs text-red-400 flex items-center gap-1">
                         <span className="material-symbols-outlined text-sm">error</span>
@@ -304,15 +321,13 @@ export default function Payments() {
         <div className="space-y-8">
           {/* Header */}
           <div>
-            {isFromLinks && (
-              <button
-                onClick={() => setCurrentStep("cart")}
-                className="flex items-center gap-2 text-silver/40 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest mb-6"
-              >
-                <span className="material-symbols-outlined text-base">arrow_back</span>
-                Volver al Carrito
-              </button>
-            )}
+            <button
+              onClick={() => isFromLinks ? setCurrentStep("cart") : navigate("/dashboard/links")}
+              className="flex items-center gap-2 text-silver/40 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest mb-6"
+            >
+              <span className="material-symbols-outlined text-base">arrow_back</span>
+              {isFromLinks ? "Volver al Carrito" : "Volver a Mis Links"}
+            </button>
             <h1 className="text-4xl font-black text-white tracking-tight uppercase">Registra tu Pago</h1>
             <p className="text-silver/60 mt-1">Completa tu proceso para activar tus servicios.</p>
           </div>

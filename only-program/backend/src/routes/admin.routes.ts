@@ -167,13 +167,37 @@ router.delete("/users/:userId", async (req: AuthRequest, res: Response) => {
 
 /**
  * GET /api/admin/users
- * Obtiene lista de usuarios (solo admin)
+ * Obtiene lista de usuarios con email (service role bypasses RLS en auth.users)
  */
 router.get("/users", async (req: AuthRequest, res) => {
-  res.json({
-    message: "Endpoint de administración",
-    admin: req.user,
-  });
+  try {
+    // 1. Traer perfiles con sus smart_links
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("*, smart_links!smart_links_user_id_fkey(*, smart_link_buttons(*))")
+      .order("created_at", { ascending: false });
+
+    if (profilesError) throw profilesError;
+
+    // 2. Enriquecer con emails desde auth.users
+    const enriched = await Promise.all(
+      (profiles || []).map(async (profile: any) => {
+        let email: string | null = null;
+        try {
+          const { data: authUser } = await supabase.auth.admin.getUserById(profile.id);
+          email = authUser?.user?.email || null;
+        } catch {
+          // ignore
+        }
+        return { ...profile, email };
+      })
+    );
+
+    res.json({ success: true, data: enriched });
+  } catch (err: any) {
+    console.error("[Admin] users error:", err);
+    res.status(500).json({ error: "Error al obtener usuarios" });
+  }
 });
 
 /**
@@ -202,15 +226,29 @@ router.post("/approve-link", async (req: AuthRequest, res: Response) => {
       return res.status(409).json({ error: "El slug ya está en uso" });
     }
 
+    // Obtener info actual del link para ver si tiene dominio
+    const { data: currentLink } = await supabase
+      .from("smart_links")
+      .select("custom_domain, domain_status")
+      .eq("id", linkId)
+      .single();
+
     // Actualizar el link
+    const updateData: any = {
+      slug: slug,
+      status: "active",
+      is_active: true,
+    };
+
+    // Si tiene dominio pero no está en estado pending/active, ponerlo en pending
+    if (currentLink?.custom_domain && currentLink.custom_domain.trim() !== "" && (!currentLink.domain_status || currentLink.domain_status === "none")) {
+      updateData.domain_status = "pending";
+      updateData.domain_requested_at = new Date().toISOString();
+    }
+
     const { data: link, error } = await supabase
       .from("smart_links")
-      .update({
-        slug: slug,
-        status: "active",
-        is_active: true,
-        // Eliminado updated_at porque la columna no existe en la tabla
-      })
+      .update(updateData)
       .eq("id", linkId)
       .select()
       .single();
@@ -272,17 +310,15 @@ router.get("/domain-requests", async (req: AuthRequest, res: Response) => {
   try {
     const { data, error } = await supabase
       .from("smart_links")
-      .select(
-        `
+      .select(`
         id, slug, title, custom_domain, domain_status, domain_reservation_type,
-        domain_requested_at, domain_activated_at, domain_notes,
-        is_active, status,
-        profiles!smart_links_user_id_fkey (full_name, id)
-      `,
-      )
-      .not("domain_status", "eq", "none")
-      .not("domain_status", "is", null)
-      .order("domain_requested_at", { ascending: false });
+        domain_requested_at, domain_activated_at, domain_notes, config, subtitle, photo,
+        is_active, status, created_at,
+        profiles!smart_links_user_id_fkey (full_name, id),
+        smart_link_buttons (*)
+      `)
+      .or('status.eq.pending,domain_status.in.(pending,failed)')
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
 
@@ -324,6 +360,15 @@ router.post(
   async (req: AuthRequest, res: Response) => {
     try {
       const { linkId } = req.params;
+      const { custom_domain } = req.body;
+
+      // Update custom_domain if provided
+      if (custom_domain) {
+        await supabase
+          .from("smart_links")
+          .update({ custom_domain })
+          .eq("id", linkId);
+      }
 
       const { data: link, error } = await supabase
         .from("smart_links")
@@ -349,8 +394,11 @@ router.post(
 
       // Use dns module to do lookup
       const dns = await import("dns/promises");
+      // Force fresh DNS lookup bypassing local cache by using Google's resolver
+      const resolver = new dns.Resolver();
+      resolver.setServers(['8.8.8.8', '1.1.1.1']);
       try {
-        const addresses = await dns.resolve4(domain);
+        const addresses = await resolver.resolve4(domain);
         const hasCorrectIp = addresses.includes(expectedIp);
         res.json({
           success: true,
@@ -359,15 +407,18 @@ router.post(
           expectedIp,
           configured: hasCorrectIp,
           message: hasCorrectIp
-            ? `✅ DNS correcto. ${domain} apunta a ${expectedIp}`
-            : `❌ DNS incorrecto. ${domain} apunta a ${addresses.join(", ")}, se esperaba ${expectedIp}`,
+            ? `✅ DNS correcto. ${domain} apunta correctamente a ${expectedIp}. ¡Puedes activar el servicio!`
+            : `❌ Corrige tu DNS. El dominio ${domain} está apuntando a ${addresses.join(", ")} pero debe apuntar a ${expectedIp}. Verifica tu registro A en el panel de tu proveedor de dominio.`,
         });
       } catch (dnsErr: any) {
+        const isNotFound = dnsErr.code === 'ENOTFOUND' || dnsErr.code === 'ENODATA' || dnsErr.code === 'NXDOMAIN';
         res.json({
           success: false,
           domain,
           configured: false,
-          message: `❌ No se pudo resolver ${domain}: ${dnsErr.code || dnsErr.message}`,
+          message: isNotFound
+            ? `⚠️ El dominio ${domain} aún no apunta a ningún servidor. Si acabas de configurar tu DNS, puede tardar entre 15 minutos y 48 horas en propagarse. Asegúrate de haber creado un registro A con valor ${expectedIp}.`
+            : `❌ No se pudo verificar ${domain}. Error: ${dnsErr.code || dnsErr.message}. Intenta de nuevo en unos minutos.`,
         });
       }
     } catch (err: any) {
@@ -379,30 +430,77 @@ router.post(
 
 /**
  * POST /api/admin/domain-requests/:linkId/activate
- * Marca el dominio como activo
+ * Marca el dominio como activo, opcionalmente asignando o corrigiendo el custom_domain
  */
 router.post(
   "/domain-requests/:linkId/activate",
   async (req: AuthRequest, res: Response) => {
     try {
       const { linkId } = req.params;
+      const { custom_domain } = req.body;
+
+      const updates: any = {
+        domain_status: "active",
+        domain_activated_at: new Date().toISOString(),
+        domain_notes: null,
+        is_active: true,   // ← también activar el link
+        status: "active",  // ← marcar como activo en moderación
+      };
+
+      if (custom_domain) {
+        updates.custom_domain = custom_domain;
+      }
 
       const { error } = await supabase
         .from("smart_links")
-        .update({
-          domain_status: "active",
-          domain_activated_at: new Date().toISOString(),
-          domain_notes: null,
-        })
+        .update(updates)
         .eq("id", linkId);
 
       if (error) throw error;
 
-      console.log(`[Admin] Domain activated for link: ${linkId}`);
+      console.log(`[Admin] Domain activated for link: ${linkId} with domain: ${custom_domain || 'existing'}`);
       res.json({ success: true, message: "Dominio activado exitosamente" });
     } catch (err: any) {
       console.error("[Admin] domain activate error:", err);
       res.status(500).json({ error: "Error al activar dominio" });
+    }
+  },
+);
+
+/**
+ * PATCH /api/admin/domain-requests/:linkId/assign-domain
+ * El admin asigna un custom_domain a un link
+ */
+router.patch(
+  "/domain-requests/:linkId/assign-domain",
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { linkId } = req.params;
+      const { custom_domain } = req.body;
+
+      if (typeof custom_domain !== "string") {
+        return res.status(400).json({ error: "Formato de dominio inválido" });
+      }
+
+      const domain = custom_domain.trim().toLowerCase().replace(/^https?:\/\//i, "");
+      const isClearing = domain === "";
+
+      const { error } = await supabase
+        .from("smart_links")
+        .update(isClearing
+          ? { custom_domain: null, domain_status: null, domain_requested_at: null }
+          : { custom_domain: domain, domain_status: "pending", domain_requested_at: new Date().toISOString() }
+        )
+        .eq("id", linkId);
+
+      if (error) throw error;
+
+      const msg = isClearing ? "Dominio eliminado" : `Dominio asignado: ${domain}`;
+      console.log(`[Admin] ${msg} → link ${linkId}`);
+      res.json({ success: true, message: msg, domain: domain || null });
+    } catch (err: any) {
+      console.error("[Admin] assign-domain error:", err);
+      res.status(500).json({ error: "Error al asignar dominio" });
     }
   },
 );
@@ -529,4 +627,74 @@ router.post(
   },
 );
 
+/**
+ * DELETE /api/admin/links/:linkId
+ * Elimina un smart link
+ */
+router.delete(
+  "/links/:linkId",
+  async (req: AuthRequest, res: Response) => {
+    try {
+      const { linkId } = req.params;
+
+      const { error } = await supabase
+        .from("smart_links")
+        .delete()
+        .eq("id", linkId);
+
+      if (error) throw error;
+      res.json({
+        success: true,
+        message: "Link eliminado exitosamente",
+      });
+    } catch (err: any) {
+      console.error("[Admin] link delete error:", err);
+      res.status(500).json({ error: "Error al eliminar el link" });
+    }
+  },
+);
+
+
+/**
+ * GET /api/admin/contact-messages
+ * Lista todos los mensajes del formulario de contacto, ordenados por fecha
+ */
+router.get("/contact-messages", async (req: AuthRequest, res: Response) => {
+  try {
+    const { data, error } = await supabase
+      .from("contact_messages")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    res.json({ success: true, data });
+  } catch (err: any) {
+    console.error("[Admin] contact-messages GET error:", err);
+    res.status(500).json({ error: "Error al obtener los mensajes." });
+  }
+});
+
+/**
+ * PATCH /api/admin/contact-messages/:id
+ * Actualiza el estado 'contacted' de un mensaje
+ */
+router.patch("/contact-messages/:id", async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { contacted } = req.body;
+
+    const { error } = await supabase
+      .from("contact_messages")
+      .update({ contacted: !!contacted, updated_at: new Date().toISOString() })
+      .eq("id", id);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (err: any) {
+    console.error("[Admin] contact-messages PATCH error:", err);
+    res.status(500).json({ error: "Error al actualizar el mensaje." });
+  }
+});
+
 export default router;
+
