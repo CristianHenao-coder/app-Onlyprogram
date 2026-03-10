@@ -38,12 +38,8 @@ export default function Payments() {
         ]);
         setPricingCfg(pricing);
 
-        // If coming from links editor, show cart step first
-        if (isFromLinks) {
-          setCurrentStep("cart");
-        } else {
-          setCurrentStep("payment");
-        }
+        // Always skip directly to payment step since cart is handled in Checkout.tsx
+        setCurrentStep("payment");
       } catch (error) {
         console.error("Error loading payments:", error);
       } finally {
@@ -322,7 +318,7 @@ export default function Payments() {
           {/* Header */}
           <div>
             <button
-              onClick={() => isFromLinks ? setCurrentStep("cart") : navigate("/dashboard/links")}
+              onClick={() => isFromLinks ? navigate(-1) : navigate("/dashboard/links")}
               className="flex items-center gap-2 text-silver/40 hover:text-white transition-colors text-xs font-bold uppercase tracking-widest mb-6"
             >
               <span className="material-symbols-outlined text-base">arrow_back</span>
@@ -342,13 +338,15 @@ export default function Payments() {
                     ? `${linksData.length} Link${linksData.length !== 1 ? "s" : ""} — Acceso Vitalicio`
                     : "Compra"}
                 </p>
-                {appliedCoupon && (
+                {appliedCoupon ? (
                   <p className="text-xs text-green-400">Cupón {appliedCoupon.code} aplicado ({appliedCoupon.discount_percent}% off)</p>
-                )}
+                ) : pendingPurchase?.coupon ? (
+                  <p className="text-xs text-green-400">Cupón {pendingPurchase.coupon} aplicado</p>
+                ) : null}
               </div>
             </div>
             <div className="text-right">
-              {appliedCoupon && (
+              {(appliedCoupon || pendingPurchase?.coupon) && (
                 <p className="text-xs text-silver/30 line-through">{fmt(baseTotal)}</p>
               )}
               <p className="text-2xl font-black text-white">{fmt(finalTotal)}</p>
