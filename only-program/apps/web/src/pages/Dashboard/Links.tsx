@@ -1157,15 +1157,63 @@ export default function Links() {
                   {t("dashboard.links.creatingDraft")}
                 </p>
               </div>
-              <button
-                onClick={handleCreateNew}
-                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-bold text-sm rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
-              >
-                <span className="material-symbols-outlined text-lg">
-                  add_circle
-                </span>
-                <span>{t("dashboard.links.createLink")}</span>
-              </button>
+              <div className="flex items-center gap-3">
+                {pages.some(p => !p.dbStatus && p.status === "draft") && (
+                  <button
+                    onClick={() => {
+                      const allDraftPages = pages.filter((p: any) => !p.dbStatus && p.status === "draft");
+                      const validDrafts = allDraftPages.filter((page: any) => {
+                        if (page.landingMode === "direct") {
+                           return page.directUrl && page.directUrl.trim() && isValidUrl(page.directUrl.trim());
+                        }
+                        const hasButtons = page.buttons && page.buttons.length > 0;
+                        const allUrlsValid = page.buttons?.every((btn: any) => btn.url && btn.url.trim() && isValidUrl(btn.url.trim()));
+                        return hasButtons && allUrlsValid;
+                      });
+
+                      if (validDrafts.length === 0) {
+                        toast.error("No tienes borradores válidos para pagar. Configura sus URLs en 'Continuar editando'.");
+                        return;
+                      }
+
+                      try {
+                        localStorage.setItem(
+                          "my_links_data_backup",
+                          JSON.stringify({
+                            timestamp: Date.now(),
+                            linksData: validDrafts,
+                          }),
+                        );
+                      } catch (e) {
+                        console.warn("Could not save backup to local storage due to quota limits");
+                      }
+
+                      navigate("/dashboard/checkout", {
+                        state: {
+                          pendingPurchase: {
+                            type: "links_bundle",
+                            linksData: validDrafts,
+                            amount: null,
+                          },
+                        },
+                      });
+                    }}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-green-500 text-white font-bold text-sm rounded-xl shadow-lg shadow-green-500/20 hover:scale-[1.02] active:scale-95 transition-all"
+                  >
+                    <span className="material-symbols-outlined text-lg">payment</span>
+                    <span>Pagar Borradores</span>
+                  </button>
+                )}
+                <button
+                  onClick={handleCreateNew}
+                  className="flex items-center gap-2 px-5 py-2.5 bg-primary text-white font-bold text-sm rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                >
+                  <span className="material-symbols-outlined text-lg">
+                    add_circle
+                  </span>
+                  <span>{t("dashboard.links.createLink")}</span>
+                </button>
+              </div>
             </div>
 
             {/* DB Links (activos + pendientes) */}
