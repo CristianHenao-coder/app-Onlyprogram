@@ -4,7 +4,6 @@ import { WompiService } from "../services/wompi.service";
 import { config } from "../config/env";
 import { v4 as uuidv4 } from "uuid";
 import { supabase } from "../services/supabase.service";
-import { sendPaymentConfirmationEmail } from "../services/brevo.service";
 
 const router = Router();
 
@@ -135,115 +134,8 @@ router.post(
   },
 );
 
-/**
- * POST /api/wompi/webhook
- * Handles transaction updates from Wompi.
- */
-router.post("/webhook", async (req, res) => {
-  try {
-    const event = req.body;
-    // console.log("Incoming Wompi Webhook:", JSON.stringify(event, null, 2));
-
-    if (event.event !== "transaction.updated") {
-      return res.status(200).json({ message: "Event ignored" }); // Acknowledge receipt
-    }
-
-    const transaction = event.data.transaction;
-    const reference = transaction.reference;
-    const status = transaction.status; // APPROVED, DECLINED, VOIDED, ERROR
-    const transactionId = transaction.id;
-
-    // Verify status with Wompi directly for security
-    // const verifiedTx = await WompiService.getTransaction(transactionId);
-    // if (!verifiedTx || verifiedTx.data.status !== status) { ... }
-    // For MVP, trusting the payload but assuming HTTPS + Secret check if we implemented it.
-
-    if (status === "APPROVED") {
-      // 1. Update Payment Record
-      const { data: payment, error: payError } = await supabase
-        .from("payments")
-        .update({
-          status: "completed",
-          tx_reference: transactionId,
-          confirmed_at: new Date().toISOString(),
-        })
-        .eq("id", reference) // reference was used as ID
-        .select()
-        .single();
-
-      if (payError || !payment) {
-        console.error("Payment record not found for ref:", reference);
-        return res.status(404).json({ error: "Payment not found" });
-      }
-
-      // 2. Capture Payment Token for Recurring Billing
-      // Extract token from transaction payment_method
-      const paymentMethod = transaction.payment_method;
-      const cardToken = paymentMethod?.token; // e.g., "tok_prod_12345_..."
-      const last4 = paymentMethod?.extra?.last_four || "";
-
-      if (cardToken) {
-        console.log(`💳 Captured payment token for user ${payment.user_id}`);
-
-        // Check if subscription already exists
-        const { data: existingSub } = await supabase
-          .from("subscriptions")
-          .select("id")
-          .eq("user_id", payment.user_id)
-          .eq("status", "active")
-          .single();
-
-        if (!existingSub) {
-          // Create new subscription with 30-day billing cycle
-          const nextPayment = new Date();
-          nextPayment.setDate(nextPayment.getDate() + 30);
-
-          await supabase.from("subscriptions").insert({
-            user_id: payment.user_id,
-            status: "active",
-            wompi_token: cardToken,
-            payment_method_last4: last4,
-            current_period_start: new Date().toISOString(),
-            current_period_end: nextPayment.toISOString(),
-            next_payment_at: nextPayment.toISOString(),
-            last_payment_at: new Date().toISOString(),
-            total_amount: payment.amount,
-            total_links: 1, // Adjust based on your business logic
-          });
-
-          console.log(`✅ Subscription created for user ${payment.user_id}`);
-        }
-      }
-
-      // 3. Activate User Links (Centralized)
-      const { FulfillmentService } =
-        await import("../services/fulfillment.service");
-      await FulfillmentService.activateLinkProduct(
-        payment.user_id,
-        reference,
-        payment.amount,
-        payment.currency,
-      );
-
-      console.log(
-        `✅ Payment ${reference} approved. Links activated via Webhook.`,
-      );
-    } else {
-      // Handle Rejected/Voided
-      await supabase
-        .from("payments")
-        .update({
-          status: "failed",
-          tx_reference: transactionId,
-        })
-        .eq("id", reference);
-    }
-
-    res.status(200).json({ received: true });
-  } catch (error: any) {
-    console.error("Error in Wompi webhook:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
+// NOTE: El webhook de Wompi fue consolidado en payments.routes.ts
+// URL de producción: POST /api/payments/webhook/wompi
+// Esta ruta fue eliminada para evitar duplicados.
 
 export default router;

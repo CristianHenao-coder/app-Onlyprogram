@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/services/supabase";
 import FloatingTutorial from "./FloatingTutorial";
+import Logo from "./Logo";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -156,15 +157,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <Link to="/dashboard/home" className="flex items-center gap-3 group">
             <div
               className={`
-              bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center transition-all duration-500 overflow-hidden
-              ${sidebarOpen ? "h-14 w-14" : "h-12 w-12"}
+              flex items-center justify-center transition-all duration-500
+              ${sidebarOpen ? "h-20 w-20" : "h-10 w-10"}
             `}
             >
-              <img
-                src="/src/assets/img/logoinc.png"
-                alt="OnlyProgram Logo"
-                className="w-full h-full object-contain p-2"
-              />
+              <Logo className="w-full h-full" imgClassName="p-0" />
             </div>
             {sidebarOpen && (
               <div className="animate-fade-in">

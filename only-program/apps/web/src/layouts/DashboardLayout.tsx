@@ -3,6 +3,7 @@ import { Outlet, NavLink } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/contexts/I18nContext";
+import Logo from "@/components/Logo";
 
 type NavItem = {
   to: string;
@@ -54,33 +55,32 @@ export default function DashboardLayout() {
         aria-label="Sidebar"
       >
         {/* Header / Brand */}
-        <div className="h-16 flex items-center gap-3 px-4 border-b border-border">
-          <div className="h-10 w-10 rounded-2xl bg-surface/60 border border-border flex items-center justify-center">
-            <span className="material-symbols-outlined text-primary">verified</span>
-          </div>
+        <div className={`flex flex-col items-center justify-center border-b border-border transition-all ${collapsed ? 'h-24 py-4 px-2' : 'h-48 py-8 px-4'}`}>
+          <Logo className={`${collapsed ? 'h-10 w-10' : 'h-28 w-28'} shrink-0 filter drop-shadow-[0_0_15px_rgba(0,123,255,0.2)]`} imgClassName="p-0" />
 
           {!collapsed && (
-            <div className="min-w-0">
-              <p className="text-white font-extrabold leading-tight">Only Program</p>
-              <p className="text-[11px] text-silver/45 -mt-0.5">User Panel</p>
+            <div className="text-center mt-3 animate-fade-in">
+              <p className="text-white font-black leading-none text-xl tracking-tighter uppercase">Only Program</p>
+              <p className="text-[10px] text-primary/60 font-black uppercase tracking-[0.2em] mt-1">User Panel</p>
             </div>
           )}
-
-          <button
-            type="button"
-            className={[
-              "ml-auto hidden md:inline-flex items-center justify-center rounded-xl border border-border bg-surface/40",
-              "h-9 w-9 text-silver/70 hover:text-white hover:border-primary/40 transition-all",
-            ].join(" ")}
-            onClick={() => setCollapsed((v) => !v)}
-            aria-label="Collapse sidebar"
-            title="Collapse sidebar"
-          >
-            <span className="material-symbols-outlined text-[20px]">
-              {collapsed ? "chevron_right" : "chevron_left"}
-            </span>
-          </button>
         </div>
+
+        {/* Collapse tab — sticks out from the right edge, vertically centered */}
+        <button
+          type="button"
+          onClick={() => setCollapsed((v) => !v)}
+          aria-label="Toggle sidebar"
+          title={collapsed ? "Expandir sidebar" : "Colapsar sidebar"}
+          className="hidden md:flex absolute top-1/2 -translate-y-1/2 -right-3 z-10
+            h-10 w-6 items-center justify-center
+            rounded-r-xl border border-l-0 border-border bg-[#0B0B0B]
+            text-silver/50 hover:text-white hover:bg-surface/40 transition-all"
+        >
+          <span className="material-symbols-outlined text-[16px]">
+            {collapsed ? "chevron_right" : "chevron_left"}
+          </span>
+        </button>
 
         {/* Nav */}
         <nav className="p-3">
@@ -112,22 +112,13 @@ export default function DashboardLayout() {
           </div>
         </nav>
 
-        {/* Bottom user card */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border bg-[#0B0B0B]">
+        {/* Bottom: user card + logout */}
+        <div className="absolute bottom-0 left-0 right-0 pb-6 px-3 pt-3 border-t border-border bg-[#0B0B0B]">
 
-          {/* Logout Button */}
-          <button
-            onClick={() => { signOut(); navigate('/login'); }}
-            className={`w-full mb-3 flex items-center gap-3 rounded-xl px-3 py-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all ${collapsed ? 'justify-center' : ''}`}
-            title="Cerrar Sesión"
-          >
-            <span className="material-symbols-outlined text-[20px]">logout</span>
-            {!collapsed && <span className="text-xs font-bold uppercase tracking-wide">Cerrar Sesión</span>}
-          </button>
-
-          <div className={["rounded-2xl border border-white/10 bg-surface/20 p-3", collapsed ? "flex justify-center" : ""].join(" ")}>
+          {/* User card */}
+          <div className={["rounded-2xl border border-white/10 bg-surface/20 p-3 mb-2", collapsed ? "flex justify-center" : ""].join(" ")}>
             <div className={["flex items-center gap-3", collapsed ? "justify-center" : ""].join(" ")}>
-              <div className="h-10 w-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
+              <div className="h-10 w-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -142,25 +133,39 @@ export default function DashboardLayout() {
               )}
             </div>
           </div>
+
+          {/* Logout — always last */}
+          <button
+            onClick={() => { signOut(); navigate('/login'); }}
+            className={`w-full flex items-center gap-3 rounded-xl px-3 py-2 text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all ${collapsed ? 'justify-center' : ''}`}
+            title="Cerrar Sesión"
+          >
+            <span className="material-symbols-outlined text-[20px]">logout</span>
+            {!collapsed && <span className="text-xs font-bold uppercase tracking-wide">Cerrar Sesión</span>}
+          </button>
         </div>
       </aside>
 
       {/* MAIN AREA (reserve sidebar width on desktop only) */}
       <div className={["min-h-[100dvh] transition-[padding] duration-300", "md:pl-[280px]", collapsed ? "md:pl-[76px]" : ""].join(" ")}>
-        {/* TOPBAR */}
-
-
-        {/* CONTENT */}
-        <main className="px-4 sm:px-6 py-6 relative">
-          {/* Mobile Menu Trigger (restored since header is gone) */}
+        
+        {/* MOBILE TOPBAR */}
+        <header className="md:hidden flex items-center justify-between px-4 h-16 border-b border-border bg-[#0B0B0B]/80 backdrop-blur-xl fixed top-0 w-full z-40">
+          <div className="flex items-center gap-3">
+            <Logo className="h-9 w-9" imgClassName="p-0" />
+            <span className="text-white font-black text-sm tracking-tighter uppercase">Only Program</span>
+          </div>
           <button
             type="button"
-            className="md:hidden absolute top-6 left-4 z-40 inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-surface/40 text-silver/70 hover:text-white hover:border-primary/40 transition-all"
+            className="h-10 w-10 inline-flex items-center justify-center rounded-xl bg-surface/20 text-silver/70 hover:text-white transition-all shadow-lg"
             onClick={() => setSidebarOpen(true)}
-            aria-label="Open menu"
           >
             <span className="material-symbols-outlined">menu</span>
           </button>
+        </header>
+
+        {/* CONTENT */}
+        <main className="px-4 sm:px-6 py-6 pt-20 md:pt-6 relative">
           <Outlet />
         </main>
       </div>

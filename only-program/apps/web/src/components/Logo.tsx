@@ -1,4 +1,4 @@
-import logo from '@/assets/img/logoinc.png';
+const logo = "/logo.png";
 
 interface LogoProps {
   className?: string;
@@ -6,7 +6,7 @@ interface LogoProps {
   customSrc?: string;
 }
 
-export default function Logo({ className = "h-11 w-11 sm:h-12 sm:w-12", imgClassName = "", customSrc }: LogoProps) {
+export default function Logo({ className = "h-24 w-24", imgClassName = "", customSrc }: LogoProps) {
   const finalLogo = customSrc || logo;
   return (
     <div className={`group flex items-center justify-center relative ${className}`}>
@@ -14,7 +14,7 @@ export default function Logo({ className = "h-11 w-11 sm:h-12 sm:w-12", imgClass
       <div className="absolute -inset-2 rounded-2xl bg-primary/15 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       
       {/* Container */}
-      <div className="relative h-full w-full rounded-2xl bg-surface border border-border flex items-center justify-center overflow-hidden">
+      <div className="relative h-full w-full flex items-center justify-center">
         <img
           src={finalLogo}
           alt="Only Program"

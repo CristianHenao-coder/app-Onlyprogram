@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { supabase } from "../services/supabase";
 import { useTranslation } from "@/contexts/I18nContext";
 import { API_URL } from "../services/apiConfig";
+import { trackEvent } from "../services/analytics.service";
 
 // --- SUB-COMPONENTES UI (PORTADOS DEL SISTEMA ANTERIOR) ---
 
@@ -92,165 +93,7 @@ const LegacySafetyGate = () => {
   );
 };
 
-// 3. INSTAGRAM VIP BYPASS (Basado en igBypass.ejs)
-const InstagramVIPBypass = ({ slug }: { slug: string }) => {
-  const [targetUrl, setTargetUrl] = useState<string | null>(null);
-  const [status, setStatus] = useState<"verifying" | "ready" | "escaping">("verifying");
-
-  useEffect(() => {
-    const init = async () => {
-      try {
-        const r = await fetch(`${API_URL}/gate/${slug}`);
-        const json = await r.json();
-        let resolved = null;
-
-        if (Array.isArray(json.c)) {
-          resolved = String.fromCharCode(...json.c);
-        } else if (json.data) {
-          const p = JSON.parse(atob(json.data));
-          resolved = p.u;
-        }
-
-        if (resolved) {
-          setTargetUrl(resolved);
-          // Marketing CL delay exacto: 1.5s antes de mostrar el botón
-          setTimeout(() => setStatus("ready"), 1500);
-        }
-      } catch (e) {
-        console.error("IG Bypass Error:", e);
-        setStatus("ready"); // MCLC fail-safe
-      }
-    };
-    init();
-  }, [slug]);
-
-  const doEscape = () => {
-    if (!targetUrl) return;
-    setStatus("escaping");
-
-    const ua = navigator.userAgent.toLowerCase();
-    const isIOS = /iphone|ipad|ipod/i.test(ua);
-    const isAndroid = /android/i.test(ua);
-
-    if (isAndroid) {
-      // Android: Intent a Chrome (El método más estable en 2025)
-      const intentUri = `intent://${targetUrl.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end`;
-      window.location.href = intentUri;
-
-      // Fallback: Si no tiene Chrome, intentamos con el navegador por defecto (esquema https)
-      setTimeout(() => {
-        window.location.href = `intent://${targetUrl.replace(/^https?:\/\//, "")}#Intent;scheme=https;end`;
-      }, 1500);
-    } else if (isIOS) {
-      // iOS: Un solo protocolo a la vez para evitar el "bucle" de avisos en iPhone
-      // Intentamos Chrome primero (googlechromes://)
-      const chromeUrl = targetUrl.replace(/^https?:\/\//, "googlechromes://");
-      window.location.href = chromeUrl;
-
-      // Fallback para Safari (esperamos 1.5s para que el sistema reaccione)
-      setTimeout(() => {
-        window.location.href = targetUrl.replace(/^https?:\/\//, "x-safari-https://");
-      }, 1500);
-    } else {
-      // Desktop o casos raros: Redirect normal
-      window.location.href = targetUrl;
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-[10002] flex flex-col items-center justify-center p-6 text-center text-white font-['Poppins',sans-serif]"
-      style={{ background: "radial-gradient(circle at top, #2a001a, #0a0a0a, #000)" }}>
-
-      {/* Contenedor adaptado de MCLC */}
-      <div className="relative w-full max-w-[400px] flex flex-col items-center gap-[30px] z-10 px-5 py-10">
-
-        {/* Spinner Elegante MCLC */}
-        <div className="relative w-[80px] h-[80px]">
-          <div className="absolute inset-0 rounded-full border-[3px] border-pink-500/10 border-t-[#ff3888] animate-[spin_1s_cubic-bezier(0.68,-0.55,0.27,1.55)_infinite]"></div>
-          <div className="absolute inset-0 flex items-center justify-center text-[0.7rem] font-bold tracking-[2px] text-[#ff3888]" style={{ textShadow: "0 0 10px rgba(255, 56, 136, 0.5)" }}>
-            VIP
-          </div>
-        </div>
-
-        <div className="mb-2">
-          <h1 className="text-[1.5rem] font-bold mb-[10px] tracking-[1px] bg-gradient-to-r from-white to-[#ff3888] bg-clip-text text-transparent">
-            Acceso VIP
-          </h1>
-          <p className="text-[0.95rem] text-white/60 leading-[1.5]">
-            {status === "verifying" ? "Verificando conexión segura..." :
-              status === "escaping" ? "Conectando fuera de Instagram..." :
-                "Conexión segura lista."}
-          </p>
-        </div>
-
-        {/* Botón Fallback Premium MCLC */}
-        {status === "ready" && targetUrl && (
-          <button
-            onClick={doEscape}
-            className="px-[40px] py-[16px] rounded-[12px] bg-gradient-to-br from-[#ff3888] to-[#c0206a] text-white text-[0.9rem] font-bold uppercase tracking-[1.5px] cursor-pointer shadow-[0_10px_30px_rgba(255,56,136,0.3)] animate-in fade-in slide-in-from-bottom-5 duration-500 border-none hover:scale-105 active:scale-95 transition-all w-max"
-          >
-            Entrar a mi Perfil ↗
-          </button>
-        )}
-      </div>
-
-    </div>
-  );
-};
-
-// 4. UPGRADE REQUIRED SCREEN (Basado en upgradeRequired.ejs - Tema Black Pro)
-const UpgradeRequired = () => {
-  return (
-    <div className="fixed inset-0 z-[10003] flex flex-col items-center justify-center p-5 text-center text-white font-['Inter',sans-serif]"
-      style={{
-        backgroundColor: "#050505",
-        backgroundImage: `
-          radial-gradient(circle at 20% 20%, rgba(225, 48, 108, 0.05) 0%, transparent 40%),
-          radial-gradient(circle at 80% 80%, rgba(0, 255, 136, 0.05) 0%, transparent 40%)
-        `
-      }}
-    >
-      <div className="relative w-full max-w-[450px] px-5 py-10 z-10 flex flex-col items-center">
-
-        {/* Box Icon con Animación Pulse */}
-        <div
-          className="text-[80px] mb-[30px] animate-[pulse_2s_infinite_ease-in-out]"
-          style={{ filter: "drop-shadow(0 0 15px #e1306c)" }}
-        >
-          🛡️
-        </div>
-
-        <h1 className="font-['Orbitron',sans-serif] text-[24px] tracking-[2px] mb-[15px] uppercase text-white">
-          Protección Requerida
-        </h1>
-
-        <div className="bg-[#e1306c]/10 border border-[#e1306c]/30 p-[15px] rounded-[12px] mb-[30px] text-[13px] text-[#ff6ba8] w-full">
-          Atención: El dueño de este enlace debe activar el servicio de protección para continuar.
-        </div>
-
-        <p className="text-[#888] leading-[1.6] mb-[40px] text-[15px]">
-          Este Smart Link está intentando utilizar funciones avanzadas de seguridad que no se encuentran activas en este momento.
-        </p>
-
-        <a
-          href="https://t.me/blackproonlyfans"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block bg-gradient-to-tr from-[#e1306c] to-[#ff6ba8] text-white no-underline px-[32px] py-[16px] rounded-[50px] font-bold text-[14px] tracking-[1px] uppercase shadow-[0_10px_20px_rgba(225,48,108,0.3)] hover:-translate-y-[3px] hover:shadow-[0_15px_30px_rgba(225,48,108,0.5)] transition-all duration-300"
-        >
-          Contactar Soporte
-        </a>
-
-        <div className="mt-[50px] text-[11px] text-[#444] tracking-[1px] uppercase">
-          BLACK PRO © 2026 | SECURE TRAFFIC SYSTEM
-        </div>
-
-      </div>
-    </div>
-  );
-};
-
-// 5. SOCIAL BUTTON (Botón Genérico)
+// 3. SOCIAL BUTTON (Botón Genérico)
 interface SocialButtonProps {
   type: string;
   url: string;
@@ -348,66 +191,85 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
   const [linkData, setLinkData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isSocialApp, setIsSocialApp] = useState(false);
-  const [trafficType, setTrafficType] = useState<string | null>(null);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!slug) {
-        setLoading(false);
-        return;
-      }
+      // ── Detectar dominio personalizado ──────────────────────────
+      // Si el hostname no es el dominio principal de la app, buscar el link
+      // por custom_domain en el backend antes de continuar.
+      const APP_DOMAINS = ["localhost", "onlyprogramlink.com", "onlyprogram.com"];
+      const hostname = window.location.hostname;
+      const isCustomDomain = !APP_DOMAINS.some(
+        (d) => hostname === d || hostname.endsWith("." + d)
+      );
 
-      try {
-        // Consultamos nuestro Backend Gate para obtener data + decisión de tráfico
-        const response = await fetch(`${API_URL}/gate/${slug}`);
-        const json = await response.json().catch(() => null);
+      let resolvedSlug = slug;
 
-        if (json?.data) {
-          try {
-            const payload = JSON.parse(atob(json.data));
-            console.log("[Cloaking] Traffic Decision:", payload.traffic?.action, payload.traffic?.type);
-
-            if (payload.traffic?.action === "show_overlay" || payload.traffic?.action === "block") {
-              setTrafficType(payload.traffic.type);
+      if (isCustomDomain) {
+        try {
+          const domainRes = await fetch(`${API_URL}/gate/domain/${encodeURIComponent(hostname)}`);
+          const domainJson = await domainRes.json().catch(() => null);
+          if (domainJson?.slug) {
+            resolvedSlug = domainJson.slug;
+            // Aplicar acción de tráfico si viene en la respuesta
+            if (domainJson.traffic?.action === "show_overlay") {
               setIsSocialApp(true);
-              setLoading(false);
-              return;
             }
-
-            if (payload.traffic?.action === "direct_redirect" && payload.u) {
-              window.location.href = payload.u;
-              return;
-            }
-          } catch (decodeErr) {
-            console.error("[Cloaking] Payload decode error:", decodeErr);
+          } else {
+            // Dominio no encontrado en la DB
+            setLoading(false);
+            return;
           }
+        } catch (err) {
+          console.error("Domain resolution error:", err);
+          setLoading(false);
+          return;
         }
-      } catch (err) {
-        console.error("[Cloaking] Traffic check network error:", err);
+      } else {
+        // Flujo normal por slug
+        if (!resolvedSlug) {
+          setLoading(false);
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_URL}/gate/${resolvedSlug}`);
+          const json = await response.json().catch(() => null);
+          if (json?.data) {
+            const payload = JSON.parse(atob(json.data));
+            if (payload.traffic?.action === "show_overlay") {
+              setIsSocialApp(true);
+            }
+          }
+        } catch (err) {
+          console.error("Traffic check error:", err);
+        }
       }
 
-      // Cargar data visual
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
-      console.log("[Landing] Processing slug:", slug, "isUUID:", isUUID);
-
+      // ── Cargar data visual del link ──────────────────────────────
       let query = supabase.from("smart_links").select(`
                 *,
                 smart_link_buttons (*)
             `);
-
-      if (isUUID) {
-        query = query.or(`slug.eq.${slug},id.eq.${slug}`);
+      if (resolvedSlug && resolvedSlug.length > 20 && resolvedSlug.includes("-")) {
+        query = query.or(`slug.eq.${resolvedSlug},id.eq.${resolvedSlug}`);
       } else {
-        query = query.eq("slug", slug);
+        query = query.eq("slug", resolvedSlug);
       }
 
-      const { data, error } = await query.single();
-      if (error) {
-        console.error("[Landing] Fetch Error:", error.message);
+      try {
+        const { data } = await query.single();
+        if (data) {
+          setLinkData(data);
+          // Track page_view (fire-and-forget)
+          trackEvent({ linkId: data.id, buttonType: 'page_view' });
+        }
+      } catch (err) {
+        console.error("Error loading link data:", err);
+      } finally {
+        setLoading(false);
       }
-      if (data) setLinkData(data);
-      setLoading(false);
     };
 
     fetchData();
@@ -461,22 +323,7 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
     }, 2000);
   };
 
-  // PRIORIDAD: Si es app social, mostrar overlay SIN IMPORTAR si cargó el link
-  if (isSocialApp) {
-    return (
-      <div className="min-h-screen w-full flex flex-col items-center justify-center" style={{ background: 'radial-gradient(circle at top, #1a0a14, #0a0007)' }}>
-        {trafficType === "upgrade_required" ? (
-          <UpgradeRequired />
-        ) : trafficType === "instagram_threads" ? (
-          <InstagramVIPBypass slug={slug!} />
-        ) : (
-          <LegacySafetyGate />
-        )}
-      </div>
-    );
-  }
-
-  if (loading) return null;
+  if (loading) return null; // El loader legacy se encarga de OF, para el perfil general usamos nada o un mini spinner
   if (!linkData)
     return (
       <div className="bg-black text-white h-screen flex items-center justify-center">
@@ -509,11 +356,11 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
       ? { background: `linear-gradient(to bottom, ${bgStart}, ${bgEnd})` }
       : bgType === "blur"
         ? {
-          backgroundColor: bgStart,
-          backgroundImage: displayPhoto ? `url(${displayPhoto})` : undefined,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }
+            backgroundColor: bgStart,
+            backgroundImage: displayPhoto ? `url(${displayPhoto})` : undefined,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }
         : { backgroundColor: bgStart };
 
   const renderButtons = () => {
@@ -527,7 +374,7 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
       const isActive = btn.is_active ?? btn.isActive ?? true;
       if (!isActive) return null;
 
-      // Especial OnlyFans → Redirect Flow con estilo custom del usuario
+      // Especial OnlyFans -> Redirect Flow
       if (btn.type === "onlyfans") {
         return (
           <SocialButton
@@ -536,13 +383,10 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
             url="#"
             label={btn.title || t("landing.unlockPremium")}
             sub={btn.subtitle || btn.sub || t("landing.directAccess")}
-            onClick={handleUnlockPremium}
-            style={btn.color ? {
-              backgroundColor: btn.color,
-              color: btn.text_color || btn.textColor || "#FFFFFF",
-              borderRadius: btn.border_radius ? `${btn.border_radius}px` : undefined,
-              opacity: (btn.opacity || 100) / 100,
-            } : undefined}
+            onClick={() => {
+              trackEvent({ linkId: linkData.id, buttonId: btn.id, buttonType: 'onlyfans' });
+              handleUnlockPremium();
+            }}
           />
         );
       }
@@ -554,29 +398,30 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
           ? `${API_URL}/t/${slug}`
           : btn.url;
 
-      // Usar estilos del usuario si existen, o fallback a los defaults por tipo
-      const customStyle = {
-        backgroundColor: btn.color,
-        color: btn.text_color || btn.textColor,
-        borderRadius: (btn.border_radius || btn.borderRadius || 28) + 'px',
-        opacity: (btn.opacity || 100) / 100,
-      };
-
       return (
-        <SocialButton
+        <div
           key={btn.id}
-          type={btn.type}
-          url={finalUrl}
-          label={btn.title}
-          sub={
-            btn.subtitle ||
-            btn.sub ||
-            (btn.type === "telegram"
-              ? t("landing.joinChannel")
-              : t("landing.followMe"))
-          }
-          style={customStyle}
-        />
+          onClick={() => trackEvent({ linkId: linkData.id, buttonId: btn.id, buttonType: btn.type || 'custom' })}
+        >
+          <SocialButton
+            type={btn.type}
+            url={finalUrl}
+            label={btn.title}
+            sub={
+              btn.subtitle ||
+              btn.sub ||
+              (btn.type === "telegram"
+                ? t("landing.joinChannel")
+                : t("landing.followMe"))
+            }
+            style={{
+              backgroundColor: btn.color,
+              color: btn.text_color || btn.textColor,
+              borderRadius: btn.border_radius || btn.borderRadius,
+              opacity: (btn.opacity || 100) / 100,
+            }}
+          />
+        </div>
       );
     });
   };
@@ -657,17 +502,7 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
 
       {/* Overlays */}
       {isRedirecting && <LegacyLoadingScreen />}
-      {isSocialApp && (
-        <>
-          {trafficType === "upgrade_required" ? (
-            <UpgradeRequired />
-          ) : trafficType === "instagram_threads" ? (
-            <InstagramVIPBypass slug={slug!} />
-          ) : (
-            <LegacySafetyGate />
-          )}
-        </>
-      )}
+      {isSocialApp && <LegacySafetyGate />}
 
       <style>{`
                 @keyframes buttonShine {

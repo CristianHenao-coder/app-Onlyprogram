@@ -223,8 +223,10 @@ router.post("/wompi/get-signature", async (req: AuthRequest, res) => {
     const { amount, currency = "COP" } = req.body;
     if (!amount) return res.status(400).json({ error: "Amount is required" });
 
-    const amountInCents = Math.round(amount * 100);
     const { WompiService } = await import("../services/wompi.service");
+
+    // Convertir USD → centavos de COP usando la tasa real de cambio
+    const amountInCents = await WompiService.calculateAmountInCents(amount);
 
     const reference = WompiService.generateReference();
     const signature = WompiService.generateSignature(

@@ -114,7 +114,7 @@ export default function Navbar({ previewData }: { previewData?: any }) {
         <div className="h-20 flex items-center justify-between gap-4">
           {/* BRAND */}
           <a href="#home" className="group flex items-center gap-3 min-w-0" aria-label="Only Program">
-            <Logo customSrc={previewData?.general?.logoUrl} />
+            <Logo className="h-14 w-14 shrink-0" imgClassName="p-0" customSrc={previewData?.general?.logoUrl} />
 
             <div className="leading-tight min-w-0">
               <div className="flex items-baseline gap-1.5 uppercase">

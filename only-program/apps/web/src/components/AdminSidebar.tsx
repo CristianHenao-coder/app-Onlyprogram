@@ -1,6 +1,7 @@
 import { useNavigate, Link, NavLink } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/contexts/I18nContext";
+import Logo from "./Logo";
 
 interface NavItemProps {
   to: string;
@@ -78,22 +79,18 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
     `}
     >
       {/* Brand Section */}
-      <div className="flex flex-col items-center p-6 gap-6">
-        <Link to="/admin/dashboard" className="flex items-center gap-3 group">
+      <div className="flex flex-col items-center p-6 gap-4">
+        <Link to="/admin/dashboard" className="flex flex-col items-center gap-3 group">
           <div
             className={`
-            bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center transition-all duration-500 overflow-hidden
-            ${isCollapsed ? "h-12 w-12" : "h-14 w-14"}
+            flex items-center justify-center transition-all duration-500
+            ${isCollapsed ? "h-12 w-12" : "h-28 w-28"}
           `}
           >
-            <img
-              src="/src/assets/img/logoinc.png"
-              alt="OnlyProgram Logo"
-              className="w-full h-full object-contain p-2"
-            />
+            <Logo className="w-full h-full" imgClassName="p-0" />
           </div>
           {!isCollapsed && (
-            <div className="animate-fade-in">
+            <div className="text-center animate-fade-in">
               <h1 className="text-white font-black tracking-tighter text-xl leading-none">
                 ONLY
               </h1>

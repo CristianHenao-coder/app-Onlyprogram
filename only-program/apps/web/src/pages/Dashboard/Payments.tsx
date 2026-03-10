@@ -359,7 +359,7 @@ export default function Payments() {
           <div className="bg-surface/40 border border-border rounded-3xl p-8 md:p-12 shadow-2xl">
             <PaymentSelector
               onSelect={() => { }}
-              initialMethod="card"
+              initialMethod="qr"
               amount={finalTotal}
               onSuccess={handlePaymentSuccess}
               linksData={linksData}

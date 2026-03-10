@@ -1,91 +1,86 @@
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/services/supabase';
+import { getAnalyticsOverview, AnalyticsOverview } from '@/services/analytics.service';
 
-// Types
-interface ActiveLink {
-  id: string;
-  title: string;
-  slug: string;
-  photo?: string;
-  is_active: boolean;
-  clicks?: number;
-  unique_clicks?: number;
-  status: string;
-}
+// Map: source name → display color
+const SOURCE_COLORS: Record<string, string> = {
+  instagram: '#E1306C',
+  tiktok:    '#010101',
+  whatsapp:  '#25D366',
+  telegram:  '#0088cc',
+  twitter:   '#1DA1F2',
+  facebook:  '#1877F2',
+  youtube:   '#FF0000',
+  google:    '#4285F4',
+  direct:    '#6366f1',
+  other:     '#64748b',
+};
 
-// Skeleton Pulse component
+const BUTTON_COLORS: Record<string, string> = {
+  instagram: '#E1306C',
+  tiktok:    '#69C9D0',
+  onlyfans:  '#00AFF0',
+  telegram:  '#0088cc',
+  custom:    '#8b5cf6',
+  page_view: '#94a3b8',
+  other:     '#64748b',
+};
+
+const BUTTON_LABELS: Record<string, string> = {
+  instagram: 'Instagram',
+  tiktok:    'TikTok',
+  onlyfans:  'OnlyFans',
+  telegram:  'Telegram',
+  custom:    'Botón customizado',
+  page_view: 'Vista de página',
+};
+
 const Skeleton = ({ className = '' }: { className?: string }) => (
   <div className={`animate-pulse bg-white/5 rounded-xl ${className}`} />
 );
 
-export default function Analytics() {
-  const { user } = useAuth();
-  const [activeLinks, setActiveLinks] = useState<ActiveLink[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState('30d');
+const COUNTRY_FLAGS: Record<string, string> = {
+  CO: '🇨🇴', MX: '🇲🇽', US: '🇺🇸', AR: '🇦🇷', VE: '🇻🇪',
+  ES: '🇪🇸', CL: '🇨🇱', PE: '🇵🇪', EC: '🇪🇨', BR: '🇧🇷',
+  GT: '🇬🇹', DO: '🇩🇴', HN: '🇭🇳', BO: '🇧🇴', UY: '🇺🇾',
+  PY: '🇵🇾', CA: '🇨🇦', GB: '🇬🇧', DE: '🇩🇪', FR: '🇫🇷',
+};
 
-  const hasActiveLinks = activeLinks.length > 0;
+const dateRangeOptions = [
+  { value: '7',  label: 'Últimos 7 días' },
+  { value: '30', label: 'Últimos 30 días' },
+  { value: '90', label: 'Últimos 90 días' },
+  { value: '365', label: 'Último año' },
+];
+
+// Normaliza la respuesta para garantizar que los arrays nunca sean undefined
+function normalizeData(raw: any): AnalyticsOverview {
+  return {
+    totalClicks:    raw?.totalClicks    ?? 0,
+    totalUnique:    raw?.totalUnique    ?? 0,
+    botsBlocked:    raw?.botsBlocked    ?? 0,
+    conversionRate: raw?.conversionRate ?? 0,
+    countries: Array.isArray(raw?.countries) ? raw.countries : [],
+    sources:   Array.isArray(raw?.sources)   ? raw.sources   : [],
+    byMonth:   Array.isArray(raw?.byMonth)   ? raw.byMonth   : [],
+    byButton:  Array.isArray(raw?.byButton)  ? raw.byButton  : [],
+    links:     Array.isArray(raw?.links)     ? raw.links     : [],
+  };
+}
+
+export default function Analytics() {
+  const [data, setData] = useState<AnalyticsOverview | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [days, setDays] = useState('30');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user?.id) return;
-    const fetchLinks = async () => {
-      setLoading(true);
-      const { data } = await supabase
-        .from('smart_links')
-        .select('id, title, slug, photo, is_active, status')
-        .eq('user_id', user.id)
-        .eq('is_active', true); // Only fetch active links
-
-      if (data) {
-        setActiveLinks(data.map((l: any) => ({
-          ...l,
-          clicks: l.clicks || 0,
-          unique_clicks: l.unique_clicks || 0,
-        })));
-      }
-      setLoading(false);
-    };
-    fetchLinks();
-  }, [user]);
-
-  // Calculate totals
-  const totalClicks = hasActiveLinks ? activeLinks.reduce((sum, l) => sum + (l.clicks || 0), 0) : 0;
-  const totalUnique = hasActiveLinks ? activeLinks.reduce((sum, l) => sum + (l.unique_clicks || 0), 0) : 0;
-  const conversionRate = hasActiveLinks && totalClicks > 0 ? ((totalUnique / totalClicks) * 100).toFixed(1) : '0';
-
-  const dateRangeOptions = [
-    { value: '7d', label: 'Últimos 7 días' },
-    { value: '30d', label: 'Últimos 30 días' },
-    { value: '90d', label: 'Últimos 90 días' },
-    { value: '1y', label: 'Último año' },
-  ];
-
-  // Empty chart bars for skeleton
-  const chartBars = Array.from({ length: 12 }, (_, i) => ({
-    label: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'][i],
-    value: 0,
-  }));
-
-  // Countries skeleton
-  const countries: any[] = [];
-
-  // Device distribution calculation
-  const deviceStats = { ios: 0, android: 0, desktop: 0 };
-  activeLinks.forEach((l: any) => {
-    const config = typeof l.config === 'string' ? JSON.parse(l.config) : (l.config || {});
-    const stats = config.stats?.devices || { ios: 0, android: 0, desktop: 0 };
-    deviceStats.ios += (stats.ios || 0);
-    deviceStats.android += (stats.android || 0);
-    deviceStats.desktop += (stats.desktop || 0);
-  });
-  const totalDeviceClicks = (deviceStats.ios + deviceStats.android + deviceStats.desktop) || 1;
-
-  const devicesBreakdown = [
-    { name: 'iOS Mobile', pct: Math.round((deviceStats.ios / totalDeviceClicks) * 100), color: '#FF2A8A', icon: 'smartphone' },
-    { name: 'Android Mobile', pct: Math.round((deviceStats.android / totalDeviceClicks) * 100), color: '#00AFF0', icon: 'phone_android' },
-    { name: 'Desktop / Otros', pct: Math.round((deviceStats.desktop / totalDeviceClicks) * 100), color: '#FFFFFF', icon: 'desktop_windows' },
-  ];
+    setLoading(true);
+    setError(null);
+    getAnalyticsOverview(parseInt(days))
+      .then(raw => setData(normalizeData(raw)))
+      .catch(() => setError('No se pudieron cargar las analíticas.'))
+      .finally(() => setLoading(false));
+  }, [days]);
 
   if (loading) {
     return (
@@ -103,43 +98,52 @@ export default function Analytics() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto flex flex-col items-center justify-center py-20 text-center gap-4">
+        <span className="material-symbols-outlined text-5xl text-red-400">error</span>
+        <p className="text-white font-bold text-lg">{error}</p>
+        <button onClick={() => window.location.reload()} className="px-6 py-2 bg-primary rounded-xl text-white font-bold text-sm hover:bg-primary/80 transition-all">
+          Reintentar
+        </button>
+      </div>
+    );
+  }
+
+  const d = data!;
+  const maxMonthVal = Math.max(...(d.byMonth.map(m => m.value) ?? [0]), 1);
+  const hasData = d.totalClicks > 0 || d.botsBlocked > 0;
+
   return (
     <div className="max-w-7xl mx-auto space-y-6">
+
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">Analíticas Globales</h1>
           <p className="text-silver/50 text-sm mt-1">
-            {hasActiveLinks ? 'Rendimiento en tiempo real de tus links activos' : 'Activa un link para comenzar a ver analíticas'}
+            {hasData ? 'Rendimiento en tiempo real de tus links activos' : 'Activa un link y compártelo para comenzar a ver analíticas'}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
             <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
+              value={days}
+              onChange={e => setDays(e.target.value)}
               className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-silver font-bold appearance-none cursor-pointer pr-10 hover:border-white/20 transition-colors focus:outline-none focus:border-blue-500/50"
             >
-              {dateRangeOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
+              {dateRangeOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
             <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-silver/40 pointer-events-none text-lg">expand_more</span>
           </div>
-          <button
-            disabled={!hasActiveLinks}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${hasActiveLinks ? 'bg-blue-600/20 border border-blue-500/30 text-blue-400 hover:bg-blue-600/30 hover:border-blue-500/50' : 'bg-white/5 border border-white/5 text-silver/30 cursor-not-allowed'}`}
-          >
-            <span className="material-symbols-outlined text-lg">download</span>
-            Exportar Reporte
-          </button>
         </div>
       </div>
 
       {/* STAT CARDS */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
         {/* Clicks Totales */}
-        <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5 relative overflow-hidden group hover:border-white/10 transition-all">
+        <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5 relative overflow-hidden hover:border-white/10 transition-all">
           <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 bg-blue-500/10 rounded-lg flex items-center justify-center">
@@ -147,18 +151,14 @@ export default function Analytics() {
             </div>
             <span className="text-xs font-bold uppercase tracking-wider text-silver/40">Clicks Totales</span>
           </div>
-          <p className={`text-3xl font-black ${hasActiveLinks ? 'text-white' : 'text-silver/20'}`}>
-            {hasActiveLinks ? totalClicks.toLocaleString() : '0'}
+          <p className={`text-3xl font-black ${hasData ? 'text-white' : 'text-silver/20'}`}>
+            {d.totalClicks.toLocaleString()}
           </p>
-          {hasActiveLinks && (
-            <p className="text-xs text-green-400/70 mt-1 font-bold">
-              <span className="material-symbols-outlined text-xs align-text-bottom">trending_up</span> +12.5%
-            </p>
-          )}
+          <p className="text-xs text-silver/40 mt-1 font-bold">{d.totalUnique.toLocaleString()} únicos</p>
         </div>
 
         {/* Bots Bloqueados */}
-        <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5 relative overflow-hidden group hover:border-white/10 transition-all">
+        <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5 relative overflow-hidden hover:border-white/10 transition-all">
           <div className="absolute top-0 right-0 w-20 h-20 bg-red-500/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 bg-red-500/10 rounded-lg flex items-center justify-center">
@@ -166,18 +166,16 @@ export default function Analytics() {
             </div>
             <span className="text-xs font-bold uppercase tracking-wider text-silver/40">Bots Bloqueados</span>
           </div>
-          <p className={`text-3xl font-black ${hasActiveLinks ? 'text-white' : 'text-silver/20'}`}>
-            {hasActiveLinks ? Math.floor(totalClicks * 0.08) : '0'}
+          <p className={`text-3xl font-black ${d.botsBlocked > 0 ? 'text-white' : 'text-silver/20'}`}>
+            {d.botsBlocked.toLocaleString()}
           </p>
-          {hasActiveLinks && (
-            <p className="text-xs text-red-400/70 mt-1 font-bold">
-              <span className="material-symbols-outlined text-xs align-text-bottom">security</span> Protección activa
-            </p>
-          )}
+          <p className="text-xs text-red-400/70 mt-1 font-bold">
+            <span className="material-symbols-outlined text-xs align-text-bottom">security</span> Protección activa
+          </p>
         </div>
 
-        {/* Tasa de Conversión */}
-        <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5 relative overflow-hidden group hover:border-white/10 transition-all">
+        {/* Conversión */}
+        <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5 relative overflow-hidden hover:border-white/10 transition-all">
           <div className="absolute top-0 right-0 w-20 h-20 bg-green-500/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 bg-green-500/10 rounded-lg flex items-center justify-center">
@@ -185,18 +183,14 @@ export default function Analytics() {
             </div>
             <span className="text-xs font-bold uppercase tracking-wider text-silver/40">Conversión</span>
           </div>
-          <p className={`text-3xl font-black ${hasActiveLinks ? 'text-white' : 'text-silver/20'}`}>
-            {hasActiveLinks ? `${conversionRate}%` : '0%'}
+          <p className={`text-3xl font-black ${hasData ? 'text-white' : 'text-silver/20'}`}>
+            {d.conversionRate}%
           </p>
-          {hasActiveLinks && (
-            <p className="text-xs text-green-400/70 mt-1 font-bold">
-              <span className="material-symbols-outlined text-xs align-text-bottom">trending_up</span> +3.2%
-            </p>
-          )}
+          <p className="text-xs text-silver/40 mt-1 font-bold">clicks / visitas</p>
         </div>
 
-        {/* Países Principales */}
-        <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5 relative overflow-hidden group hover:border-white/10 transition-all">
+        {/* Países */}
+        <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-5 relative overflow-hidden hover:border-white/10 transition-all">
           <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/5 rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 bg-purple-500/10 rounded-lg flex items-center justify-center">
@@ -204,15 +198,17 @@ export default function Analytics() {
             </div>
             <span className="text-xs font-bold uppercase tracking-wider text-silver/40">Países</span>
           </div>
-          {hasActiveLinks ? (
-            <div className="flex items-center gap-1 mt-1">
-              {countries.slice(0, 4).map(c => (
-                <span key={c.name} className="text-2xl" title={c.name}>{c.code}</span>
+          {d.countries.length > 0 ? (
+            <div className="flex items-center gap-1 mt-1 flex-wrap">
+              {d.countries.slice(0, 5).map(c => (
+                <span key={c.code} className="text-2xl" title={c.name}>{COUNTRY_FLAGS[c.code] || '🌍'}</span>
               ))}
-              <span className="text-silver/30 text-sm ml-1 font-bold">+1</span>
+              {d.countries.length > 5 && (
+                <span className="text-silver/30 text-sm ml-1 font-bold">+{d.countries.length - 5}</span>
+              )}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-8 opacity-40">
+            <div className="flex flex-col items-center justify-center py-4 opacity-40">
               <span className="material-symbols-outlined text-3xl mb-1">public_off</span>
               <span className="text-xs font-bold uppercase tracking-wider">Sin datos</span>
             </div>
@@ -220,110 +216,96 @@ export default function Analytics() {
         </div>
       </div>
 
-      {/* CHART: Tendencia de Tráfico */}
+      {/* CHART: Tendencia mensual */}
       <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-white font-bold text-lg">Tendencia de Tráfico</h3>
-          {hasActiveLinks && (
-            <div className="flex items-center gap-4 text-xs">
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-blue-500" />
-                <span className="text-silver/50 font-bold">Clicks</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-blue-500/30" />
-                <span className="text-silver/50 font-bold">Únicos</span>
-              </div>
+          <div className="flex items-center gap-4 text-xs">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-full bg-blue-500" />
+              <span className="text-silver/50 font-bold">Clicks</span>
             </div>
-          )}
+          </div>
         </div>
-        <div className="flex items-end gap-2 h-48 border-b border-l border-white/5 p-4 relative">
-          {/* Y-axis labels */}
-          <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-[10px] text-silver/20 font-mono -translate-x-1">
-            <span>100</span>
-            <span>75</span>
-            <span>50</span>
-            <span>25</span>
+        <div className="flex items-end gap-1.5 h-48 border-b border-l border-white/5 px-4 pb-1 relative">
+          <div className="absolute left-0 top-0 bottom-4 flex flex-col justify-between text-[9px] text-silver/20 font-mono -translate-x-3">
+            <span>{maxMonthVal}</span>
+            <span>{Math.round(maxMonthVal * 0.5)}</span>
             <span>0</span>
           </div>
-          {/* Bars */}
-          {chartBars.map((bar, i) => (
+          {d.byMonth.map((bar, i) => (
             <div key={i} className="flex-1 flex flex-col items-center gap-1">
               <div className="w-full flex flex-col justify-end h-36">
-                {hasActiveLinks ? (
-                  <div
-                    className="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-md transition-all duration-500 min-h-[4px]"
-                    style={{ height: `${bar.value}%` }}
-                  />
-                ) : (
-                  <div className="w-full bg-white/[0.03] rounded-t-md h-full" />
-                )}
+                <div
+                  className="w-full bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-md transition-all duration-700 min-h-[2px]"
+                  style={{ height: `${Math.round((bar.value / maxMonthVal) * 100)}%` }}
+                  title={`${bar.label}: ${bar.value} clicks`}
+                />
               </div>
               <span className="text-[9px] text-silver/25 font-bold">{bar.label}</span>
             </div>
           ))}
         </div>
-        {!hasActiveLinks && (
-          <div className="text-center mt-6">
-            <span className="material-symbols-outlined text-4xl text-silver/10 mb-2">bar_chart</span>
-            <p className="text-silver/20 text-sm font-bold">Sin datos disponibles</p>
-            <p className="text-silver/10 text-xs mt-1">Activa un link para ver las tendencias</p>
+        {!hasData && (
+          <div className="text-center mt-4">
+            <span className="material-symbols-outlined text-4xl text-silver/10">bar_chart</span>
+            <p className="text-silver/20 text-sm font-bold mt-1">Sin datos disponibles aún</p>
           </div>
         )}
       </div>
 
-      {/* BOTTOM GRID: Country + Sources */}
+      {/* BOTTOM GRID */}
       <div className="grid md:grid-cols-2 gap-4">
-        {/* Tráfico por País */}
+
+        {/* País */}
         <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
           <h3 className="text-white font-bold text-lg mb-4">Tráfico por País</h3>
           <div className="space-y-3">
-            {hasActiveLinks ? (
-              countries.map(c => (
-                <div key={c.name} className="flex items-center gap-3">
-                  <span className="text-xl">{c.code}</span>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-white font-bold">{c.name}</span>
-                      <span className="text-xs text-silver/50 font-bold">{c.pct}%</span>
-                    </div>
-                    <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-500/60 rounded-full transition-all duration-700" style={{ width: `${c.pct}%` }} />
-                    </div>
+            {d.countries.length > 0 ? d.countries.map(c => (
+              <div key={c.code} className="flex items-center gap-3">
+                <span className="text-xl w-8 text-center">{COUNTRY_FLAGS[c.code] || '🌍'}</span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm text-white font-bold">{c.name}</span>
+                    <span className="text-xs text-silver/50 font-bold">{c.pct}%</span>
+                  </div>
+                  <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500/60 rounded-full transition-all duration-700" style={{ width: `${c.pct}%` }} />
                   </div>
                 </div>
-              ))
-            ) : (
-              [...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-white/5 animate-pulse" />
-                  <div className="flex-1 space-y-2">
-                    <Skeleton className="h-3 w-24" />
-                    <Skeleton className="h-1.5 w-full" />
-                  </div>
-                </div>
-              ))
+              </div>
+            )) : (
+              <div className="flex flex-col items-center justify-center py-8 opacity-40">
+                <span className="material-symbols-outlined text-3xl mb-1">public_off</span>
+                <span className="text-xs font-bold uppercase tracking-wider">Sin datos de países</span>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Distribución de Dispositivos */}
+        {/* Fuentes */}
         <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
-          <h3 className="text-white font-bold text-lg mb-4">Uso de Dispositivos</h3>
-          {hasActiveLinks ? (
+          <h3 className="text-white font-bold text-lg mb-4">Fuentes de Tráfico</h3>
+          {d.sources.length > 0 ? (
             <div className="space-y-4">
-              {devicesBreakdown.map(d => (
-                <div key={d.name} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5">
-                    <span className="material-symbols-outlined text-silver/60 text-lg">{d.icon}</span>
+              {d.sources.map(s => (
+                <div key={s.name} className="flex items-center gap-3">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: `${SOURCE_COLORS[s.name] || '#64748b'}20` }}
+                  >
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: SOURCE_COLORS[s.name] || '#64748b' }} />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm text-white font-bold">{d.name}</span>
-                      <span className="text-xs text-silver/50 font-bold">{d.pct}%</span>
+                      <span className="text-sm text-white font-bold capitalize">{s.name}</span>
+                      <span className="text-xs text-silver/50 font-bold">{s.pct}%</span>
                     </div>
                     <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full rounded-full transition-all duration-700" style={{ backgroundColor: d.color, width: `${d.pct}%` }} />
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{ backgroundColor: `${SOURCE_COLORS[s.name] || '#64748b'}80`, width: `${s.pct}%` }}
+                      />
                     </div>
                   </div>
                 </div>
@@ -331,14 +313,39 @@ export default function Analytics() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-8 opacity-40">
-              <span className="material-symbols-outlined text-3xl mb-1">devices</span>
+              <span className="material-symbols-outlined text-3xl mb-1">query_stats</span>
               <span className="text-xs font-bold uppercase tracking-wider">Sin datos</span>
             </div>
           )}
         </div>
       </div>
 
-      {/* TABLE: Rendimiento por Link */}
+      {/* CLICKS POR BOTÓN */}
+      {d.byButton.filter(b => b.type !== 'page_view').length > 0 && (
+        <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl p-6">
+          <h3 className="text-white font-bold text-lg mb-5">Clicks por Tipo de Botón</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {d.byButton.filter(b => b.type !== 'page_view').map(b => (
+              <div key={b.type} className="flex items-center gap-3 p-4 rounded-xl border border-white/5 bg-white/[0.02]">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: `${BUTTON_COLORS[b.type] || '#64748b'}20` }}
+                >
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: BUTTON_COLORS[b.type] || '#64748b' }} />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-white font-black text-lg">{b.count.toLocaleString()}</p>
+                  <p className="text-silver/40 text-[10px] uppercase tracking-wide font-bold truncate">
+                    {BUTTON_LABELS[b.type] || b.type}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TABLE: Rendimiento por link */}
       <div className="bg-[#0A0A0A] border border-white/5 rounded-2xl overflow-hidden">
         <div className="p-6 border-b border-white/5">
           <h3 className="text-white font-bold text-lg">Rendimiento por Link</h3>
@@ -348,84 +355,61 @@ export default function Analytics() {
             <thead>
               <tr className="border-b border-white/5">
                 <th className="text-left px-6 py-3 text-xs font-bold uppercase tracking-wider text-silver/40">Nombre del Link</th>
-                <th className="text-right px-6 py-3 text-xs font-bold uppercase tracking-wider text-silver/40">Clicks Totales</th>
+                <th className="text-right px-6 py-3 text-xs font-bold uppercase tracking-wider text-silver/40">Clicks</th>
                 <th className="text-right px-6 py-3 text-xs font-bold uppercase tracking-wider text-silver/40">Únicos</th>
                 <th className="text-center px-6 py-3 text-xs font-bold uppercase tracking-wider text-silver/40">Estado</th>
               </tr>
             </thead>
             <tbody>
-              {activeLinks.length > 0 ? (
-                activeLinks.map(link => (
-                  <tr key={link.id} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-white/5 overflow-hidden border border-white/10 flex items-center justify-center shrink-0">
-                          {link.photo ? (
-                            <img src={link.photo} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="material-symbols-outlined text-silver/30 text-lg">link</span>
-                          )}
-                        </div>
-                        <div>
-                          <p className="text-white font-bold text-sm">{link.title || link.slug}</p>
-                          <p className="text-silver/30 text-xs font-mono">/{link.slug}</p>
-                        </div>
+              {d.links.length > 0 ? d.links.map(link => (
+                <tr key={link.id} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-white/5 overflow-hidden border border-white/10 flex items-center justify-center shrink-0">
+                        {link.photo ? (
+                          <img src={link.photo} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="material-symbols-outlined text-silver/30 text-lg">link</span>
+                        )}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className={`font-bold text-sm ${link.is_active ? 'text-white' : 'text-silver/20'}`}>
-                        {link.is_active ? (link.clicks || 0).toLocaleString() : '--'}
+                      <div>
+                        <p className="text-white font-bold text-sm">{link.title || link.slug}</p>
+                        <p className="text-silver/30 text-xs font-mono">/{link.slug}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <span className="font-bold text-sm text-white">{link.clicks.toLocaleString()}</span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <span className="font-bold text-sm text-silver/70">{link.unique_clicks.toLocaleString()}</span>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    {link.is_active ? (
+                      <span className="inline-flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                        Activo
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className={`font-bold text-sm ${link.is_active ? 'text-silver/70' : 'text-silver/20'}`}>
-                        {link.is_active ? (link.unique_clicks || 0).toLocaleString() : '--'}
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 text-silver/30 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full">
+                        <span className="w-1.5 h-1.5 rounded-full bg-silver/20" />
+                        Inactivo
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      {link.is_active ? (
-                        <span className="inline-flex items-center gap-1.5 bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full">
-                          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                          Link Activo
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 text-silver/30 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-full">
-                          <span className="w-1.5 h-1.5 rounded-full bg-silver/20" />
-                          Inactivo
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                // No active links state
+                    )}
+                  </td>
+                </tr>
+              )) : (
                 <tr>
                   <td colSpan={4} className="px-6 py-8 text-center text-silver/30 text-sm font-bold">
-                    No tienes links activos con datos reportados.
+                    No hay datos de links aún. Comparte tus links para ver las analíticas.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-      </div >
+      </div>
 
-      {/* CTA Banner when no active links */}
-      {
-        !hasActiveLinks && (
-          <div className="bg-gradient-to-r from-blue-600/10 via-blue-500/5 to-transparent border border-blue-500/10 rounded-2xl p-8 text-center">
-            <span className="material-symbols-outlined text-5xl text-blue-400/30 mb-4">rocket_launch</span>
-            <h3 className="text-white font-black text-xl mb-2">Activa tu primer link</h3>
-            <p className="text-silver/40 text-sm max-w-md mx-auto mb-4">
-              Compra y activa un link para empezar a recibir analíticas en tiempo real: clicks, países, fuentes de tráfico y más.
-            </p>
-            <a href="/dashboard/links" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-xl transition-all hover:scale-105 shadow-lg shadow-blue-500/20">
-              <span className="material-symbols-outlined">add</span>
-              Ir a mis Links
-            </a>
-          </div>
-        )
-      }
-    </div >
+    </div>
   );
 }
