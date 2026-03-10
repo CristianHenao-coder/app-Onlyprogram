@@ -2192,58 +2192,11 @@ export default function Links() {
                                         !isActivating &&
                                         selectedButton.rotatorActive
                                       ) {
-                                        // Deactivating rotator - show confirmation
-                                        const confirmed = await showConfirm({
-                                          title: t(
-                                            "dashboard.links.deactivateRotatorConfirmTitle",
-                                            {
-                                              defaultValue:
-                                                "�Desactivar Telegram Rotativo?",
-                                            },
-                                          ),
-                                          message: t(
-                                            "dashboard.links.deactivateRotatorConfirmMsg",
-                                            {
-                                              defaultValue:
-                                                "Al desactivar el rotador, se eliminar�n las URLs 2-5. Solo se mantendr� la primera URL.",
-                                            },
-                                          ),
-                                          confirmText: t(
-                                            "common.yesDeactivate",
-                                            { defaultValue: "S�, Desactivar" },
-                                          ),
-                                          cancelText: t("common.cancel", {
-                                            defaultValue: "Cancelar",
-                                          }),
-                                        });
-
-                                        if (confirmed) {
-                                          // Keep only first URL, clear the rest
-                                          const firstUrl =
-                                            selectedButton.rotatorLinks?.[0] ||
-                                            "";
-                                          handleUpdateButton("rotatorLinks", [
-                                            firstUrl,
-                                            "",
-                                            "",
-                                            "",
-                                            "",
-                                          ]);
-                                          handleUpdateButton(
-                                            "rotatorActive",
-                                            false,
-                                          );
-                                          toast.success(
-                                            t(
-                                              "dashboard.links.rotatorDeactivatedSuccess",
-                                              {
-                                                defaultValue:
-                                                  "Rotador desactivado. URLs 2-5 eliminadas.",
-                                              },
-                                            ),
-                                          );
-                                        }
-                                      } else {
+                                        // Deactivating rotator - auto-process without confirmation
+                                        const firstUrl = selectedButton.rotatorLinks?.[0] || "";
+                                        handleUpdateButton("rotatorLinks", [firstUrl, "", "", "", ""]);
+                                        handleUpdateButton("rotatorActive", false);
+                                        toast.success(t("dashboard.links.rotatorDeactivatedSuccess", { defaultValue: "Rotador desactivado." })); else {
                                         // Activating rotator
                                         handleUpdateButton(
                                           "rotatorActive",
