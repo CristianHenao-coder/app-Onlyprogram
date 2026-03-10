@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import { supabase } from "../services/supabase";
 import { useTranslation } from "@/contexts/I18nContext";
 import { API_URL } from "../services/apiConfig";
+import { trackEvent } from "../services/analytics.service";
 
 // --- SUB-COMPONENTES UI (PORTADOS DEL SISTEMA ANTERIOR) ---
 
@@ -194,40 +195,81 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!slug) {
-        setLoading(false);
-        return;
-      }
+      // ── Detectar dominio personalizado ──────────────────────────
+      // Si el hostname no es el dominio principal de la app, buscar el link
+      // por custom_domain en el backend antes de continuar.
+      const APP_DOMAINS = ["localhost", "onlyprogramlink.com", "onlyprogram.com"];
+      const hostname = window.location.hostname;
+      const isCustomDomain = !APP_DOMAINS.some(
+        (d) => hostname === d || hostname.endsWith("." + d)
+      );
 
-      try {
-        // Consultamos nuestro Backend Gate para obtener data + decisión de tráfico
-        const response = await fetch(`${API_URL}/gate/${slug}`);
-        const json = await response.json().catch(() => null);
+      let resolvedSlug = slug;
 
-        if (json?.data) {
-          const payload = JSON.parse(atob(json.data));
-          if (payload.traffic?.action === "show_overlay") {
-            setIsSocialApp(true);
+      if (isCustomDomain) {
+        try {
+          const domainRes = await fetch(`${API_URL}/gate/domain/${encodeURIComponent(hostname)}`);
+          const domainJson = await domainRes.json().catch(() => null);
+          if (domainJson?.slug) {
+            resolvedSlug = domainJson.slug;
+            // Aplicar acción de tráfico si viene en la respuesta
+            if (domainJson.traffic?.action === "show_overlay") {
+              setIsSocialApp(true);
+            }
+          } else {
+            // Dominio no encontrado en la DB
+            setLoading(false);
+            return;
           }
+        } catch (err) {
+          console.error("Domain resolution error:", err);
+          setLoading(false);
+          return;
         }
-      } catch (err) {
-        console.error("Traffic check error:", err);
+      } else {
+        // Flujo normal por slug
+        if (!resolvedSlug) {
+          setLoading(false);
+          return;
+        }
+
+        try {
+          const response = await fetch(`${API_URL}/gate/${resolvedSlug}`);
+          const json = await response.json().catch(() => null);
+          if (json?.data) {
+            const payload = JSON.parse(atob(json.data));
+            if (payload.traffic?.action === "show_overlay") {
+              setIsSocialApp(true);
+            }
+          }
+        } catch (err) {
+          console.error("Traffic check error:", err);
+        }
       }
 
-      // Cargar data visual
+      // ── Cargar data visual del link ──────────────────────────────
       let query = supabase.from("smart_links").select(`
                 *,
                 smart_link_buttons (*)
             `);
-      if (slug.length > 20 && slug.includes("-")) {
-        query = query.or(`slug.eq.${slug},id.eq.${slug}`);
+      if (resolvedSlug && resolvedSlug.length > 20 && resolvedSlug.includes("-")) {
+        query = query.or(`slug.eq.${resolvedSlug},id.eq.${resolvedSlug}`);
       } else {
-        query = query.eq("slug", slug);
+        query = query.eq("slug", resolvedSlug);
       }
 
-      const { data } = await query.single();
-      if (data) setLinkData(data);
-      setLoading(false);
+      try {
+        const { data } = await query.single();
+        if (data) {
+          setLinkData(data);
+          // Track page_view (fire-and-forget)
+          trackEvent({ linkId: data.id, buttonType: 'page_view' });
+        }
+      } catch (err) {
+        console.error("Error loading link data:", err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchData();
@@ -341,7 +383,10 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
             url="#"
             label={btn.title || t("landing.unlockPremium")}
             sub={btn.subtitle || btn.sub || t("landing.directAccess")}
-            onClick={handleUnlockPremium}
+            onClick={() => {
+              trackEvent({ linkId: linkData.id, buttonId: btn.id, buttonType: 'onlyfans' });
+              handleUnlockPremium();
+            }}
           />
         );
       }
@@ -354,25 +399,29 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
           : btn.url;
 
       return (
-        <SocialButton
+        <div
           key={btn.id}
-          type={btn.type}
-          url={finalUrl}
-          label={btn.title}
-          sub={
-            btn.subtitle ||
-            btn.sub ||
-            (btn.type === "telegram"
-              ? t("landing.joinChannel")
-              : t("landing.followMe"))
-          }
-          style={{
-            backgroundColor: btn.color,
-            color: btn.text_color || btn.textColor,
-            borderRadius: btn.border_radius || btn.borderRadius,
-            opacity: (btn.opacity || 100) / 100,
-          }}
-        />
+          onClick={() => trackEvent({ linkId: linkData.id, buttonId: btn.id, buttonType: btn.type || 'custom' })}
+        >
+          <SocialButton
+            type={btn.type}
+            url={finalUrl}
+            label={btn.title}
+            sub={
+              btn.subtitle ||
+              btn.sub ||
+              (btn.type === "telegram"
+                ? t("landing.joinChannel")
+                : t("landing.followMe"))
+            }
+            style={{
+              backgroundColor: btn.color,
+              color: btn.text_color || btn.textColor,
+              borderRadius: btn.border_radius || btn.borderRadius,
+              opacity: (btn.opacity || 100) / 100,
+            }}
+          />
+        </div>
       );
     });
   };

@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useSessionTimeout } from '@/hooks/useSessionTimeout';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -8,9 +9,13 @@ interface ProtectedRouteProps {
 /**
  * Componente para proteger rutas privadas
  * Redirige a /login si el usuario no está autenticado
+ * Cierra sesión automáticamente tras 30 minutos de inactividad
  */
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
+
+  // Cerrar sesión automáticamente tras 30 min de inactividad
+  useSessionTimeout(!!user);
 
   // Mostrar loading mientras se verifica la autenticación
   if (loading) {

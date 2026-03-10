@@ -14,17 +14,14 @@ interface PaymentSelectorProps {
   customDomain?: string;
 }
 
-// Criptos curadas con label e ícono emoji para mostrar en el selector
-const POPULAR_CURRENCIES: { id: string; label: string; icon: string }[] = [
-  { id: 'usdttrc20', label: 'USDT TRC20', icon: '💚' },
-  { id: 'usdterc20', label: 'USDT ERC20', icon: '🔵' },
-  { id: 'btc', label: 'Bitcoin', icon: '🟠' },
-  { id: 'eth', label: 'Ethereum', icon: '🔷' },
-  { id: 'sol', label: 'Solana', icon: '🟣' },
-  { id: 'bnbbsc', label: 'BNB', icon: '🟡' },
-  { id: 'trx', label: 'TRON', icon: '🔴' },
-  { id: 'ltc', label: 'Litecoin', icon: '⚪' },
-  { id: 'doge', label: 'Dogecoin', icon: '🐶' },
+// Stablecoins aceptadas
+const POPULAR_CURRENCIES: { id: string; label: string }[] = [
+  { id: 'usdttrc20', label: 'Tether (USDT) TRC20' },
+  { id: 'usdterc20', label: 'Tether (USDT) ERC20' },
+  { id: 'usdcerc20', label: 'USD Coin (USDC)' },
+  { id: 'dai', label: 'DAI' },
+  { id: 'usdeerc20', label: 'Ethena USD (USDe)' },
+  { id: 'busd', label: 'Binance USD (BUSD)' },
 ];
 
 type PaymentStatus = 'waiting' | 'confirming' | 'confirmed' | 'sending' | 'partially_paid' | 'finished' | 'failed' | 'refunded' | 'expired';
@@ -44,10 +41,6 @@ const FAILED_STATUSES: PaymentStatus[] = ['failed', 'refunded', 'expired'];
 
 function formatCurrency(id: string): string {
   return POPULAR_CURRENCIES.find(c => c.id === id)?.label || id.toUpperCase();
-}
-
-function formatIcon(id: string): string {
-  return POPULAR_CURRENCIES.find(c => c.id === id)?.icon || '🪙';
 }
 
 function CountdownTimer({ expiresAt }: { expiresAt?: string }) {
@@ -300,7 +293,8 @@ export default function PaymentSelector({
                       );
                     }
                   }}
-                  className="w-full bg-[#0070ba] hover:bg-[#003087] text-white font-black py-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-3 uppercase tracking-wider text-sm"
+                  disabled={!amount || amount <= 0}
+                  className="w-full bg-[#0070ba] hover:bg-[#003087] disabled:opacity-40 disabled:cursor-not-allowed text-white font-black py-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-3 uppercase tracking-wider text-sm"
                 >
                   <span className="material-symbols-outlined">output</span>
                   Pagar con PayPal
@@ -327,20 +321,19 @@ export default function PaymentSelector({
                   Selecciona la criptomoneda con la que deseas pagar. Se generará una dirección única para tu transacción.
                 </p>
 
-                {/* Grid de criptos */}
-                <div className="grid grid-cols-3 gap-3">
+                {/* Lista de stablecoins */}
+                <div className="grid grid-cols-2 gap-3">
                   {POPULAR_CURRENCIES.map((c) => (
                     <button
                       key={c.id}
                       type="button"
                       onClick={() => setSelectedCrypto(c.id)}
-                      className={`flex flex-col items-center gap-2 p-3 rounded-2xl border-2 transition-all ${selectedCrypto === c.id
+                      className={`flex items-center justify-center p-3 rounded-2xl border-2 transition-all ${selectedCrypto === c.id
                         ? 'border-orange-500 bg-orange-500/10'
                         : 'border-border/40 bg-background-dark/20 hover:border-border'
                         }`}
                     >
-                      <span className="text-2xl">{c.icon}</span>
-                      <span className={`text-[10px] font-black text-center leading-tight ${selectedCrypto === c.id ? 'text-orange-400' : 'text-silver/50'
+                      <span className={`text-xs font-black text-center leading-tight ${selectedCrypto === c.id ? 'text-orange-400' : 'text-silver/50'
                         }`}>
                         {c.label}
                       </span>
@@ -357,14 +350,14 @@ export default function PaymentSelector({
                   <div className="text-right">
                     <p className="text-silver/50 text-xs uppercase tracking-widest font-bold">Moneda elegida</p>
                     <p className="text-orange-400 text-xl font-black mt-1">
-                      {formatIcon(selectedCrypto)} {formatCurrency(selectedCrypto)}
+                      {formatCurrency(selectedCrypto)}
                     </p>
                   </div>
                 </div>
 
                 <button
                   onClick={handleCreateCryptoPayment}
-                  disabled={isCreatingPayment}
+                  disabled={isCreatingPayment || !amount || amount <= 0}
                   className="w-full bg-gradient-to-r from-orange-500 to-amber-500 disabled:opacity-50 disabled:cursor-not-allowed hover:from-orange-600 hover:to-amber-600 text-white py-4 rounded-xl font-black uppercase text-sm tracking-widest transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-3"
                 >
                   {isCreatingPayment ? (
@@ -374,7 +367,7 @@ export default function PaymentSelector({
                     </>
                   ) : (
                     <>
-                      <span className="material-symbols-outlined">generate</span>
+                      <span className="material-symbols-outlined">bolt</span>
                       Generar dirección de pago
                     </>
                   )}
@@ -456,7 +449,6 @@ export default function PaymentSelector({
 
                     {/* Red / Moneda */}
                     <div className="flex items-center gap-2 p-3 bg-background-dark/50 rounded-xl border border-border/50">
-                      <span className="text-xl">{formatIcon(selectedCrypto)}</span>
                       <div>
                         <p className="text-white font-bold text-sm">{formatCurrency(selectedCrypto)}</p>
                         <p className="text-silver/50 text-[10px]">Red: {cryptoInfo.pay_currency.toUpperCase()}</p>
