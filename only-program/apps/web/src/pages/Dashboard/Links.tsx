@@ -1017,7 +1017,7 @@ export default function Links() {
       isActive: true,
       rotatorActive: false,
       rotatorLinks: ["", "", "", "", ""],
-      metaShield: false,
+      metaShield: type === "tiktok" ? true : false,
     };
     setPages((prev) =>
       prev.map((p) =>
@@ -2106,26 +2106,32 @@ export default function Links() {
                                     </span>
                                   </div>
                                   <p className="text-[10px] text-silver/50 max-w-[250px]">
-                                    Protege tu link de la moderación de {selectedButton.type === "instagram" ? "Meta (Instagram/Facebook)" : "TikTok"}. Activa el sistema de cloaking anti-rastreo.
+                                    {selectedButton.type === "tiktok"
+                                      ? "Protección activa por defecto. Tu link está seguro de la moderación de TikTok mediante cloaking."
+                                      : "Protege tu link de la moderación de Meta (Instagram/Facebook). Activa el sistema de cloaking anti-rastreo."}
                                   </p>
                                 </div>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={(selectedButton as any).metaShield || false}
-                                    onChange={(e) =>
-                                      handleUpdateButton("metaShield", e.target.checked)
-                                    }
-                                    className="sr-only peer"
-                                  />
-                                  <div className="w-11 h-6 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-                                </label>
+                                {selectedButton.type !== "tiktok" && (
+                                  <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={(selectedButton as any).metaShield || false}
+                                      onChange={(e) =>
+                                        handleUpdateButton("metaShield", e.target.checked)
+                                      }
+                                      className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                                  </label>
+                                )}
                               </div>
-                              {(selectedButton as any).metaShield && (
+                              {((selectedButton as any).metaShield || selectedButton.type === "tiktok") && (
                                 <div className="mt-3 p-3 bg-orange-500/10 rounded-xl border border-orange-500/20 flex items-start gap-2 animate-fade-in">
                                   <span className="material-symbols-outlined text-orange-400 text-sm mt-0.5">info</span>
                                   <p className="text-[10px] text-orange-300/80">
-                                    Cuando un visitante que viene de {selectedButton.type === "instagram" ? "Instagram" : "TikTok"} haga clic, verá instrucciones para abrir el link en el navegador externo, protegiendo tu link de detección.
+                                    {selectedButton.type === "tiktok"
+                                      ? "Al ser un link de TikTok, el escudo está activado permanentemente para tu seguridad."
+                                      : "Cuando un visitante que viene de Instagram haga clic, verá instrucciones para abrir el link en el navegador externo, protegiendo tu link de detección."}
                                   </p>
                                 </div>
                               )}
@@ -2422,15 +2428,19 @@ export default function Links() {
                                       >
                                         {t("dashboard.links.fullMode")}
                                       </button>
-                                      <button
-                                        onClick={() => {
-                                          handleUpdatePage("landingMode", "direct");
-                                        }}
-                                        className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all flex items-center gap-1 ${currentPage.landingMode === "direct" ? "bg-red-500 text-white shadow-lg" : "text-silver/60 hover:text-white"}`}
-                                      >
-                                        <span className="material-symbols-outlined text-[10px]">bolt</span>
-                                        Directo
-                                      </button>
+                                      {/* Only show 'Direct' option if the link is ALREADY in direct mode. 
+                                          Otherwise, users should stay within Landing Page types. */}
+                                      {currentPage.landingMode === "direct" && (
+                                        <button
+                                          onClick={() => {
+                                            handleUpdatePage("landingMode", "direct");
+                                          }}
+                                          className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all flex items-center gap-1 ${currentPage.landingMode === "direct" ? "bg-red-500 text-white shadow-lg" : "text-silver/60 hover:text-white"}`}
+                                        >
+                                          <span className="material-symbols-outlined text-[10px]">bolt</span>
+                                          Directo
+                                        </button>
+                                      )}
                                     </div>
                                   </div>
                                 )}
