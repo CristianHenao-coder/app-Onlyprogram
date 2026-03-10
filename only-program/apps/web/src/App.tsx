@@ -41,8 +41,6 @@ import Telegram from '@/pages/Dashboard/Telegram';
 import Domains from '@/pages/Dashboard/Domains';
 import Settings from '@/pages/Dashboard/Settings';
 import Payments from '@/pages/Dashboard/Payments';
-import Checkout from '@/pages/Dashboard/Checkout';
-
 
 import Support from '@/pages/Dashboard/Support';
 
@@ -116,7 +114,6 @@ function App() {
                 <Route path="domains" element={<Domains />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="payments" element={<Payments />} />
-                <Route path="checkout" element={<Checkout />} />
                 <Route path="support" element={<Support />} />
               </Route>
 

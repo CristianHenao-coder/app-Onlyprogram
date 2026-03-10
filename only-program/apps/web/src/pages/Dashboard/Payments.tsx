@@ -38,8 +38,12 @@ export default function Payments() {
         ]);
         setPricingCfg(pricing);
 
-        // Always skip directly to payment step since cart is handled in Checkout.tsx
-        setCurrentStep("payment");
+        // If coming from links editor, show cart step first
+        if (isFromLinks) {
+          setCurrentStep("cart");
+        } else {
+          setCurrentStep("payment");
+        }
       } catch (error) {
         console.error("Error loading payments:", error);
       } finally {

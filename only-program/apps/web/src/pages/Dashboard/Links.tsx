@@ -1188,7 +1188,7 @@ export default function Links() {
                         console.warn("Could not save backup to local storage due to quota limits");
                       }
 
-                      navigate("/dashboard/checkout", {
+                      navigate("/dashboard/payments", {
                         state: {
                           pendingPurchase: {
                             type: "links_bundle",
@@ -2762,7 +2762,7 @@ export default function Links() {
                                               JSON.stringify(linkForCheckout),
                                             );
                                           } catch { }
-                                          navigate("/dashboard/checkout", {
+                                          navigate("/dashboard/payments", {
                                             state: {
                                               pendingPurchase: {
                                                 linksData: linkForCheckout,
@@ -3524,7 +3524,7 @@ export default function Links() {
                       console.warn("Could not save backup to local storage due to quota limits");
                     }
 
-                    navigate("/dashboard/checkout", {
+                    navigate("/dashboard/payments", {
                       state: {
                         pendingPurchase: {
                           type: "links_bundle",
