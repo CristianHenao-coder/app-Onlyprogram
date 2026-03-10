@@ -291,7 +291,7 @@ export default function Home({
           <div className="absolute top-1/2 left-1/4 w-[600px] h-[200px] bg-blue-600/10 blur-[90px] rounded-full -translate-y-1/2" />
         </div>
 
-        <section className="testimonials-wrap relative z-10">
+        <section id="testimonials" className="testimonials-wrap relative z-10">
           <PremiumTestimonials />
         </section>
 
