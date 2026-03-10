@@ -124,16 +124,15 @@ export default function PaymentSelector({
   // Construir URL de checkout de Wompi
   const wompiCheckoutUrl = wompiData
     ? `https://checkout.wompi.co/p/?` +
-      `public-key=${encodeURIComponent(wompiData.publicKey)}` +
+      `public-key=${wompiData.publicKey}` +
       `&currency=${wompiData.currency}` +
       `&amount-in-cents=${wompiData.amountInCents}` +
       `&reference=${encodeURIComponent(wompiData.reference)}` +
-      `&signature%3Aintegrity=${encodeURIComponent(wompiData.signature)}` +
+      `&signature:integrity=${encodeURIComponent(wompiData.signature)}` +
       `&redirect-url=${encodeURIComponent(window.location.origin + '/dashboard/payments?status=wompi_return')}`
     : '';
 
-  // Equivalente en COP (aproximado, solo para mostrar al usuario)
-  const copAmount = wompiData ? (wompiData.amountInCents / 100).toLocaleString('es-CO') : null;
+
 
   // ─── POLLING: check payment status every 10s ─────────────────
   const startPolling = useCallback((paymentId: string) => {
@@ -294,19 +293,12 @@ export default function PaymentSelector({
             {/* Con monto — mostrar QR */}
             {amount && amount > 0 && (
               <>
-                {/* Equivalencia USD → COP */}
-                <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-center justify-between">
+                {/* Monto en USD */}
+                <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+                  <span className="material-symbols-outlined text-red-400 text-xl">payments</span>
                   <div>
-                    <p className="text-silver/40 text-[10px] uppercase tracking-widest font-bold">Tu pedido</p>
+                    <p className="text-silver/40 text-[10px] uppercase tracking-widest font-bold">Total a pagar</p>
                     <p className="text-white text-2xl font-black mt-0.5">${amount.toFixed(2)} USD</p>
-                  </div>
-                  <span className="material-symbols-outlined text-silver/20 text-2xl">east</span>
-                  <div className="text-right">
-                    <p className="text-silver/40 text-[10px] uppercase tracking-widest font-bold">Se cobra en</p>
-                    {copAmount
-                      ? <p className="text-red-400 text-2xl font-black mt-0.5">${copAmount} COP</p>
-                      : <p className="text-silver/30 text-lg font-mono mt-0.5">Calculando...</p>
-                    }
                   </div>
                 </div>
 
@@ -393,9 +385,27 @@ export default function PaymentSelector({
                         Abrir en navegador
                       </a>
 
-                      <p className="text-[10px] text-silver/25 text-center leading-relaxed">
-                        El QR expira en pocos minutos. Si caduca, recarga la página para generar uno nuevo.
-                      </p>
+                      <div className="flex items-center justify-between pt-1">
+                        <p className="text-[10px] text-silver/25 leading-relaxed">
+                          Si el QR no funciona, genera uno nuevo
+                        </p>
+                        <button
+                          onClick={() => {
+                            if (!amount || amount <= 0) return;
+                            setWompiData(null);
+                            setWompiError(null);
+                            setWompiLoading(true);
+                            paymentsService.getWompiSignature(amount, 'COP')
+                              .then(setWompiData)
+                              .catch(() => setWompiError('No se pudo regenerar el QR. Intenta de nuevo.'))
+                              .finally(() => setWompiLoading(false));
+                          }}
+                          className="flex items-center gap-1.5 text-[10px] font-black text-silver/40 hover:text-red-400 transition-all border border-white/10 hover:border-red-500/30 px-3 py-1.5 rounded-lg"
+                        >
+                          <span className="material-symbols-outlined text-sm">refresh</span>
+                          Nuevo QR
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

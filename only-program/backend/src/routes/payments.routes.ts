@@ -98,6 +98,39 @@ router.post("/webhook/nowpayments", async (req, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
+// WOMPI — get-signature (público, no requiere auth)
+// ─────────────────────────────────────────────────────────────
+router.post("/wompi/get-signature", async (req: AuthRequest, res) => {
+  try {
+    const { amount, currency = "COP" } = req.body;
+    if (!amount) return res.status(400).json({ error: "Amount is required" });
+
+    const { WompiService } = await import("../services/wompi.service");
+
+    // Convertir USD → centavos de COP usando la tasa real de cambio
+    const amountInCents = await WompiService.calculateAmountInCents(amount);
+
+    const reference = WompiService.generateReference();
+    const signature = WompiService.generateSignature(
+      reference,
+      amountInCents,
+      currency,
+    );
+
+    res.json({
+      reference,
+      signature,
+      amountInCents,
+      currency,
+      publicKey: (await import("../config/env")).config.wompi.pubKey,
+    });
+  } catch (error: any) {
+    console.error("Error creating Wompi Signature:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
 // Todas las rutas siguientes requieren autenticación
 // ─────────────────────────────────────────────────────────────
 router.use(authenticateToken);
@@ -215,38 +248,7 @@ router.post("/paypal/capture-order", async (req: AuthRequest, res) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────
-// WOMPI
-// ─────────────────────────────────────────────────────────────
-router.post("/wompi/get-signature", async (req: AuthRequest, res) => {
-  try {
-    const { amount, currency = "COP" } = req.body;
-    if (!amount) return res.status(400).json({ error: "Amount is required" });
-
-    const { WompiService } = await import("../services/wompi.service");
-
-    // Convertir USD → centavos de COP usando la tasa real de cambio
-    const amountInCents = await WompiService.calculateAmountInCents(amount);
-
-    const reference = WompiService.generateReference();
-    const signature = WompiService.generateSignature(
-      reference,
-      amountInCents,
-      currency,
-    );
-
-    res.json({
-      reference,
-      signature,
-      amountInCents,
-      currency,
-      publicKey: (await import("../config/env")).config.wompi.pubKey,
-    });
-  } catch (error: any) {
-    console.error("Error creating Wompi Signature:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
+// (get-signature movido arriba del middleware de auth)
 
 router.post("/wompi/transaction", async (req: AuthRequest, res) => {
   try {
