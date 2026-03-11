@@ -22,10 +22,10 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "@/services/supabase";
 import { useAuth } from "@/hooks/useAuth";
-import { API_URL } from "@/services/apiConfig";
+
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { linksService } from "@/services/links.service";
-import InlineDomainSearch from "@/components/InlineDomainSearch";
+
 import {
   productPricingService,
   DEFAULT_PRODUCT_PRICING,
@@ -80,6 +80,7 @@ const cleanButtons = (buttons: any[]): ButtonLink[] => {
       metaShield: btn.metaShield ?? btn.meta_shield ?? false,
       rotatorActive: btn.rotatorActive ?? btn.rotator_active ?? false,
       rotatorLinks: btn.rotatorLinks || btn.rotator_links || ["", "", "", "", ""],
+      deviceRedirects: btn.deviceRedirects || btn.device_redirects || { ios: "", android: "" },
     }));
 };
 
@@ -100,6 +101,11 @@ interface ButtonLink {
   rotatorLinks?: string[]; // Up to 5
   // Shield Features
   metaShield?: boolean;
+  // Device Redirection
+  deviceRedirects?: {
+    ios: string;
+    android: string;
+  };
 }
 
 interface LinkPage {
@@ -111,6 +117,14 @@ interface LinkPage {
   profileImageSize?: number; // 0-100 scale
   template: TemplateType;
   landingMode?: "circle" | "full" | "direct";
+  security_config?: {
+    geoblocking?: string[];
+    device_redirections?: {
+      ios?: string;
+      android?: string;
+      desktop?: string;
+    };
+  };
   directUrl?: string;
   theme: {
     pageBorderColor: string;
@@ -425,11 +439,8 @@ export default function Links() {
   const [settingsTab, setSettingsTab] = useState<"profile" | "domain">(
     "profile",
   );
-  const [domainFlowChoice, setDomainFlowChoice] = useState<
-    "buy" | "connect" | null
-  >(null);
-  const [showProcessingModal, setShowProcessingModal] = useState(false);
-  const [ownDomainError, setOwnDomainError] = useState<string | null>(null);
+
+
   const [urlError, setUrlError] = useState<string | null>(null);
   const [inactiveAlertPageId, setInactiveAlertPageId] = useState<string | null>(null);
 
@@ -522,6 +533,9 @@ export default function Links() {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
+
+  // --- NEW CREATE FLOW STATE ---
+  const [showLinkTypeSelector, setShowLinkTypeSelector] = useState(false);
 
   const handleCreateFolder = () => {
     const name = window.prompt(t("dashboard.links.newFolderPrompt"));
@@ -913,18 +927,27 @@ export default function Links() {
 
   // --- HANDLERS ---
   const handleAddPage = () => {
+    setShowLinkTypeSelector(true);
+  };
+
+  const confirmCreation = (type: "direct" | "landing") => {
+    setShowLinkTypeSelector(false);
     const newId = `page${Date.now()}`;
-    // New pages are DRAFTS by default, and named "Link X" or similar
-    setPages((prev) => [
-      ...prev,
-      {
-        ...DEFAULTS.PAGE,
-        id: newId,
-        status: "draft",
-        name: `Link ${prev.length + 1}`,
-      },
-    ]);
+    const newPage: LinkPage = {
+      ...DEFAULTS.PAGE,
+      id: newId,
+      status: "draft",
+      name:
+        type === "direct"
+          ? `Directo ${allDraftPages.length + 1}`
+          : `Landing ${allDraftPages.length + 1}`,
+      landingMode: type === "direct" ? "direct" : "circle",
+      directUrl: "",
+    };
+
+    setPages((prev) => [...prev, newPage]);
     setSelectedPageId(newId);
+    setView("editor");
     toast.success(t("dashboard.links.designStartedToast"));
   };
 
@@ -1005,7 +1028,7 @@ export default function Links() {
       isActive: true,
       rotatorActive: false,
       rotatorLinks: ["", "", "", "", ""],
-      metaShield: false,
+      metaShield: type === "tiktok" ? true : false,
     };
     setPages((prev) =>
       prev.map((p) =>
@@ -1075,19 +1098,7 @@ export default function Links() {
   };
 
   const handleCreateNew = () => {
-    const newId = `page${Date.now()}`;
-    setPages((prev) => [
-      ...prev,
-      {
-        ...DEFAULTS.PAGE,
-        id: newId,
-        status: "draft",
-        name: `Link ${prev.filter((p) => !p.dbStatus).length + 1}`,
-      },
-    ]);
-    setSelectedPageId(newId);
-    setView("editor");
-    toast.success(t("dashboard.links.designStartedToast"));
+    setShowLinkTypeSelector(true);
   };
 
   return (
@@ -1719,35 +1730,40 @@ export default function Links() {
                         )}
                       </div>
 
-                      {/* EDIT PROFILE BUTTON */}
-                      <button
-                        onClick={() => {
-                          setSelectedButtonId(null);
-                          setShowButtonCreator(false);
-                        }}
-                        className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all flex items-center justify-center gap-2 touch-manipulation"
-                      >
-                        <span className="material-symbols-outlined text-xl">
-                          settings
-                        </span>
-                        <span>{t("dashboard.links.editProfile", { defaultValue: "Editar Perfil" })}</span>
-                      </button>
+                      {/* ACTIONS: Only show if NOT in Direct Mode */}
+                      {(currentPage.landingMode as string) !== "direct" && (
+                        <>
+                          {/* EDIT PROFILE BUTTON */}
+                          <button
+                            onClick={() => {
+                              setSelectedButtonId(null);
+                              setShowButtonCreator(false);
+                            }}
+                            className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all flex items-center justify-center gap-2 touch-manipulation"
+                          >
+                            <span className="material-symbols-outlined text-xl">
+                              settings
+                            </span>
+                            <span>{t("dashboard.links.editProfile", { defaultValue: "Editar Perfil" })}</span>
+                          </button>
 
-                      {/* ADD BUTTON */}
-                      <button
-                        onClick={() => setShowButtonCreator(true)}
-                        className="w-full py-3 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 touch-manipulation"
-                      >
-                        <span className="material-symbols-outlined text-xl">
-                          add_circle
-                        </span>
-                        <span>{t("dashboard.links.addButton")}</span>
-                      </button>
+                          {/* ADD BUTTON */}
+                          <button
+                            onClick={() => setShowButtonCreator(true)}
+                            className="w-full py-3 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 touch-manipulation"
+                          >
+                            <span className="material-symbols-outlined text-xl">
+                              add_circle
+                            </span>
+                            <span>{t("dashboard.links.addButton")}</span>
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
 
-                  {/* COLLAPSED ADD BUTTON */}
-                  {sidebarCollapsed && (
+                  {/* COLLAPSED ACTIONS: Only show if NOT in Direct Mode */}
+                  {sidebarCollapsed && (currentPage.landingMode as string) !== "direct" && (
                     <div className="px-2 pb-3 flex flex-col items-center gap-3">
                       <button
                         onClick={() => {
@@ -1775,59 +1791,73 @@ export default function Links() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-3 relative z-0">
-                  <DndContext
-                    sensors={sensors}
-                    collisionDetection={closestCenter}
-                    onDragEnd={handleDragEnd}
-                  >
-                    <SortableContext
-                      items={currentPage.buttons}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      <div className="space-y-2">
-                        {currentPage.buttons.map((btn) => (
-                          <div key={btn.id} className="relative group">
-                            <SortableButton
-                              btn={btn}
-                              isSelected={selectedButtonId === btn.id}
-                              onClick={() => {
-                                setSelectedButtonId(btn.id);
-                                setShowButtonCreator(false);
-                              }}
-                              collapsed={sidebarCollapsed}
-                              rotatorSurcharge={ROTATOR_SURCHARGE}
-                              socialPresets={SOCIAL_PRESETS}
-                            />
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteButton(btn.id);
-                              }}
-                              className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-silver/20 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all z-10"
-                            >
-                              <span className="material-symbols-outlined text-sm">
-                                delete
-                              </span>
-                            </button>
-                          </div>
-                        ))}
-                        {currentPage.buttons.length === 0 &&
-                          !showButtonCreator && (
-                            <div className="text-center py-10 px-4 border-2 border-dashed border-white/5 rounded-xl">
-                              <span className="material-symbols-outlined text-3xl text-silver/20 mb-2">
-                                touch_app
-                              </span>
-                              <p className="text-xs text-silver/40">
-                                {t("dashboard.links.emptyLinkMsg", {
-                                  defaultValue:
-                                    "Tu link est� vac�o. �A�ade tu primer bot�n!",
-                                })}
-                              </p>
-                            </div>
-                          )}
+                  {(currentPage.landingMode as string) === "direct" ? (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4 animate-fade-in">
+                      <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
+                        <span className="material-symbols-outlined text-red-500 text-2xl">rocket_launch</span>
                       </div>
-                    </SortableContext>
-                  </DndContext>
+                      {!sidebarCollapsed && (
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold text-white uppercase tracking-wider">Modo Directo Activo</p>
+                          <p className="text-[10px] text-silver/40 leading-relaxed">No se requieren botones para este tipo de enlace.</p>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext
+                        items={currentPage.buttons}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        <div className="space-y-2">
+                          {currentPage.buttons.map((btn) => (
+                            <div key={btn.id} className="relative group">
+                              <SortableButton
+                                btn={btn}
+                                isSelected={selectedButtonId === btn.id}
+                                onClick={() => {
+                                  setSelectedButtonId(btn.id);
+                                  setShowButtonCreator(false);
+                                }}
+                                collapsed={sidebarCollapsed}
+                                rotatorSurcharge={ROTATOR_SURCHARGE}
+                                socialPresets={SOCIAL_PRESETS}
+                              />
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteButton(btn.id);
+                                }}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-silver/20 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all z-10"
+                              >
+                                <span className="material-symbols-outlined text-sm">
+                                  delete
+                                </span>
+                              </button>
+                            </div>
+                          ))}
+                          {currentPage.buttons.length === 0 &&
+                            !showButtonCreator && (
+                              <div className="text-center py-10 px-4 border-2 border-dashed border-white/5 rounded-xl">
+                                <span className="material-symbols-outlined text-3xl text-silver/20 mb-2">
+                                  touch_app
+                                </span>
+                                <p className="text-xs text-silver/40">
+                                  {t("dashboard.links.emptyLinkMsg", {
+                                    defaultValue:
+                                      "Tu link está vacío. ¡Añade tu primer botón!",
+                                  })}
+                                </p>
+                              </div>
+                            )}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
+                  )}
                 </div>
 
                 {/* STICKY BOTTOM ACTIONS */}
@@ -2072,6 +2102,62 @@ export default function Links() {
                             </div>
                           </div>
 
+                          {/* SMART REDIRECT (iOS/Android URLs) */}
+                          <div className="p-6 bg-[#0a0a0b] border border-white/5 rounded-2xl space-y-6">
+                            <div className="flex items-center gap-2 text-indigo-400">
+                              <span className="material-symbols-outlined text-xl">
+                                devices
+                              </span>
+                              <span className="text-sm font-bold tracking-tight">
+                                Smart Redirect (Device targeting)
+                              </span>
+                            </div>
+
+                            <p className="text-[10px] text-silver/40 leading-relaxed font-medium">
+                              Opcional: Define links específicos para sistemas operativos. Si un campo queda vacío, se usará el link principal normal del botón.
+                            </p>
+
+                            <div className="space-y-5">
+                              {/* Apple Link */}
+                              <div className="space-y-3">
+                                <label className="flex items-center gap-2 text-silver/60">
+                                  <svg className="w-5 h-5" viewBox="0 0 384 512" fill="currentColor">
+                                    <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
+                                  </svg>
+                                  <span className="text-[9px] font-black uppercase tracking-widest text-silver/30 mt-0.5">LINK PARA IOS (IPHONE/IPAD)</span>
+                                </label>
+                                <input
+                                  type="url"
+                                  placeholder="https://onlyfans.com/perfil_ios"
+                                  value={selectedButton.deviceRedirects?.ios || ""}
+                                  onChange={(e) => {
+                                    const current = selectedButton.deviceRedirects || { ios: "", android: "" };
+                                    handleUpdateButton("deviceRedirects", { ...current, ios: e.target.value });
+                                  }}
+                                  className="w-full bg-[#030303] border border-white/5 rounded-xl px-4 py-3.5 text-xs text-silver focus:outline-none focus:border-white/20 transition-all font-mono shadow-inner placeholder:text-silver/20"
+                                />
+                              </div>
+
+                              {/* Android Link */}
+                              <div className="space-y-3">
+                                <label className="flex items-center gap-2 text-silver/40">
+                                  <span className="material-symbols-outlined text-xl">android</span>
+                                  <span className="text-[9px] font-black uppercase tracking-widest text-silver/30 mt-1">LINK PARA ANDROID</span>
+                                </label>
+                                <input
+                                  type="url"
+                                  placeholder="https://onlyfans.com/perfil_android"
+                                  value={selectedButton.deviceRedirects?.android || ""}
+                                  onChange={(e) => {
+                                    const current = selectedButton.deviceRedirects || { ios: "", android: "" };
+                                    handleUpdateButton("deviceRedirects", { ...current, android: e.target.value });
+                                  }}
+                                  className="w-full bg-[#030303] border border-white/5 rounded-xl px-4 py-3.5 text-xs text-silver focus:outline-none focus:border-white/20 transition-all font-mono shadow-inner placeholder:text-silver/20"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
 
                           {/* META / TIKTOK SHIELD */}
                           {(selectedButton.type === "instagram" || selectedButton.type === "tiktok") && (
@@ -2087,26 +2173,32 @@ export default function Links() {
                                     </span>
                                   </div>
                                   <p className="text-[10px] text-silver/50 max-w-[250px]">
-                                    Protege tu link de la moderación de {selectedButton.type === "instagram" ? "Meta (Instagram/Facebook)" : "TikTok"}. Activa el sistema de cloaking anti-rastreo.
+                                    {selectedButton.type === "tiktok"
+                                      ? "Protección activa por defecto. Tu link está seguro de la moderación de TikTok mediante cloaking."
+                                      : "Protege tu link de la moderación de Meta (Instagram/Facebook). Activa el sistema de cloaking anti-rastreo."}
                                   </p>
                                 </div>
-                                <label className="relative inline-flex items-center cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={(selectedButton as any).metaShield || false}
-                                    onChange={(e) =>
-                                      handleUpdateButton("metaShield", e.target.checked)
-                                    }
-                                    className="sr-only peer"
-                                  />
-                                  <div className="w-11 h-6 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-                                </label>
+                                {selectedButton.type !== "tiktok" && (
+                                  <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={(selectedButton as any).metaShield || false}
+                                      onChange={(e) =>
+                                        handleUpdateButton("metaShield", e.target.checked)
+                                      }
+                                      className="sr-only peer"
+                                    />
+                                    <div className="w-11 h-6 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
+                                  </label>
+                                )}
                               </div>
-                              {(selectedButton as any).metaShield && (
+                              {((selectedButton as any).metaShield || selectedButton.type === "tiktok") && (
                                 <div className="mt-3 p-3 bg-orange-500/10 rounded-xl border border-orange-500/20 flex items-start gap-2 animate-fade-in">
                                   <span className="material-symbols-outlined text-orange-400 text-sm mt-0.5">info</span>
                                   <p className="text-[10px] text-orange-300/80">
-                                    Cuando un visitante que viene de {selectedButton.type === "instagram" ? "Instagram" : "TikTok"} haga clic, verá instrucciones para abrir el link en el navegador externo, protegiendo tu link de detección.
+                                    {selectedButton.type === "tiktok"
+                                      ? "Al ser un link de TikTok, el escudo está activado permanentemente para tu seguridad."
+                                      : "Cuando un visitante que viene de Instagram haga clic, verá instrucciones para abrir el link en el navegador externo, protegiendo tu link de detección."}
                                   </p>
                                 </div>
                               )}
@@ -2323,15 +2415,17 @@ export default function Links() {
                           </div>
                         </div>
 
-                        {true ? (
+                        {true && (
                           <div className="space-y-8 animate-fade-in">
                             <section className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
                               <div className="p-4 border-b border-white/5 bg-white/[0.02]">
                                 <h3 className="text-sm font-bold flex items-center gap-2">
                                   <span className="material-symbols-outlined text-silver/40">
-                                    person
+                                    {(currentPage.landingMode as string) === "direct" ? "settings" : "person"}
                                   </span>
-                                  {t("dashboard.links.profileIdentity")}
+                                  {(currentPage.landingMode as string) === "direct"
+                                    ? "Configuración del Enlace Directo"
+                                    : t("dashboard.links.profileIdentity")}
                                 </h3>
                               </div>
                               <div className="p-6">
@@ -2368,50 +2462,57 @@ export default function Links() {
                                   </div>
                                 </div>
 
-                                <div className="mb-6 flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
-                                  <div>
-                                    <span className="text-xs font-bold text-white block">
-                                      {t("dashboard.links.landingMode")}
-                                    </span>
-                                    <span className="text-[10px] text-silver/40">
-                                      {t("dashboard.links.landingModeDesc")}
-                                    </span>
+                                {/* LANDING MODE SELECTOR: Hide if already in Direct Mode to avoid confusion */}
+                                {(currentPage.landingMode as string) !== "direct" && (
+                                  <div className="mb-6 flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+                                    <div>
+                                      <span className="text-xs font-bold text-white block">
+                                        {t("dashboard.links.landingMode")}
+                                      </span>
+                                      <span className="text-[10px] text-silver/40">
+                                        {t("dashboard.links.landingModeDesc")}
+                                      </span>
+                                    </div>
+                                    <div className="flex bg-black/40 p-1 rounded-lg border border-white/5">
+                                      <button
+                                        onClick={() => {
+                                          handleUpdatePage("template", "minimal");
+                                          handleUpdatePage("landingMode", "circle");
+                                          handleUpdatePage("profileImageSize", 100);
+                                        }}
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${currentPage.template === "minimal" || currentPage.landingMode === "circle" ? "bg-white text-black shadow-lg" : "text-silver/60 hover:text-white"}`}
+                                      >
+                                        {t("dashboard.links.minimalist")}
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          handleUpdatePage("template", "full");
+                                          handleUpdatePage("landingMode", "full");
+                                          handleUpdatePage("profileImageSize", 100);
+                                          handleUpdatePage("theme.backgroundType", "blur");
+                                        }}
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${currentPage.template === "full" || currentPage.landingMode === "full" ? "bg-primary text-white shadow-lg" : "text-silver/60 hover:text-white"}`}
+                                      >
+                                        {t("dashboard.links.fullMode")}
+                                      </button>
+                                      {/* Only show 'Direct' option if the link is ALREADY in direct mode. 
+                                          Otherwise, users should stay within Landing Page types. */}
+                                      {(currentPage.landingMode as string) === "direct" && (
+                                        <button
+                                          onClick={() => {
+                                            handleUpdatePage("landingMode", "direct");
+                                          }}
+                                          className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all flex items-center gap-1 ${(currentPage.landingMode as string) === "direct" ? "bg-red-500 text-white shadow-lg" : "text-silver/60 hover:text-white"}`}
+                                        >
+                                          <span className="material-symbols-outlined text-[10px]">bolt</span>
+                                          Directo
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="flex bg-black/40 p-1 rounded-lg border border-white/5">
-                                    <button
-                                      onClick={() => {
-                                        handleUpdatePage("template", "minimal");
-                                        handleUpdatePage("landingMode", "circle");
-                                        handleUpdatePage("profileImageSize", 100);
-                                      }}
-                                      className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${currentPage.template === "minimal" || currentPage.landingMode === "circle" ? "bg-white text-black shadow-lg" : "text-silver/60 hover:text-white"}`}
-                                    >
-                                      {t("dashboard.links.minimalist")}
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        handleUpdatePage("template", "full");
-                                        handleUpdatePage("landingMode", "full");
-                                        handleUpdatePage("profileImageSize", 100);
-                                        handleUpdatePage("theme.backgroundType", "blur");
-                                      }}
-                                      className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${currentPage.template === "full" || currentPage.landingMode === "full" ? "bg-primary text-white shadow-lg" : "text-silver/60 hover:text-white"}`}
-                                    >
-                                      {t("dashboard.links.fullMode")}
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        handleUpdatePage("landingMode", "direct");
-                                      }}
-                                      className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all flex items-center gap-1 ${currentPage.landingMode === "direct" ? "bg-red-500 text-white shadow-lg" : "text-silver/60 hover:text-white"}`}
-                                    >
-                                      <span className="material-symbols-outlined text-[10px]">bolt</span>
-                                      Directo
-                                    </button>
-                                  </div>
-                                </div>
+                                )}
 
-                                {currentPage.landingMode === "direct" ? (
+                                {(currentPage.landingMode as string) === "direct" ? (
                                   <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-2xl animate-fade-in text-center">
                                     <span className="material-symbols-outlined text-4xl text-red-500 mb-4 block animate-bounce-subtle">
                                       rocket_launch
@@ -2516,736 +2617,211 @@ export default function Links() {
                                   </>
                                 )}
 
-                                <div className="pt-6 mt-6 border-t border-white/5">
-                                  <label className="text-[10px] font-bold text-silver/40 uppercase mb-3 block">
-                                    {t("dashboard.links.pageBackground")}
-                                  </label>
-                                  <div className="flex gap-4 mb-4">
-                                    {/* When Full mode is active, Solid and Gradient are locked */}
-                                    {currentPage.landingMode === "full" ? (
-                                      <div className="flex items-center gap-3">
-                                        <div className="flex bg-[#0B0B0B] border border-border p-1 rounded-xl w-fit opacity-40 pointer-events-none select-none" title="Solo disponible en modo Minimalista">
-                                          <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg text-silver/30 cursor-not-allowed">
+                                {(currentPage.landingMode as string) !== "direct" && (
+                                  <div className="pt-6 mt-6 border-t border-white/5">
+                                    <label className="text-[10px] font-bold text-silver/40 uppercase mb-3 block">
+                                      {t("dashboard.links.pageBackground")}
+                                    </label>
+                                    <div className="flex gap-4 mb-4">
+                                      {/* When Full mode is active, Solid and Gradient are locked */}
+                                      {currentPage.landingMode === "full" ? (
+                                        <div className="flex items-center gap-3">
+                                          <div className="flex bg-[#0B0B0B] border border-border p-1 rounded-xl w-fit opacity-40 pointer-events-none select-none" title="Solo disponible en modo Minimalista">
+                                            <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg text-silver/30 cursor-not-allowed">
+                                              {t("dashboard.links.solid")}
+                                            </button>
+                                            <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg text-silver/30 cursor-not-allowed">
+                                              {t("dashboard.links.gradient")}
+                                            </button>
+                                            <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg bg-primary/80 text-white shadow-lg rounded-lg cursor-not-allowed">
+                                              {t("dashboard.links.blurPhoto")}
+                                            </button>
+                                          </div>
+                                          <span className="text-[10px] text-primary/80 font-bold flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-sm">lock</span>
+                                            Blur obligatorio en modo Full
+                                          </span>
+                                        </div>
+                                      ) : (
+                                        <div className="flex bg-[#0B0B0B] border border-border p-1 rounded-xl w-fit">
+                                          <button
+                                            onClick={() =>
+                                              handleUpdatePage(
+                                                "theme.backgroundType",
+                                                "solid",
+                                              )
+                                            }
+                                            className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "solid" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
+                                          >
                                             {t("dashboard.links.solid")}
                                           </button>
-                                          <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg text-silver/30 cursor-not-allowed">
+                                          <button
+                                            onClick={() =>
+                                              handleUpdatePage(
+                                                "theme.backgroundType",
+                                                "gradient",
+                                              )
+                                            }
+                                            className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "gradient" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
+                                          >
                                             {t("dashboard.links.gradient")}
                                           </button>
-                                          <button disabled className="px-6 py-2 text-[10px] font-bold rounded-lg bg-primary/80 text-white shadow-lg rounded-lg cursor-not-allowed">
+                                          <button
+                                            onClick={() =>
+                                              handleUpdatePage(
+                                                "theme.backgroundType",
+                                                "blur",
+                                              )
+                                            }
+                                            className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "blur" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
+                                          >
                                             {t("dashboard.links.blurPhoto")}
                                           </button>
                                         </div>
-                                        <span className="text-[10px] text-primary/80 font-bold flex items-center gap-1">
-                                          <span className="material-symbols-outlined text-sm">lock</span>
-                                          Blur obligatorio en modo Full
-                                        </span>
-                                      </div>
-                                    ) : (
-                                      <div className="flex bg-[#0B0B0B] border border-border p-1 rounded-xl w-fit">
-                                        <button
-                                          onClick={() =>
-                                            handleUpdatePage(
-                                              "theme.backgroundType",
-                                              "solid",
-                                            )
-                                          }
-                                          className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "solid" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
-                                        >
-                                          {t("dashboard.links.solid")}
-                                        </button>
-                                        <button
-                                          onClick={() =>
-                                            handleUpdatePage(
-                                              "theme.backgroundType",
-                                              "gradient",
-                                            )
-                                          }
-                                          className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "gradient" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
-                                        >
-                                          {t("dashboard.links.gradient")}
-                                        </button>
-                                        <button
-                                          onClick={() =>
-                                            handleUpdatePage(
-                                              "theme.backgroundType",
-                                              "blur",
-                                            )
-                                          }
-                                          className={`px-6 py-2 text-[10px] font-bold transition-all rounded-lg ${currentPage.theme.backgroundType === "blur" ? "bg-white/10 border border-white/10 text-white" : "text-silver/40 hover:text-white"}`}
-                                        >
-                                          {t("dashboard.links.blurPhoto")}
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
-
-                                  {currentPage.theme.backgroundType ===
-                                    "solid" ? (
-                                    <div className="flex items-center gap-3 bg-black/20 p-3 rounded-xl border border-white/5">
-                                      <input
-                                        type="color"
-                                        value={currentPage.theme.backgroundStart}
-                                        onChange={(e) =>
-                                          handleUpdatePage(
-                                            "theme.backgroundStart",
-                                            e.target.value,
-                                          )
-                                        }
-                                        className="h-10 w-10 rounded-lg cursor-pointer border-none bg-transparent"
-                                      />
-                                      <span className="text-xs font-mono text-silver/50 uppercase">
-                                        {currentPage.theme.backgroundStart}
-                                      </span>
+                                      )}
                                     </div>
-                                  ) : currentPage.theme.backgroundType ===
-                                    "gradient" ? (
-                                    <div className="grid grid-cols-2 gap-3">
-                                      <div className="bg-black/20 p-3 rounded-xl border border-white/5">
-                                        <p className="text-[9px] text-silver/30 font-bold uppercase mb-2">
-                                          Inicio
-                                        </p>
+
+                                    {currentPage.theme.backgroundType ===
+                                      "solid" ? (
+                                      <div className="flex items-center gap-3 bg-black/20 p-3 rounded-xl border border-white/5">
                                         <input
                                           type="color"
-                                          value={
-                                            currentPage.theme.backgroundStart
-                                          }
+                                          value={currentPage.theme.backgroundStart}
                                           onChange={(e) =>
                                             handleUpdatePage(
                                               "theme.backgroundStart",
                                               e.target.value,
                                             )
                                           }
-                                          className="h-10 w-full rounded-lg cursor-pointer border-none bg-transparent"
+                                          className="h-10 w-10 rounded-lg cursor-pointer border-none bg-transparent"
                                         />
+                                        <span className="text-xs font-mono text-silver/50 uppercase">
+                                          {currentPage.theme.backgroundStart}
+                                        </span>
                                       </div>
-                                      <div className="bg-black/20 p-3 rounded-xl border border-white/5">
-                                        <p className="text-[9px] text-silver/30 font-bold uppercase mb-2">
-                                          Fin
-                                        </p>
-                                        <input
-                                          type="color"
-                                          value={currentPage.theme.backgroundEnd}
-                                          onChange={(e) =>
-                                            handleUpdatePage(
-                                              "theme.backgroundEnd",
-                                              e.target.value,
-                                            )
-                                          }
-                                          className="h-10 w-full rounded-lg cursor-pointer border-none bg-transparent"
-                                        />
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div className="bg-black/20 p-3 rounded-xl border border-white/5 flex items-center gap-3">
-                                      <span className="material-symbols-outlined text-silver/40">
-                                        blur_on
-                                      </span>
-                                      <p className="text-[10px] text-silver/50">
-                                        {t("dashboard.links.blurPhotoDesc")}
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </section>
-                          </div>
-                        ) : (
-                          <div className="space-y-8 animate-fade-in">
-                            {/* DOMAIN CONFIGURATION SECTION */}
-                            <section className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-                              <div className="p-4 border-b border-white/5 bg-white/[0.02] flex justify-between items-center">
-                                <h3 className="text-sm font-bold flex items-center gap-2">
-                                  <span className="material-symbols-outlined text-silver/40">
-                                    language
-                                  </span>
-                                  {t("dashboard.links.domainStatusTitle")}
-                                </h3>
-                                <div
-                                  className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${currentPage.status === "active"
-                                    ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                                    : "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20"
-                                    }`}
-                                >
-                                  {currentPage.status === "active"
-                                    ? t("dashboard.links.published")
-                                    : t("dashboard.links.draft")}
-                                </div>
-                              </div>
-
-                              <div className="p-6 space-y-6">
-                                {/* Custom Domain Section � state-based flow */}
-                                <div className="p-5 bg-black/40 border border-white/5 rounded-2xl relative overflow-hidden group">
-                                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                                  <div className="flex items-center gap-2 mb-4 relative">
-                                    <span className="material-symbols-outlined text-primary text-sm">
-                                      verified
-                                    </span>
-                                    <h4 className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">
-                                      {t("dashboard.links.customDomainPro")}
-                                    </h4>
-                                  </div>
-
-                                  {/* STATE: draft / no plan */}
-                                  {currentPage.status === "draft" && (
-                                    <div className="p-8 text-center bg-white/5 border border-white/5 rounded-[2rem] border-dashed">
-                                      <span className="material-symbols-outlined text-4xl text-silver/20 mb-4 block">
-                                        lock
-                                      </span>
-                                      <h4 className="text-white font-bold mb-2">
-                                        {t("dashboard.links.linkNotActivated")}
-                                      </h4>
-                                      <p className="text-silver/40 text-xs max-w-xs mx-auto mb-6">
-                                        {t(
-                                          "dashboard.links.customDomainProDesc",
-                                          {
-                                            defaultValue:
-                                              "Debes contratar un plan para desbloquear la configuraci�n de dominio personalizado.",
-                                          },
-                                        )}
-                                      </p>
-                                      <button
-                                        onClick={() => {
-                                          // Ensure the link data is available for checkout
-                                          const linkForCheckout = [currentPage];
-                                          try {
-                                            localStorage.setItem(
-                                              "my_links_data",
-                                              JSON.stringify(linkForCheckout),
-                                            );
-                                          } catch { }
-                                          navigate("/dashboard/checkout", {
-                                            state: {
-                                              pendingPurchase: {
-                                                linksData: linkForCheckout,
-                                              },
-                                            },
-                                          });
-                                        }}
-                                        className="px-6 py-2.5 bg-white text-black font-bold rounded-xl text-xs hover:scale-110 transition-all"
-                                      >
-                                        {t("dashboard.links.viewPlans")}
-                                      </button>
-                                    </div>
-                                  )}
-
-                                  {/* STATE: none � choose domain flow */}
-                                  {currentPage.status === "active" && (
-                                    <div className="space-y-4">
-                                      {currentPage.domainStatus ===
-                                        "pending" ? (
-                                        /* Persistent Pending View */
-                                        <div className="rounded-[2rem] border border-primary/20 bg-primary/5 p-8 text-center animate-pulse-slow">
-                                          <div className="w-16 h-16 bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                                            <span className="material-symbols-outlined text-primary text-3xl animate-pulse">
-                                              verified
-                                            </span>
-                                          </div>
-
-                                          <h3 className="text-xl font-black text-white mb-2 tracking-tight">
-                                            {t(
-                                              "dashboard.links.requestInProcessTitle",
-                                              {
-                                                defaultValue:
-                                                  "Solicitud en proceso",
-                                              },
-                                            )}
-                                          </h3>
-
-                                          <p className="text-silver/60 text-[11px] leading-relaxed mb-0 px-4">
-                                            {t(
-                                              "dashboard.links.requestInProcessDesc",
-                                              {
-                                                defaultValue:
-                                                  "Estamos procesando tu solicitud de dominio. Nuestro equipo se encargar� de realizar la configuraci�n necesaria.",
-                                              },
-                                            )}
+                                    ) : currentPage.theme.backgroundType ===
+                                      "gradient" ? (
+                                      <div className="grid grid-cols-2 gap-3">
+                                        <div className="bg-black/20 p-3 rounded-xl border border-white/5">
+                                          <p className="text-[9px] text-silver/30 font-bold uppercase mb-2">
+                                            Inicio
                                           </p>
-
-                                          <div className="mt-8 pt-6 border-t border-white/5">
-                                            <p className="text-[10px] text-silver/40 uppercase tracking-widest font-black">
-                                              Estado:{" "}
-                                              <span className="text-primary">
-                                                Pendiente de Activaci�n
-                                              </span>
-                                            </p>
-                                          </div>
-
-                                          <button
-                                            onClick={() => {
+                                          <input
+                                            type="color"
+                                            value={
+                                              currentPage.theme.backgroundStart
+                                            }
+                                            onChange={(e) =>
                                               handleUpdatePage(
-                                                "domainStatus",
-                                                "none",
-                                              );
-                                              handleUpdatePage(
-                                                "customDomain",
-                                                "",
-                                              );
-                                            }}
-                                            className="mt-6 text-xs text-silver/40 hover:text-silver transition-colors underline underline-offset-4"
-                                          >
-                                            {t("dashboard.links.cancelRequest")}
-                                          </button>
-                                        </div>
-                                      ) : (
-                                        (!currentPage.domainStatus ||
-                                          currentPage.domainStatus ===
-                                          "none") && (
-                                          <div className="space-y-3 relative">
-                                            <p className="text-[11px] text-silver/40 leading-relaxed">
-                                              {t(
-                                                "dashboard.links.domainFlowPref",
-                                              )}
-                                            </p>
-
-                                            {/* Option A: Buy new domain */}
-                                            <div className="rounded-2xl border border-white/10 overflow-hidden bg-black/30">
-                                              <button
-                                                onClick={() =>
-                                                  setDomainFlowChoice(
-                                                    domainFlowChoice === "buy"
-                                                      ? null
-                                                      : "buy",
-                                                  )
-                                                }
-                                                className="w-full flex items-center gap-4 p-4 hover:bg-white/5 transition-all text-left group"
-                                              >
-                                                <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-all">
-                                                  <span className="material-symbols-outlined text-primary text-lg">
-                                                    shopping_cart
-                                                  </span>
-                                                </div>
-                                                <div className="flex-1">
-                                                  <p className="text-sm font-bold text-white">
-                                                    {t(
-                                                      "dashboard.links.buyNewDomain",
-                                                    )}
-                                                  </p>
-                                                  <p className="text-[10px] text-silver/40">
-                                                    {t(
-                                                      "dashboard.links.buyNewDomainDesc",
-                                                    )}
-                                                  </p>
-                                                </div>
-                                                <span
-                                                  className={`material-symbols-outlined text-silver/30 transition-transform ${domainFlowChoice === "buy" ? "rotate-180" : ""}`}
-                                                >
-                                                  expand_more
-                                                </span>
-                                              </button>
-                                              {domainFlowChoice === "buy" && (
-                                                <div className="border-t border-white/5 p-4 animate-fade-in relative z-20">
-                                                  <p className="text-[10px] text-silver/40 mb-1">
-                                                    {t(
-                                                      "dashboard.links.domainInstruction",
-                                                    )}
-                                                  </p>
-
-                                                  <InlineDomainSearch
-                                                    onDomainSelected={(
-                                                      domain,
-                                                    ) =>
-                                                      handleUpdatePage(
-                                                        "customDomain",
-                                                        domain,
-                                                      )
-                                                    }
-                                                    initialValue={
-                                                      currentPage.customDomain ||
-                                                      ""
-                                                    }
-                                                  />
-
-                                                  <div className="mt-4 flex justify-end">
-                                                    <button
-                                                      disabled={
-                                                        !currentPage.customDomain
-                                                      }
-                                                      onClick={async () => {
-                                                        const loadingToast =
-                                                          toast.loading(
-                                                            t(
-                                                              "dashboard.links.sendingRequest",
-                                                            ),
-                                                          );
-                                                        try {
-                                                          const {
-                                                            supabase: sb,
-                                                          } =
-                                                            await import("@/services/supabase");
-                                                          const {
-                                                            data: { session },
-                                                          } =
-                                                            await sb.auth.getSession();
-                                                          const res =
-                                                            await fetch(
-                                                              `${API_URL}/domains/request`,
-                                                              {
-                                                                method: "POST",
-                                                                headers: {
-                                                                  "Content-Type":
-                                                                    "application/json",
-                                                                  Authorization: `Bearer ${session?.access_token}`,
-                                                                },
-                                                                body: JSON.stringify(
-                                                                  {
-                                                                    linkId:
-                                                                      currentPage.id,
-                                                                    domain:
-                                                                      currentPage.customDomain,
-                                                                    reservation_type:
-                                                                      "buy_new",
-                                                                  },
-                                                                ),
-                                                              },
-                                                            );
-
-                                                          const json =
-                                                            await res.json();
-                                                          toast.dismiss(
-                                                            loadingToast,
-                                                          );
-                                                          if (!res.ok) {
-                                                            toast.error(
-                                                              json.error ||
-                                                              t(
-                                                                "common.errorSendingRequest",
-                                                              ),
-                                                            );
-                                                          } else {
-                                                            handleUpdatePage(
-                                                              "domainStatus",
-                                                              "pending",
-                                                            );
-                                                            setShowProcessingModal(
-                                                              true,
-                                                            );
-                                                          }
-                                                        } catch {
-                                                          toast.dismiss(
-                                                            loadingToast,
-                                                          );
-                                                          toast.error(
-                                                            t(
-                                                              "common.errorSendingRequest",
-                                                            ),
-                                                          );
-                                                        }
-                                                      }}
-                                                      className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${currentPage.customDomain
-                                                        ? "bg-primary text-black hover:scale-105 active:scale-95"
-                                                        : "bg-white/5 text-white/20 cursor-not-allowed"
-                                                        }`}
-                                                    >
-                                                      {t(
-                                                        "dashboard.links.reserve",
-                                                      )}
-                                                    </button>
-                                                  </div>
-                                                </div>
-                                              )}
-                                            </div>
-
-                                            {/* Option B: Connect own domain */}
-                                            <div className="rounded-2xl border border-white/10 overflow-hidden bg-black/30">
-                                              <button
-                                                onClick={() =>
-                                                  setDomainFlowChoice(
-                                                    domainFlowChoice ===
-                                                      "connect"
-                                                      ? null
-                                                      : "connect",
-                                                  )
-                                                }
-                                                className="w-full flex items-center gap-4 p-4 hover:bg-white/5 transition-all text-left group"
-                                              >
-                                                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0 group-hover:bg-blue-500/20 transition-all">
-                                                  <span className="material-symbols-outlined text-blue-400 text-lg">
-                                                    link
-                                                  </span>
-                                                </div>
-                                                <div className="flex-1">
-                                                  <p className="text-sm font-bold text-white">
-                                                    {t(
-                                                      "dashboard.links.connectOwnDomain",
-                                                    )}
-                                                  </p>
-                                                  <p className="text-[10px] text-silver/40">
-                                                    {t(
-                                                      "dashboard.links.connectOwnDomainDesc",
-                                                    )}
-                                                  </p>
-                                                </div>
-                                                <span
-                                                  className={`material-symbols-outlined text-silver/30 transition-transform ${domainFlowChoice === "connect" ? "rotate-180" : ""}`}
-                                                >
-                                                  expand_more
-                                                </span>
-                                              </button>
-                                              {domainFlowChoice ===
-                                                "connect" && (
-                                                  <div className="border-t border-white/5 p-4 animate-fade-in relative z-20">
-                                                    <p className="text-[10px] text-silver/40 mb-3">
-                                                      {t(
-                                                        "dashboard.links.dnsInstruction",
-                                                      )}
-                                                    </p>
-                                                    <div className="relative">
-                                                      <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-silver/20 text-sm">
-                                                        language
-                                                      </span>
-                                                      <input
-                                                        type="text"
-                                                        placeholder="tudominio.com"
-                                                        value={
-                                                          currentPage.customDomain ||
-                                                          ""
-                                                        }
-                                                        onChange={(e) => {
-                                                          const val =
-                                                            e.target.value
-                                                              .toLowerCase()
-                                                              .replace(/\s/g, "")
-                                                              .replace(
-                                                                /https?:\/\//,
-                                                                "",
-                                                              );
-                                                          handleUpdatePage(
-                                                            "customDomain",
-                                                            val,
-                                                          );
-
-                                                          if (
-                                                            val &&
-                                                            !/\.[a-z]{2,}$/i.test(
-                                                              val,
-                                                            )
-                                                          ) {
-                                                            setOwnDomainError(
-                                                              t(
-                                                                "dashboard.links.invalidExtensionError",
-                                                                {
-                                                                  defaultValue:
-                                                                    "Se requiere una extensi�n v�lida (.com, .net, .co, etc)",
-                                                                },
-                                                              ),
-                                                            );
-                                                          } else {
-                                                            setOwnDomainError(
-                                                              null,
-                                                            );
-                                                          }
-                                                        }}
-                                                        className={`w-full bg-[#0a0a0a] border rounded-xl pl-9 pr-4 py-3 text-sm text-white placeholder:text-silver/20 focus:outline-none transition-all font-mono ${ownDomainError
-                                                          ? "border-red-500/50"
-                                                          : "border-white/10 focus:border-primary/50"
-                                                          }`}
-                                                      />
-                                                    </div>
-
-                                                    {ownDomainError && (
-                                                      <p className="mt-2 text-[10px] text-red-500 font-bold">
-                                                        {ownDomainError}
-                                                      </p>
-                                                    )}
-
-                                                    <div className="mt-4 flex justify-end">
-                                                      <button
-                                                        disabled={
-                                                          !currentPage.customDomain ||
-                                                          !!ownDomainError
-                                                        }
-                                                        onClick={async () => {
-                                                          const loadingToast =
-                                                            toast.loading(
-                                                              t(
-                                                                "dashboard.links.sendingRequest",
-                                                              ),
-                                                            );
-                                                          try {
-                                                            const {
-                                                              supabase: sb,
-                                                            } =
-                                                              await import("@/services/supabase");
-                                                            const {
-                                                              data: { session },
-                                                            } =
-                                                              await sb.auth.getSession();
-                                                            const res =
-                                                              await fetch(
-                                                                `${API_URL}/domains/request`,
-                                                                {
-                                                                  method: "POST",
-                                                                  headers: {
-                                                                    "Content-Type":
-                                                                      "application/json",
-                                                                    Authorization: `Bearer ${session?.access_token}`,
-                                                                  },
-                                                                  body: JSON.stringify(
-                                                                    {
-                                                                      linkId:
-                                                                        currentPage.id,
-                                                                      domain:
-                                                                        currentPage.customDomain,
-                                                                      reservation_type:
-                                                                        "connect_own",
-                                                                    },
-                                                                  ),
-                                                                },
-                                                              );
-
-                                                            const json =
-                                                              await res.json();
-                                                            toast.dismiss(
-                                                              loadingToast,
-                                                            );
-                                                            if (!res.ok) {
-                                                              toast.error(
-                                                                json.error ||
-                                                                t(
-                                                                  "common.errorSendingRequest",
-                                                                ),
-                                                              );
-                                                            } else {
-                                                              handleUpdatePage(
-                                                                "domainStatus",
-                                                                "pending",
-                                                              );
-                                                              setShowProcessingModal(
-                                                                true,
-                                                              );
-                                                            }
-                                                          } catch {
-                                                            toast.dismiss(
-                                                              loadingToast,
-                                                            );
-                                                            toast.error(
-                                                              t(
-                                                                "common.errorSendingRequest",
-                                                              ),
-                                                            );
-                                                          }
-                                                        }}
-                                                        className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${currentPage.customDomain &&
-                                                          !ownDomainError
-                                                          ? "bg-white text-black hover:scale-105 active:scale-95"
-                                                          : "bg-white/5 text-white/20 cursor-not-allowed"
-                                                          }`}
-                                                      >
-                                                        {t(
-                                                          "dashboard.links.connect",
-                                                        )}
-                                                      </button>
-                                                    </div>
-                                                  </div>
-                                                )}
-                                            </div>
-                                          </div>
-                                        )
-                                      )}
-                                    </div>
-                                  )}
-
-                                  {/* STATE: active � domain live */}
-                                  {currentPage.status === "active" &&
-                                    currentPage.domainStatus === "active" && (
-                                      <div className="space-y-4 relative">
-                                        <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
-                                          <span className="material-symbols-outlined text-emerald-400 text-2xl">
-                                            check_circle
-                                          </span>
-                                          <div>
-                                            <p className="text-sm font-bold text-emerald-300">
-                                              {t(
-                                                "dashboard.links.domainActive",
-                                              )}
-                                            </p>
-                                            <p className="text-xs text-emerald-400/70 mt-0.5">
-                                              {t(
-                                                "dashboard.links.domainActiveDesc",
-                                              )}
-                                            </p>
-                                          </div>
-                                        </div>
-                                        <div className="p-4 bg-black/30 border border-white/5 rounded-xl">
-                                          <span className="text-[10px] text-silver/40 uppercase tracking-widest block mb-1">
-                                            {t("dashboard.links.yourDomain")}
-                                          </span>
-                                          <p className="text-primary font-mono text-sm font-bold">
-                                            {currentPage.customDomain}
-                                          </p>
-                                        </div>
-                                        <div className="flex gap-3 flex-wrap">
-                                          <button
-                                            onClick={() =>
-                                              window.open(
-                                                `https://${currentPage.customDomain}`,
-                                                "_blank",
+                                                "theme.backgroundStart",
+                                                e.target.value,
                                               )
                                             }
-                                            className="flex items-center gap-2 flex-1 py-3 px-4 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-300 font-bold rounded-xl text-xs transition-all"
-                                          >
-                                            <span className="material-symbols-outlined text-sm">
-                                              open_in_new
-                                            </span>
-                                            {t("dashboard.links.viewMySite")}
-                                          </button>
-                                          <button
-                                            onClick={() =>
-                                              navigate("/dashboard/analytics")
+                                            className="h-10 w-full rounded-lg cursor-pointer border-none bg-transparent"
+                                          />
+                                        </div>
+                                        <div className="bg-black/20 p-3 rounded-xl border border-white/5">
+                                          <p className="text-[9px] text-silver/30 font-bold uppercase mb-2">
+                                            Fin
+                                          </p>
+                                          <input
+                                            type="color"
+                                            value={currentPage.theme.backgroundEnd}
+                                            onChange={(e) =>
+                                              handleUpdatePage(
+                                                "theme.backgroundEnd",
+                                                e.target.value,
+                                              )
                                             }
-                                            className="flex items-center gap-2 flex-1 py-3 px-4 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary font-bold rounded-xl text-xs transition-all"
-                                          >
-                                            <span className="material-symbols-outlined text-sm">
-                                              bar_chart
-                                            </span>
-                                            {t("dashboard.links.viewMetrics")}
-                                          </button>
+                                            className="h-10 w-full rounded-lg cursor-pointer border-none bg-transparent"
+                                          />
                                         </div>
                                       </div>
+                                    ) : (
+                                      <div className="bg-black/20 p-3 rounded-xl border border-white/5 flex items-center gap-3">
+                                        <span className="material-symbols-outlined text-silver/40">
+                                          blur_on
+                                        </span>
+                                        <p className="text-[10px] text-silver/50">
+                                          {t("dashboard.links.blurPhotoDesc")}
+                                        </p>
+                                      </div>
                                     )}
+                                  </div>
+                                )}
+                              </div>
+                            </section>
 
-                                  {/* STATE: failed */}
-                                  {currentPage.status === "active" &&
-                                    currentPage.domainStatus === "failed" && (
-                                      <div className="space-y-4 relative">
-                                        <div className="flex items-start gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
-                                          <span className="material-symbols-outlined text-red-400 text-2xl">
-                                            cancel
-                                          </span>
-                                          <div>
-                                            <p className="text-sm font-bold text-red-300">
-                                              {t("dashboard.links.configError")}
-                                            </p>
-                                            <p className="text-xs text-red-400/70 mt-0.5">
-                                              {currentPage.domainNotes ||
-                                                t(
-                                                  "dashboard.links.configErrorDesc",
-                                                )}
-                                            </p>
-                                          </div>
-                                        </div>
+                            {/* SECCIÓN DE SEGURIDAD E INTELIGENCIA (PREMIUM) */}
+                            <section className="bg-white/5 border border-primary/20 rounded-2xl overflow-hidden shadow-[0_0_20px_rgba(37,99,235,0.05)] mt-8">
+                              <div className="p-4 border-b border-primary/10 bg-primary/5">
+                                <h3 className="text-sm font-bold flex items-center gap-2 text-primary">
+                                  <span className="material-symbols-outlined text-primary">
+                                    shield
+                                  </span>
+                                  Seguridad e Inteligencia Predictiva
+                                </h3>
+                              </div>
+                              <div className="p-6 space-y-8">
+
+                                {/* GEO-BLOCKING */}
+                                <div className="space-y-4">
+                                  <div>
+                                    <h4 className="text-xs font-bold text-white mb-1">Geofiltering: Bloqueo de Países</h4>
+                                    <p className="text-[10px] text-silver/40">Bloquea el acceso a este link desde países específicos (ej: auditores, competidores).</p>
+                                  </div>
+                                  <div className="flex flex-wrap gap-2 mb-3">
+                                    {(currentPage.security_config?.geoblocking || []).map((code: string) => (
+                                      <div key={code} className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 px-3 py-1.5 rounded-xl">
+                                        <span className="text-[10px] font-black text-red-100 uppercase">{code}</span>
                                         <button
                                           onClick={() => {
-                                            handleUpdatePage(
-                                              "domainStatus",
-                                              "none",
-                                            );
-                                            handleUpdatePage(
-                                              "customDomain",
-                                              "",
-                                            );
+                                            const current = currentPage.security_config?.geoblocking || [];
+                                            handleUpdatePage("security_config", {
+                                              ...currentPage.security_config,
+                                              geoblocking: current.filter((c: string) => c !== code)
+                                            });
                                           }}
-                                          className="flex items-center gap-2 px-5 py-2.5 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary font-bold rounded-xl text-xs transition-all"
+                                          className="material-symbols-outlined text-sm text-red-500 hover:text-red-400 transition-colors"
                                         >
-                                          <span className="material-symbols-outlined text-sm">
-                                            refresh
-                                          </span>
-                                          {t("dashboard.links.tryAgain")}
+                                          close
                                         </button>
                                       </div>
+                                    ))}
+                                    {(!currentPage.security_config?.geoblocking || currentPage.security_config.geoblocking.length === 0) && (
+                                      <p className="text-[10px] text-silver/20 italic">No hay países bloqueados. Acceso global permitido.</p>
                                     )}
+                                  </div>
+                                  <div className="relative">
+                                    <select
+                                      onChange={(e) => {
+                                        if (!e.target.value) return;
+                                        const current = currentPage.security_config?.geoblocking || [];
+                                        if (current.includes(e.target.value)) return;
+                                        handleUpdatePage("security_config", {
+                                          ...currentPage.security_config,
+                                          geoblocking: [...current, e.target.value]
+                                        });
+                                        e.target.value = "";
+                                      }}
+                                      className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-xs font-bold text-silver focus:outline-none focus:border-red-500/50"
+                                    >
+                                      <option value="">+ Añadir país a la lista negra (ISO)...</option>
+                                      <option value="US">US - Estados Unidos</option>
+                                      <option value="CO">CO - Colombia</option>
+                                      <option value="ES">ES - España</option>
+                                      <option value="MX">MX - México</option>
+                                      <option value="AR">AR - Argentina</option>
+                                      <option value="BR">BR - Brasil</option>
+                                      <option value="CL">CL - Chile</option>
+                                      <option value="PE">PE - Perú</option>
+                                      <option value="VE">VE - Venezuela</option>
+                                      <option value="RU">RU - Rusia</option>
+                                      <option value="CN">CN - China</option>
+                                    </select>
+                                  </div>
                                 </div>
+
                               </div>
                             </section>
                           </div>
@@ -3267,7 +2843,7 @@ export default function Links() {
                 setShowButtonCreator(false);
               }}
             >
-              {currentPage.landingMode === "direct" ? (
+              {(currentPage.landingMode as string) === "direct" ? (
                 <div className="flex-1 bg-[#050505] flex flex-col items-center justify-center px-6 text-center z-20 relative">
                   <span className="material-symbols-outlined text-6xl text-red-500 mb-6 animate-[bounce_2s_infinite]">rocket_launch</span>
                   <h3 className="text-white font-bold text-lg mb-2">Escudo Directo</h3>
@@ -3406,7 +2982,7 @@ export default function Links() {
                   if (allDraftPages.length > 0) {
                     // 1. VALIDATE ONLY CURRENT PAGE (if it's a draft)
                     if (currentPage.status === "draft") {
-                      if (currentPage.landingMode === "direct") {
+                      if ((currentPage.landingMode as string) === "direct") {
                         if (!currentPage.directUrl || !currentPage.directUrl.trim()) {
                           toast.error(
                             `"${currentPage.name}" no tiene URL de destino. Agrégala antes de continuar.`,
@@ -3451,7 +3027,7 @@ export default function Links() {
                     // 2. FILTER OTHER DRAFTS (Include only those that are complete)
                     const validDrafts = allDraftPages.filter((page: any) => {
                       if (page.landingMode === "direct") {
-                         return page.directUrl && page.directUrl.trim() && isValidUrl(page.directUrl.trim());
+                        return page.directUrl && page.directUrl.trim() && isValidUrl(page.directUrl.trim());
                       }
                       const hasButtons = page.buttons && page.buttons.length > 0;
                       const allUrlsValid = page.buttons.every((btn: any) => btn.url && btn.url.trim() && isValidUrl(btn.url.trim()));
@@ -3476,12 +3052,18 @@ export default function Links() {
                       console.warn("Could not save backup to local storage due to quota limits");
                     }
 
+                    const hasMetaShield = validDrafts.some((p: any) => {
+                      if (p.landingMode === "direct") return true;
+                      return p.buttons?.some((b: any) => b.metaShield);
+                    });
+
                     navigate("/dashboard/checkout", {
                       state: {
                         pendingPurchase: {
                           type: "links_bundle",
                           linksData: validDrafts,
                           amount: null,
+                          hasInstagram: hasMetaShield,
                         },
                       },
                     });
@@ -3498,60 +3080,62 @@ export default function Links() {
               </button>
             )}
           </div>
-        </div >
-      )
-      }
+        </div>
+      )}
+
       {/* INACTIVE LINK ALERT MODAL */}
-      {inactiveAlertPageId && (() => {
-        const alertPage = pages.find(p => p.id === inactiveAlertPageId);
-        return (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-            onClick={() => setInactiveAlertPageId(null)}
-          >
+      {
+        inactiveAlertPageId && (() => {
+          const alertPage = pages.find(p => p.id === inactiveAlertPageId);
+          return (
             <div
-              className="w-full max-w-sm bg-[#0A0A0A] border border-orange-500/20 rounded-3xl overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200"
-              onClick={(e) => e.stopPropagation()}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+              onClick={() => setInactiveAlertPageId(null)}
             >
-              {/* Top glow */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-24 bg-orange-500/10 blur-3xl rounded-full pointer-events-none" />
+              <div
+                className="w-full max-w-sm bg-[#0A0A0A] border border-orange-500/20 rounded-3xl overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Top glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-24 bg-orange-500/10 blur-3xl rounded-full pointer-events-none" />
 
-              <div className="p-8 text-center relative">
-                {/* Animated lock icon */}
-                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
-                  <span className="material-symbols-outlined text-4xl text-orange-400 animate-pulse">
-                    lock
-                  </span>
-                </div>
+                <div className="p-8 text-center relative">
+                  {/* Animated lock icon */}
+                  <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-4xl text-orange-400 animate-pulse">
+                      lock
+                    </span>
+                  </div>
 
-                <h2 className="text-xl font-black text-white mb-2">
-                  Tu link aún no está activo
-                </h2>
+                  <h2 className="text-xl font-black text-white mb-2">
+                    Tu link aún no está activo
+                  </h2>
 
-                {alertPage && (
-                  <p className="text-sm text-silver/40 font-medium mb-1">
-                    <span className="text-orange-400 font-bold">"{alertPage.name}"</span>
+                  {alertPage && (
+                    <p className="text-sm text-silver/40 font-medium mb-1">
+                      <span className="text-orange-400 font-bold">"{alertPage.name}"</span>
+                    </p>
+                  )}
+
+                  <p className="text-sm text-silver/40 leading-relaxed mb-6">
+                    Este link está en revisión o pendiente de activación. Una vez aprobado podrás visitarlo directamente.
                   </p>
-                )}
 
-                <p className="text-sm text-silver/40 leading-relaxed mb-6">
-                  Este link está en revisión o pendiente de activación. Una vez aprobado podrás visitarlo directamente.
-                </p>
-
-                <div className="flex flex-col gap-3">
-                  <button
-                    onClick={() => setInactiveAlertPageId(null)}
-                    className="w-full py-3 px-5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-bold text-white transition-all flex items-center justify-center gap-2"
-                  >
-                    <span className="material-symbols-outlined text-base">arrow_back</span>
-                    Volver a Mis Links
-                  </button>
+                  <div className="flex flex-col gap-3">
+                    <button
+                      onClick={() => setInactiveAlertPageId(null)}
+                      className="w-full py-3 px-5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-bold text-white transition-all flex items-center justify-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-base">arrow_back</span>
+                      Volver a Mis Links
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()
+      }
 
       {/* DELETE CONFIRMATION MODAL */}
       {
@@ -3645,48 +3229,75 @@ export default function Links() {
         )
       }
 
+      {/* SELECTOR DE TIPO DE LINK */}
       {
-        showProcessingModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        showLinkTypeSelector && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
             <div
-              className="absolute inset-0 bg-black/80 backdrop-blur-xl animate-fade-in"
-              onClick={() => setShowProcessingModal(false)}
+              className="absolute inset-0 bg-black/90 backdrop-blur-xl animate-fade-in"
+              onClick={() => setShowLinkTypeSelector(false)}
             />
-            <div className="relative w-full max-w-sm bg-zinc-900 border border-white/10 rounded-[2.5rem] p-8 text-center shadow-2xl animate-scale-up">
-              <div className="w-20 h-20 bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="material-symbols-outlined text-primary text-4xl animate-pulse">
-                  verified
-                </span>
+            <div className="relative w-full max-w-2xl bg-zinc-900 border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl animate-scale-up overflow-hidden">
+              {/* Background Decorations */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -mr-32 -mt-32" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] -ml-32 -mb-32" />
+
+              <div className="relative z-10 text-center mb-10">
+                <h3 className="text-3xl font-black text-white mb-2 tracking-tight">
+                  ¿Qué tipo de link quieres crear?
+                </h3>
+                <p className="text-silver/40 text-sm">
+                  Escoge el flujo que mejor se adapte a tu publicidad
+                </p>
               </div>
 
-              <h3 className="text-2xl font-black text-white mb-3 tracking-tight leading-tight">
-                {t("dashboard.links.requestInProcessTitle", {
-                  defaultValue: "Solicitud en proceso",
-                })}
-              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+                {/* Opción 1: Enlace Directo */}
+                <button
+                  onClick={() => confirmCreation("direct")}
+                  className="group relative flex flex-col text-left p-6 rounded-[2rem] bg-white/5 border border-white/10 hover:border-red-500/50 hover:bg-red-500/5 transition-all duration-300"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-red-500 text-3xl">rocket_launch</span>
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-2">Escudo Directo</h4>
+                  <p className="text-silver/60 text-xs leading-relaxed mb-6">
+                    Redirección instantánea a OnlyFans con <b>Protección de Meta activa</b> por defecto. Ideal para anuncios directos.
+                  </p>
+                  <div className="mt-auto flex items-center gap-2 text-red-400 text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                    Seleccionar <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                  </div>
+                </button>
 
-              <p className="text-silver/60 text-sm leading-relaxed mb-8 px-2">
-                {t("dashboard.links.requestInProcessDesc", {
-                  defaultValue:
-                    "Estamos procesando tu solicitud de dominio. Nuestro equipo se encargar� de realizar la configuraci�n necesaria.",
-                })}
-              </p>
+                {/* Opción 2: Landing Page */}
+                <button
+                  onClick={() => confirmCreation("landing")}
+                  className="group relative flex flex-col text-left p-6 rounded-[2rem] bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300"
+                >
+                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-primary text-3xl">view_list</span>
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-2">Landing Page</h4>
+                  <p className="text-silver/60 text-xs leading-relaxed mb-6">
+                    Página personalizada con múltiples botones. Incluye <b>Protección de TikTok</b> por defecto.
+                  </p>
+                  <div className="mt-auto flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
+                    Seleccionar <span className="material-symbols-outlined text-xs">arrow_forward</span>
+                  </div>
+                </button>
+              </div>
 
               <button
-                onClick={() => {
-                  setShowProcessingModal(false);
-                  setDomainFlowChoice(null);
-                }}
-                className="w-full py-4 bg-primary text-black font-black rounded-2xl hover:bg-primary/90 hover:scale-[1.02] active:scale-[0.98] transition-all uppercase tracking-widest text-xs"
+                onClick={() => setShowLinkTypeSelector(false)}
+                className="mt-10 mx-auto block text-[10px] font-bold text-silver/30 uppercase tracking-widest hover:text-white transition-colors"
               >
-                {t("dashboard.links.goToLinks", {
-                  defaultValue: "Ir a mis links",
-                })}
+                Cancelar
               </button>
             </div>
           </div>
         )
       }
+
     </div >
   );
 }

@@ -27,14 +27,19 @@ export default function Checkout() {
   const selectedPlan = 'standard';
 
   // Read addons that might have been selected in previous views
-  const hasRotator = location.state?.pendingPurchase?.hasRotator || false;
-  const hasInstagram = location.state?.pendingPurchase?.hasInstagram || false;
-
-  // Extract linksData from navigation state, fall back to localStorage
+  // Fallback: derive from linksData if state is missing
   const linksDataFromState = location.state?.pendingPurchase?.linksData || [];
   const linksData = linksDataFromState.length > 0
     ? linksDataFromState
     : (() => { try { return JSON.parse(localStorage.getItem('my_links_data') || '[]'); } catch { return []; } })();
+
+  const hasRotator = location.state?.pendingPurchase?.hasRotator !== undefined
+    ? location.state.pendingPurchase.hasRotator
+    : linksData.some((p: any) => p.buttons?.some((b: any) => b.rotatorActive));
+
+  const hasInstagram = location.state?.pendingPurchase?.hasInstagram !== undefined
+    ? location.state.pendingPurchase.hasInstagram
+    : linksData.some((p: any) => p.landingMode === 'direct' || p.buttons?.some((b: any) => b.metaShield));
 
   useEffect(() => {
     if (linksData.length === 0) {

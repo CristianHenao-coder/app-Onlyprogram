@@ -18,6 +18,10 @@ export interface AnalyticsOverview {
   sources: { name: string; count: number; pct: number }[];
   byMonth: { label: string; value: number }[];
   byButton: { type: string; count: number; pct: number }[];
+  byOS: { name: string; count: number; pct: number }[];
+  byBrowser: { name: string; count: number; pct: number }[];
+  byDevice: { name: string; count: number; pct: number }[];
+  hourlyHeatmap: { hour: number; count: number }[];
   links: {
     id: string;
     title: string;

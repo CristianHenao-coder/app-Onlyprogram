@@ -4,6 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 import { config } from "../config/env";
 import * as geoip from "geoip-lite";
 import * as crypto from "crypto";
+import { parseUA } from "../utils/ua-parser";
+
 
 const router = Router();
 const supabase = createClient(config.supabase.url, config.supabase.serviceRoleKey);
@@ -26,15 +28,15 @@ function isBot(userAgent: string): boolean {
 function inferSource(referrer: string | undefined): string {
   if (!referrer) return "direct";
   const r = referrer.toLowerCase();
-  if (r.includes("instagram.com"))  return "instagram";
-  if (r.includes("tiktok.com"))     return "tiktok";
+  if (r.includes("instagram.com")) return "instagram";
+  if (r.includes("tiktok.com")) return "tiktok";
   if (r.includes("twitter.com") || r.includes("t.co")) return "twitter";
   if (r.includes("whatsapp.com") || r.includes("wa.me")) return "whatsapp";
   if (r.includes("facebook.com") || r.includes("fb.com")) return "facebook";
-  if (r.includes("telegram"))       return "telegram";
-  if (r.includes("youtube.com"))    return "youtube";
-  if (r.includes("google.com"))     return "google";
-  if (r.includes("linktr.ee"))      return "linktree";
+  if (r.includes("telegram")) return "telegram";
+  if (r.includes("youtube.com")) return "youtube";
+  if (r.includes("google.com")) return "google";
+  if (r.includes("linktr.ee")) return "linktree";
   return "other";
 }
 
@@ -71,14 +73,18 @@ router.post("/event", async (req: Request, res) => {
     // Geo lookup
     let countryCode: string | null = null;
     let countryName: string | null = null;
+    let city: string | null = null;
     if (ip && !ip.startsWith("127.") && !ip.startsWith("::1") && !ip.startsWith("::ffff:127.")) {
       const geo = geoip.lookup(ip);
       if (geo) {
         countryCode = geo.country;
+        city = geo.city || null;
         const regionNames = new Intl.DisplayNames(["es"], { type: "region" });
         try { countryName = regionNames.of(geo.country) || geo.country; } catch { countryName = geo.country; }
       }
     }
+
+    const { os, browser, device } = parseUA(ua);
 
     const { error } = await supabase.from("link_events").insert({
       link_id,
@@ -86,6 +92,10 @@ router.post("/event", async (req: Request, res) => {
       button_type,
       country_code: countryCode,
       country_name: countryName,
+      city,
+      os,
+      browser,
+      device,
       referrer: referrer || null,
       source,
       is_bot: bot,
@@ -121,7 +131,7 @@ router.get("/overview", authenticateToken, async (req: AuthRequest, res) => {
 
     if (linksError) throw linksError;
     if (!userLinks || userLinks.length === 0) {
-      return res.json({ totalClicks: 0, totalUnique: 0, botsBlocked: 0, conversionRate: 0, countries: [], sources: [], byMonth: [], byButton: [], links: [] });
+      return res.json({ totalClicks: 0, totalUnique: 0, botsBlocked: 0, conversionRate: 0, countries: [], sources: [], byMonth: [], byButton: [], links: [], byOS: [], byBrowser: [], byDevice: [], hourlyHeatmap: [] });
     }
 
     const linkIds = userLinks.map((l: any) => l.id);
@@ -129,7 +139,7 @@ router.get("/overview", authenticateToken, async (req: AuthRequest, res) => {
     // Obtener todos los eventos del período
     const { data: events, error: evError } = await supabase
       .from("link_events")
-      .select("link_id, button_type, country_code, country_name, source, is_bot, ip_hash, created_at")
+      .select("link_id, button_type, country_code, country_name, source, is_bot, ip_hash, created_at, os, browser, device")
       .in("link_id", linkIds)
       .gte("created_at", since);
 
@@ -138,12 +148,12 @@ router.get("/overview", authenticateToken, async (req: AuthRequest, res) => {
 
     // Métricas globales
     const realClicks = evs.filter((e: any) => !e.is_bot && e.button_type !== "page_view");
-    const pageViews  = evs.filter((e: any) => !e.is_bot && e.button_type === "page_view");
-    const bots       = evs.filter((e: any) => e.is_bot);
+    const pageViews = evs.filter((e: any) => !e.is_bot && e.button_type === "page_view");
+    const bots = evs.filter((e: any) => e.is_bot);
 
-    const totalClicks  = realClicks.length;
-    const botsBlocked  = bots.length;
-    const uniqueIps    = new Set(realClicks.map((e: any) => e.ip_hash).filter(Boolean)).size;
+    const totalClicks = realClicks.length;
+    const botsBlocked = bots.length;
+    const uniqueIps = new Set(realClicks.map((e: any) => e.ip_hash).filter(Boolean)).size;
     const conversionRate = pageViews.length > 0
       ? Math.round((realClicks.length / (pageViews.length + realClicks.length)) * 1000) / 10
       : 0;
@@ -176,7 +186,7 @@ router.get("/overview", authenticateToken, async (req: AuthRequest, res) => {
       const month = e.created_at.substring(0, 7); // YYYY-MM
       monthMap[month] = (monthMap[month] || 0) + 1;
     }
-    const monthLabels = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+    const monthLabels = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
     const now = new Date();
     const byMonth = Array.from({ length: 12 }, (_, i) => {
       const d = new Date(now.getFullYear(), now.getMonth() - 11 + i, 1);
@@ -194,6 +204,44 @@ router.get("/overview", authenticateToken, async (req: AuthRequest, res) => {
       .map(([type, count]) => ({ type, count, pct: totalClicks > 0 ? Math.round((count / totalClicks) * 100) : 0 }))
       .sort((a, b) => b.count - a.count);
 
+    // Por OS
+    const osMap: Record<string, number> = {};
+    for (const e of realClicks) {
+      const os = e.os || "Other";
+      osMap[os] = (osMap[os] || 0) + 1;
+    }
+    const byOS = Object.entries(osMap)
+      .map(([name, count]) => ({ name, count, pct: totalClicks > 0 ? Math.round((count / totalClicks) * 100) : 0 }))
+      .sort((a, b) => b.count - a.count);
+
+    // Por Navegador
+    const browserMap: Record<string, number> = {};
+    for (const e of realClicks) {
+      const b = e.browser || "Other";
+      browserMap[b] = (browserMap[b] || 0) + 1;
+    }
+    const byBrowser = Object.entries(browserMap)
+      .map(([name, count]) => ({ name, count, pct: totalClicks > 0 ? Math.round((count / totalClicks) * 100) : 0 }))
+      .sort((a, b) => b.count - a.count);
+
+    // Por Dispositivo
+    const deviceMap: Record<string, number> = {};
+    for (const e of realClicks) {
+      const d = e.device || "desktop";
+      deviceMap[d] = (deviceMap[d] || 0) + 1;
+    }
+    const byDevice = Object.entries(deviceMap)
+      .map(([name, count]) => ({ name, count, pct: totalClicks > 0 ? Math.round((count / totalClicks) * 100) : 0 }))
+      .sort((a, b) => b.count - a.count);
+
+    // Heatmap por hora (0-23)
+    const heatmapArr = Array(24).fill(0);
+    for (const e of realClicks) {
+      const hour = new Date(e.created_at).getHours();
+      heatmapArr[hour]++;
+    }
+    const hourlyHeatmap = heatmapArr.map((count, hour) => ({ hour, count }));
+
     // Por link
     const links = userLinks.map((link: any) => {
       const linkClicks = realClicks.filter((e: any) => e.link_id === link.id);
@@ -210,6 +258,10 @@ router.get("/overview", authenticateToken, async (req: AuthRequest, res) => {
       sources,
       byMonth,
       byButton,
+      byOS,
+      byBrowser,
+      byDevice,
+      hourlyHeatmap,
       links,
     });
   } catch (err: any) {
