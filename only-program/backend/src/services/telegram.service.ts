@@ -116,7 +116,7 @@ export const telegramService = {
         // Decidir si rotar para el PRÓXIMO usuario
         const shouldRotate =
             newClicks >= maxCapacity ||
-            (batchLimit > 1 && newClicks > 0 && newClicks % batchLimit === 0);
+            (batchLimit >= 1 && newClicks > 0 && newClicks % batchLimit === 0);
 
         if (shouldRotate) {
             let nextIndex = (currentIndex + 1) % bots.length;
@@ -178,7 +178,7 @@ export const telegramService = {
         let nextIndex = currentIndex;
         const shouldRotate =
             newClicks >= maxCapacity ||
-            (batchLimit > 1 && newClicks > 0 && newClicks % batchLimit === 0);
+            (batchLimit >= 1 && newClicks > 0 && newClicks % batchLimit === 0);
 
         if (shouldRotate) {
             nextIndex = (currentIndex + 1) % allOptions.length;
