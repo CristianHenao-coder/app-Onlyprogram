@@ -302,7 +302,13 @@ export default function Payments() {
 
               {/* Proceed button */}
               <button
-                onClick={() => setCurrentStep("payment")}
+                onClick={() => {
+                  if (!finalTotal || finalTotal <= 0) {
+                    toast.error('Primero debe tener un producto para generarse');
+                    return;
+                  }
+                  setCurrentStep("payment");
+                }}
                 className="w-full py-4 rounded-xl bg-primary text-white font-black text-sm uppercase tracking-wider hover:bg-primary/90 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
               >
                 <span className="material-symbols-outlined text-base">payment</span>

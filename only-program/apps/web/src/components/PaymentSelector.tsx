@@ -164,7 +164,10 @@ export default function PaymentSelector({
   };
 
   const handleCreateCryptoPayment = async () => {
-    if (!amount) return toast.error('No se especificó el monto.');
+    if (!amount || amount <= 0) {
+      toast.error('Primero debe tener un producto para generarse');
+      return;
+    }
     setIsCreatingPayment(true);
     try {
       const data = await paymentsService.createNowPayment(amount, selectedCrypto, linksData, customDomain);
@@ -279,8 +282,8 @@ export default function PaymentSelector({
             </div>
 
             {/* Sin monto — no genera QR */}
-            {(!amount || amount <= 0) && (
-              <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
+              {(!amount || amount <= 0) && (
+              <div className="flex flex-col items-center justify-center py-12 gap-4 text-center cursor-pointer" onClick={() => toast.error('Primero debe tener un producto para generarse')}>
                 <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center">
                   <span className="material-symbols-outlined text-3xl text-silver/30">shopping_cart</span>
                 </div>
@@ -423,6 +426,10 @@ export default function PaymentSelector({
               <div className="w-full max-w-sm">
                 <button
                   onClick={async () => {
+                    if (!amount || amount <= 0) {
+                      toast.error('Primero debe tener un producto para generarse');
+                      return;
+                    }
                     const toastId = toast.loading('Conectando con PayPal...');
                     try {
                       const order = await paymentsService.createPayPalOrder(amount || 0, undefined, linksData, customDomain);
@@ -444,8 +451,7 @@ export default function PaymentSelector({
                       );
                     }
                   }}
-                  disabled={!amount || amount <= 0}
-                  className="w-full bg-[#0070ba] hover:bg-[#003087] disabled:opacity-40 disabled:cursor-not-allowed text-white font-black py-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-3 uppercase tracking-wider text-sm"
+                  className={`w-full bg-[#0070ba] hover:bg-[#003087] text-white font-black py-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-3 uppercase tracking-wider text-sm ${(!amount || amount <= 0) ? "opacity-40" : ""}`}
                 >
                   <span className="material-symbols-outlined">output</span>
                   Pagar con PayPal
@@ -501,8 +507,8 @@ export default function PaymentSelector({
 
                 <button
                   onClick={handleCreateCryptoPayment}
-                  disabled={isCreatingPayment || !amount || amount <= 0}
-                  className="w-full bg-gradient-to-r from-orange-500 to-amber-500 disabled:opacity-50 disabled:cursor-not-allowed hover:from-orange-600 hover:to-amber-600 text-white py-4 rounded-xl font-black uppercase text-sm tracking-widest transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-3"
+                  disabled={isCreatingPayment}
+                  className={`w-full bg-gradient-to-r from-orange-500 to-amber-500 disabled:opacity-50 disabled:cursor-not-allowed hover:from-orange-600 hover:to-amber-600 text-white py-4 rounded-xl font-black uppercase text-sm tracking-widest transition-all shadow-lg shadow-orange-500/20 flex items-center justify-center gap-3 ${(!amount || amount <= 0) ? "opacity-50" : ""}`}
                 >
                   {isCreatingPayment ? (
                     <>

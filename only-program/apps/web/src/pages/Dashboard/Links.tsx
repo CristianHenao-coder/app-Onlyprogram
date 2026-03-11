@@ -1172,7 +1172,7 @@ export default function Links() {
                       });
 
                       if (validDrafts.length === 0) {
-                        toast.error("No tienes borradores válidos para pagar. Configura sus URLs en 'Continuar editando'.");
+                        toast.error("Primero debe tener un producto para generarse");
                         return;
                       }
 
