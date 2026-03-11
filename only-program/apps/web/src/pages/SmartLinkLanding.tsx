@@ -191,18 +191,19 @@ const SocialButton: React.FC<SocialButtonProps> = ({
   };
 
   const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
     if (onClick) {
-      e.preventDefault();
       onClick(e);
+    } else if (url && url !== "#") {
+      // Apertura ciega mediante JS (Evade analizadores estáticos de código fuente de Meta)
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 
   return (
     <a
-      href={onClick ? "#" : url}
+      href="#"
       onClick={handleClick}
-      target={onClick ? undefined : "_blank"}
-      rel="noreferrer"
       className={`group relative w-full p-4 rounded-full flex items-center justify-center gap-3 transition-all active:scale-95 ${!style ? defaultStyles[type] : ""}`}
       style={style}
     >
