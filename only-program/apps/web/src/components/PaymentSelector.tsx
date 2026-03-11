@@ -40,6 +40,7 @@ interface WompiQRData {
   currency: string;
   signature: string;
   publicKey: string;
+  paymentLink: string;
 }
 
 const COMPLETED_STATUSES: PaymentStatus[] = ['finished', 'confirmed'];
@@ -115,18 +116,16 @@ export default function PaymentSelector({
     setWompiError(null);
     setWompiData(null);
 
-    paymentsService.getWompiSignature(amount, 'COP')
+    paymentsService.getWompiSignature(amount, 'COP', linksData, customDomain)
       .then((data) => setWompiData(data))
       .catch(() => setWompiError('No se pudo generar el QR de pago. Intenta de nuevo.'))
       .finally(() => setWompiLoading(false));
-  }, [paymentMethod, amount]);
+  }, [paymentMethod, amount, linksData, customDomain]);
 
-  // Construir URL de checkout de Wompi
+  // Construir URL de checkout de Wompi usando el Link de Pago (VPOS)
   const wompiCheckoutUrl = wompiData
-    ? `https://checkout.wompi.co/p/?` +
-      `public-key=${wompiData.publicKey}` +
-      `&currency=${wompiData.currency}` +
-      `&amount-in-cents=${wompiData.amountInCents}` +
+    ? `${wompiData.paymentLink}?` +
+      `amount-in-cents=${wompiData.amountInCents}` +
       `&reference=${encodeURIComponent(wompiData.reference)}` +
       `&signature:integrity=${encodeURIComponent(wompiData.signature)}` +
       `&redirect-url=${encodeURIComponent(window.location.origin + '/dashboard/payments?status=wompi_return')}`

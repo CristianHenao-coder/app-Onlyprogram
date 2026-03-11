@@ -8,6 +8,7 @@ import {
 } from "../services/brevo.service";
 import { supabase } from "../services/supabase.service";
 import { SubscriptionService } from "../services/subscription.service";
+import { config } from "../config/env";
 import { v4 as uuidv4 } from "uuid";
 
 const router = Router();
@@ -100,16 +101,15 @@ router.post("/webhook/nowpayments", async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 // WOMPI — get-signature (público, no requiere auth)
 // ─────────────────────────────────────────────────────────────
-router.post("/wompi/get-signature", async (req: AuthRequest, res) => {
+router.post("/wompi/get-signature", authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const { amount, currency = "COP" } = req.body;
+    const { amount, currency = "COP", linksData, customDomain } = req.body;
     if (!amount) return res.status(400).json({ error: "Amount is required" });
+    if (!req.user) return res.status(401).json({ error: "Unauthorized" });
 
     const { WompiService } = await import("../services/wompi.service");
 
-    // Convertir USD → centavos de COP usando la tasa real de cambio
     const amountInCents = await WompiService.calculateAmountInCents(amount);
-
     const reference = WompiService.generateReference();
     const signature = WompiService.generateSignature(
       reference,
@@ -117,12 +117,30 @@ router.post("/wompi/get-signature", async (req: AuthRequest, res) => {
       currency,
     );
 
+    // PERSISTENCE FIX: Save pending payment so webhook can find it
+    const { error: payError } = await supabase.from("payments").insert({
+      id: reference,
+      user_id: req.user.id,
+      amount,
+      currency: "USD",
+      provider: "wompi",
+      status: "pending",
+      created_at: new Date().toISOString(),
+      metadata: { linksData, customDomain },
+    });
+
+    if (payError) {
+      console.error("Error saving pending Wompi payment:", payError);
+      // We continue because the signature is still valid, but fulfillment might fail
+    }
+
     res.json({
       reference,
       signature,
       amountInCents,
       currency,
-      publicKey: (await import("../config/env")).config.wompi.pubKey,
+      publicKey: config.wompi.pubKey,
+      paymentLink: config.wompi.paymentLink,
     });
   } catch (error: any) {
     console.error("Error creating Wompi Signature:", error);

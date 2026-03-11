@@ -38,6 +38,14 @@ export default function Payments() {
         ]);
         setPricingCfg(pricing);
 
+        // Check for Wompi redirect status
+        const params = new URLSearchParams(location.search);
+        if (params.get("status") === "wompi_return") {
+          setCurrentStep("success");
+          toast.success("¡Pago procesado con éxito!");
+          return;
+        }
+
         // If coming from links editor, show cart step first
         if (isFromLinks) {
           setCurrentStep("cart");
@@ -51,7 +59,7 @@ export default function Payments() {
       }
     };
     load();
-  }, [isFromLinks]);
+  }, [isFromLinks, location.search]);
   // Si aplicaron cupón en checkout, lo iniciamos acá tmbn
   useEffect(() => {
     if (pendingPurchase?.coupon && !appliedCoupon) {
