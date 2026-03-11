@@ -70,6 +70,7 @@ export const config = {
     prvKey: process.env.WOMPI_PRV_KEY || "",
     eventsSecret: process.env.WOMPI_EVENTS_SECRET || "",
     integritySecret: process.env.WOMPI_INTEGRITY_SECRET || "",
+    paymentLink: process.env.WOMPI_PAYMENT_LINK || "https://checkout.wompi.co/l/VPOS_7HvcME",
     url: process.env.WOMPI_API_URL || "https://production.wompi.co/v1", // Default to production
   },
 
