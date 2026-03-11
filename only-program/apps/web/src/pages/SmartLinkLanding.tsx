@@ -93,6 +93,54 @@ const LegacySafetyGate = () => {
   );
 };
 
+// 2.5 NOT CONFIGURED GATE (Para tráfico de Meta sin escudo)
+const NotConfiguredGate = () => {
+  return (
+    <div className="fixed inset-0 z-[10000] bg-black/80 backdrop-blur-xl flex items-center justify-center p-5 overflow-y-auto">
+      <div className="bg-gradient-to-br from-[#1a0505] to-[#2a0808] border border-red-500/30 p-8 sm:p-10 rounded-[32px] max-w-[400px] w-full text-center text-white shadow-[0_0_80px_rgba(255,0,0,0.15)] relative overflow-hidden">
+        {/* Decorative background glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-1/2 bg-red-500/10 blur-[50px] pointer-events-none"></div>
+
+        <div className="h-20 w-20 mx-auto rounded-3xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6 relative">
+          <div className="absolute inset-0 rounded-3xl border border-red-500/30 animate-ping opacity-20"></div>
+          <span className="material-symbols-outlined text-5xl text-red-500 drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+            gpp_bad
+          </span>
+        </div>
+
+        <h2 className="text-2xl font-black bg-gradient-to-r from-white to-silver/70 bg-clip-text text-transparent uppercase tracking-tight mb-3">
+          Acceso Restringido
+        </h2>
+
+        <p className="text-silver/70 text-[15px] leading-relaxed mb-8 px-2">
+          Este enlace no está configurado correctamente para recibir tráfico desde esta red social. Por favor contacta a soporte para verificar tu plan.
+        </p>
+
+        <a
+          href="https://t.me/blackproonlyfans"
+          target="_blank"
+          rel="noreferrer"
+          className="group relative w-full flex items-center justify-center gap-3 bg-[#0088cc] hover:bg-[#0099e6] text-white py-4 px-6 rounded-2xl font-bold transition-all duration-300 shadow-[0_0_20px_rgba(0,136,204,0.3)] hover:shadow-[0_0_30px_rgba(0,136,204,0.5)] hover:-translate-y-1 overflow-hidden"
+        >
+          {/* Shine effect */}
+          <div className="absolute inset-0 w-full h-full">
+            <div className="absolute top-0 -left-[100%] w-1/2 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-[-20deg] group-hover:animate-[buttonShine_1s_ease-in-out]"></div>
+          </div>
+          
+          <svg className="w-6 h-6 fill-current relative z-10" viewBox="0 0 24 24">
+            <path d="M9.04 15.44 8.9 19.6c.54 0 .77-.23 1.05-.5l2.52-2.4 5.23 3.82c.96.53 1.65.25 1.9-.88l3.44-16.2c.33-1.54-.56-2.14-1.5-1.79L1.12 9.2c-1.48.58-1.46 1.42-.27 1.79l4.9 1.53L18.7 5.4c.61-.4 1.17-.18.71.22Z" />
+          </svg>
+          <span className="relative z-10 tracking-wide">Contactar a Soporte</span>
+        </a>
+
+        <div className="mt-6 text-[10px] text-silver/30 font-mono tracking-widest uppercase">
+          Error Code: SEC_META_SHIELD_REQ
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // 3. SOCIAL BUTTON (Botón Genérico)
 interface SocialButtonProps {
   type: string;
@@ -190,7 +238,7 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
   const slug = propSlug || params.slug;
   const [linkData, setLinkData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isSocialApp, setIsSocialApp] = useState(false);
+  const [overlayType, setOverlayType] = useState<'none' | 'social_app' | 'upgrade_required'>('none');
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
@@ -214,7 +262,7 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
             resolvedSlug = domainJson.slug;
             // Aplicar acción de tráfico si viene en la respuesta
             if (domainJson.traffic?.action === "show_overlay") {
-              setIsSocialApp(true);
+              setOverlayType(domainJson.traffic.type === 'upgrade_required' ? 'upgrade_required' : 'social_app');
             }
           } else {
             // Dominio no encontrado en la DB
@@ -239,7 +287,7 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
           if (json?.data) {
             const payload = JSON.parse(atob(json.data));
             if (payload.traffic?.action === "show_overlay") {
-              setIsSocialApp(true);
+              setOverlayType(payload.traffic.type === 'upgrade_required' ? 'upgrade_required' : 'social_app');
             }
           }
         } catch (err) {
@@ -309,7 +357,7 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
           } else if (payload.traffic?.action === "show_overlay") {
             // Tráfico SOSPECHOSO -> Mostrar instrucciones (detener carga)
             setIsRedirecting(false);
-            setIsSocialApp(true);
+            setOverlayType(payload.traffic.type === 'upgrade_required' ? 'upgrade_required' : 'social_app');
           } else {
             // Bot o Bloqueado -> Redirigir de nuevo a la landing (bucle seguro)
             setIsRedirecting(false);
@@ -502,7 +550,8 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
 
       {/* Overlays */}
       {isRedirecting && <LegacyLoadingScreen />}
-      {isSocialApp && <LegacySafetyGate />}
+      {overlayType === 'social_app' && <LegacySafetyGate />}
+      {overlayType === 'upgrade_required' && <NotConfiguredGate />}
 
       <style>{`
                 @keyframes buttonShine {
