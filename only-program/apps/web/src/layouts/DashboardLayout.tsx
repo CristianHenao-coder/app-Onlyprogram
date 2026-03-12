@@ -23,6 +23,7 @@ export default function DashboardLayout() {
     () => [
       { to: "/dashboard/analytics", label: "Analytics", icon: "analytics" },
       { to: "/dashboard/links", label: t("nav.links"), icon: "link" },
+      { to: "/dashboard/pricing", label: "Precios y Planes", icon: "workspace_premium" },
       { to: "/dashboard/payments", label: t("nav.payments"), icon: "payments" },
       { to: "/dashboard/settings", label: t("nav.settings"), icon: "settings" },
     ],

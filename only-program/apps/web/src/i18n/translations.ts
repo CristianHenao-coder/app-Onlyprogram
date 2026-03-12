@@ -486,6 +486,17 @@ export const translations = {
         rotatorDeactivatedSuccess: "Rotador desactivado. URLs 2-5 eliminadas.",
         rotatorActivatedSuccess:
           "Telegram Rotativo activado. Ahora puedes agregar hasta 5 URLs.",
+        createLinkModalTitle: "¿Para qué red social vas a crear tu link?",
+        createLinkModalSubtitle: "Puedes elegir tu servicio para diferentes redes sociales",
+        directLinkTitle: "Escudo Directo (Sin Landing)",
+        directLinkPlatform: "Sólo Instagram & Facebook",
+        directLinkDesc: "Redireccionamiento instantáneo con deeplink seguro para dirigir tu tráfico de Instagram y Facebook de manera segura a tu contenido exclusivo +18. Especializado con tecnología anti-ban.",
+        landingPageTitle: "Landing Page Personalizada",
+        landingPagePlatform: "Sólo TikTok",
+        landingPageDesc: "Diseña tu página de aterrizaje con botones configurados con antidetect para que tu tráfico y leads lleguen seguros a tus plataformas +18. Sistema especializado para TikTok.",
+        createBothTitle: "Crear ambos flujos al mismo tiempo (Meta + TikTok)",
+        modelNameLabel: "Nombre de la Modelo (Uso Interno - No se mostrará)",
+        modelNamePlaceholder: "Ej: Mia Khalifa (Opcional)",
       },
     },
 

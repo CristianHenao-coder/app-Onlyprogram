@@ -277,9 +277,85 @@ export default function Home({
             </div>
           </div>
 
-          {/* Soft Gradient Transition & Ambient Glow */}
+        {/* Soft Gradient Transition & Ambient Glow */}
           <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-b from-transparent to-background z-20" />
           <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-primary/20 blur-[120px] rounded-full z-10 opacity-50 pointer-events-none" />
+        </section>
+
+        {/* ✅ CARACTERISTICAS CLAVE */}
+        <section className="relative py-16 lg:py-24 z-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16" data-reveal>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white uppercase tracking-tight mb-4 drop-shadow-lg">
+                El blindaje definitivo para <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-purple-500">tu contenido</span>
+              </h2>
+              <p className="text-silver/60 max-w-3xl mx-auto text-base sm:text-lg leading-relaxed">
+                Nuestra plataforma está construida con la mejor tecnología de <strong>Hacking Ético</strong>. Somos la <strong>única y mejor plataforma</strong> dedicada a proteger cuentas de creadores de contenido de alto riesgo.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="p-6 rounded-3xl bg-[#0A0A0A]/80 backdrop-blur-sm border border-white/5 hover:border-white/10 hover:bg-[#0E0E0E] transition-all group" data-reveal data-delay="1">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 bg-blue-500/10 border-blue-500/20 border">
+                  <span className="material-symbols-outlined text-2xl text-blue-500">security</span>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Escudo Cloaking & Antidetección</h3>
+                <p className="text-sm text-silver/50 leading-relaxed font-medium">
+                  Ocultamos la URL real a los algoritmos de revisión (bots). Cuando un revisor entra, ve un sitio 'limpio', pero tus usuarios reales ven tu contenido.
+                </p>
+              </div>
+
+              <div className="p-6 rounded-3xl bg-[#0A0A0A]/80 backdrop-blur-sm border border-white/5 hover:border-white/10 hover:bg-[#0E0E0E] transition-all group" data-reveal data-delay="2">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 bg-red-500/10 border-red-500/20 border">
+                  <span className="material-symbols-outlined text-2xl text-red-500">smart_toy</span>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Detención de Bots</h3>
+                <p className="text-sm text-silver/50 leading-relaxed font-medium">
+                  Bloqueamos automáticamente crawlers, bots espías y software malicioso que intentan rastrear o banear tus enlaces de redes sociales.
+                </p>
+              </div>
+
+              <div className="p-6 rounded-3xl bg-[#0A0A0A]/80 backdrop-blur-sm border border-white/5 hover:border-white/10 hover:bg-[#0E0E0E] transition-all group" data-reveal data-delay="3">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 bg-green-500/10 border-green-500/20 border">
+                  <span className="material-symbols-outlined text-2xl text-green-500">travel_explore</span>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Geofilter Avanzado</h3>
+                <p className="text-sm text-silver/50 leading-relaxed font-medium">
+                  Elige qué países pueden ver tu enlace y cuáles no. Bloquea regiones enteras para proteger tu identidad y evitar denuncias irrelevantes.
+                </p>
+              </div>
+
+              <div className="p-6 rounded-3xl bg-[#0A0A0A]/80 backdrop-blur-sm border border-white/5 hover:border-white/10 hover:bg-[#0E0E0E] transition-all group" data-reveal data-delay="4">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 bg-orange-500/10 border-orange-500/20 border">
+                  <span className="material-symbols-outlined text-2xl text-orange-500">rotate_right</span>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Rotador de Tráfico Inteligente</h3>
+                <p className="text-sm text-silver/50 leading-relaxed font-medium">
+                  Distribuye automáticamente a tus visitantes entre múltiples URLs. Ideal para agencias que manejan varios perfiles o grupos sin saturar un solo enlace.
+                </p>
+              </div>
+
+              <div className="p-6 rounded-3xl bg-[#0A0A0A]/80 backdrop-blur-sm border border-white/5 hover:border-white/10 hover:bg-[#0E0E0E] transition-all group" data-reveal data-delay="5">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 bg-purple-500/10 border-purple-500/20 border">
+                  <span className="material-symbols-outlined text-2xl text-purple-500">language</span>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Dominios VIP Seguros</h3>
+                <p className="text-sm text-silver/50 leading-relaxed font-medium">
+                  Mejora la confianza del usuario y aumenta enormemente tus clics. Conecta tus propios dominios web y nosotros los aseguramos y blindamos.
+                </p>
+              </div>
+
+              <div className="p-6 rounded-3xl bg-[#0A0A0A]/80 backdrop-blur-sm border border-white/5 hover:border-white/10 hover:bg-[#0E0E0E] transition-all group" data-reveal data-delay="6">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 bg-teal-500/10 border-teal-500/20 border">
+                  <span className="material-symbols-outlined text-2xl text-teal-500">support_agent</span>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Atención Personalizada y Garantía</h3>
+                <p className="text-sm text-silver/50 leading-relaxed font-medium">
+                  Te ofrecemos garantía total. Aunque es extremadamente raro que un dominio falle en nuestra plataforma, si llega a suceder te aseguramos un reemplazo inmediato y un servicio excelente en todo momento.
+                </p>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* ✅ FEATURES: CENTRO DE CONTROL DE ENLACES (NUEVO DISEÑO) */}
