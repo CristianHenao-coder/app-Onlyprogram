@@ -142,6 +142,7 @@ interface LinkPage {
   dbStatus?: string; // Real status from DB (pending, active, etc.)
   telegramMaxCapacity?: number; // Max clicks per rotator link before rotating
   telegramRotationLimit?: number; // Rotate every N clicks (1 = round robin)
+  modelName?: string; // Internal name for domain identification
 }
 
 export type PageData = LinkPage;
@@ -224,6 +225,7 @@ const getDefaults = (t: any) => ({
     template: "minimal" as TemplateType,
     landingMode: "circle" as const,
     directUrl: "",
+    modelName: "",
     theme: {
       pageBorderColor: "#333333",
       overlayOpacity: 40,
@@ -537,6 +539,28 @@ export default function Links() {
   // --- NEW CREATE FLOW STATE ---
   const [showLinkTypeSelector, setShowLinkTypeSelector] = useState(false);
 
+  // Delete a draft link from state + localStorage
+  const handleDeleteDraftPage = async (pageId: string, pageName: string) => {
+    const confirmed = await showConfirm({
+      title: "¿Eliminar este link?",
+      message: `"${pageName || 'Link sin nombre'}" se eliminará de tus borradores. Esta acción no se puede deshacer.`,
+      confirmText: "Sí, eliminar",
+      type: "info",
+    });
+    if (!confirmed) return;
+
+    setPages((prev) => {
+      const updated = prev.filter((p) => p.id !== pageId);
+      try {
+        const drafts = updated.filter((p) => !p.dbStatus && p.status === "draft");
+        localStorage.setItem("my_links_data", JSON.stringify(drafts));
+      } catch { }
+      return updated;
+    });
+    if (selectedPageId === pageId) setSelectedPageId("");
+    toast.success("Borrador eliminado", { icon: "🗑️" });
+  };
+
   const handleCreateFolder = () => {
     const name = window.prompt(t("dashboard.links.newFolderPrompt"));
     if (name && name.trim()) {
@@ -808,6 +832,7 @@ export default function Links() {
               folder: currentPageToSave.folder,
               landingMode: currentPageToSave.landingMode,
               profileImageSize: currentPageToSave.profileImageSize,
+              modelName: currentPageToSave.modelName,
             },
             // Telegram Rotator capacity persisted as dedicated columns
             ...(currentPageToSave.telegramMaxCapacity !== undefined
@@ -930,8 +955,69 @@ export default function Links() {
     setShowLinkTypeSelector(true);
   };
 
-  const confirmCreation = (type: "direct" | "landing") => {
+  const confirmCreation = (type: "direct" | "landing" | "both") => {
     setShowLinkTypeSelector(false);
+
+    if (type === "both") {
+      const now = Date.now();
+      const modelId = `model_${now}`;
+      const page1: LinkPage = {
+        ...DEFAULTS.PAGE,
+        id: `page${now}`,
+        status: "draft",
+        name: `Instagram/FB Direct`,
+        modelName: `Pack ${allDraftPages.length + 1}`,
+        landingMode: "direct",
+        directUrl: "",
+      };
+
+      const page2: LinkPage = {
+        ...DEFAULTS.PAGE,
+        id: `page${now + 1}`,
+        status: "draft",
+        name: `TikTok Landing`,
+        modelName: `Pack ${allDraftPages.length + 1}`,
+        landingMode: "circle",
+        directUrl: "",
+        buttons: [
+          {
+            id: Math.random().toString(36).substring(2, 9),
+            type: "instagram",
+            title: "Instagram",
+            subtitle: "",
+            url: "",
+            color: "#FFFFFF",
+            textColor: "#000000",
+            font: "sans",
+            borderRadius: 12,
+            opacity: 100,
+            isActive: true,
+            metaShield: true,
+          },
+          {
+            id: Math.random().toString(36).substring(2, 9),
+            type: "tiktok",
+            title: "TikTok",
+            subtitle: "",
+            url: "",
+            color: "#000000",
+            textColor: "#FFFFFF",
+            font: "sans",
+            borderRadius: 12,
+            opacity: 100,
+            isActive: true,
+            metaShield: true,
+          }
+        ]
+      };
+
+      setPages((prev) => [...prev, page1, page2]);
+      setSelectedPageId(page2.id); // Open Landing Page functions as requested
+      setView("editor");
+      toast.success("¡Ambos flujos creados!", { icon: "🚀" });
+      return;
+    }
+
     const newId = `page${Date.now()}`;
     const newPage: LinkPage = {
       ...DEFAULTS.PAGE,
@@ -1110,7 +1196,23 @@ export default function Links() {
 
       {/* Header */}
       <header className="h-16 px-6 flex items-center justify-between border-b border-white/5 bg-[#050505] z-30 shrink-0">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          {view === "editor" && currentPage && (
+            <div className="flex items-center animate-in fade-in slide-in-from-left-4 duration-700 mr-4 pr-4 border-r border-white/10 h-10">
+               <div className={`flex items-center gap-3 py-1.5 px-3 rounded-xl border transition-all ${currentPage.landingMode === "direct" ? "bg-red-500/10 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]" : "bg-blue-500/10 border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]"}`}>
+                  <div className="w-5 h-5 flex-shrink-0">
+                    {currentPage.landingMode === "direct" ? <Icons.Instagram /> : <Icons.TikTok />}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[6px] font-black uppercase tracking-[0.2em] text-silver/40 leading-none mb-0.5 whitespace-nowrap">Conexión</span>
+                    <span className="text-[9px] font-black text-white uppercase tracking-wider leading-none whitespace-nowrap">
+                      {currentPage.landingMode === "direct" ? "Instagram & FB" : "TikTok Link"}
+                    </span>
+                  </div>
+               </div>
+            </div>
+          )}
+
           {view === "editor" && (
             <button
               onClick={() => setView("list")}
@@ -1120,7 +1222,7 @@ export default function Links() {
                 arrow_back
               </span>
               <span className="hidden sm:inline">
-                {t("dashboard.links.linksListBack")}
+                {t("dashboard.links.linksListBack") || "Mis Links"}
               </span>
             </button>
           )}
@@ -1129,11 +1231,13 @@ export default function Links() {
               {view === "editor" ? "edit" : "layers"}
             </span>
           </div>
-          <h1 className="text-sm font-bold uppercase tracking-wider">
-            {view === "editor"
-              ? currentPage?.name || t("dashboard.links.editorTitle")
-              : t("dashboard.links.managerTitle")}
-          </h1>
+          <div className="flex items-center gap-3">
+             <h1 className="text-sm font-black uppercase tracking-widest text-white">
+               {view === "editor"
+                 ? currentPage?.modelName || currentPage?.name || t("dashboard.links.editorTitle")
+                 : t("dashboard.links.managerTitle")}
+             </h1>
+           </div>
         </div>
         <div className="flex items-center gap-4">
           <LanguageSwitcher />
@@ -1194,6 +1298,18 @@ export default function Links() {
                         onClick={() => openEditor(page.id)}
                         className="relative group rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
                       >
+                        {/* Delete button - top left */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteDraftPage(page.id, page.profileName || page.name); }}
+                          title="Eliminar link"
+                          className={`absolute top-2 left-2 z-20 w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg ${
+                            page.landingMode === 'direct'
+                              ? 'bg-red-500/20 hover:bg-red-500/40 border border-red-500/40 text-red-400'
+                              : 'bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/40 text-blue-400'
+                          }`}
+                        >
+                          <span className="material-symbols-outlined text-[14px]">delete</span>
+                        </button>
                         {/* Mini preview background */}
                         <div
                           className="h-28 w-full relative"
@@ -1345,6 +1461,18 @@ export default function Links() {
                           onClick={() => openEditor(page.id)}
                           className="relative group rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.01] overflow-hidden hover:border-yellow-500/40 hover:shadow-lg hover:shadow-yellow-500/10 hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
                         >
+                          {/* Delete button - top left */}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteDraftPage(page.id, page.name); }}
+                            title="Eliminar borrador"
+                            className={`absolute top-2 left-2 z-20 w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg ${
+                              page.landingMode === 'direct'
+                                ? 'bg-red-500/20 hover:bg-red-500/40 border border-red-500/40 text-red-400'
+                                : 'bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/40 text-blue-400'
+                            }`}
+                          >
+                            <span className="material-symbols-outlined text-[14px]">delete</span>
+                          </button>
                           <div
                             className="h-28 w-full relative"
                             style={getBackgroundStyle(page)}
@@ -1390,7 +1518,7 @@ export default function Links() {
                             <div className="mt-3">
                               <button
                                 onClick={(e) => { e.stopPropagation(); openEditor(page.id); }}
-                                className="w-full py-2 rounded-xl bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 hover:border-yellow-500/40 text-xs font-bold text-yellow-400 transition-all flex items-center justify-center gap-1"
+                                className="w-full py-2 rounded-xl bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 text-xs font-bold text-yellow-400 transition-all flex items-center justify-center gap-1"
                               >
                                 <span className="material-symbols-outlined text-sm">
                                   edit
@@ -1464,16 +1592,33 @@ export default function Links() {
                 </button>
 
                 <div className="h-8 w-px bg-white/10 shrink-0 mx-2"></div>
+                {allActivePages.map((page) => {
+                   const isDirect = page.landingMode === "direct";
+                   const isSelected = selectedPageId === page.id;
+                   const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
+                   
+                   let buttonClass = "bg-transparent border-transparent hover:bg-white/5 hover:border-white/10";
+                   let dotClass = isDirect ? "bg-red-500" : "bg-blue-500";
 
-                {allActivePages.map((page) => (
-                  <button
-                    key={page.id}
-                    onClick={() => {
-                      setSelectedPageId(page.id);
-                      setSelectedButtonId(null);
-                    }}
-                    className={`relative group flex items-center gap-3 pr-4 pl-1 py-1 rounded-full transition-all border ${selectedPageId === page.id ? "bg-white/10 border-primary/50" : "bg-transparent border-transparent hover:bg-white/5 hover:border-white/10"}`}
-                  >
+                   if (isSelected) {
+                     if (hasPair) {
+                       buttonClass = "bg-gradient-to-r from-red-500/10 to-blue-500/10 border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.05)]";
+                     } else if (isDirect) {
+                       buttonClass = "bg-red-500/10 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.1)]";
+                     } else {
+                       buttonClass = "bg-blue-500/10 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.1)]";
+                     }
+                   }
+                   
+                   return (
+                     <button
+                       key={page.id}
+                       onClick={() => {
+                         setSelectedPageId(page.id);
+                         setSelectedButtonId(null);
+                       }}
+                       className={`relative group flex items-center gap-3 pr-4 pl-1 py-1 rounded-full transition-all border ${buttonClass}`}
+                     >
                     <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 shrink-0">
                       {page.profileImage &&
                         page.profileImage !== DEFAULTS.PROFILE_IMAGE ? (
@@ -1491,9 +1636,9 @@ export default function Links() {
                     </div>
                     <div className="text-left min-w-[60px]">
                       <p
-                        className={`text-xs font-bold leading-tight ${selectedPageId === page.id ? "text-white" : "text-silver/60"}`}
+                        className={`text-xs font-bold leading-tight ${isSelected ? "text-white" : "text-silver/60"}`}
                       >
-                        {page.name}
+                        {page.modelName || page.name}
                       </p>
                       <span className="inline-flex items-center gap-1 mt-0.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -1502,25 +1647,42 @@ export default function Links() {
                         </span>
                       </span>
                     </div>
-                    {selectedPageId === page.id && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-[#080808]"></div>
-                    )}
-                  </button>
-                ))}
+                     {isSelected && (
+                       <div className={`absolute -top-1 -right-1 w-3 h-3 ${hasPair ? 'bg-gradient-to-r from-red-500 to-blue-500' : (isDirect ? 'bg-red-500' : 'bg-blue-500')} rounded-full border-2 border-[#080808]`}></div>
+                     )}
+                   </button>
+                 );
+               })}
 
                 {/* Drafts */}
                 {allDraftPages.length > 0 && (
                   <div className="h-8 w-px bg-white/10 shrink-0 mx-2"></div>
                 )}
-                {allDraftPages.map((page) => (
-                  <button
-                    key={page.id}
-                    onClick={() => {
-                      setSelectedPageId(page.id);
-                      setSelectedButtonId(null);
-                    }}
-                    className={`relative group flex items-center gap-3 pr-4 pl-1 py-1 rounded-full transition-all border ${selectedPageId === page.id ? "bg-white/10 border-yellow-500/50" : "bg-transparent border-transparent hover:bg-white/5 hover:border-white/10"}`}
-                  >
+                 {allDraftPages.map((page) => {
+                   const isDirect = page.landingMode === "direct";
+                   const isSelected = selectedPageId === page.id;
+                   const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
+                   let buttonClass = "bg-transparent border-transparent hover:bg-white/5 hover:border-white/10";
+
+                   if (isSelected) {
+                     if (hasPair) {
+                       buttonClass = "bg-gradient-to-r from-red-500/10 to-blue-500/10 border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.05)]";
+                     } else if (isDirect) {
+                       buttonClass = "bg-red-500/10 border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.15)]";
+                     } else {
+                       buttonClass = "bg-blue-500/10 border-blue-500/50 shadow-[0_0_20px_rgba(59,130,246,0.15)]";
+                     }
+                   }
+
+                   return (
+                     <button
+                       key={page.id}
+                       onClick={() => {
+                         setSelectedPageId(page.id);
+                         setSelectedButtonId(null);
+                       }}
+                       className={`relative group flex items-center gap-3 pr-4 pl-1 py-1 rounded-full transition-all border ${buttonClass}`}
+                     >
                     <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 shrink-0">
                       {page.profileImage &&
                         page.profileImage !== DEFAULTS.PROFILE_IMAGE ? (
@@ -1538,9 +1700,9 @@ export default function Links() {
                     </div>
                     <div className="text-left min-w-[60px]">
                       <p
-                        className={`text-xs font-bold leading-tight ${selectedPageId === page.id ? "text-white" : "text-silver/60"}`}
+                        className={`text-xs font-bold leading-tight ${isSelected ? "text-white" : "text-silver/60"}`}
                       >
-                        {page.name}
+                        {page.modelName || page.name}
                       </p>
                       {page.dbStatus ? (
                         <span className="inline-flex items-center gap-1 mt-0.5">
@@ -1555,15 +1717,12 @@ export default function Links() {
                         </p>
                       )}
                     </div>
-                    {hasRotatorActive(page) && (
-                      <div className="absolute -top-1 -left-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-[#080808] flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[8px] text-white">
-                          sync
-                        </span>
-                      </div>
-                    )}
-                  </button>
-                ))}
+                     {isSelected && (
+                       <div className={`absolute -top-1 -right-1 w-3 h-3 ${hasPair ? 'bg-gradient-to-r from-red-500 to-blue-500' : (isDirect ? 'bg-red-500' : 'bg-blue-500')} rounded-full border-2 border-[#080808]`}></div>
+                     )}
+                   </button>
+                 );   
+               })}
               </div>
 
               {/* Right Arrow */}
@@ -1890,6 +2049,31 @@ export default function Links() {
               <div className="flex-1 flex flex-col relative bg-[#050505] overflow-hidden">
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-8 pb-32">
                   <div className="max-w-2xl mx-auto">
+                    {/* ANUNCIO FLUJO DUAL */}
+                    {pages.some(p => p.modelName === currentPage.modelName && p.modelName && p.id !== currentPage.id) && (
+                      <div className="mb-8 p-6 rounded-[2rem] bg-gradient-to-br from-purple-600/20 via-indigo-600/10 to-transparent border border-purple-500/30 relative overflow-hidden group animate-in slide-in-from-top-4 duration-700">
+                        {/* Decorative elements */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-[50px] rounded-full -mr-16 -mt-16 group-hover:bg-purple-500/20 transition-all duration-1000" />
+                        
+                        <div className="flex items-start gap-5 relative z-10">
+                          <div className="w-12 h-12 rounded-2xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-600/40 shrink-0">
+                            <span className="material-symbols-outlined text-white text-2xl animate-bounce">auto_awesome</span>
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-black text-white mb-2 flex items-center gap-2">
+                              Conectividad Dual Activada
+                              <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30 uppercase tracking-widest font-black">PRO</span>
+                            </h3>
+                            <p className="text-sm text-silver/60 leading-relaxed">
+                              Estás usando nuestro <span className="text-white font-bold">sistema híbrido inteligente</span>: 
+                              Tu landing page está optimizada para <span className="text-blue-400 font-bold">TikTok</span>, mientras que el sistema <span className="text-red-400 font-bold">Directo de Instagram/FB</span> ya está integrado. 
+                              <br /><br />
+                              <span className="text-[11px] font-bold text-purple-400">Puedes usar tu link final en cualquier red social y el sistema detectará automáticamente la mejor experiencia para el usuario.</span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {/* BUTTON CREATOR */}
                     {showButtonCreator && (
                       <div className="animate-fade-in space-y-6">
@@ -2514,6 +2698,30 @@ export default function Links() {
 
                                 {(currentPage.landingMode as string) === "direct" ? (
                                   <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-2xl animate-fade-in text-center">
+                                    {/* Model Name Input (Internal) */}
+                                    <div className="mb-8 p-4 bg-white/5 border border-white/10 rounded-xl text-left max-w-lg mx-auto">
+                                      <label className="text-[10px] font-bold text-silver/40 uppercase pl-1 block mb-2">
+                                        {t("dashboard.links.modelNameLabel")}
+                                      </label>
+                                      <div className="relative">
+                                        <span className="material-symbols-outlined absolute left-3 top-2.5 text-silver/20 text-lg">
+                                          person
+                                        </span>
+                                        <input
+                                          type="text"
+                                          value={currentPage.modelName || ""}
+                                          onChange={(e) =>
+                                            handleUpdatePage(
+                                              "modelName",
+                                              e.target.value,
+                                            )
+                                          }
+                                          placeholder={t("dashboard.links.modelNamePlaceholder")}
+                                          className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-primary placeholder:text-silver/20 transition-all"
+                                        />
+                                      </div>
+                                    </div>
+
                                     <span className="material-symbols-outlined text-4xl text-red-500 mb-4 block animate-bounce-subtle">
                                       rocket_launch
                                     </span>
@@ -2535,86 +2743,84 @@ export default function Links() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <>
-                                    <div className="flex gap-6 items-start">
-                                      <div className="space-y-3 shrink-0">
-                                        <div
-                                          className="group relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-white/20 hover:border-primary transition-colors"
-                                          style={{
-                                            backgroundColor:
-                                              currentPage.theme.backgroundType ===
-                                                "solid"
-                                                ? currentPage.theme.backgroundStart
-                                                : currentPage.theme.backgroundStart,
-                                          }}
-                                        >
-                                          <img
-                                            src={currentPage.profileImage}
-                                            className="w-full h-full object-cover"
-                                          />
-                                          <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer">
-                                            <span className="material-symbols-outlined text-white text-sm mb-1">
-                                              upload
-                                            </span>
-                                            <span className="text-[8px] text-white font-bold uppercase">
-                                              {t("common.change")}
-                                            </span>
-                                          </div>
-                                          <input
-                                            type="file"
-                                            ref={fileInputRef}
-                                            onChange={handleImageUpload}
-                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                            accept="image/*"
-                                          />
+                                  <div className="flex gap-6 items-start">
+                                    <div className="space-y-3 shrink-0">
+                                      <div
+                                        className="group relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-white/20 hover:border-primary transition-colors"
+                                        style={{
+                                          backgroundColor:
+                                            currentPage.theme.backgroundType ===
+                                              "solid"
+                                              ? currentPage.theme.backgroundStart
+                                              : currentPage.theme.backgroundStart,
+                                        }}
+                                      >
+                                        <img
+                                          src={currentPage.profileImage}
+                                          className="w-full h-full object-cover"
+                                        />
+                                        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer">
+                                          <span className="material-symbols-outlined text-white text-sm mb-1">
+                                            upload
+                                          </span>
+                                          <span className="text-[8px] text-white font-bold uppercase">
+                                            {t("common.change")}
+                                          </span>
                                         </div>
-                                        <div className="space-y-1 w-24">
-                                          <label className="text-[8px] font-bold text-silver/40 uppercase block text-center">
-                                            {t("dashboard.links.size")} (
-                                            {currentPage.profileImageSize || 100}px)
-                                          </label>
-                                          <input
-                                            type="range"
-                                            min="50"
-                                            max="150"
-                                            value={
-                                              currentPage.profileImageSize || 100
-                                            }
-                                            onChange={(e) =>
-                                              handleUpdatePage(
-                                                "profileImageSize",
-                                                parseInt(e.target.value),
-                                              )
-                                            }
-                                            className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
-                                          />
-                                        </div>
+                                        <input
+                                          type="file"
+                                          ref={fileInputRef}
+                                          onChange={handleImageUpload}
+                                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                          accept="image/*"
+                                        />
                                       </div>
-
-                                      <div className="flex-1 space-y-4">
-                                        <div className="space-y-1">
-                                          <label className="text-[10px] font-bold text-silver/40 uppercase pl-1">
-                                            {t("dashboard.links.visibleName")}
-                                          </label>
-                                          <input
-                                            type="text"
-                                            value={currentPage.profileName}
-                                            onChange={(e) => {
-                                              handleUpdatePage(
-                                                "profileName",
-                                                e.target.value,
-                                              );
-                                              handleUpdatePage(
-                                                "name",
-                                                e.target.value,
-                                              );
-                                            }}
-                                            className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-primary"
-                                          />
-                                        </div>
+                                      <div className="space-y-1 w-24">
+                                        <label className="text-[8px] font-bold text-silver/40 uppercase block text-center">
+                                          {t("dashboard.links.size")} (
+                                          {currentPage.profileImageSize || 100}px)
+                                        </label>
+                                        <input
+                                          type="range"
+                                          min="50"
+                                          max="150"
+                                          value={
+                                            currentPage.profileImageSize || 100
+                                          }
+                                          onChange={(e) =>
+                                            handleUpdatePage(
+                                              "profileImageSize",
+                                              parseInt(e.target.value),
+                                            )
+                                          }
+                                          className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                                        />
                                       </div>
                                     </div>
-                                  </>
+
+                                    <div className="flex-1 space-y-4">
+                                      <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-silver/40 uppercase pl-1">
+                                          {t("dashboard.links.visibleName")}
+                                        </label>
+                                        <input
+                                          type="text"
+                                          value={currentPage.profileName}
+                                          onChange={(e) => {
+                                            handleUpdatePage(
+                                              "profileName",
+                                              e.target.value,
+                                            );
+                                            handleUpdatePage(
+                                              "name",
+                                              e.target.value,
+                                            );
+                                          }}
+                                          className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-primary"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
                                 )}
 
                                 {(currentPage.landingMode as string) !== "direct" && (
@@ -2985,7 +3191,7 @@ export default function Links() {
                       if ((currentPage.landingMode as string) === "direct") {
                         if (!currentPage.directUrl || !currentPage.directUrl.trim()) {
                           toast.error(
-                            `"${currentPage.name}" no tiene URL de destino. Agrégala antes de continuar.`,
+                            `"${currentPage.name}" no tiene URL de destino. Agregue una URL antes de continuar.`,
                             { duration: 5000 }
                           );
                           return;
@@ -3008,7 +3214,7 @@ export default function Links() {
                         for (const btn of currentPage.buttons) {
                           if (!btn.url || !btn.url.trim()) {
                             toast.error(
-                              `El botón "${btn.title}" en "${currentPage.name}" no tiene URL. Agrégala antes de continuar.`,
+                              `El botón "${btn.title}" en "${currentPage.name}" no tiene URL. Agregue una URL antes de continuar.`,
                               { duration: 4000 }
                             );
                             return;
@@ -3244,54 +3450,81 @@ export default function Links() {
 
               <div className="relative z-10 text-center mb-10">
                 <h3 className="text-3xl font-black text-white mb-2 tracking-tight">
-                  ¿Qué tipo de link quieres crear?
+                  {t("dashboard.links.createLinkModalTitle")}
                 </h3>
-                <p className="text-silver/40 text-sm">
-                  Escoge el flujo que mejor se adapte a tu publicidad
+                <p className="text-silver/40 text-sm font-medium">
+                  {t("dashboard.links.createLinkModalSubtitle")}
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                 {/* Opción 1: Enlace Directo */}
                 <button
                   onClick={() => confirmCreation("direct")}
-                  className="group relative flex flex-col text-left p-6 rounded-[2rem] bg-white/5 border border-white/10 hover:border-red-500/50 hover:bg-red-500/5 transition-all duration-300"
+                  className="group relative flex flex-col p-6 rounded-3xl bg-secondary/30 border border-white/5 hover:border-red-500/50 hover:bg-black transition-all text-left overflow-hidden h-full shadow-lg"
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-red-500 text-3xl">rocket_launch</span>
+                  <div className="absolute top-4 right-4 px-2 py-1 rounded bg-red-500/10 border border-red-500/20">
+                    <span className="text-[10px] font-black text-red-400 uppercase tracking-tighter">
+                      {t("dashboard.links.directLinkPlatform")}
+                    </span>
                   </div>
-                  <h4 className="text-xl font-bold text-white mb-2">Escudo Directo</h4>
-                  <p className="text-silver/60 text-xs leading-relaxed mb-6">
-                    Redirección instantánea a OnlyFans con <b>Protección de Meta activa</b> por defecto. Ideal para anuncios directos.
+
+                  <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-3xl text-red-500">
+                      rocket_launch
+                    </span>
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-2">
+                    {t("dashboard.links.directLinkTitle")}
+                  </h4>
+                  <p className="text-silver/40 text-xs leading-relaxed mb-4">
+                    {t("dashboard.links.directLinkDesc")}
                   </p>
-                  <div className="mt-auto flex items-center gap-2 text-red-400 text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                    Seleccionar <span className="material-symbols-outlined text-xs">arrow_forward</span>
-                  </div>
                 </button>
 
                 {/* Opción 2: Landing Page */}
                 <button
                   onClick={() => confirmCreation("landing")}
-                  className="group relative flex flex-col text-left p-6 rounded-[2rem] bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300"
+                  className="group relative flex flex-col p-6 rounded-3xl bg-secondary/30 border border-white/5 hover:border-blue-500/50 hover:bg-black transition-all text-left overflow-hidden h-full shadow-lg"
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-primary text-3xl">view_list</span>
+                  <div className="absolute top-4 right-4 px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20">
+                    <span className="text-[10px] font-black text-blue-400 uppercase tracking-tighter">
+                      {t("dashboard.links.landingPagePlatform")}
+                    </span>
                   </div>
-                  <h4 className="text-xl font-bold text-white mb-2">Landing Page</h4>
-                  <p className="text-silver/60 text-xs leading-relaxed mb-6">
-                    Página personalizada con múltiples botones. Incluye <b>Protección de TikTok</b> por defecto.
+
+                  <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-3xl text-blue-500">
+                      web
+                    </span>
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-2">
+                    {t("dashboard.links.landingPageTitle")}
+                  </h4>
+                  <p className="text-silver/40 text-xs leading-relaxed mb-4">
+                    {t("dashboard.links.landingPageDesc")}
                   </p>
-                  <div className="mt-auto flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                    Seleccionar <span className="material-symbols-outlined text-xs">arrow_forward</span>
-                  </div>
                 </button>
               </div>
+
+              <button
+                onClick={() => confirmCreation("both")}
+                className="w-full flex items-center justify-center gap-3 py-5 rounded-[2rem] bg-gradient-to-r from-purple-600 to-indigo-600 hover:scale-[1.01] active:scale-[0.99] transition-all group shadow-[0_0_40px_rgba(147,51,234,0.3)] border-2 border-purple-400/50 relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span className="material-symbols-outlined text-2xl text-white group-hover:rotate-12 transition-transform relative z-10">
+                  auto_awesome
+                </span>
+                <span className="font-black text-sm uppercase tracking-widest text-white relative z-10">
+                  {t("dashboard.links.createBothTitle")}
+                </span>
+              </button>
 
               <button
                 onClick={() => setShowLinkTypeSelector(false)}
                 className="mt-10 mx-auto block text-[10px] font-bold text-silver/30 uppercase tracking-widest hover:text-white transition-colors"
               >
-                Cancelar
+                {t("common.cancel")}
               </button>
             </div>
           </div>
