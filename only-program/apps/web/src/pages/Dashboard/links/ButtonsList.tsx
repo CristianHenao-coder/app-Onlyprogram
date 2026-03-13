@@ -12,7 +12,7 @@ interface ButtonsListProps {
   handleCreateNew: () => void;
   handleOpenFolderModal: (folder?: Folder) => void;
   handleDeleteFolder: (id: string) => void;
-  handleDeleteDraftPage: (id: string, name: string) => void;
+  handleDeletePage: (id: string, name: string) => void;
   openEditor: (id: string) => void;
   DEFAULTS: { PROFILE_IMAGE: string };
   loadLinks?: () => Promise<void>;
@@ -27,7 +27,7 @@ const ButtonsList: React.FC<ButtonsListProps> = ({
   handleCreateNew,
   handleOpenFolderModal,
   handleDeleteFolder,
-  handleDeleteDraftPage,
+  handleDeletePage,
   openEditor,
   DEFAULTS,
   loadLinks,
@@ -226,7 +226,7 @@ const ButtonsList: React.FC<ButtonsListProps> = ({
                           className={`relative group rounded-[2rem] border bg-[#0A0A0A] overflow-hidden hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 cursor-pointer ${borderClass}`}
                         >
                           <button
-                            onClick={(e) => { e.stopPropagation(); handleDeleteDraftPage(page.id, page.profileName || page.name); }}
+                            onClick={(e) => { e.stopPropagation(); handleDeletePage(page.id, page.profileName || page.name); }}
                             className={`absolute top-3 left-3 z-20 w-8 h-8 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg border ${bgTrash}`}
                           >
                             <span className="material-symbols-outlined text-[16px]">delete</span>
@@ -329,7 +329,7 @@ const ButtonsList: React.FC<ButtonsListProps> = ({
                           className={`relative group rounded-[2rem] border bg-[#0A0A0A] overflow-hidden hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 cursor-pointer ${borderClass}`}
                         >
                           <button
-                            onClick={(e) => { e.stopPropagation(); handleDeleteDraftPage(page.id, page.name); }}
+                            onClick={(e) => { e.stopPropagation(); handleDeletePage(page.id, page.profileName || page.name); }}
                             className={`absolute top-3 left-3 z-20 w-8 h-8 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg border ${bgTrash}`}
                           >
                             <span className="material-symbols-outlined text-[16px]">delete</span>

@@ -38,7 +38,6 @@ interface LinkEditorProps {
   handleUpdateButton: (field: string, value: any) => void;
   handleUpdatePage: (field: string, value: any) => void;
   handleNextStep: () => void;
-  handleDeleteDraftPage: (id: string, name: string) => Promise<void>;
   ROTATOR_SURCHARGE: number;
   SOCIAL_PRESETS: any;
   DEFAULTS: any;
@@ -52,6 +51,7 @@ interface LinkEditorProps {
   Icons: any;
   isSaving?: boolean;
   handleSyncButtons?: () => Promise<void>;
+  handleDeletePage: (id: string, name: string) => Promise<void>;
 }
 
 const LinkEditor: React.FC<LinkEditorProps> = ({
@@ -81,7 +81,6 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
   handleUpdateButton,
   handleUpdatePage,
   handleNextStep,
-  handleDeleteDraftPage,
   ROTATOR_SURCHARGE,
   SOCIAL_PRESETS,
   DEFAULTS,
@@ -95,6 +94,7 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
   Icons,
   isSaving,
   handleSyncButtons,
+  handleDeletePage,
 }) => {
   const { t } = useTranslation();
 
@@ -444,7 +444,7 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
           </div>
           <DesktopFooter
             currentPage={currentPage}
-            handleDeleteDraftPage={handleDeleteDraftPage}
+            handleDeletePage={handleDeletePage}
             sidebarCollapsed={sidebarCollapsed}
           />
         </div>
