@@ -284,6 +284,51 @@ const LinksPage: React.FC = () => {
     }
   }, [user, loadLinks]);
 
+  // --- REAL-TIME ACTIVATION NOTIFICATION ---
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel("schema-db-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "smart_links",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const oldRecord = payload.old;
+          const newRecord = payload.new;
+          if (
+            (oldRecord.status === "pending" || oldRecord.status === "draft") &&
+            newRecord.status === "active"
+          ) {
+            const linkName = newRecord.profile_name || newRecord.title || newRecord.name || "Tu link";
+            toast.success(`¡Tu link ${linkName} ha sido activado exitosamente!`, {
+              duration: 30000,
+              icon: "🚀",
+              style: {
+                background: "#22c55e",
+                color: "#fff",
+                fontWeight: "bold",
+                padding: "16px",
+                borderRadius: "12px",
+              },
+            });
+            // Refresh to update UI
+            loadLinks();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, loadLinks]);
+
   // --- AUTO-SAVE LOGIC FOR ACTIVE LINKS ---
   useEffect(() => {
     if (!currentPage || !currentPage.dbStatus || initialLoad) return;

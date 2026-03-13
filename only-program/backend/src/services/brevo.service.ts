@@ -294,7 +294,60 @@ export async function sendAdminVerificationCode(
 }
 
 /**
- * Envía email de confirmación de pago
+ * Envía un enlace de recuperación de contraseña
+ */
+export async function sendPasswordResetEmail(
+  email: string,
+  resetLink: string,
+): Promise<boolean> {
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Inter', Arial, sans-serif; background-color: #0B0B0B; color: #C9CCD1; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background: #161616; border: 1px solid #2A2A2A; border-radius: 24px; padding: 48px; text-align: center; }
+        .logo { margin-bottom: 32px; }
+        .logo h1 { color: #1DA1F2; font-size: 24px; margin: 0; font-weight: 900; letter-spacing: -0.05em; }
+        .content { margin-bottom: 32px; }
+        .button { display: inline-block; background: linear-gradient(to right, #1DA1F2, #1E90FF); color: white; padding: 16px 32px; text-decoration: none; border-radius: 12px; margin-top: 24px; font-weight: bold; font-size: 16px; }
+        .warning { font-size: 13px; color: #1DA1F2; margin-top: 24px; }
+        .footer { font-size: 12px; color: #555; margin-top: 48px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="logo">
+          <h1>🛡️ ONLY PROGRAM</h1>
+        </div>
+        <div class="content">
+          <h2 style="color: white; font-size: 20px;">Restablecer Contraseña</h2>
+          <p>Hemos recibido una solicitud para restablecer tu contraseña. Haz clic en el siguiente botón para crear una nueva:</p>
+          
+          <a href="\${resetLink}" class="button">Restablecer Mi Contraseña</a>
+          
+          <p class="warning">Este enlace expirará por razones de seguridad en unos minutos.</p>
+        </div>
+        <div class="footer">
+          <p>Si no solicitaste este cambio, puedes ignorar este mensaje.</p>
+          <p>© \${new Date().getFullYear()} Only Program. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return await sendEmail({
+    to: email,
+    subject: "🔐 Restablecer tu contraseña",
+    htmlContent,
+    textContent: `Haz clic en el siguiente enlace para restablecer tu contraseña: \${resetLink}`,
+  });
+}
+
+/**
+ * Envía email de confirmación de pago con instrucciones de activación
  */
 export async function sendPaymentConfirmationEmail(
   email: string,
@@ -314,7 +367,11 @@ export async function sendPaymentConfirmationEmail(
         .logo h1 { color: #1DA1F2; font-size: 24px; margin: 0; }
         .content { line-height: 1.6; }
         .success { background: #00FF0020; border-left: 4px solid #00FF00; padding: 12px; margin: 20px 0; border-radius: 4px; }
-        .button { display: inline-block; background: linear-gradient(to right, #1DA1F2, #1E90FF); color: white; padding: 12px 32px; text-decoration: none; border-radius: 8px; margin-top: 20px; font-weight: bold; }
+        .steps { background: #1A1A1A; padding: 20px; border-radius: 8px; margin: 25px 0; border: 1px solid #333; }
+        .steps h3 { color: #FFF; margin-top: 0; }
+        .steps ol { padding-left: 20px; margin: 0; }
+        .steps li { margin-bottom: 10px; color: #E0E0E0; }
+        .button { display: inline-block; background: linear-gradient(to right, #1DA1F2, #1E90FF); color: white; padding: 12px 32px; text-decoration: none; border-radius: 8px; margin-top: 20px; font-weight: bold; text-align: center; }
         .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
       </style>
     </head>
@@ -324,17 +381,28 @@ export async function sendPaymentConfirmationEmail(
           <h1>🛡️ ONLY <span style="font-size: 14px;">PROGRAM</span></h1>
         </div>
         <div class="content">
-          <h2 style="color: #00FF00;">¡Pago Exitoso!</h2>
+          <h2 style="color: #00FF00; text-align: center;">¡Pago Recibido Exitosamente!</h2>
           <div class="success">
-            <strong>Tu pago ha sido procesado correctamente</strong><br>
-            Monto: ${amount} ${currency}<br>
-            ID de Orden: <code>${orderId}</code>
+            <strong>Monto:</strong> ${amount} ${currency}<br>
+            <strong>ID de Orden:</strong> <code>${orderId}</code>
           </div>
-          <p>Gracias por tu compra. Tu cuenta ha sido actualizada.</p>
-          <a href="${frontendUrl}/dashboard/billing" class="button">Ver Facturación</a>
+          <p>Muchas gracias por tu compra. Para que tu Link Smart empiece a funcionar y sea público, por favor sigue estos 3 simples pasos:</p>
+          
+          <div class="steps">
+            <h3>Paso a paso para la Activación</h3>
+            <ol>
+              <li><strong>Ingresa al Dashboard:</strong> Inicia sesión y ve a la sección de "Tus Links".</li>
+              <li><strong>Personaliza tu Link:</strong> Configura la imagen, el estilo de la Landing Page, y edita las URL de destino de tus botones. Recuerda elegir tu dominio personalizado o el por defecto.</li>
+              <li><strong>Espera la Verificación:</strong> Una vez guardes los cambios, un administrador de nuestro equipo revisará y activará tu link. Verás una notificación verde en tu pantalla cuando esté listo.</li>
+            </ol>
+          </div>
+          
+          <div style="text-align: center;">
+            <a href="${frontendUrl}/dashboard/links" class="button">Ir a Configurar mi Link</a>
+          </div>
         </div>
         <div class="footer">
-          <p>© 2024 Only Program. Todos los derechos reservados.</p>
+          <p>© ${new Date().getFullYear()} Only Program. Todos los derechos reservados.</p>
         </div>
       </div>
     </body>
@@ -343,9 +411,9 @@ export async function sendPaymentConfirmationEmail(
 
   return await sendEmail({
     to: email,
-    subject: "✅ Confirmación de Pago - Only Program",
+    subject: "✅ Confirmación de Pago y Pasos de Activación - Only Program",
     htmlContent,
-    textContent: `Pago exitoso de ${amount} ${currency}. ID: ${orderId}.`,
+    textContent: `Pago exitoso de ${amount} ${currency}. ID: ${orderId}. Por favor ingresa al dashboard, configura tu link y espera la verificación de un administrador.`,
   });
 }
 
@@ -444,134 +512,15 @@ export async function sendOTPEmail(
     textContent: `${t.subtitle} ${code}. ${t.warning}`,
   });
 }
-
 /**
- * Envía email de factura para el plan gratuito de 3 días
- */
-export async function sendFreeTrialInvoiceEmail(
-  email: string,
-  userName: string,
-  paymentDate: Date,
-  nextBillingDate: Date,
-  orderId: string,
-): Promise<boolean> {
-  const fmt = (d: Date) =>
-    d.toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
-
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        body { font-family: 'Inter', Arial, sans-serif; background-color: #0B0B0B; color: #C9CCD1; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: 40px auto; background: #161616; border: 1px solid #2A2A2A; border-radius: 16px; overflow: hidden; }
-        .header { background: linear-gradient(135deg, #1DA1F2 0%, #0d6efd 100%); padding: 36px 40px; text-align: center; }
-        .header h1 { color: white; margin: 0; font-size: 22px; font-weight: 900; letter-spacing: -0.03em; }
-        .badge { display: inline-block; background: rgba(255,255,255,0.2); color: white; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 100px; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 10px; }
-        .body { padding: 36px 40px; }
-        .greeting { font-size: 17px; color: white; font-weight: 600; margin-bottom: 8px; }
-        .subtitle { font-size: 14px; color: #888; margin-bottom: 28px; line-height: 1.6; }
-        .invoice-box { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
-        .invoice-title { font-size: 11px; font-weight: 700; color: #1DA1F2; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 18px; }
-        .invoice-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #242424; font-size: 14px; }
-        .invoice-row:last-child { border-bottom: none; }
-        .invoice-row .label { color: #888; }
-        .invoice-row .value { color: white; font-weight: 600; }
-        .total-row { background: #1DA1F210; border-radius: 8px; padding: 14px 16px; margin-top: 16px; display: flex; justify-content: space-between; align-items: center; }
-        .total-row .label { color: #1DA1F2; font-weight: 700; font-size: 14px; }
-        .total-row .value { color: #1DA1F2; font-size: 22px; font-weight: 900; }
-        .domain-box { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
-        .domain-title { font-size: 11px; font-weight: 700; color: #F59E0B; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 14px; }
-        .step { display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; }
-        .step-num { background: #1DA1F2; color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; min-width: 24px; }
-        .step-text { font-size: 13px; color: #C9CCD1; line-height: 1.5; }
-        .step-text code { background: #000; color: #1DA1F2; padding: 2px 6px; border-radius: 4px; font-family: monospace; font-size: 12px; }
-        .button { display: block; background: linear-gradient(to right, #1DA1F2, #0d6efd); color: white; padding: 14px 32px; text-decoration: none; border-radius: 10px; font-weight: 700; text-align: center; margin-top: 24px; font-size: 15px; }
-        .warning { background: #F59E0B15; border: 1px solid #F59E0B40; border-radius: 10px; padding: 14px 16px; margin-top: 20px; font-size: 13px; color: #F59E0B; }
-        .footer { text-align: center; padding: 24px 40px; font-size: 12px; color: #555; border-top: 1px solid #222; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <img src="https://fptwztporosusnwcwvny.supabase.co/storage/v1/object/public/public-fotos/logoOnly.png" alt="Only Program Logo" style="height: 50px; width: auto; margin-bottom: 10px;">
-          <br>
-          <span class="badge">🎁 Activación Exitosa</span>
-        </div>
-        <div class="body">
-          <div class="greeting">¡Bienvenido a tu prueba gratuita, ${userName || "Usuario"}!</div>
-          <div class="subtitle">Tu plan de prueba ha sido activado correctamente. Disfruta 3 días completos con todas las funciones del sistema.</div>
-
-          <div class="invoice-box">
-            <div class="invoice-title">📄 Factura · ${orderId.slice(0, 8).toUpperCase()}</div>
-            <div class="invoice-row"><span class="label">Plan</span><span class="value">Link Estándar — Prueba Gratuita</span></div>
-            <div class="invoice-row"><span class="label">Método de pago</span><span class="value">🎁 Gratuito</span></div>
-            <div class="invoice-row"><span class="label">Fecha de activación</span><span class="value">${fmt(paymentDate)}</span></div>
-            <div class="invoice-row"><span class="label">Vence / Próximo cobro</span><span class="value">${fmt(nextBillingDate)}</span></div>
-            <div class="total-row">
-              <span class="label">Total cobrado</span>
-              <span class="value">$0.00 USD</span>
-            </div>
-          </div>
-
-          <div class="domain-box">
-            <div class="domain-title">🌐 Cómo conectar tu dominio personalizado</div>
-            <div class="step">
-              <div class="step-num">1</div>
-              <div class="step-text">Entra a tu proveedor (GoDaddy / Cloudflare) y ve a la configuración DNS de tu dominio.</div>
-            </div>
-            <div class="step">
-              <div class="step-num">2</div>
-              <div class="step-text">Agrega un registro <code>A</code> apuntando a la IP de tu servidor: <code>${process.env.SERVER_IP || "IP del servidor"}</code></div>
-            </div>
-            <div class="step">
-              <div class="step-num">3</div>
-              <div class="step-text">En tu dashboard Only Program → "Mis Links" → edita tu link y asigna tu dominio personalizado.</div>
-            </div>
-            <div class="step">
-              <div class="step-num">4</div>
-              <div class="step-text">Caddy gestionará el certificado SSL automáticamente cuando el DNS propague (hasta 24h).</div>
-            </div>
-          </div>
-
-          <div class="warning">
-            ⏰ <strong>Recuerda:</strong> Tu prueba gratuita vence el <strong>${fmt(nextBillingDate)}</strong>. 
-            Después de esta fecha necesitarás adquirir un plan de pago para mantener tu link activo.
-          </div>
-
-          <a href="${frontendUrl}/dashboard" class="button">Ir al Dashboard →</a>
-        </div>
-        <div class="footer">
-          <p>© ${new Date().getFullYear()} Only Program. Todos los derechos reservados.</p>
-          <p>¿Dudas? Responde este correo o escríbenos a support@onlyprogramlink.com</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-
-  return await sendEmail({
-    to: email,
-    toName: userName,
-    subject: "🎁 ¡Tu prueba gratuita está activa! — Only Program",
-    htmlContent,
-    textContent: `¡Hola ${userName}! Tu prueba gratuita de 3 días ha sido activada. Vence el ${fmt(nextBillingDate)}. Factura #${orderId.slice(0, 8).toUpperCase()} — $0.00 USD.`,
-  });
-}
-
-/**
- * Envía email de alerta 24h antes del vencimiento
+ * Envía email avisando expiración de link
  */
 export async function sendExpirationAlertEmail(
   email: string,
   userName: string,
   linkSlug: string,
   expiryDate: Date,
+  daysRemaining: number,
 ): Promise<boolean> {
   const fmt = (d: Date) =>
     d.toLocaleDateString("es-ES", {
@@ -582,6 +531,16 @@ export async function sendExpirationAlertEmail(
       minute: "2-digit",
     });
 
+  let urgencyColor = "#F59E0B"; // Amarillo por defecto (5 o 3 días)
+  let headerText = `⏳ ¡Tu link vence en ${daysRemaining} días!`;
+  
+  if (daysRemaining <= 1) {
+    urgencyColor = "#EF4444"; // Rojo si falta 1 día
+    headerText = "🚨 ¡Tu link vence MAÑANA!";
+  } else if (daysRemaining === 3) {
+    headerText = "⏳ Tu link está por expirar";
+  }
+
   const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -590,14 +549,14 @@ export async function sendExpirationAlertEmail(
       <style>
         body { font-family: 'Inter', Arial, sans-serif; background-color: #0B0B0B; color: #C9CCD1; margin: 0; padding: 0; }
         .container { max-width: 600px; margin: 40px auto; background: #161616; border: 1px solid #2A2A2A; border-radius: 16px; overflow: hidden; }
-        .header { background: #F59E0B; padding: 30px; text-align: center; }
+        .header { background: ${urgencyColor}; padding: 30px; text-align: center; }
         .header h1 { color: white; margin: 0; font-size: 20px; font-weight: 800; }
         .body { padding: 40px; }
         .greeting { font-size: 18px; color: white; font-weight: 600; margin-bottom: 12px; }
         .content { line-height: 1.6; margin-bottom: 30px; }
         .link-box { background: #000; border: 1px solid #333; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0; }
         .slug { color: #1DA1F2; font-weight: bold; }
-        .button { display: block; background: #F59E0B; color: white; padding: 14px; text-decoration: none; border-radius: 10px; font-weight: 700; text-align: center; }
+        .button { display: block; background: ${urgencyColor}; color: white; padding: 14px; text-decoration: none; border-radius: 10px; font-weight: 700; text-align: center; }
         .footer { text-align: center; padding: 20px; font-size: 11px; color: #555; border-top: 1px solid #222; }
       </style>
     </head>
@@ -605,12 +564,12 @@ export async function sendExpirationAlertEmail(
       <div class="container">
         <div class="header">
           <img src="https://fptwztporosusnwcwvny.supabase.co/storage/v1/object/public/public-fotos/logoOnly.png" alt="Only Program Logo" style="height: 40px; width: auto; margin-bottom: 5px;">
-          <h1>⏳ ¡Tu link está por expirar!</h1>
+          <h1>${headerText}</h1>
         </div>
         <div class="body">
           <div class="greeting">Hola, ${userName}</div>
           <div class="content">
-            <p>Te informamos que tu link seguro está por vencer en menos de 24 horas.</p>
+            <p>Te informamos que tu link seguro perderá su activación en <strong>${daysRemaining} días</strong>.</p>
             <div class="link-box">
               Link: <span class="slug">${linkSlug}</span><br>
               Vence: <strong>${fmt(expiryDate)}</strong>
@@ -630,9 +589,61 @@ export async function sendExpirationAlertEmail(
   return await sendEmail({
     to: email,
     toName: userName,
-    subject: `⚠️ Aviso: Tu link ${linkSlug} vence pronto — Only Program`,
+    subject: `Aviso de expiración: ${daysRemaining} días restantes — Only Program`,
     htmlContent,
     textContent: `Hola ${userName}, tu link ${linkSlug} vence el ${fmt(expiryDate)}. Renuévalo ahora en ${frontendUrl}/dashboard/links para evitar interrupciones.`,
+  });
+}
+
+/**
+ * Envía email para restablecer la contraseña
+ */
+export async function sendPasswordResetEmail(
+  email: string,
+  resetLink: string,
+): Promise<boolean> {
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Inter', Arial, sans-serif; background-color: #0B0B0B; color: #C9CCD1; margin: 0; padding: 0; }
+        .container { max-width: 600px; margin: 40px auto; background: #161616; border: 1px solid #2A2A2A; border-radius: 24px; padding: 48px; text-align: center; }
+        .logo { margin-bottom: 32px; }
+        .logo h1 { color: #1DA1F2; font-size: 24px; margin: 0; font-weight: 900; letter-spacing: -0.05em; }
+        .content { margin-bottom: 32px; }
+        .title { color: white; font-size: 20px; font-weight: 900; margin-bottom: 12px; }
+        .button { display: inline-block; background: #1DA1F2; color: white; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: 700; margin: 24px 0; font-size: 16px; }
+        .footer { font-size: 12px; color: #555; margin-top: 48px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="logo">
+          <h1>🛡️ ONLY PROGRAM</h1>
+        </div>
+        <div class="content">
+          <div class="title">Restablecer Contraseña</div>
+          <p>Hemos recibido una solicitud para restablecer tu contraseña. Haz clic en el siguiente botón para continuar:</p>
+          <a href="${resetLink}" class="button">Restablecer Mi Contraseña</a>
+          <p style="font-size: 13px; color: #888; margin-top: 20px;">
+            Si no solicitaste este cambio, puedes ignorar este correo sin problemas. El enlace expirará pronto por tu seguridad.
+          </p>
+        </div>
+        <div class="footer">
+          <p>© ${new Date().getFullYear()} Only Program. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return await sendEmail({
+    to: email,
+    subject: "Restablece tu contraseña - Only Program",
+    htmlContent,
+    textContent: `Hemos recibido una solicitud para restablecer tu contraseña. Visita el siguiente enlace para continuar: ${resetLink}`,
   });
 }
 

@@ -254,16 +254,29 @@ const ButtonsList: React.FC<ButtonsListProps> = ({
                             <p className="font-black text-base text-white truncate px-2">
                               {page.profileName || page.name}
                             </p>
-                            <p className="text-[10px] text-silver/30 mt-1 font-bold uppercase tracking-widest">
-                              /{page.slug || page.id.slice(0, 8)}
+                            <p className="text-[10px] text-silver/30 mt-1 font-bold uppercase tracking-widest truncate">
+                              {page.domainStatus === "active" && page.customDomain ? (
+                                <span className="text-primary/80 lowercase">{page.customDomain}</span>
+                              ) : (
+                                "onlyprogram.com"
+                              )}/{page.slug || page.id.slice(0, 8)}
                             </p>
 
                             <div className="mt-4 flex items-center justify-center gap-2">
                               {page.status === "active" ? (
-                                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                  <span className="text-[9px] font-black uppercase tracking-widest text-green-500">Publicado</span>
-                                </div>
+                                <a 
+                                  href={`https://${page.domainStatus === "active" && page.customDomain ? page.customDomain.toLowerCase() : "onlyprogram.com"}/${page.slug || page.id.slice(0, 8)}`} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-full bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 text-[10px] font-black uppercase tracking-widest transition-colors shadow-[0_0_10px_rgba(34,197,94,0.1)] group/link"
+                                >
+                                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse group-hover/link:animate-none" />
+                                  <span className="truncate max-w-[150px] lowercase text-[#1DA1F2]">
+                                    {page.domainStatus === "active" && page.customDomain ? page.customDomain : "onlyprogram.com"}
+                                  </span>
+                                  <span className="material-symbols-outlined text-[14px]">arrow_outward</span>
+                                </a>
                               ) : (
                                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20">
                                   <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />

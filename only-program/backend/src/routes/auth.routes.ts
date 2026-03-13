@@ -99,8 +99,12 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
       });
     }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${config.urls.frontend}/reset-password`,
+    const { data, error } = await supabase.auth.admin.generateLink({
+      type: "recovery",
+      email: email,
+      options: {
+        redirectTo: `${config.urls.frontend}/reset-password`,
+      },
     });
 
     if (error) {
@@ -108,6 +112,10 @@ router.post("/forgot-password", async (req: Request, res: Response) => {
         error: error.message,
         code: "RESET_FAILED",
       });
+    }
+
+    if (data?.properties?.action_link) {
+      await sendPasswordResetEmail(email, data.properties.action_link);
     }
 
     res.json({
