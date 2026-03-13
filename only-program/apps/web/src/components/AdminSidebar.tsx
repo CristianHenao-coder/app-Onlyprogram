@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate, Link, NavLink } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/contexts/I18nContext";
@@ -62,6 +63,7 @@ const NavLinkWrapper = ({
 );
 
 const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
+  const [isHovered, setIsHovered] = useState(false);
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -71,11 +73,16 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
     navigate("/login");
   };
 
+  const isExpanded = !isCollapsed || isHovered;
+
   return (
     <aside
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className={`
-      ${isCollapsed ? "w-20" : "w-72"} 
+      ${isExpanded ? "w-72" : "w-20"} 
       bg-background-dark border-r border-border/50 flex flex-col h-screen sticky top-0 transition-all duration-300 ease-in-out z-50
+      ${isHovered && isCollapsed ? "shadow-2xl shadow-black/50 border-r border-primary/20" : ""}
     `}
     >
       {/* Brand Section */}
@@ -84,12 +91,12 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
           <div
             className={`
             flex items-center justify-center transition-all duration-500
-            ${isCollapsed ? "h-12 w-12" : "h-28 w-28"}
+            ${isExpanded ? "h-28 w-28" : "h-12 w-12"}
           `}
           >
             <Logo className="w-full h-full" imgClassName="p-0" />
           </div>
-          {!isCollapsed && (
+          {isExpanded && (
             <div className="text-center animate-fade-in">
               <h1 className="text-white font-black tracking-tighter text-xl leading-none">
                 ONLY
@@ -102,24 +109,24 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
         </Link>
 
         {/* Toggle Button Below Logo */}
-        <button
-          onClick={onToggle}
-          className={`
-            flex items-center justify-center h-10 rounded-xl border border-white/10 bg-white/5 text-silver hover:text-white transition-all hover:bg-white/10
-            ${isCollapsed ? "w-12" : "w-full"}
-          `}
-        >
-          <span className="material-symbols-outlined text-xl">
-            {isCollapsed ? "menu" : "menu_open"}
-          </span>
-        </button>
+          <button
+            onClick={onToggle}
+            className={`
+              flex items-center justify-center h-10 rounded-xl border border-white/10 bg-white/5 text-silver hover:text-white transition-all hover:bg-white/10
+              ${isExpanded ? "w-full" : "w-12"}
+            `}
+          >
+            <span className="material-symbols-outlined text-xl">
+              {isExpanded ? "keyboard_double_arrow_left" : "menu"}
+            </span>
+          </button>
       </div>
 
       {/* Navigation */}
       <nav
-        className={`flex-1 ${isCollapsed ? "px-3" : "px-4"} space-y-2 overflow-y-auto custom-scrollbar pt-2`}
+        className={`flex-1 ${isExpanded ? "px-4" : "px-3"} space-y-2 overflow-y-auto custom-scrollbar pt-2`}
       >
-        {!isCollapsed && (
+        {isExpanded && (
           <p className="px-4 text-[10px] font-black text-silver/20 uppercase tracking-[0.2em] mb-4">
             {t("admin.menu.main")}
           </p>
@@ -129,63 +136,63 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
           to="/admin/dashboard"
           icon="dashboard"
           label={t("admin.menu.overview")}
-          isCollapsed={isCollapsed}
+          isCollapsed={!isExpanded}
         />
         <NavItem
           to="/admin/cms"
           icon="edit_note"
           label={t("admin.menu.cms")}
-          isCollapsed={isCollapsed}
+          isCollapsed={!isExpanded}
         />
         <NavItem
           to="/admin/pricing"
           icon="paid"
           label={t("admin.menu.pricing")}
-          isCollapsed={isCollapsed}
+          isCollapsed={!isExpanded}
         />
         <NavItem
           to="/admin/users"
           icon="group"
           label={t("admin.menu.users")}
-          isCollapsed={isCollapsed}
+          isCollapsed={!isExpanded}
         />
         <NavItem
           to="/admin/coupons"
           icon="confirmation_number"
           label={t("admin.menu.coupons")}
-          isCollapsed={isCollapsed}
+          isCollapsed={!isExpanded}
         />
         <NavItem
           to="/admin/inbox"
           icon="inbox"
           label="Buzón"
-          isCollapsed={isCollapsed}
+          isCollapsed={!isExpanded}
         />
 
         <NavItem
           to="/admin/domains"
           icon="admin_panel_settings"
           label="Gestión Dominios"
-          isCollapsed={isCollapsed}
+          isCollapsed={!isExpanded}
         />
         <NavItem
           to="/admin/settings"
           icon="settings"
           label={t("admin.menu.settings")}
-          isCollapsed={isCollapsed}
+          isCollapsed={!isExpanded}
         />
       </nav>
 
       {/* User Footer */}
       <div className="p-4 mt-auto">
         <div
-          className={`bg-white/5 border border-white/5 rounded-2xl ${isCollapsed ? "p-2" : "p-4"} transition-all`}
+          className={`bg-white/5 border border-white/5 rounded-2xl ${isExpanded ? "p-4" : "p-2"} transition-all`}
         >
           <div className="flex items-center gap-3">
             <div
               className={`
               rounded-xl bg-gradient-to-br from-primary/20 to-blue-500/10 border border-white/10 overflow-hidden shrink-0 transition-all
-              ${isCollapsed ? "h-10 w-10" : "h-12 w-12"}
+              ${isExpanded ? "h-12 w-12" : "h-10 w-10"}
             `}
             >
               {profile?.avatar_url ? (
@@ -202,7 +209,7 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
                 </div>
               )}
             </div>
-            {!isCollapsed && (
+            {isExpanded && (
               <div className="flex-1 min-w-0 animate-fade-in">
                 <p className="text-sm font-bold truncate text-white">
                   {profile?.full_name || "Administrator"}
@@ -215,20 +222,20 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
           </div>
 
           <div
-            className={`flex gap-2 transition-all ${isCollapsed ? "flex-col mt-4" : "mt-4"}`}
+            className={`flex gap-2 transition-all ${isExpanded ? "mt-4" : "flex-col mt-4"}`}
           >
             <button
               onClick={() => navigate("/admin/settings")}
-              title={isCollapsed ? t("admin.menu.settings") : undefined}
+              title={!isExpanded ? t("admin.menu.settings") : undefined}
               className={`
                 flex items-center justify-center h-10 rounded-xl bg-white/5 text-silver hover:text-white hover:bg-white/10 border border-white/10 transition-all
-                ${isCollapsed ? "w-10" : "flex-1"}
+                ${isExpanded ? "flex-1" : "w-10"}
               `}
             >
               <span className="material-symbols-outlined text-sm">
                 settings
               </span>
-              {!isCollapsed && (
+              {isExpanded && (
                 <span className="ml-2 text-xs font-bold uppercase tracking-widest">
                   {t("admin.menu.settings")}
                 </span>
@@ -236,10 +243,10 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
             </button>
             <button
               onClick={handleSignOut}
-              title={isCollapsed ? t("admin.menu.logout") : undefined}
+              title={!isExpanded ? t("admin.menu.logout") : undefined}
               className={`
                 flex items-center justify-center h-10 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 transition-all
-                ${isCollapsed ? "w-10" : "w-12"}
+                ${isExpanded ? "w-12" : "w-10"}
               `}
             >
               <span className="material-symbols-outlined text-sm">logout</span>

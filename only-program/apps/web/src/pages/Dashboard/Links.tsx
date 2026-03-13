@@ -1089,7 +1089,8 @@ export default function Links() {
     handleUpdateButton("rotatorLinks", currentLinks);
   };
 
-  // --- VIEW STATE: 'list' = Mis Links, 'editor' = Builder ---
+  // UI State
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
   const [view, setView] = useState<"list" | "editor">("list");
 
   const openEditor = (pageId?: string) => {
@@ -1144,6 +1145,15 @@ export default function Links() {
               ></span>
               {isSaving ? t("common.verifying") : t("dashboard.links.autosave")}
             </span>
+          )}
+          {view === "editor" && (
+            <button
+              onClick={() => setShowMobilePreview(true)}
+              className="lg:hidden flex items-center gap-2 px-3 py-1.5 bg-primary/10 text-primary border border-primary/20 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-all"
+            >
+              <span className="material-symbols-outlined text-sm">visibility</span>
+              <span>Preview</span>
+            </button>
           )}
         </div>
       </header>
@@ -1293,20 +1303,7 @@ export default function Links() {
                               </span>
                               {t("dashboard.links.config")}
                             </button>
-                            {page.slug && (
-                              page.status === 'active' ? (
-                                <a
-                                  href={`/${page.slug}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-white transition-all flex items-center justify-center"
-                                >
-                                  <span className="material-symbols-outlined text-sm">
-                                    open_in_new
-                                  </span>
-                                </a>
-                              ) : (
+                            {page.slug && page.status !== 'active' && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -1319,7 +1316,6 @@ export default function Links() {
                                     lock
                                   </span>
                                 </button>
-                              )
                             )}
                           </div>
                         </div>
@@ -3297,6 +3293,68 @@ export default function Links() {
           </div>
         )
       }
+      {/* MOBILE PREVIEW MODAL */}
+      {showMobilePreview && (
+        <div className="lg:hidden fixed inset-0 z-[100] bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center p-6">
+          <button 
+            onClick={() => setShowMobilePreview(false)}
+            className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all z-20"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+          
+          <div className="w-full max-w-[320px] aspect-[9/19] bg-black rounded-[2.5rem] border-[4px] border-[#333] shadow-2xl overflow-hidden relative">
+             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#333] rounded-b-2xl z-30" />
+             <div className="absolute inset-0 pt-8">
+                <div className="h-full flex flex-col overflow-y-auto custom-scrollbar">
+                  {(currentPage.landingMode as string) === "direct" ? (
+                    <div className="flex-1 bg-[#050505] flex flex-col items-center justify-center px-6 text-center">
+                      <span className="material-symbols-outlined text-5xl text-red-500 mb-6">rocket_launch</span>
+                      <h3 className="text-white font-bold text-lg mb-2">Escudo Directo</h3>
+                      <p className="text-silver/60 text-xs mb-8">Redirección instantánea activa.</p>
+                      <div className="w-full bg-black/40 border border-red-500/20 rounded-xl p-3 text-left">
+                        <span className="text-[9px] font-black text-red-500 uppercase tracking-wider block mb-1">Link Destino</span>
+                        <p className="text-white text-xs truncate">{currentPage.directUrl}</p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div 
+                      className="flex-1 flex flex-col"
+                      style={{
+                        background: getBackgroundStyle(currentPage).background,
+                        backgroundImage: getBackgroundStyle(currentPage).backgroundImage,
+                        backgroundSize: getBackgroundStyle(currentPage).backgroundSize,
+                        backgroundPosition: getBackgroundStyle(currentPage).backgroundPosition,
+                      }}
+                    >
+                      <div className="p-6 pt-12 flex flex-col items-center text-center">
+                         <div className="w-24 h-24 rounded-full border-4 border-white/20 overflow-hidden mb-4 shadow-xl bg-gray-900">
+                            {currentPage.profileImage ? (
+                                <img src={currentPage.profileImage} className="w-full h-full object-cover" />
+                            ) : (
+                                <span className="material-symbols-outlined text-2xl text-white/20 flex items-center justify-center h-full">person</span>
+                            )}
+                         </div>
+                         <h2 className="text-white font-bold text-xl leading-tight uppercase tracking-tighter">{currentPage.profileName}</h2>
+                         <p className="text-white/60 text-xs mt-1">@{currentPage.slug}</p>
+                         
+                         <div className="w-full mt-8 space-y-3">
+                            {currentPage.buttons.map(btn => (
+                              <div key={btn.id} className="w-full py-3.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2" style={{ backgroundColor: btn.color, color: btn.textColor }}>
+                                {btn.title}
+                              </div>
+                            ))}
+                         </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+             </div>
+          </div>
+          
+          <p className="text-silver/40 text-xs mt-6 font-medium uppercase tracking-[0.2em]">Vista Previa en Vivo</p>
+        </div>
+      )}
 
     </div >
   );
