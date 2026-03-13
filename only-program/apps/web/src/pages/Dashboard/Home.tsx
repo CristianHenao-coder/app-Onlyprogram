@@ -66,10 +66,10 @@ export default function Home() {
     return (
         <div className="p-6 space-y-8 animate-fade-in">
             {/* Header */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                 <div>
-                    <h1 className="text-3xl font-black text-white">Home</h1>
-                    <p className="text-silver/60 text-sm mt-1">Gestiona tus links y revisa tu actividad</p>
+                    <h1 className="text-3xl font-black text-white leading-none">Home</h1>
+                    <p className="text-silver/60 text-sm mt-2">Gestiona tus links y revisa tu actividad</p>
                 </div>
                 <Link
                     to="/dashboard/links"

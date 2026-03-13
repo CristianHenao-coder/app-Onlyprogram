@@ -13,7 +13,11 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    const saved = localStorage.getItem("sidebarOpen");
+    return saved !== null ? saved === "true" : true;
+  });
+  const [isHovered, setIsHovered] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [links, setLinks] = useState<any[]>([]);
 
@@ -30,6 +34,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       fetchLinks();
     }
   }, [user]);
+
+  useEffect(() => {
+    localStorage.setItem("sidebarOpen", sidebarOpen.toString());
+  }, [sidebarOpen]);
 
   useEffect(() => {
     // Show tutorial if first time
@@ -143,13 +151,16 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       </button>
 
       {/* Sidebar - Fixed positioning, collapsible on all screen sizes */}
-      <aside
+    <aside
         id="sidebar"
+        onMouseEnter={() => window.innerWidth >= 1024 && setIsHovered(true)}
+        onMouseLeave={() => window.innerWidth >= 1024 && setIsHovered(false)}
         className={`
           fixed top-0 left-0 h-screen bg-[#0a0a0a] border-r border-white/5 
           transition-all duration-300 ease-in-out z-40 flex flex-col
-          ${sidebarOpen ? "w-72" : "w-20"}
-          ${!sidebarOpen ? "max-lg:-translate-x-full" : ""}
+          ${(sidebarOpen || isHovered) ? "w-72" : "w-20"}
+          ${(!sidebarOpen && !isHovered) ? "max-lg:-translate-x-full" : ""}
+          ${isHovered && !sidebarOpen ? "shadow-2xl shadow-black/50 border-r border-primary/20" : ""}
         `}
       >
         {/* Brand Section */}
@@ -158,12 +169,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             <div
               className={`
               flex items-center justify-center transition-all duration-500
-              ${sidebarOpen ? "h-20 w-20" : "h-10 w-10"}
+              ${(sidebarOpen || isHovered) ? "h-20 w-20" : "h-10 w-10"}
             `}
             >
               <Logo className="w-full h-full" imgClassName="p-0" />
             </div>
-            {sidebarOpen && (
+            {(sidebarOpen || isHovered) && (
               <div className="animate-fade-in">
                 <h1 className="text-white font-black tracking-tighter text-xl leading-none uppercase">
                   Only Program
@@ -179,22 +190,24 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className={`
-              flex items-center justify-center h-10 rounded-xl border border-white/10 bg-white/5 text-silver hover:text-white transition-all hover:bg-white/10
-              ${sidebarOpen ? "w-full" : "w-12"}
+              flex items-center justify-center h-10 rounded-xl border transition-all
+              ${sidebarOpen 
+                ? "w-full bg-primary text-white border-primary shadow-lg shadow-primary/20 hover:bg-primary-dark" 
+                : "w-12 bg-white/5 text-silver border-white/10 hover:text-white hover:bg-white/10"}
             `}
             title={sidebarOpen ? "Ocultar menú" : "Mostrar menú"}
           >
             <span className="material-symbols-outlined text-xl">
-              {sidebarOpen ? "menu_open" : "menu"}
+              {sidebarOpen ? "keyboard_double_arrow_left" : "menu"}
             </span>
           </button>
         </div>
 
         {/* FOLDERS & PROFILES SECTION */}
         <div
-          className={`flex-1 overflow-y-auto custom-scrollbar pt-2 space-y-6 transition-all ${sidebarOpen ? "px-4" : "px-3"}`}
+          className={`flex-1 overflow-y-auto custom-scrollbar pt-2 space-y-6 transition-all ${(sidebarOpen || isHovered) ? "px-4" : "px-3"}`}
         >
-          {sidebarOpen ? (
+          {(sidebarOpen || isHovered) ? (
             <>
               {/* FOLDERS SYSTEM */}
               <div className="space-y-3">
@@ -303,7 +316,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
           {/* MAIN MENU ITEMS */}
           <div
-            className={`border-t border-white/5 space-y-1 ${sidebarOpen ? "pt-6" : "pt-4"}`}
+            className={`border-t border-white/5 space-y-1 ${(sidebarOpen || isHovered) ? "pt-6" : "pt-4"}`}
           >
             {menuItems
               .filter((i) => !["nav-home", "nav-links"].includes(i.id))
@@ -317,19 +330,19 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   }
                   className={`
                   flex items-center gap-3 rounded-xl transition-all group
-                  ${sidebarOpen ? "px-4 py-3" : "p-3 justify-center"}
+                  ${(sidebarOpen || isHovered) ? "px-4 py-3" : "p-3 justify-center"}
                   ${
                     isActive(item.path)
                       ? "bg-primary/10 text-primary border border-primary/20"
                       : "text-silver/40 hover:text-white hover:bg-white/5 border border-transparent"
                   }
                 `}
-                  title={!sidebarOpen ? item.label : undefined}
+                  title={!(sidebarOpen || isHovered) ? item.label : undefined}
                 >
                   <span className="material-symbols-outlined text-[20px]">
                     {item.icon}
                   </span>
-                  {sidebarOpen && (
+                  {(sidebarOpen || isHovered) && (
                     <span className="font-bold text-xs uppercase tracking-wide">
                       {item.label}
                     </span>
@@ -342,13 +355,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* User Section */}
         <div className="p-4 mt-auto">
           <div
-            className={`bg-white/5 border border-white/5 rounded-2xl ${sidebarOpen ? "p-4" : "p-2"} transition-all`}
+            className={`bg-white/5 border border-white/5 rounded-2xl ${(sidebarOpen || isHovered) ? "p-4" : "p-2"} transition-all`}
           >
             <div className="flex items-center gap-3">
               <div
                 className={`
                 rounded-xl bg-gradient-to-br from-primary/20 to-blue-500/10 border border-white/10 overflow-hidden shrink-0 transition-all
-                ${sidebarOpen ? "h-12 w-12" : "h-10 w-10"}
+                ${(sidebarOpen || isHovered) ? "h-12 w-12" : "h-10 w-10"}
               `}
               >
                 {user?.user_metadata?.avatar_url ||
@@ -369,7 +382,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   </div>
                 )}
               </div>
-              {sidebarOpen && (
+              {(sidebarOpen || isHovered) && (
                 <div className="flex-1 min-w-0 animate-fade-in">
                   <p className="text-sm font-bold truncate text-white">
                     {user?.user_metadata?.full_name ||
@@ -384,20 +397,20 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
 
             <div
-              className={`flex gap-2 transition-all ${sidebarOpen ? "mt-4" : "flex-col mt-4"}`}
+              className={`flex gap-2 transition-all ${(sidebarOpen || isHovered) ? "mt-4" : "flex-col mt-4"}`}
             >
               <Link
                 to="/dashboard/settings"
-                title={sidebarOpen ? undefined : "Configuración"}
+                title={(sidebarOpen || isHovered) ? undefined : "Configuración"}
                 className={`
                   flex items-center justify-center h-10 rounded-xl bg-white/5 text-silver hover:text-white hover:bg-white/10 border border-white/10 transition-all
-                  ${sidebarOpen ? "flex-1" : "w-10"}
+                  ${(sidebarOpen || isHovered) ? "flex-1" : "w-10"}
                 `}
               >
                 <span className="material-symbols-outlined text-sm">
                   settings
                 </span>
-                {sidebarOpen && (
+                {(sidebarOpen || isHovered) && (
                   <span className="ml-2 text-xs font-bold uppercase tracking-widest">
                     Ajustes
                   </span>
@@ -405,10 +418,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               </Link>
               <button
                 onClick={handleSignOut}
-                title={sidebarOpen ? undefined : "Cerrar Sesión"}
+                title={(sidebarOpen || isHovered) ? undefined : "Cerrar Sesión"}
                 className={`
                   flex items-center justify-center h-10 rounded-xl bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 transition-all
-                  ${sidebarOpen ? "w-12" : "w-10"}
+                  ${(sidebarOpen || isHovered) ? "w-12" : "w-10"}
                 `}
               >
                 <span className="material-symbols-outlined text-sm">
@@ -422,10 +435,40 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Main Content Area */}
       <main
-        className={`min-h-screen transition-all duration-300 ${sidebarOpen ? "lg:ml-72" : "lg:ml-20"}`}
+        className={`min-h-screen transition-all duration-300 ${sidebarOpen ? "lg:ml-72" : "lg:ml-20"} pb-20 lg:pb-0`}
       >
         <div className="p-4 sm:p-6 lg:p-8 pt-20 lg:pt-8">{children}</div>
       </main>
+
+      {/* Bottom Navigation - Mobile/Tablet Only */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#0a0a0a]/80 backdrop-blur-xl border-t border-white/5 z-50 px-6 flex items-center justify-between shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+        {menuItems.slice(0, 5).map((item) => (
+          <Link
+            key={item.path}
+            to={item.path}
+            className={`flex flex-col items-center gap-1 transition-all ${isActive(item.path) ? "text-primary scale-110" : "text-silver/40"}`}
+          >
+            <span className="material-symbols-outlined text-xl">
+              {item.icon}
+            </span>
+            <span className="text-[9px] font-black uppercase tracking-widest leading-none">
+              {item.label.split(' ')[0]}
+            </span>
+          </Link>
+        ))}
+        {/* Toggle Sidebar for more items */}
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="flex flex-col items-center gap-1 text-silver/40"
+        >
+          <span className="material-symbols-outlined text-xl">
+            more_horiz
+          </span>
+          <span className="text-[9px] font-black uppercase tracking-widest leading-none">
+            Más
+          </span>
+        </button>
+      </nav>
     </div>
   );
 }

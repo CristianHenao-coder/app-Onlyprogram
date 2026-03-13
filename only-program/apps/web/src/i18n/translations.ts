@@ -28,6 +28,9 @@ export const translations = {
       viewAll: "Ver Todo",
       yesDeactivate: "Sí, Desactivar",
       cancel: "Cancelar",
+      saveAndClose: "Guardar y Cerrar",
+      loading: "Cargando...",
+      copied: "Copiado",
     },
 
     countries: {
@@ -65,6 +68,7 @@ export const translations = {
       links: "Links",
       payments: "Pagos",
       settings: "Ajustes",
+      analytics: "Analíticas",
       tagline: "Protección & Analíticas • Anti-bot",
     },
 
@@ -408,8 +412,9 @@ export const translations = {
         fullMode: "Full Mode",
         upload: "Subir",
         imageSize: "Tamaño",
+        size: "Tamaño",
+        uploadPhoto: "Subir foto",
         internalName: "Nombre Interno (Dashboard)",
-        saveAndClose: "Guardar y Cerrar",
         appearance: "Apariencia",
         rotatorConfirmTitle: "¿Desactivar Telegram Rotativo?",
         rotatorConfirmMsg:
@@ -428,6 +433,10 @@ export const translations = {
         draft: "Borrador",
         customDomainPro: "Dominio Personalizado Pro",
         linkNotActivated: "Link no activado",
+        editProfile: "Editar Perfil",
+        deleteLink: "Eliminar Link",
+        emptyLinkMsg: "Tu página de TikTok está vacía. ¡Empieza a blindarla!",
+        profileSettings: "Ajustes de Perfil",
         viewPlans: "Ver Planes",
         domainFlowPref: "¿Cómo prefieres usar tu dominio personalizado?",
         buyNewDomain: "Comprar Nuevo Dominio",
@@ -1040,6 +1049,8 @@ export const translations = {
       verifying: "Verifying...",
       back: "Back",
       refresh: "Refresh",
+      error: "Error",
+      errorSendingRequest: "Error sending request",
       payments: {
         wompiLoading: "Loading Wompi...",
         wompiError: "Error loading payment",
@@ -1048,6 +1059,9 @@ export const translations = {
       viewAll: "View All",
       yesDeactivate: "Yes, Deactivate",
       cancel: "Cancel",
+      saveAndClose: "Save and Close",
+      loading: "Loading...",
+      copied: "Copied",
     },
 
     countries: {
@@ -1424,7 +1438,6 @@ export const translations = {
         upload: "Upload",
         imageSize: "Size",
         internalName: "Internal Name (Dashboard)",
-        saveAndClose: "Save and Close",
         appearance: "Appearance",
         rotatorConfirmTitle: "Deactivate Telegram Rotator?",
         rotatorConfirmMsg:
@@ -1443,6 +1456,10 @@ export const translations = {
         draft: "Draft",
         customDomainPro: "Custom Domain Pro",
         linkNotActivated: "Link not activated",
+        editProfile: "Edit Profile",
+        deleteLink: "Delete Link",
+        emptyLinkMsg: "Your TikTok page is empty. Start shielding it!",
+        profileSettings: "Profile Settings",
         viewPlans: "View Plans",
         domainFlowPref: "How do you prefer to use your custom domain?",
         buyNewDomain: "Buy New Domain",

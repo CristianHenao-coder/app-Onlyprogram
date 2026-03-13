@@ -1,13 +1,18 @@
 import { useTranslation } from '@/contexts/I18nContext';
 import { Language } from '@/i18n/translations';
 
+// Import flag icons
+import esFlag from '@/assets/img/espana.png';
+import enFlag from '@/assets/img/reino-unido.png';
+import frFlag from '@/assets/img/francia.png';
+
 export default function LanguageSwitcher() {
     const { language, setLanguage } = useTranslation();
 
-    const langs: { code: Language; label: string }[] = [
-        { code: 'en', label: 'EN' },
-        { code: 'es', label: 'ES' },
-        { code: 'fr', label: 'FR' },
+    const langs: { code: Language; label: string; flag: string }[] = [
+        { code: 'en', label: 'EN', flag: enFlag },
+        { code: 'es', label: 'ES', flag: esFlag },
+        { code: 'fr', label: 'FR', flag: frFlag },
     ];
 
     return (
@@ -16,12 +21,17 @@ export default function LanguageSwitcher() {
                 <button
                     key={l.code}
                     onClick={() => setLanguage(l.code)}
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase transition-all ${language === l.code
-                            ? 'bg-primary text-white shadow-sm'
-                            : 'text-silver/40 hover:text-white hover:bg-white/5'
+                    className={`flex items-center justify-center w-7 h-7 rounded transition-all ${language === l.code
+                            ? 'bg-primary/20 text-white shadow-sm border border-primary/30'
+                            : 'opacity-40 hover:opacity-100 hover:bg-white/5'
                         }`}
+                    title={l.code.toUpperCase()}
                 >
-                    {l.label}
+                    <img 
+                        src={l.flag} 
+                        alt={l.label} 
+                        className="w-4 h-4 object-contain"
+                    />
                 </button>
             ))}
         </div>

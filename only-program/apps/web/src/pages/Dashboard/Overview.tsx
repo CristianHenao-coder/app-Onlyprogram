@@ -41,7 +41,7 @@ export default function Overview() {
   // If no links, show Pricing/Plans and then Payment Methods
   if (links.length === 0) {
     return (
-      <div className="space-y-16 max-w-5xl mx-auto pb-20 animate-fade-in">
+      <div className="max-w-5xl mx-auto px-4 py-12 space-y-16 pb-20 animate-fade-in">
         <div className="text-center space-y-4">
           <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight uppercase">Activa tu primer link protegido</h1>
           <p className="text-silver/60 max-w-2xl mx-auto font-medium">
@@ -89,7 +89,7 @@ export default function Overview() {
 
   // If there are links, show the list
   return (
-    <div className="space-y-6">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-white">Mis Links Protegidos</h1>
@@ -136,7 +136,7 @@ export default function Overview() {
                 <span className="text-xs font-medium">0 clics</span>
               </div>
               <span className="text-primary text-sm font-bold flex items-center gap-1 group-hover:gap-2 transition-all duration-200">
-                Continuar editando
+                {link.status === 'active' ? 'Continuar editando' : 'Completar activación'}
                 <span className="material-symbols-outlined text-sm">arrow_forward</span>
               </span>
             </div>

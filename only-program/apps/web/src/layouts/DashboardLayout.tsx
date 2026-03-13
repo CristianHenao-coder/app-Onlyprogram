@@ -21,7 +21,7 @@ export default function DashboardLayout() {
 
   const navItems: NavItem[] = useMemo(
     () => [
-      { to: "/dashboard/analytics", label: "Analytics", icon: "analytics" },
+      { to: "/dashboard/analytics", label: t("nav.analytics"), icon: "analytics" },
       { to: "/dashboard/links", label: t("nav.links"), icon: "link" },
       { to: "/dashboard/pricing", label: "Precios y Planes", icon: "workspace_premium" },
       { to: "/dashboard/payments", label: t("nav.payments"), icon: "payments" },
@@ -167,7 +167,7 @@ export default function DashboardLayout() {
         </header>
 
         {/* CONTENT */}
-        <main className="px-4 sm:px-6 py-6 pt-20 md:pt-6 relative">
+        <main className="px-0 sm:px-6 py-6 pt-20 md:pt-6 relative">
           <Outlet />
         </main>
       </div>

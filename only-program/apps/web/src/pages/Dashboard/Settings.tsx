@@ -92,7 +92,7 @@ export default function Settings() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-fade-in pb-20">
+    <div className="max-w-5xl mx-auto px-4 py-8 space-y-8 animate-fade-in pb-20">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h1 className="text-3xl font-black text-white tracking-tight">Configuración</h1>
@@ -101,7 +101,7 @@ export default function Settings() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 p-1.5 bg-surface/50 border border-border rounded-2xl w-full md:w-fit backdrop-blur-md">
+      <div className="flex gap-2 p-1.5 bg-surface/50 border border-border rounded-2xl w-full md:w-fit backdrop-blur-md overflow-x-auto scrollbar-hide">
         {[
           { id: 'profile', label: 'Mi Perfil', icon: 'person' },
           { id: 'billing', label: 'Pagos y Facturación', icon: 'payments' },
@@ -132,12 +132,11 @@ export default function Settings() {
                   <div className="w-24 h-24 rounded-3xl bg-primary/10 border-2 border-primary/20 flex items-center justify-center overflow-hidden">
                     <span className="material-symbols-outlined text-5xl text-primary">account_circle</span>
                   </div>
-                  <button type="button" className="absolute -bottom-2 -right-2 p-2 bg-white text-black rounded-lg shadow-xl hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-sm font-bold">edit</span>
-                  </button>
                 </div>
                 <div className="text-center md:text-left">
-                  <h3 className="text-xl font-black text-white">{profile.full_name || 'Nuevo Usuario'}</h3>
+                  <h3 className="text-xl font-black text-white">
+                    {profile.full_name || user?.user_metadata?.full_name || user?.user_metadata?.name || 'Usuario'}
+                  </h3>
                   <p className="text-silver/60 text-sm font-medium">{profile.email}</p>
                 </div>
               </div>

@@ -88,7 +88,7 @@ export default function Analytics() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto space-y-6 animate-pulse">
+      <div className="max-w-7xl mx-auto px-4 py-8 space-y-6 animate-pulse">
         <Skeleton className="h-16 w-full" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28" />)}
@@ -104,7 +104,7 @@ export default function Analytics() {
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto flex flex-col items-center justify-center py-20 text-center gap-4">
+      <div className="max-w-7xl mx-auto px-4 py-12 flex flex-col items-center justify-center text-center gap-4">
         <span className="material-symbols-outlined text-5xl text-red-400">error</span>
         <p className="text-white font-bold text-lg">{error}</p>
         <button onClick={() => window.location.reload()} className="px-6 py-2 bg-primary rounded-xl text-white font-bold text-sm hover:bg-primary/80 transition-all">
@@ -119,7 +119,7 @@ export default function Analytics() {
   const hasData = d.totalClicks > 0 || d.botsBlocked > 0;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
 
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
