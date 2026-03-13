@@ -69,14 +69,31 @@ export default function Payments() {
     }
   }, []);
 
-  // Prices
-  const perLinkBase = (pricingCfg?.link?.base ?? 0)
-    + (pendingPurchase?.hasRotator ? (pricingCfg?.link?.telegramAddon ?? 0) : 0)
-    + (pendingPurchase?.hasInstagram ? (pricingCfg?.link?.instagramAddon ?? 0) : 0);
+  // Prices calculation
+  const calculatedBaseTotal = linksData.reduce((acc, link) => {
+    let linkPrice = 0;
+    
+    // Choose base price based on landing mode
+    if (link.landingMode === "dual") {
+      linkPrice = pricingCfg.link.dual;
+    } else if (link.landingMode === "direct") {
+      linkPrice = pricingCfg.link.instagram;
+    } else {
+      // Default / TikTok template
+      linkPrice = pricingCfg.link.tiktok;
+    }
+
+    // Addons - Check if any button has rotator active
+    if (link.buttons?.some((b: any) => b.rotator_active)) {
+      linkPrice += pricingCfg.link.telegramAddon;
+    }
+    
+    return acc + linkPrice;
+  }, 0);
 
   const baseTotal = pendingPurchase?.baseAmount || (
     isFromLinks
-      ? perLinkBase * linksData.length
+      ? calculatedBaseTotal
       : pendingPurchase?.amount || 0
   );
 
@@ -149,7 +166,7 @@ export default function Payments() {
   const fmt = (n: number) => `$${n.toFixed(2)}`;
 
   return (
-    <div className="p-4 sm:p-6 max-w-5xl mx-auto pb-20 animate-fade-in">
+    <div className="w-full px-6 py-12 pb-32 animate-fade-in">
 
       {/* ── STEP 1: CART + COUPON ── */}
       {currentStep === "cart" && (
@@ -170,11 +187,11 @@ export default function Payments() {
             <p className="text-silver/40 text-sm mt-1">Revisa tu pedido y aplica un cupón antes de pagar.</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
             {/* Left: Links detail */}
             <div className="lg:col-span-2 space-y-4">
-              <div className="rounded-2xl border border-white/10 bg-[#080808] overflow-hidden">
+              <div className="rounded-3xl border border-white/10 bg-[#080808] overflow-hidden shadow-2xl">
                 {/* Cart header */}
                 <div className="px-6 py-4 border-b border-white/5 flex items-center gap-2">
                   <span className="material-symbols-outlined text-primary text-base">shopping_cart</span>
@@ -185,33 +202,45 @@ export default function Payments() {
 
                 {/* Link rows */}
                 <div className="divide-y divide-white/5">
-                  {linksData.map((link: any, i: number) => (
-                    <div key={link.id || i} className="flex items-center gap-4 px-6 py-4">
-                      {/* Thumbnail */}
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
-                        style={{ background: link.theme?.backgroundStart || "#111" }}
-                      >
-                        {link.profileImage && link.profileImage !== "" ? (
-                          <img src={link.profileImage} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="material-symbols-outlined text-white/40 text-base">link</span>
-                        )}
+                  {linksData.map((link: any, i: number) => {
+                    let linkPrice = 0;
+                    if (link.landingMode === "dual") linkPrice = pricingCfg.link.dual;
+                    else if (link.landingMode === "direct") linkPrice = pricingCfg.link.instagram;
+                    else linkPrice = pricingCfg.link.tiktok;
+
+                    if (link.buttons?.some((b: any) => b.rotator_active)) {
+                      linkPrice += pricingCfg.link.telegramAddon;
+                    }
+
+                    return (
+                      <div key={link.id || i} className="flex items-center gap-4 px-6 py-4">
+                        {/* Thumbnail */}
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
+                          style={{ background: link.theme?.backgroundStart || "#111" }}
+                        >
+                          {link.profileImage && link.profileImage !== "" ? (
+                            <img src={link.profileImage} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="material-symbols-outlined text-white/40 text-base">link</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-white text-sm truncate">
+                            {link.name || `Link ${i + 1}`}
+                          </p>
+                          <p className="text-[11px] text-silver/40 truncate flex gap-2">
+                            {link.landingMode === "dual" && <span>Dual</span>}
+                            {link.landingMode === "direct" && <span>Directo</span>}
+                            {link.buttons?.some((b: any) => b.rotator_active) && <span>+ Rotador</span>}
+                          </p>
+                        </div>
+                        <span className="text-sm font-mono text-white shrink-0">
+                          {fmt(linkPrice)}
+                        </span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-white text-sm truncate">
-                          {link.name || `Link ${i + 1}`}
-                        </p>
-                        <p className="text-[11px] text-silver/40 truncate flex gap-2">
-                          {pendingPurchase?.hasRotator && <span>+ Telegram</span>}
-                          {pendingPurchase?.hasInstagram && <span>+ Instagram</span>}
-                        </p>
-                      </div>
-                      <span className="text-sm font-mono text-white shrink-0">
-                        {fmt(perLinkBase)}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Totals */}
@@ -239,7 +268,7 @@ export default function Payments() {
             {/* Right: Coupon + CTA */}
             <div className="space-y-4">
               {/* Coupon box */}
-              <div className="rounded-2xl border border-white/10 bg-[#080808] px-6 py-5">
+              <div className="rounded-3xl border border-white/10 bg-[#080808] px-8 py-8 shadow-xl">
                 <label className="text-[10px] font-black text-silver/40 uppercase tracking-widest mb-3 flex items-center gap-1.5">
                   <span className="material-symbols-outlined text-sm">confirmation_number</span>
                   Cupón de Descuento
@@ -291,7 +320,7 @@ export default function Payments() {
               </div>
 
               {/* Order summary card */}
-              <div className="rounded-2xl border border-white/10 bg-[#080808] px-6 py-5 space-y-2">
+              <div className="rounded-3xl border border-white/10 bg-[#080808] px-8 py-8 space-y-4 shadow-xl">
                 <div className="flex justify-between text-xs text-silver/40">
                   <span>{linksData.length} link{linksData.length !== 1 ? "s" : ""}</span>
                   <span className="font-mono">{fmt(baseTotal)}</span>
