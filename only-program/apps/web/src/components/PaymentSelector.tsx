@@ -267,32 +267,35 @@ export default function PaymentSelector({
       {/* ── PAYMENT CONTENT ── */}
       <div className="mt-8 p-8 bg-background-dark/30 border border-border/50 rounded-3xl min-h-[300px]">
 
-        {/* ── QR WOMPI ── */}
-        {paymentMethod === 'qr' && (
-          <div className="animate-fade-in space-y-6">
-            <div className="flex items-center justify-between">
-              <h4 className="text-lg font-black text-white px-1">Pagar con QR Wompi</h4>
-              <span className="text-[10px] font-black bg-red-500/20 text-red-400 border border-red-500/20 px-3 py-1 rounded-full uppercase">
-                Nequi · PSE · Tarjeta
-              </span>
+        {(!amount || amount <= 0) ? (
+          <div className="flex flex-col items-center justify-center py-14 gap-5 text-center animate-fade-in px-4">
+            <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center border border-primary/20 shadow-[0_0_30px_rgba(0,123,255,0.15)]">
+              <span className="material-symbols-outlined text-5xl text-primary/80">shopping_cart_checkout</span>
             </div>
-
-            {/* Sin monto — no genera QR */}
-            {(!amount || amount <= 0) && (
-              <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
-                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center">
-                  <span className="material-symbols-outlined text-3xl text-silver/30">shopping_cart</span>
+            <h3 className="text-white font-black text-2xl uppercase tracking-tight">Acción Requerida</h3>
+            <p className="text-silver/60 text-sm max-w-md leading-relaxed mt-1">
+              Para habilitar los métodos de pago y proceder con la transacción, es indispensable que agregues al menos un servicio o factura. <br className="hidden md:block" />Actualmente tu saldo a pagar es <strong className="text-white bg-white/10 px-2 pl-2.5 py-1 rounded-md ml-1 font-mono tracking-wide">$0.00</strong>
+            </p>
+            <button 
+              onClick={() => window.location.href = '/dashboard/links'}
+              className="mt-6 px-8 py-4 bg-white hover:bg-silver text-black font-black uppercase tracking-wider text-xs rounded-xl shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-base">arrow_back</span>
+              Completar mi pedido
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* ── QR WOMPI ── */}
+            {paymentMethod === 'qr' && (
+              <div className="animate-fade-in space-y-6">
+                <div className="flex items-center justify-between mx-1">
+                  <h4 className="text-lg font-black text-white">Pagar con QR Wompi</h4>
+                  <span className="text-[10px] font-black bg-red-500/20 text-red-400 border border-red-500/20 px-3 py-1 rounded-full uppercase">
+                    Nequi · PSE · Tarjeta
+                  </span>
                 </div>
-                <p className="text-silver/50 font-bold text-sm">No hay productos en tu carrito</p>
-                <p className="text-silver/30 text-xs max-w-xs">
-                  Agrega links u otros servicios a tu pedido para generar el QR de pago.
-                </p>
-              </div>
-            )}
 
-            {/* Con monto — mostrar QR */}
-            {amount && amount > 0 && (
-              <>
                 {/* Monto en USD */}
                 <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
                   <span className="material-symbols-outlined text-red-400 text-xl">payments</span>
@@ -409,10 +412,8 @@ export default function PaymentSelector({
                     </div>
                   </div>
                 )}
-              </>
+              </div>
             )}
-          </div>
-        )}
 
         {/* ── PAYPAL ── */}
         {paymentMethod === 'paypal' && (
@@ -609,6 +610,8 @@ export default function PaymentSelector({
               </div>
             )}
           </div>
+        )}
+          </>
         )}
       </div>
 

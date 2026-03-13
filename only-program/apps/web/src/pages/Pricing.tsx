@@ -22,6 +22,8 @@ export default function Pricing() {
   const [dualTab, setDualTab] = useState<'dual' | 'meta' | 'tiktok'>('dual');
   const [linkType, setLinkType] = useState<'meta' | 'tiktok' | 'dual'>('dual');
   const [linkCount, setLinkCount] = useState(1);
+  const [applyPromo, setApplyPromo] = useState(false);
+  const PROMO_DISCOUNT = 0.30;
 
   const SERVICE_PRICES = { meta: 59, tiktok: 69, dual: 83 } as const;
   const basePrice = SERVICE_PRICES[linkType];
@@ -33,7 +35,8 @@ export default function Pricing() {
     return 0;
   };
   const currentDiscount = getDiscount(linkCount);
-  const totalPrice = basePrice * linkCount * (1 - currentDiscount);
+  let totalPrice = basePrice * linkCount * (1 - currentDiscount);
+  if (applyPromo) totalPrice *= (1 - PROMO_DISCOUNT);
 
   return (
     <div className="min-h-screen bg-background-dark text-silver">
@@ -177,7 +180,7 @@ export default function Pricing() {
               </div>
               <div>
                 <h3 className="text-lg font-bold text-white mb-1">Pagos Transparentes y Cupones</h3>
-                <p className="text-sm text-silver/60 leading-relaxed max-w-2xl">Al renovar o adquirir tu suscripción mensual, incluyendo el <strong className="text-white">Sistema Dual (+16$/mes)</strong>, si tienes un <strong>Cupón de Descuento</strong>, el porcentaje aplicará directamente sobre la suma total de tu compra. ¡Consigue tus pro-links todavía más baratos!</p>
+                <p className="text-sm text-silver/60 leading-relaxed max-w-2xl">Al renovar o adquirir tu suscripción mensual, incluyendo el <strong className="text-white">Sistema Dual</strong>, si tienes un <strong>Cupón de Descuento</strong>, el porcentaje aplicará directamente sobre la suma total de tu compra. ¡Consigue tus pro-links todavía más baratos!</p>
               </div>
             </div>
 
@@ -188,7 +191,16 @@ export default function Pricing() {
 
               <div className="relative z-10">
                 <span className="text-[10px] font-black uppercase tracking-widest text-silver/40">Calculadora</span>
-                <h2 className="text-2xl md:text-3xl font-black text-white mt-1">Compra individual o masiva</h2>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-1">
+                  <h2 className="text-2xl md:text-3xl font-black text-white">Compra individual o masiva</h2>
+                  <button 
+                    onClick={() => setApplyPromo(!applyPromo)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all whitespace-nowrap border ${applyPromo ? 'bg-green-500/10 border-green-500/50 text-green-400 shadow-[0_0_15px_rgba(34,197,94,0.2)]' : 'bg-white/5 border-white/10 text-silver/40 hover:bg-white/10'}`}
+                  >
+                    <span className="material-symbols-outlined text-sm">{applyPromo ? 'check_circle' : 'add_circle'}</span>
+                    Aplicar Promo 30% OFF
+                  </button>
+                </div>
               </div>
 
               <div className="relative z-10 pt-2">
@@ -240,7 +252,12 @@ export default function Pricing() {
                   <p className="text-silver/50 text-xs font-bold uppercase tracking-wider mb-1">Costo Estimado Mensual</p>
                   <div className="flex items-end justify-center sm:justify-start gap-3">
                     <span className="text-4xl font-black text-white">${totalPrice.toFixed(0)} <span className="text-lg text-silver/40 font-bold">USD</span></span>
-                    {currentDiscount > 0 && <span className="text-sm text-silver/50 line-through mb-1">${(basePrice * linkCount).toFixed(0)}</span>}
+                    {(currentDiscount > 0 || applyPromo) && (
+                      <span className="text-sm text-silver/50 line-through mb-1">
+                        ${(basePrice * linkCount).toFixed(0)}
+                      </span>
+                    )}
+                    {applyPromo && <span className="text-[10px] font-black bg-green-500/20 text-green-400 px-2 py-0.5 rounded border border-green-500/20 mb-2 uppercase tracking-tighter">Con 30% OFF Extra</span>}
                   </div>
                 </div>
                 <Link to="/register" className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white text-black text-sm font-black hover:bg-silver transition-all uppercase tracking-widest shadow-xl shadow-white/10 text-center">Comenzar Ahora</Link>
@@ -252,7 +269,7 @@ export default function Pricing() {
               <div className="rounded-[2rem] border border-primary/30 bg-primary/10 p-6 sm:p-8 text-center cursor-pointer transition-all hover:bg-primary/20 hover:border-primary/50 shadow-[0_0_30px_rgba(29,161,242,0.1)]" onClick={() => setShowCouponGuide(!showCouponGuide)}>
                 <div className="flex items-center justify-center gap-3 mb-2">
                   <span className="material-symbols-outlined text-primary text-3xl">local_offer</span>
-                  <h3 className="text-xl sm:text-2xl font-black text-white">¿Cómo conseguir un cupón del 33% OFF?</h3>
+                  <h3 className="text-xl sm:text-2xl font-black text-white">¿Cómo conseguir un cupón del 30% OFF?</h3>
                 </div>
                 <p className="text-silver/70 font-medium text-sm sm:text-base">Haz clic aquí para descubrir cómo obtener un descuento especial para tu primera compra.</p>
                 
@@ -266,7 +283,7 @@ export default function Pricing() {
                       <li>Síguenos en nuestra cuenta oficial de Instagram: <a href="http://instagram.com/blackonlypro/" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-white transition-colors underline font-bold">@blackonlypro</a>.</li>
                       <li>Busca nuestra <strong className="text-white">última publicación fijada</strong> relacionada con el cupón.</li>
                       <li>Comenta la palabra <span className="text-primary font-extrabold uppercase bg-primary/20 px-2 py-0.5 rounded text-[13px]">"CUPON"</span> en esa publicación.</li>
-                      <li>¡Listo! Recibirás inmediatamente tu cupón del <strong className="text-green-400">33% de descuento</strong> por mensaje directo para aplicarlo en tu primera compra en la plataforma.</li>
+                      <li>¡Listo! Recibirás inmediatamente tu cupón del <strong className="text-green-400">30% de descuento</strong> por mensaje directo para aplicarlo en tu primera compra en la plataforma.</li>
                     </ol>
                   </div>
                 )}
@@ -317,9 +334,9 @@ export default function Pricing() {
 
                   <div className="grid sm:grid-cols-3 gap-6 mb-10 text-left">
                     <div className="bg-background-dark/80 border border-white/5 rounded-3xl p-6 hover:bg-white/5 transition-all relative overflow-hidden">
-                      <div className="w-12 h-12 rounded-xl bg-green-500/20 text-green-400 flex items-center justify-center mb-5 text-2xl font-bold border border-green-500/20">$</div>
-                      <h4 className="text-white text-lg font-bold mb-2">Comienza con $3 USD</h4>
-                      <p className="text-sm text-silver/60">Obtienes 3 dólares inmediatos y directos a tu bolsillo por <strong>cada persona</strong> que invite a adquirir un plan a través de ti.</p>
+                      <div className="w-12 h-12 rounded-xl bg-green-500/20 text-green-400 flex items-center justify-center mb-5 text-2xl font-bold border border-green-500/20">%</div>
+                      <h4 className="text-white text-lg font-bold mb-2">Comisión del 33%</h4>
+                      <p className="text-sm text-silver/60">Obtienes el <strong>33% de cada venta</strong> generada a través de tu link de referido. ¡Un ingreso masivo y directo a tu bolsillo!</p>
                     </div>
 
                     <div className="bg-background-dark/80 border border-white/5 rounded-3xl p-6 hover:bg-white/5 transition-all relative overflow-hidden">
@@ -330,16 +347,24 @@ export default function Pricing() {
 
                     <div className="bg-background-dark/80 border border-white/5 rounded-3xl p-6 hover:bg-white/5 transition-all relative overflow-hidden">
                       <div className="w-12 h-12 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center mb-5 font-bold border border-purple-500/20">
-                        <span className="material-symbols-outlined text-2xl">trending_up</span>
+                        <span className="material-symbols-outlined text-2xl">volunteer_activism</span>
                       </div>
-                      <h4 className="text-white text-lg font-bold mb-2">Escala tu Capital</h4>
-                      <p className="text-sm text-silver/60">Los tres dólares son solo tu inicio. Entre más referidos sumes a tu red, el retorno pasivo puede hacer crecer tus ganancias hasta límites impensables.</p>
+                      <h4 className="text-white text-lg font-bold mb-2">Gana sin invertir</h4>
+                      <p className="text-sm text-silver/60">Hoy mismo puedes empezar a ganar refiriendo nuestro servicio. Gana comisiones por cada suscripción; solo debes registrarte y entrar a la sección de <strong>"Referidos"</strong> para comenzar.</p>
                     </div>
                   </div>
 
-                  <p className="text-sm text-silver/50 max-w-2xl mx-auto">
-                    Construye un modelo de comisiones que trabaje por ti todos los meses y benefíciate de nuestro crecimiento compartiéndolo con tu círculo.
-                  </p>
+                  <div className="flex flex-col items-center gap-4">
+                    <p className="text-sm text-silver/50 max-w-2xl mx-auto">
+                      Construye un modelo de comisiones que trabaje por ti todos los meses y benefíciate de nuestro crecimiento compartiéndolo con tu círculo.
+                    </p>
+                    <Link
+                      to="/register"
+                      className="inline-flex items-center justify-center px-8 py-3 rounded-xl bg-primary text-black font-black text-sm tracking-widest uppercase shadow-lg shadow-primary/30 hover:bg-white hover:text-black transition-all"
+                    >
+                      Crear tu perfil
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
