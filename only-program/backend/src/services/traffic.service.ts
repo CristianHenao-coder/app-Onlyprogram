@@ -28,6 +28,7 @@ export interface TrafficAnalysisResult {
     action: 'allow' | 'show_overlay' | 'block' | 'direct_redirect';
     type?: string;
     device?: 'ios' | 'android' | 'desktop';
+    tier?: 'high' | 'low';
     flags?: Record<string, boolean>;
     score?: number;
 }
@@ -54,6 +55,12 @@ export const TrafficService = {
         const isIOS = /iphone|ipad|ipod/.test(ua);
         const isAndroid = /android/.test(ua);
         const device: 'ios' | 'android' | 'desktop' = isIOS ? 'ios' : isAndroid ? 'android' : 'desktop';
+
+        // ── 2.5 DETECCIÓN DE GAMA (Best Effort via UA) ─────────────────────
+        // Modelos Premium conocidos
+        const isPremiumModel = /pro|ultra|max|s22|s23|s24|fold|flip|pixel 7|pixel 8|pixel 9/i.test(ua);
+        // iOS suele considerarse Gama Alta a menos que sea muy viejo (difícil de saber por UA solo)
+        const tier: 'high' | 'low' = (isPremiumModel || (isIOS && !/iphone os [1-9]_/.test(ua))) ? 'high' : 'low';
 
         // iOS: Safari limpio tiene "Version/X Safari"
         const isCleanSafari = /version\/.*safari/.test(ua);
@@ -94,6 +101,7 @@ export const TrafficService = {
                 action: 'show_overlay',
                 type: isInstagramThreads ? 'instagram_threads' : 'social_app',
                 device,
+                tier,
                 flags: { isSocialApp, isInstagramThreads, isIOSInApp, isAndroidWebView },
                 score,
             };
@@ -101,15 +109,15 @@ export const TrafficService = {
 
         // Bots conocidos con score alto → bloquear
         if (score >= BOT_BLOCK_THRESHOLD) {
-            return { action: 'block', type: 'known_bot', device, score };
+            return { action: 'block', type: 'known_bot', device, tier, score };
         }
 
         // Score medio → desafío (el frontend redirige al challenge)
         if (score >= BOT_CHALLENGE_THRESHOLD) {
-            return { action: 'block', type: 'suspicious', device, score };
+            return { action: 'block', type: 'suspicious', device, tier, score };
         }
 
-        return { action: 'allow', device, score };
+        return { action: 'allow', device, tier, score };
     },
 };
 

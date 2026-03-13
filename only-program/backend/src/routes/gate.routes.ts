@@ -133,20 +133,20 @@ router.get("/api/gate/:slug", async (req, res) => {
       const igBtn = buttons.find((b) => b.type === "instagram");
       const firstBtn = buttons[0];
 
-      if (ofBtn) {
-        targetUrl = ofBtn.url;
-      } else if (tgBtn) {
-        if (tgBtn.rotator_active) {
-          // 🔥 FIX: No rotamos en la carga inicial de la landing (eso genera clics fantasma).
-          // La rotación real ocurre en la ruta GET /t/:slug cuando el usuario hace clic.
-          targetUrl = tgBtn.url;
-        } else {
-          targetUrl = tgBtn.url;
+      let selectedBtn = ofBtn || tgBtn || igBtn || firstBtn;
+
+      if (selectedBtn) {
+        targetUrl = selectedBtn.url;
+
+        // Aplicar targeting por gama si existe el link específico
+        const redirects = selectedBtn.device_redirects || selectedBtn.deviceRedirects;
+        if (redirects) {
+          if (trafficAnalysis.tier === 'high' && redirects.ios) {
+            targetUrl = redirects.ios;
+          } else if (trafficAnalysis.tier === 'low' && redirects.android) {
+            targetUrl = redirects.android;
+          }
         }
-      } else if (igBtn) {
-        targetUrl = igBtn.url;
-      } else if (firstBtn) {
-        targetUrl = firstBtn.url;
       }
 
       // Fallback a columnas legacy si no hay botones

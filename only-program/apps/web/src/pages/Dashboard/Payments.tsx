@@ -64,7 +64,8 @@ export default function Payments() {
   // Prices
   const perLinkBase = (pricingCfg?.link?.base ?? 0)
     + (pendingPurchase?.hasRotator ? (pricingCfg?.link?.telegramAddon ?? 0) : 0)
-    + (pendingPurchase?.hasInstagram ? (pricingCfg?.link?.instagramAddon ?? 0) : 0);
+    + (pendingPurchase?.hasInstagram ? (pricingCfg?.link?.instagramAddon ?? 10) : 0)
+    + (pendingPurchase?.hasTikTok ? (pricingCfg?.link?.instagramAddon ?? 10) : 0);
 
   const baseTotal = pendingPurchase?.baseAmount || (
     isFromLinks
@@ -196,7 +197,8 @@ export default function Payments() {
                         </p>
                         <p className="text-[11px] text-silver/40 truncate flex gap-2">
                           {pendingPurchase?.hasRotator && <span>+ Telegram</span>}
-                          {pendingPurchase?.hasInstagram && <span>+ Instagram</span>}
+                          {pendingPurchase?.hasInstagram && <span>+ Escudo Meta</span>}
+                          {pendingPurchase?.hasTikTok && <span>+ Escudo TikTok</span>}
                         </p>
                       </div>
                       <span className="text-sm font-mono text-white shrink-0">

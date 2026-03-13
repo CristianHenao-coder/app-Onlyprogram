@@ -16,331 +16,31 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import { supabase } from "@/services/supabase";
 import { useAuth } from "@/hooks/useAuth";
-
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { linksService } from "@/services/links.service";
-
 import {
   productPricingService,
   DEFAULT_PRODUCT_PRICING,
   type ProductPricingConfig,
 } from "@/services/productPricing.service";
 
-// Import Social Media Logos
-import instagramLogo from "@/assets/animations/instagram.png";
-import tiktokLogo from "@/assets/animations/tik-tok.png";
+// ─── Sub-module imports ────────────────────────────────────────────────────────
+import type { ButtonLink, LinkPage, TemplateType, BackgroundType, PageStatus, SocialType, FontType } from "./links/types";
+import { Icons, getSocialPresets, getDefaults, FONT_MAP, cleanButtons, getBackgroundStyle, isValidUrl } from "./links/constants";
+import { SortableButton } from "./links/SortableButton";
+import { ButtonEditorPanel } from "./links/ButtonEditorPanel";
+import { PageConfigPanel } from "./links/PageConfigPanel";
+import { LinkTypeSelector } from "./links/LinkTypeSelector";
 
-// Types
-type TemplateType = "minimal" | "split" | "full";
-type SocialType = "instagram" | "tiktok" | "telegram" | "onlyfans" | "custom";
-type FontType = "sans" | "serif" | "mono" | "display";
-type PageStatus = "active" | "draft";
-type BackgroundType = "solid" | "gradient" | "blur";
-
-// Social types that MUST be unique per page (except for custom which can be multiple)
-const UNIQUE_SOCIAL_TYPES: SocialType[] = [
-  "instagram",
-  "tiktok",
-  "telegram",
-  "onlyfans",
-];
-
-/**
- * Utility to deduplicate buttons by type for specific social networks.
- * Keeps only the first occurrence of each unique social type.
- */
-const cleanButtons = (buttons: any[]): ButtonLink[] => {
-  const seenTypes = new Set<SocialType>();
-  return buttons
-    .filter((btn) => {
-      if (UNIQUE_SOCIAL_TYPES.includes(btn.type)) {
-        if (seenTypes.has(btn.type)) return false;
-        seenTypes.add(btn.type);
-      }
-      return true;
-    })
-    .map((btn) => ({
-      id: btn.id,
-      type: btn.type,
-      title: btn.title,
-      subtitle: btn.subtitle || "",
-      url: btn.url || "",
-      color: btn.color,
-      textColor: btn.textColor || btn.text_color,
-      font: btn.font || "sans",
-      borderRadius: btn.borderRadius ?? btn.border_radius ?? 12,
-      opacity: btn.opacity ?? 100,
-      isActive: btn.isActive ?? btn.is_active ?? true,
-      metaShield: btn.metaShield ?? btn.meta_shield ?? false,
-      rotatorActive: btn.rotatorActive ?? btn.rotator_active ?? false,
-      rotatorLinks: btn.rotatorLinks || btn.rotator_links || ["", "", "", "", ""],
-      deviceRedirects: btn.deviceRedirects || btn.device_redirects || { ios: "", android: "" },
-    }));
-};
-
-interface ButtonLink {
-  id: string;
-  type: SocialType;
-  title: string;
-  subtitle?: string;
-  url: string;
-  color: string;
-  textColor: string;
-  font: FontType;
-  borderRadius: number;
-  opacity: number;
-  isActive: boolean;
-  // Rotator Features
-  rotatorActive?: boolean;
-  rotatorLinks?: string[]; // Up to 5
-  // Shield Features
-  metaShield?: boolean;
-  // Device Redirection
-  deviceRedirects?: {
-    ios: string;
-    android: string;
-  };
-}
-
-interface LinkPage {
-  id: string;
-  status: PageStatus;
-  name: string;
-  profileName: string;
-  profileImage: string;
-  profileImageSize?: number; // 0-100 scale
-  template: TemplateType;
-  landingMode?: "circle" | "full" | "direct" | "dual";
-  security_config?: {
-    geoblocking?: string[];
-    device_redirections?: {
-      ios?: string;
-      android?: string;
-      desktop?: string;
-    };
-  };
-  directUrl?: string;
-  theme: {
-    pageBorderColor: string;
-    overlayOpacity: number; // 0-100
-    backgroundType: BackgroundType;
-    backgroundStart: string;
-    backgroundEnd: string;
-  };
-  buttons: ButtonLink[];
-  folder?: string;
-  customDomain?: string;
-  domainStatus?: "none" | "pending" | "active" | "failed";
-  domainNotes?: string;
-  slug?: string;
-  dbStatus?: string; // Real status from DB (pending, active, etc.)
-  telegramMaxCapacity?: number; // Max clicks per rotator link before rotating
-  telegramRotationLimit?: number; // Rotate every N clicks (1 = round robin)
-  modelName?: string; // Internal name for domain identification
-}
-
+// PageData re-export for external consumers
 export type PageData = LinkPage;
 
-// Icons Components
-const Icons = {
-  Instagram: () => (
-    <img
-      src={instagramLogo}
-      alt="Instagram"
-      className="w-full h-full object-contain"
-    />
-  ),
-  Facebook: () => (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-blue-500">
-      <path d="M14 13.5h2.5l1-4H14v-2c0-1.03 0-2 2-2h1.5V2.14c-.326-.043-1.557-.14-2.857-.14-2.85 0-4.643 1.743-4.643 4.96v2.54H7.5v4h2.5v11h4v-11z" />
-    </svg>
-  ),
-  TikTok: () => (
-    <img
-      src={tiktokLogo}
-      alt="TikTok"
-      className="w-full h-full object-contain"
-    />
-  ),
-  Telegram: () => (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
-      <path d="M20.665 3.717l-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.579.192l-8.533 7.701h-.002l.002.001-.314 4.692c.46 0 .663-.211.921-.46l2.211-2.15 4.599 3.397c.848.467 1.457.227 1.668-.785l3.019-14.228c.309-1.239-.473-1.8-1.282-1.441z" />
-    </svg>
-  ),
-  OnlyFans: () => (
-    <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full">
-      <path d="M16.48 2.02c-4.14 0-7.5 3.36-7.5 7.5s3.36 7.5 7.5 7.5 7.5-3.36 7.5-7.5-3.36-7.5-7.5-7.5zm0 12.5c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm-11.5 5.5c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm0-7.5c1.38 0 2.5 1.12 2.5 2.5s-1.12 2.5-2.5 2.5-2.5-1.12-2.5-2.5 1.12-2.5 2.5-2.5z" />
-    </svg>
-  ),
-  Custom: () => <span className="material-symbols-outlined text-xl">link</span>,
-};
 
-// Social Configs
-const getSocialPresets = (t: any) => ({
-  instagram: {
-    title: "Instagram",
-    color: "#FFFFFF",
-    textColor: "#000000",
-    icon: <Icons.Instagram />,
-    placeholder: t("dashboard.links.instagramPlaceholder"),
-  },
-  tiktok: {
-    title: "TikTok",
-    color: "#000000",
-    icon: <Icons.TikTok />,
-    placeholder: t("dashboard.links.tiktokPlaceholder"),
-  },
-  telegram: {
-    title: "Telegram",
-    color: "#0088cc",
-    icon: <Icons.Telegram />,
-    placeholder: t("dashboard.links.telegramPlaceholder"),
-  },
-  onlyfans: {
-    title: t("home.preview.linksDemo.vipAccess"),
-    color: "#00AFF0",
-    icon: <Icons.OnlyFans />,
-    placeholder: t("dashboard.links.onlyfansPlaceholder"),
-  },
-  custom: {
-    title: t("dashboard.links.editButton"),
-    color: "#333333",
-    icon: <Icons.Custom />,
-    placeholder: "https://...",
-  },
-});
 
-const getDefaults = (t: any) => ({
-  PROFILE_IMAGE:
-    "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
-  PAGE: {
-    id: "",
-    status: "draft" as PageStatus,
-    name: t("dashboard.links.untitledLink"),
-    profileName: t("dashboard.links.profileName"),
-    profileImage:
-      "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
-    profileImageSize: 100,
-    template: "minimal" as TemplateType,
-    landingMode: "circle" as const,
-    directUrl: "",
-    modelName: "",
-    theme: {
-      pageBorderColor: "#333333",
-      overlayOpacity: 40,
-      backgroundType: "solid" as BackgroundType,
-      backgroundStart: "#000000",
-      backgroundEnd: "#1a1a1a",
-    },
-    buttons: [],
-    domainStatus: "none" as const,
-  },
-});
-
-// Font Classes Mapping
-const FONT_MAP: Record<FontType, string> = {
-  sans: "font-sans",
-  serif: "font-serif",
-  mono: "font-mono",
-  display: "font-sans tracking-widest",
-};
-
-// --- DND COMPONENT ---
-function SortableButton({
-  btn,
-  isSelected,
-  onClick,
-  collapsed = false,
-  rotatorSurcharge,
-  socialPresets,
-}: {
-  btn: ButtonLink;
-  isSelected: boolean;
-  onClick: () => void;
-  collapsed?: boolean;
-  rotatorSurcharge: number;
-  socialPresets: any;
-}) {
-  const { t } = useTranslation();
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id: btn.id });
-  const style = { transform: CSS.Transform.toString(transform), transition };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      onClick={onClick}
-      className={`w-full p-3 rounded-xl border cursor-grab active:cursor-grabbing transition-all relative group touch-none ${collapsed
-        ? "flex items-center justify-center"
-        : "flex items-center gap-3"
-        } ${isSelected ? "bg-white/5 border-primary shadow-lg" : "bg-transparent border-transparent hover:bg-white/[0.02]"}`}
-      title={collapsed ? btn.title : undefined} // Show title on hover only when collapsed
-    >
-      <div
-        className={`rounded-lg flex items-center justify-center shrink-0 ${collapsed ? "h-10 w-10" : "h-8 w-8"}`}
-        style={{ backgroundColor: btn.color }}
-      >
-        <div className={`text-white ${collapsed ? "w-6 h-6" : "w-4 h-4"}`}>
-          {socialPresets[btn.type].icon}
-        </div>
-      </div>
-
-      {!collapsed && (
-        <div className="min-w-0 flex-1">
-          <p
-            className={`text-xs font-bold truncate ${isSelected ? "text-white" : "text-silver/60"}`}
-          >
-            {btn.title}
-          </p>
-          {btn.type === "telegram" && btn.rotatorActive && (
-            <p className="text-[9px] text-green-500 font-bold uppercase tracking-wide mt-0.5 flex items-center gap-1">
-              <span className="material-symbols-outlined text-[10px]">
-                sync
-              </span>{" "}
-              {t("dashboard.links.rotatorActiveLabel", {
-                amount: rotatorSurcharge,
-              })}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Rotator indicator badge (only when collapsed) */}
-      {collapsed && btn.type === "telegram" && btn.rotatorActive && (
-        <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-[#050505] flex items-center justify-center">
-          <span className="material-symbols-outlined text-[10px] text-black">
-            sync
-          </span>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// Utility to get background style
-const getBackgroundStyle = (page: LinkPage) => {
-  if (page.theme.backgroundType === "solid") {
-    return { background: page.theme.backgroundStart };
-  } else if (page.theme.backgroundType === "blur") {
-    return {
-      backgroundImage: `url(${page.profileImage})`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-    };
-  }
-  return {
-    background: `linear-gradient(to bottom right, ${page.theme.backgroundStart}, ${page.theme.backgroundEnd})`,
-  };
-};
 
 export default function Links() {
   const { t } = useTranslation();
@@ -429,17 +129,7 @@ export default function Links() {
   const [urlError, setUrlError] = useState<string | null>(null);
   const [inactiveAlertPageId, setInactiveAlertPageId] = useState<string | null>(null);
 
-  // Validates a URL string
-  const isValidUrl = (value: string): boolean => {
-    try {
-      const url = new URL(value);
-      return url.protocol === 'http:' || url.protocol === 'https:';
-    } catch {
-      return false;
-    }
-  };
 
-  // Deep linking: select page from URL ?id=...
   useEffect(() => {
     const idParam = searchParams.get("id");
     if (idParam && idParam !== selectedPageId) {
@@ -932,6 +622,8 @@ export default function Links() {
         name: `Pack Dual ${allDraftPages.length + 1}`,
         modelName: `Pack ${allDraftPages.length + 1}`,
         landingMode: "dual",
+        metaShield: true,
+        tiktokShield: true,
         directUrl: "",
         buttons: [],
         theme: {
@@ -958,7 +650,10 @@ export default function Links() {
         type === "direct"
           ? `Directo ${allDraftPages.length + 1}`
           : `Landing ${allDraftPages.length + 1}`,
-      landingMode: type === "direct" ? "direct" : "circle",
+      landingMode: (type as string) === "direct" ? "direct" : "circle",
+      template: (type as string) === "direct" ? "minimal" : "minimal",
+      metaShield: type === "direct",
+      tiktokShield: type === "landing",
       directUrl: "",
     };
 
@@ -1043,10 +738,15 @@ export default function Links() {
       borderRadius: 12,
       opacity: 100,
       isActive: true,
-      rotatorActive: false,
       rotatorLinks: ["", "", "", "", ""],
-      metaShield: type === "tiktok" ? true : false,
     };
+    
+    // Auto-activate page shields if creating a specific button type
+    if (type === "tiktok") {
+      handleUpdatePage("tiktokShield", true);
+    } else if (type === "instagram" && currentPage.landingMode === "dual") {
+      handleUpdatePage("metaShield", true);
+    }
     setPages((prev) =>
       prev.map((p) =>
         p.id === selectedPageId
@@ -2314,108 +2014,85 @@ export default function Links() {
                             </div>
                           </div>
 
-                          {/* SMART REDIRECT (iOS/Android URLs) */}
-                          <div className="p-6 bg-[#0a0a0b] border border-white/5 rounded-2xl space-y-6">
-                            <div className="flex items-center gap-2 text-indigo-400">
-                              <span className="material-symbols-outlined text-xl">
-                                devices
-                              </span>
-                              <span className="text-sm font-bold tracking-tight">
-                                Smart Redirect (Device targeting)
-                              </span>
+                          {/* SMART TARGETING REFINED */}
+                          <div className="p-6 bg-gradient-to-b from-[#0e0e10] to-[#0a0a0b] border border-white/10 rounded-[2.5rem] space-y-6 shadow-2xl relative overflow-hidden group/target">
+                            {/* Decorative background pulse */}
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 blur-3xl rounded-full -mr-16 -mt-16 pointer-events-none" />
+                            
+                            <div className="flex justify-between items-center relative z-10">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 border border-white/10 flex items-center justify-center shadow-lg">
+                                  <span className="material-symbols-outlined text-xl text-indigo-400">auto_awesome</span>
+                                </div>
+                                <div>
+                                  <h3 className="text-sm font-black tracking-tight text-white/90">Smart Targeting</h3>
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                    <span className="text-[9px] text-silver/30 font-bold uppercase tracking-widest">IA de Detección Activa</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="px-3 py-1 rounded-full bg-white/5 border border-white/10">
+                                <span className="text-[9px] font-black text-silver/40 uppercase tracking-tighter">Segmentación Inteligente</span>
+                              </div>
                             </div>
 
-                            <p className="text-[10px] text-silver/40 leading-relaxed font-medium">
-                              Opcional: Define links específicos para sistemas operativos. Si un campo queda vacío, se usará el link principal normal del botón.
+                            <p className="text-[11px] text-silver/40 leading-relaxed font-medium">
+                              Cuando alguien haga clic en tu botón de <span className="text-white font-bold">"{selectedButton.title}"</span>, nuestra IA detectará si su teléfono es una joya o algo más sencillo para enviarlos al link correcto.
                             </p>
 
-                            <div className="space-y-5">
-                              {/* Apple Link */}
-                              <div className="space-y-3">
-                                <label className="flex items-center gap-2 text-silver/60">
-                                  <svg className="w-5 h-5" viewBox="0 0 384 512" fill="currentColor">
-                                    <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
-                                  </svg>
-                                  <span className="text-[9px] font-black uppercase tracking-widest text-silver/30 mt-0.5">LINK PARA IOS (IPHONE/IPAD)</span>
-                                </label>
+                            <div className="grid grid-cols-1 gap-4 relative z-10">
+                              {/* High End Link Card */}
+                              <div className="relative p-5 bg-black/40 border border-amber-500/10 rounded-[1.5rem] transition-all hover:bg-black/60 hover:border-amber-500/30 group/card">
+                                <div className="flex items-center justify-between mb-4">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shadow-inner group-hover/card:scale-110 transition-transform">
+                                      <span className="material-symbols-outlined text-xl text-amber-500">diamond</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-[10px] font-black uppercase tracking-widest text-amber-400">💎 Si su teléfono es una joya (Gama Alta)</span>
+                                      <span className="text-[8px] text-silver/30 font-bold uppercase">Los que tienen el último iPhone o Samsung Ultra</span>
+                                    </div>
+                                  </div>
+                                </div>
                                 <input
                                   type="url"
-                                  placeholder="https://onlyfans.com/perfil_ios"
+                                  placeholder="Link para los clientes VIP..."
                                   value={selectedButton.deviceRedirects?.ios || ""}
                                   onChange={(e) => {
                                     const current = selectedButton.deviceRedirects || { ios: "", android: "" };
                                     handleUpdateButton("deviceRedirects", { ...current, ios: e.target.value });
                                   }}
-                                  className="w-full bg-[#030303] border border-white/5 rounded-xl px-4 py-3.5 text-xs text-silver focus:outline-none focus:border-white/20 transition-all font-mono shadow-inner placeholder:text-silver/20"
+                                  className="w-full bg-[#030303] border border-white/5 rounded-xl px-4 py-3.5 text-xs text-silver focus:outline-none focus:border-amber-500/40 transition-all font-mono placeholder:text-silver/20 shadow-inner"
                                 />
                               </div>
 
-                              {/* Android Link */}
-                              <div className="space-y-3">
-                                <label className="flex items-center gap-2 text-silver/40">
-                                  <span className="material-symbols-outlined text-xl">android</span>
-                                  <span className="text-[9px] font-black uppercase tracking-widest text-silver/30 mt-1">LINK PARA ANDROID</span>
-                                </label>
+                              {/* Low End Link Card */}
+                              <div className="relative p-5 bg-black/40 border border-white/5 rounded-[1.5rem] transition-all hover:bg-black/60 hover:border-white/15 group/card">
+                                <div className="flex items-center justify-between mb-4">
+                                  <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shadow-inner group-hover/card:scale-110 transition-transform">
+                                      <span className="material-symbols-outlined text-xl text-silver/50">smartphone</span>
+                                    </div>
+                                    <div className="flex flex-col">
+                                      <span className="text-[10px] font-black uppercase tracking-widest text-silver/60">📱 Si es un teléfono normal (Gama Estándar)</span>
+                                      <span className="text-[8px] text-silver/30 font-bold uppercase">Teléfonos sencillos o modelos antiguos</span>
+                                    </div>
+                                  </div>
+                                </div>
                                 <input
                                   type="url"
-                                  placeholder="https://onlyfans.com/perfil_android"
+                                  placeholder="Link para el resto de la gente..."
                                   value={selectedButton.deviceRedirects?.android || ""}
                                   onChange={(e) => {
                                     const current = selectedButton.deviceRedirects || { ios: "", android: "" };
                                     handleUpdateButton("deviceRedirects", { ...current, android: e.target.value });
                                   }}
-                                  className="w-full bg-[#030303] border border-white/5 rounded-xl px-4 py-3.5 text-xs text-silver focus:outline-none focus:border-white/20 transition-all font-mono shadow-inner placeholder:text-silver/20"
+                                  className="w-full bg-[#030303] border border-white/5 rounded-xl px-4 py-3.5 text-xs text-silver focus:outline-none focus:border-white/20 transition-all font-mono placeholder:text-silver/20 shadow-inner"
                                 />
                               </div>
                             </div>
                           </div>
-
-
-                          {/* META / TIKTOK SHIELD */}
-                          {(selectedButton.type === "instagram" || selectedButton.type === "tiktok") && (
-                            <div className="p-5 bg-gradient-to-br from-orange-500/5 to-red-600/5 border border-orange-500/20 rounded-2xl">
-                              <div className="flex justify-between items-start gap-4">
-                                <div>
-                                  <div className="flex items-center gap-2 text-orange-400 mb-1">
-                                    <span className="material-symbols-outlined">
-                                      security
-                                    </span>
-                                    <span className="text-sm font-bold">
-                                      {selectedButton.type === "instagram" ? "Escudo Meta" : "Escudo TikTok"}
-                                    </span>
-                                  </div>
-                                  <p className="text-[10px] text-silver/50 max-w-[250px]">
-                                    {selectedButton.type === "tiktok"
-                                      ? "Protección activa por defecto. Tu link está seguro de la moderación de TikTok mediante cloaking."
-                                      : "Protege tu link de la moderación de Meta (Instagram/Facebook). Activa el sistema de cloaking anti-rastreo."}
-                                  </p>
-                                </div>
-                                {selectedButton.type !== "tiktok" && (
-                                  <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                      type="checkbox"
-                                      checked={(selectedButton as any).metaShield || false}
-                                      onChange={(e) =>
-                                        handleUpdateButton("metaShield", e.target.checked)
-                                      }
-                                      className="sr-only peer"
-                                    />
-                                    <div className="w-11 h-6 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-                                  </label>
-                                )}
-                              </div>
-                              {((selectedButton as any).metaShield || selectedButton.type === "tiktok") && (
-                                <div className="mt-3 p-3 bg-orange-500/10 rounded-xl border border-orange-500/20 flex items-start gap-2 animate-fade-in">
-                                  <span className="material-symbols-outlined text-orange-400 text-sm mt-0.5">info</span>
-                                  <p className="text-[10px] text-orange-300/80">
-                                    {selectedButton.type === "tiktok"
-                                      ? "Al ser un link de TikTok, el escudo está activado permanentemente para tu seguridad."
-                                      : "Cuando un visitante que viene de Instagram haga clic, verá instrucciones para abrir el link en el navegador externo, protegiendo tu link de detección."}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          )}
 
                           {/* TELEGRAM ROTATOR */}
 
@@ -2601,7 +2278,7 @@ export default function Links() {
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-white/5 pb-4 gap-4">
                           <h2 className="text-xl font-bold">
                             {t("dashboard.links.pageConfigTitle", {
-                              defaultValue: "Configuraci�n de la P�gina",
+                              defaultValue: "Configuración de la Página",
                             })}
                           </h2>
 
@@ -2630,6 +2307,67 @@ export default function Links() {
                         {true && (
                           <div className="space-y-8 animate-fade-in">
                             <section className={`rounded-2xl overflow-hidden transition-all duration-500 ${currentPage.landingMode === 'dual' ? 'bg-purple-900/10 border border-purple-500/40 shadow-[0_0_30px_rgba(168,85,247,0.1)]' : 'bg-white/5 border border-white/10'}`}>
+                              
+                               {/* SECURITY SHIELDS SECTION - Shown ONLY for Solo TikTok as an optional upgrade */}
+                               {(currentPage.landingMode as string) === 'circle' && (
+                                <div className="p-6 bg-black/20 border-b border-white/5">
+                                  <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2 mb-6">
+                                    <span className="material-symbols-outlined text-base text-orange-500">verified_user</span>
+                                    Seguridad y Protección Avanzada
+                                    <span className="text-[8px] bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full border border-orange-500/30 font-black">PRO</span>
+                                  </h3>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  {/* Meta Shield */}
+                                  <div className={`p-4 rounded-2xl border transition-all ${currentPage.metaShield ? 'bg-orange-500/5 border-orange-500/30' : 'bg-white/5 border-white/5 opacity-60'}`}>
+                                    <div className="flex justify-between items-start mb-2">
+                                      <div className="flex items-center gap-2 text-orange-400">
+                                        <span className="material-symbols-outlined text-lg">shield</span>
+                                        <span className="text-xs font-bold">Escudo Meta</span>
+                                      </div>
+                                      <label className="relative inline-flex items-center cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={currentPage.metaShield || false}
+                                        onChange={(e) => handleUpdatePage("metaShield", e.target.checked)}
+                                        className="sr-only peer"
+                                        disabled={(currentPage.landingMode as string) === 'dual'}
+                                      />
+                                        <div className="w-10 h-5 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-orange-500"></div>
+                                      </label>
+                                    </div>
+                                    <p className="text-[10px] text-silver/40 leading-relaxed">
+                                      Protección anti-baneo para Instagram y Facebook con sistema de cloaking.
+                                      {currentPage.landingMode === 'dual' && <span className="block mt-1 text-orange-400 font-bold">Obligatorio en modo Dual.</span>}
+                                    </p>
+                                  </div>
+
+                                  {/* TikTok Shield - Hide if it's Solo TikTok since it's already integrated */}
+                                  {(currentPage.landingMode as string) !== 'circle' && (
+                                    <div className={`p-4 rounded-2xl border transition-all ${currentPage.tiktokShield ? 'bg-blue-500/5 border-blue-500/30' : 'bg-white/5 border-white/5 opacity-60'}`}>
+                                      <div className="flex justify-between items-start mb-2">
+                                        <div className="flex items-center gap-2 text-blue-400">
+                                          <span className="material-symbols-outlined text-lg">security</span>
+                                          <span className="text-xs font-bold">Escudo TikTok</span>
+                                        </div>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                          <input
+                                            type="checkbox"
+                                            checked={currentPage.tiktokShield || false}
+                                            onChange={(e) => handleUpdatePage("tiktokShield", e.target.checked)}
+                                            className="sr-only peer"
+                                          />
+                                          <div className="w-10 h-5 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
+                                        </label>
+                                      </div>
+                                      <p className="text-[10px] text-silver/40 leading-relaxed">
+                                        Evita la moderación de TikTok. Tu link se abrirá seguro en el navegador externo.
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              )}
                               <div className={`p-4 border-b transition-all duration-500 ${currentPage.landingMode === 'dual' ? 'border-purple-500/20 bg-gradient-to-r from-purple-500/20 to-transparent' : 'border-white/5 bg-white/[0.02]'}`}>
                                 <h3 className={`text-sm font-bold flex items-center gap-2 ${currentPage.landingMode === 'dual' ? 'text-white' : ''}`}>
                                   <span className={`material-symbols-outlined ${currentPage.landingMode === 'dual' ? 'text-purple-400' : 'text-silver/40'}`}>
@@ -2692,23 +2430,31 @@ export default function Links() {
                                       <button
                                         onClick={() => {
                                           handleUpdatePage("template", "minimal");
-                                          handleUpdatePage("landingMode", "circle");
                                           handleUpdatePage("profileImageSize", 100);
+                                          // Only change landingMode if it's NOT a specialized flow
+                                          const isSpecial = ["dual", "direct", "circle", "tiktok"].includes(currentPage.landingMode || "");
+                                          if (!isSpecial) {
+                                            handleUpdatePage("landingMode", "circle");
+                                          }
                                         }}
-                                        className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${currentPage.template === "minimal" || currentPage.landingMode === "circle" ? "bg-white text-black shadow-lg" : "text-silver/60 hover:text-white"}`}
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${(currentPage.template === "minimal" || (currentPage.landingMode === "circle" && currentPage.template !== "full")) ? "bg-white text-black shadow-lg" : "text-silver/60 hover:text-white"}`}
                                       >
-                                        {t("dashboard.links.minimalist")}
+                                        Diseño Minimal
                                       </button>
                                       <button
                                         onClick={() => {
                                           handleUpdatePage("template", "full");
-                                          handleUpdatePage("landingMode", "full");
                                           handleUpdatePage("profileImageSize", 100);
                                           handleUpdatePage("theme.backgroundType", "blur");
+                                          // Only change landingMode if it's NOT a specialized flow
+                                          const isSpecial = ["dual", "direct", "circle", "tiktok"].includes(currentPage.landingMode || "");
+                                          if (!isSpecial) {
+                                            handleUpdatePage("landingMode", "full");
+                                          }
                                         }}
-                                        className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${currentPage.template === "full" || currentPage.landingMode === "full" ? "bg-primary text-white shadow-lg" : "text-silver/60 hover:text-white"}`}
+                                        className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all ${currentPage.template === "full" ? "bg-primary text-white shadow-lg" : "text-silver/60 hover:text-white"}`}
                                       >
-                                        {t("dashboard.links.fullMode")}
+                                        Diseño Full
                                       </button>
                                       {/* Only show 'Direct' option if the link is ALREADY in direct mode. 
                                           Otherwise, users should stay within Landing Page types. */}
@@ -2716,11 +2462,13 @@ export default function Links() {
                                         <button
                                           onClick={() => {
                                             handleUpdatePage("landingMode", "direct");
+                                            // Direct Mode -> Meta Shield active by default
+                                            handleUpdatePage("metaShield", true);
                                           }}
                                           className={`px-3 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all flex items-center gap-1 ${(currentPage.landingMode as string) === "direct" ? "bg-red-500 text-white shadow-lg" : "text-silver/60 hover:text-white"}`}
                                         >
                                           <span className="material-symbols-outlined text-[10px]">bolt</span>
-                                          Directo
+                                          Estructura Directa
                                         </button>
                                       )}
                                     </div>
@@ -2771,6 +2519,63 @@ export default function Links() {
                                         onChange={(e) => handleUpdatePage("directUrl", e.target.value)}
                                         className="w-full bg-[#050505] border border-red-500/30 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.1)] transition-all placeholder:text-silver/20"
                                       />
+                                    </div>
+
+                                    {/* Smart Targeting for Direct Mode - Optional */}
+                                    <div className="mt-8 pt-8 border-t border-red-500/10 max-w-lg mx-auto text-left">
+                                      <h4 className="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2 mb-4">
+                                        <span className="material-symbols-outlined text-sm text-red-400">query_stats</span>
+                                        Smart Targeting (Opcional)
+                                      </h4>
+                                      <div className="grid grid-cols-1 gap-4">
+                                        <div className="space-y-1.5">
+                                          <label className="text-[9px] font-bold text-silver/40 uppercase pl-1 flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-[10px] text-yellow-500">diamond</span>
+                                            Link para Teléfono Moderno (Gama Alta)
+                                          </label>
+                                          <input
+                                            type="url"
+                                            placeholder="https://onlyfans.com/link_para_gama_alta"
+                                            value={currentPage.security_config?.device_redirections?.ios || ""}
+                                            onChange={(e) => {
+                                              const currentConfig = currentPage.security_config || {};
+                                              const currentRedirs = currentConfig.device_redirections || {};
+                                              handleUpdatePage("security_config", {
+                                                ...currentConfig,
+                                                device_redirections: {
+                                                  ...currentRedirs,
+                                                  ios: e.target.value
+                                                }
+                                              });
+                                            }}
+                                            className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-silver focus:outline-none focus:border-yellow-500/50 transition-all placeholder:text-silver/10"
+                                          />
+                                        </div>
+                                        <div className="space-y-1.5">
+                                          <label className="text-[9px] font-bold text-silver/40 uppercase pl-1 flex items-center gap-1">
+                                            <span className="material-symbols-outlined text-[10px]">smartphone</span>
+                                            Link para Teléfono Básico
+                                          </label>
+                                          <input
+                                            type="url"
+                                            placeholder="https://onlyfans.com/link_para_gama_basica"
+                                            value={currentPage.security_config?.device_redirections?.desktop || ""}
+                                            onChange={(e) => {
+                                              const currentConfig = currentPage.security_config || {};
+                                              const currentRedirs = currentConfig.device_redirections || {};
+                                              handleUpdatePage("security_config", {
+                                                ...currentConfig,
+                                                device_redirections: {
+                                                  ...currentRedirs,
+                                                  android: e.target.value,
+                                                  desktop: e.target.value
+                                                }
+                                              });
+                                            }}
+                                            className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-silver focus:outline-none focus:border-white/20 transition-all placeholder:text-silver/10"
+                                          />
+                                        </div>
+                                      </div>
                                     </div>
                                   </div>
                                 ) : (
@@ -2878,8 +2683,6 @@ export default function Links() {
                                         </div>
                                       </div>
                                     </div>
-                                  </div>
-                                )}
 
                                 {(currentPage.landingMode as string) !== "direct" && (
                                   <div className="pt-6 mt-6 border-t border-white/5">
@@ -3014,7 +2817,9 @@ export default function Links() {
                                   </div>
                                 )}
                               </div>
-                            </section>
+                            )}
+                          </div>
+                        </section>
 
                             {/* SECCIÓN DE SEGURIDAD E INTELIGENCIA (PREMIUM) */}
                             <section className="bg-white/5 border border-primary/20 rounded-2xl overflow-hidden shadow-[0_0_20px_rgba(37,99,235,0.05)] mt-8">
@@ -3094,7 +2899,7 @@ export default function Links() {
                     )}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
@@ -3318,8 +3123,10 @@ export default function Links() {
 
                     const hasMetaShield = validDrafts.some((p: any) => {
                       if (p.landingMode === "direct") return true;
-                      return p.buttons?.some((b: any) => b.metaShield);
+                      return p.metaShield;
                     });
+
+                    const hasTikTokShield = validDrafts.some((p: any) => p.tiktokShield);
                     
                     const hasRotator = validDrafts.some((p: any) => 
                       p.buttons?.some((b: any) => b.rotatorActive)
@@ -3332,6 +3139,7 @@ export default function Links() {
                           linksData: validDrafts,
                           amount: null,
                           hasInstagram: hasMetaShield,
+                          hasTikTok: hasTikTokShield,
                           hasRotator: hasRotator,
                         },
                       },
