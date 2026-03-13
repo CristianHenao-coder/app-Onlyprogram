@@ -169,6 +169,12 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
           isCollapsed={isCollapsed}
         />
         <NavItem
+          to="/admin/affiliates"
+          icon="handshake"
+          label="Referidos"
+          isCollapsed={isCollapsed}
+        />
+        <NavItem
           to="/admin/settings"
           icon="settings"
           label={t("admin.menu.settings")}

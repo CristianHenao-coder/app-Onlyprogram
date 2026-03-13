@@ -381,7 +381,7 @@ export default function DashboardPricing() {
           <div>
             <h3 className="text-lg font-bold text-white mb-1">Pagos Transparentes y Cupones</h3>
             <p className="text-sm text-silver/60 leading-relaxed max-w-2xl">
-              Al renovar o adquirir tu suscripción mensual, incluyendo el <strong className="text-white">Sistema Dual (+16$/mes)</strong>, si tienes un <strong>Cupón de Descuento</strong>, el porcentaje aplicará directamente sobre la suma total de tu compra. ¡Consigue tus pro-links todavía más baratos!
+              Al renovar o adquirir tu suscripción mensual, incluyendo el <strong className="text-white">Sistema Dual </strong>, si tienes un <strong>Cupón de Descuento</strong>, el porcentaje aplicará directamente sobre la suma total de tu compra. ¡Consigue tus pro-links todavía más baratos!
             </p>
           </div>
         </div>

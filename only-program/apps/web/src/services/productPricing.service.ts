@@ -3,18 +3,23 @@ import { cmsService } from "@/services/cmsService";
 export type ProductPricingConfig = {
   currency: "USD" | "COP" | string;
   link: {
-    base: number;          // 1 link
-    telegramAddon: number; // + telegram rotativo
-    instagramAddon: number;// + Instagram
+    tiktok: number;          // Landing page TikTok
+    instagram: number;       // Instagram & Facebook (directo)
+    dual: number;            // Pack Dual (TikTok + Instagram)
+    telegramAddon: number;   // Add-on Telegram Rotativo
+    // Keep legacy fields for backwards compatibility
+    base?: number;
+    instagramAddon?: number;
   };
 };
 
 export const DEFAULT_PRODUCT_PRICING: ProductPricingConfig = {
   currency: "USD",
   link: {
-    base: 69,
-    telegramAddon: 20,
-    instagramAddon: 20,
+    tiktok: 69,
+    instagram: 59,
+    dual: 83,
+    telegramAddon: 12,
   },
 };
 
@@ -24,12 +29,14 @@ const CACHE_TTL_MS = 5 * 60 * 1000;
 
 const mergePricing = (raw: any): ProductPricingConfig => {
   const cfg = raw && typeof raw === "object" ? raw : {};
+  const D = DEFAULT_PRODUCT_PRICING.link;
   return {
     currency: cfg.currency ?? DEFAULT_PRODUCT_PRICING.currency,
     link: {
-      base: Number(cfg?.link?.base ?? DEFAULT_PRODUCT_PRICING.link.base),
-      telegramAddon: Number(cfg?.link?.telegramAddon ?? DEFAULT_PRODUCT_PRICING.link.telegramAddon),
-      instagramAddon: Number(cfg?.link?.instagramAddon ?? DEFAULT_PRODUCT_PRICING.link.instagramAddon),
+      tiktok:        Number(cfg?.link?.tiktok        ?? cfg?.link?.base ?? D.tiktok),
+      instagram:     Number(cfg?.link?.instagram     ?? D.instagram),
+      dual:          Number(cfg?.link?.dual          ?? D.dual),
+      telegramAddon: Number(cfg?.link?.telegramAddon ?? D.telegramAddon),
     },
   };
 };

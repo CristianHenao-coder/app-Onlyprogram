@@ -116,7 +116,7 @@ interface LinkPage {
   profileImage: string;
   profileImageSize?: number; // 0-100 scale
   template: TemplateType;
-  landingMode?: "circle" | "full" | "direct";
+  landingMode?: "circle" | "full" | "direct" | "dual";
   security_config?: {
     geoblocking?: string[];
     device_redirections?: {
@@ -155,6 +155,11 @@ const Icons = {
       alt="Instagram"
       className="w-full h-full object-contain"
     />
+  ),
+  Facebook: () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-blue-500">
+      <path d="M14 13.5h2.5l1-4H14v-2c0-1.03 0-2 2-2h1.5V2.14c-.326-.043-1.557-.14-2.857-.14-2.85 0-4.643 1.743-4.643 4.96v2.54H7.5v4h2.5v11h4v-11z" />
+    </svg>
   ),
   TikTok: () => (
     <img
@@ -337,10 +342,6 @@ const getBackgroundStyle = (page: LinkPage) => {
   };
 };
 
-// Helper to check if page has rotator
-const hasRotatorActive = (page: LinkPage) =>
-  page.buttons.some((b) => b.type === "telegram" && b.rotatorActive);
-
 export default function Links() {
   const { t } = useTranslation();
   const DEFAULTS = getDefaults(t);
@@ -412,25 +413,7 @@ export default function Links() {
       localStorage.removeItem("my_links_data");
     }
 
-    return [
-      {
-        id: "page1",
-        status: "draft",
-        name: t("dashboard.links.untitledLink"),
-        profileName: t("dashboard.links.profileName"),
-        profileImage: DEFAULTS.PROFILE_IMAGE,
-        profileImageSize: 100,
-        template: "minimal",
-        theme: {
-          pageBorderColor: "#222222",
-          overlayOpacity: 40,
-          backgroundType: "solid",
-          backgroundStart: "#000000",
-          backgroundEnd: "#1a1a1a",
-        },
-        buttons: [],
-      },
-    ];
+    return [];
   });
 
   const [selectedPageId, setSelectedPageId] = useState<string>(
@@ -468,19 +451,14 @@ export default function Links() {
     }
   }, [searchParams, pages, selectedPageId]);
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
+
   // Derived
   const currentPage = pages.find((p) => p.id === selectedPageId) || pages[0];
 
-  // GUARD: Prevents crash if pages is empty
-  if (!currentPage) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
-  const selectedButton = currentPage.buttons?.find(
+  const selectedButton = currentPage?.buttons?.find(
     (b) => b.id === selectedButtonId,
   );
 
@@ -513,9 +491,6 @@ export default function Links() {
   // All pages for the EDITOR tab strip (always show all, regardless of folder filter)
   const allActivePages = pages.filter((p) => p.status === "active");
   const allDraftPages = pages.filter((p) => p.status === "draft");
-
-  const [isSaving, setIsSaving] = useState(false);
-  const [initialLoad, setInitialLoad] = useState(true);
 
   // Sidebar Collapse State - Auto-collapse on mobile
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -764,17 +739,7 @@ export default function Links() {
 
         const allPages = Array.from(pagesMap.values());
 
-        // FORCE DEFAULT: If user has NO links, create one
-        if (allPages.length === 0) {
-          const newId = `page${Date.now()}`;
-          allPages.push({
-            ...DEFAULTS.PAGE,
-            id: newId,
-            status: "draft",
-            name: t("dashboard.links.untitledLink") + " 1",
-          });
-        }
-
+        // Removed force default creation logic to allow empty links state
         setPages(allPages);
         if (allPages.length > 0) {
           const exists = allPages.find((p) => p.id === selectedPageId);
@@ -960,61 +925,27 @@ export default function Links() {
 
     if (type === "both") {
       const now = Date.now();
-      const modelId = `model_${now}`;
       const page1: LinkPage = {
         ...DEFAULTS.PAGE,
         id: `page${now}`,
         status: "draft",
-        name: `Instagram/FB Direct`,
+        name: `Pack Dual ${allDraftPages.length + 1}`,
         modelName: `Pack ${allDraftPages.length + 1}`,
-        landingMode: "direct",
+        landingMode: "dual",
         directUrl: "",
+        buttons: [],
+        theme: {
+          ...DEFAULTS.PAGE.theme,
+          pageBorderColor: "#C9CCD1", // Silver premium
+          backgroundType: "blur",
+          backgroundStart: "#111111",
+        }
       };
 
-      const page2: LinkPage = {
-        ...DEFAULTS.PAGE,
-        id: `page${now + 1}`,
-        status: "draft",
-        name: `TikTok Landing`,
-        modelName: `Pack ${allDraftPages.length + 1}`,
-        landingMode: "circle",
-        directUrl: "",
-        buttons: [
-          {
-            id: Math.random().toString(36).substring(2, 9),
-            type: "instagram",
-            title: "Instagram",
-            subtitle: "",
-            url: "",
-            color: "#FFFFFF",
-            textColor: "#000000",
-            font: "sans",
-            borderRadius: 12,
-            opacity: 100,
-            isActive: true,
-            metaShield: true,
-          },
-          {
-            id: Math.random().toString(36).substring(2, 9),
-            type: "tiktok",
-            title: "TikTok",
-            subtitle: "",
-            url: "",
-            color: "#000000",
-            textColor: "#FFFFFF",
-            font: "sans",
-            borderRadius: 12,
-            opacity: 100,
-            isActive: true,
-            metaShield: true,
-          }
-        ]
-      };
-
-      setPages((prev) => [...prev, page1, page2]);
-      setSelectedPageId(page2.id); // Open Landing Page functions as requested
+      setPages((prev) => [...prev, page1]);
+      setSelectedPageId(page1.id);
       setView("editor");
-      toast.success("¡Ambos flujos creados!", { icon: "🚀" });
+      toast.success("¡Flujo Dual creado!", { icon: "🚀" });
       return;
     }
 
@@ -1187,6 +1118,15 @@ export default function Links() {
     setShowLinkTypeSelector(true);
   };
 
+  // GUARD: Prevents crash while loading
+  if (initialLoad) {
+    return (
+      <div className="flex items-center justify-center min-h-[100vh] bg-[#050505]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full flex flex-col bg-[#050505] text-white font-sans overflow-hidden">
       <Toaster
@@ -1197,19 +1137,9 @@ export default function Links() {
       {/* Header */}
       <header className="h-16 px-6 flex items-center justify-between border-b border-white/5 bg-[#050505] z-30 shrink-0">
         <div className="flex items-center gap-4">
-          {view === "editor" && currentPage && (
+          {view === "editor" && (
             <div className="flex items-center animate-in fade-in slide-in-from-left-4 duration-700 mr-4 pr-4 border-r border-white/10 h-10">
-               <div className={`flex items-center gap-3 py-1.5 px-3 rounded-xl border transition-all ${currentPage.landingMode === "direct" ? "bg-red-500/10 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]" : "bg-blue-500/10 border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]"}`}>
-                  <div className="w-5 h-5 flex-shrink-0">
-                    {currentPage.landingMode === "direct" ? <Icons.Instagram /> : <Icons.TikTok />}
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-[6px] font-black uppercase tracking-[0.2em] text-silver/40 leading-none mb-0.5 whitespace-nowrap">Conexión</span>
-                    <span className="text-[9px] font-black text-white uppercase tracking-wider leading-none whitespace-nowrap">
-                      {currentPage.landingMode === "direct" ? "Instagram & FB" : "TikTok Link"}
-                    </span>
-                  </div>
-               </div>
+               {/* Empty placeholder or removed badge container */}
             </div>
           )}
 
@@ -1283,6 +1213,25 @@ export default function Links() {
               </button>
             </div>
 
+            {/* Empty State */}
+            {pages.length === 0 && (
+              <div className="mt-20 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-500">
+                <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20 shadow-[0_0_30px_rgba(29,161,242,0.1)]">
+                  <span className="material-symbols-outlined text-4xl text-primary animate-pulse">link_off</span>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">No tienes links creados</h3>
+                <p className="text-silver/50 max-w-xs mx-auto mb-8">
+                  Comienza a potenciar tu contenido blindando tus redes hoy mismo.
+                </p>
+                <button
+                  onClick={handleCreateNew}
+                  className="px-8 py-3 bg-primary text-white font-black rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 uppercase tracking-widest text-xs"
+                >
+                  Crea tu primer link
+                </button>
+              </div>
+            )}
+
             {/* DB Links (activos + pendientes) */}
             {pages.filter((p) => p.dbStatus).length > 0 && (
               <div className="mb-8">
@@ -1292,21 +1241,43 @@ export default function Links() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pages
                     .filter((p) => p.dbStatus)
-                    .map((page) => (
+                    .map((page) => {
+                      const isDirect = page.landingMode === "direct";
+                      const isDual = page.landingMode === "dual";
+                      const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
+                      let borderClass = "border-white/[0.06] hover:border-primary/40 hover:shadow-primary/10";
+                      let bgTrash = "bg-primary/20 hover:bg-primary/40 border-primary/40 text-primary";
+                      let accentColor = "text-primary";
+                      let accentBg = "bg-primary/10";
+                      let accentBorder = "border-primary/20 hover:border-primary/40";
+                      
+                      if (hasPair || isDual) {
+                        borderClass = "border-purple-500/30 hover:border-purple-500/60 shadow-[0_0_15px_rgba(168,85,247,0.1)] hover:shadow-[0_0_20px_rgba(168,85,247,0.2)]";
+                        bgTrash = "bg-purple-500/20 hover:bg-purple-500/40 border-purple-500/40 text-purple-400";
+                        accentColor = "text-purple-400";
+                        accentBg = "bg-purple-500/10";
+                        accentBorder = "border-purple-500/20 hover:border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.1)]";
+                      } else if (isDirect) {
+                        borderClass = "border-red-500/30 hover:border-red-500/60 shadow-[0_0_15px_rgba(239,68,68,0.1)] hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]";
+                        bgTrash = "bg-red-500/20 hover:bg-red-500/40 border-red-500/40 text-red-400";
+                        accentColor = "text-red-400";
+                      } else {
+                        borderClass = "border-blue-500/30 hover:border-blue-500/60 shadow-[0_0_15px_rgba(59,130,246,0.1)] hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]";
+                        bgTrash = "bg-blue-500/20 hover:bg-blue-500/40 border-blue-500/40 text-blue-400";
+                        accentColor = "text-blue-400";
+                      }
+
+                      return (
                       <div
                         key={page.id}
                         onClick={() => openEditor(page.id)}
-                        className="relative group rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+                        className={`relative group rounded-2xl border bg-white/[0.02] overflow-hidden hover:shadow-lg hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer ${borderClass}`}
                       >
                         {/* Delete button - top left */}
                         <button
                           onClick={(e) => { e.stopPropagation(); handleDeleteDraftPage(page.id, page.profileName || page.name); }}
                           title="Eliminar link"
-                          className={`absolute top-2 left-2 z-20 w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg ${
-                            page.landingMode === 'direct'
-                              ? 'bg-red-500/20 hover:bg-red-500/40 border border-red-500/40 text-red-400'
-                              : 'bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/40 text-blue-400'
-                          }`}
+                          className={`absolute top-2 left-2 z-20 w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg border ${bgTrash}`}
                         >
                           <span className="material-symbols-outlined text-[14px]">delete</span>
                         </button>
@@ -1391,7 +1362,7 @@ export default function Links() {
                           {/* Folder badge */}
                           {page.folder && (
                             <div className="mt-2 flex justify-center">
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-bold text-primary">
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-bold ${accentBg} ${accentBorder} ${accentColor}`}>
                                 <span className="material-symbols-outlined text-[10px]">folder</span>
                                 {page.folder}
                               </span>
@@ -1400,9 +1371,9 @@ export default function Links() {
 
                           {/* Buttons */}
                           <div className="mt-3 flex gap-2">
-                            <button
+                             <button
                               onClick={(e) => { e.stopPropagation(); openEditor(page.id); }}
-                              className="flex-1 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 hover:border-primary/40 text-xs font-bold text-primary transition-all flex items-center justify-center gap-1"
+                              className={`flex-1 py-2 rounded-xl border transition-all flex items-center justify-center gap-1 text-xs font-bold ${accentBg} ${accentBorder} ${accentColor}`}
                             >
                               <span className="material-symbols-outlined text-sm">
                                 edit
@@ -1440,7 +1411,8 @@ export default function Links() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1455,21 +1427,35 @@ export default function Links() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {pages
                       .filter((p) => !p.dbStatus && p.status === "draft")
-                      .map((page) => (
+                      .map((page) => {
+                        const isDirect = page.landingMode === "direct";
+                        const isDual = page.landingMode === "dual";
+                        const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
+                        let borderClass = "border-white/[0.08] hover:border-yellow-500/40 hover:shadow-yellow-500/10";
+                        let bgTrash = "bg-primary/20 hover:bg-primary/40 border-primary/40 text-primary";
+                        
+                        if (hasPair || isDual) {
+                          borderClass = "border-purple-500/30 border-dashed hover:border-purple-500/60 shadow-[0_0_15px_rgba(168,85,247,0.1)] hover:shadow-[0_0_20px_rgba(168,85,247,0.2)]";
+                          bgTrash = "bg-purple-500/20 hover:bg-purple-500/40 border-purple-500/40 text-purple-400";
+                        } else if (isDirect) {
+                          borderClass = "border-red-500/30 border-dashed hover:border-red-500/60 shadow-[0_0_15px_rgba(239,68,68,0.1)] hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]";
+                          bgTrash = "bg-red-500/20 hover:bg-red-500/40 border-red-500/40 text-red-400";
+                        } else {
+                          borderClass = "border-blue-500/30 border-dashed hover:border-blue-500/60 shadow-[0_0_15px_rgba(59,130,246,0.1)] hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]";
+                          bgTrash = "bg-blue-500/20 hover:bg-blue-500/40 border-blue-500/40 text-blue-400";
+                        }
+
+                        return (
                         <div
                           key={page.id}
                           onClick={() => openEditor(page.id)}
-                          className="relative group rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.01] overflow-hidden hover:border-yellow-500/40 hover:shadow-lg hover:shadow-yellow-500/10 hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+                          className={`relative group rounded-2xl border bg-white/[0.01] overflow-hidden hover:shadow-lg hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer ${borderClass}`}
                         >
                           {/* Delete button - top left */}
                           <button
                             onClick={(e) => { e.stopPropagation(); handleDeleteDraftPage(page.id, page.name); }}
                             title="Eliminar borrador"
-                            className={`absolute top-2 left-2 z-20 w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg ${
-                              page.landingMode === 'direct'
-                                ? 'bg-red-500/20 hover:bg-red-500/40 border border-red-500/40 text-red-400'
-                                : 'bg-blue-500/20 hover:bg-blue-500/40 border border-blue-500/40 text-blue-400'
-                            }`}
+                            className={`absolute top-2 left-2 z-20 w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg border ${bgTrash}`}
                           >
                             <span className="material-symbols-outlined text-[14px]">delete</span>
                           </button>
@@ -1528,28 +1514,13 @@ export default function Links() {
                             </div>
                           </div>
                         </div>
-                      ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
-            {/* Empty state */}
-            {pages.length === 0 && (
-              <div className="text-center py-20">
-                <span className="material-symbols-outlined text-6xl text-white/10">
-                  link
-                </span>
-                <p className="text-silver/40 mt-4">
-                  {t("dashboard.links.noLinksYet")}
-                </p>
-                <button
-                  onClick={handleCreateNew}
-                  className="mt-4 px-6 py-3 bg-primary rounded-xl font-bold text-sm hover:scale-105 transition-all"
-                >
-                  {t("dashboard.links.createFirstLink")}
-                </button>
-              </div>
-            )}
+
           </div>
         </div>
       )}
@@ -1576,7 +1547,7 @@ export default function Links() {
               )}
 
               <div
-                className="flex items-center gap-2 overflow-x-auto hide-scrollbar scroll-smooth px-4 h-full"
+                className="flex-1 flex items-center gap-2 overflow-x-auto hide-scrollbar scroll-smooth px-4 h-full"
                 ref={scrollContainerRef}
               >
                 <button
@@ -1593,22 +1564,22 @@ export default function Links() {
 
                 <div className="h-8 w-px bg-white/10 shrink-0 mx-2"></div>
                 {allActivePages.map((page) => {
-                   const isDirect = page.landingMode === "direct";
-                   const isSelected = selectedPageId === page.id;
-                   const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
-                   
-                   let buttonClass = "bg-transparent border-transparent hover:bg-white/5 hover:border-white/10";
-                   let dotClass = isDirect ? "bg-red-500" : "bg-blue-500";
+                    const isDirect = page.landingMode === "direct";
+                    const isDual = page.landingMode === "dual";
+                    const isSelected = selectedPageId === page.id;
+                    const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
+                    
+                    let buttonClass = "bg-transparent border-transparent hover:bg-white/5 hover:border-white/10";
 
-                   if (isSelected) {
-                     if (hasPair) {
-                       buttonClass = "bg-gradient-to-r from-red-500/10 to-blue-500/10 border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.05)]";
-                     } else if (isDirect) {
-                       buttonClass = "bg-red-500/10 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.1)]";
-                     } else {
-                       buttonClass = "bg-blue-500/10 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.1)]";
-                     }
-                   }
+                    if (isSelected) {
+                      if (hasPair || isDual) {
+                        buttonClass = "bg-purple-500/10 border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.15)]";
+                      } else if (isDirect) {
+                        buttonClass = "bg-red-500/10 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.1)]";
+                      } else {
+                        buttonClass = "bg-blue-500/10 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.15)]";
+                      }
+                    }
                    
                    return (
                      <button
@@ -1648,7 +1619,7 @@ export default function Links() {
                       </span>
                     </div>
                      {isSelected && (
-                       <div className={`absolute -top-1 -right-1 w-3 h-3 ${hasPair ? 'bg-gradient-to-r from-red-500 to-blue-500' : (isDirect ? 'bg-red-500' : 'bg-blue-500')} rounded-full border-2 border-[#080808]`}></div>
+                       <div className={`absolute -top-1 -right-1 w-3 h-3 ${(hasPair || isDual) ? 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]' : (isDirect ? 'bg-red-500' : 'bg-blue-500')} rounded-full border-2 border-[#080808]`}></div>
                      )}
                    </button>
                  );
@@ -1660,13 +1631,14 @@ export default function Links() {
                 )}
                  {allDraftPages.map((page) => {
                    const isDirect = page.landingMode === "direct";
+                   const isDual = page.landingMode === "dual";
                    const isSelected = selectedPageId === page.id;
                    const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
                    let buttonClass = "bg-transparent border-transparent hover:bg-white/5 hover:border-white/10";
 
                    if (isSelected) {
-                     if (hasPair) {
-                       buttonClass = "bg-gradient-to-r from-red-500/10 to-blue-500/10 border-white/20 shadow-[0_0_20px_rgba(255,255,255,0.05)]";
+                     if (hasPair || isDual) {
+                       buttonClass = "bg-purple-500/10 border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.15)]";
                      } else if (isDirect) {
                        buttonClass = "bg-red-500/10 border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.15)]";
                      } else {
@@ -1712,13 +1684,13 @@ export default function Links() {
                           </span>
                         </span>
                       ) : (
-                        <p className="text-[9px] text-yellow-500 font-bold uppercase tracking-wider">
+                        <p className={`text-[9px] font-black uppercase tracking-wider ${(isDual || hasPair) ? 'text-purple-400' : 'text-yellow-500'}`}>
                           {t("dashboard.links.creatingDraft")}
                         </p>
                       )}
                     </div>
                      {isSelected && (
-                       <div className={`absolute -top-1 -right-1 w-3 h-3 ${hasPair ? 'bg-gradient-to-r from-red-500 to-blue-500' : (isDirect ? 'bg-red-500' : 'bg-blue-500')} rounded-full border-2 border-[#080808]`}></div>
+                       <div className={`absolute -top-1 -right-1 w-3 h-3 ${(hasPair || isDual) ? 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]' : (isDirect ? 'bg-red-500' : 'bg-blue-500')} rounded-full border-2 border-[#080808]`}></div>
                      )}
                    </button>
                  );   
@@ -1737,6 +1709,62 @@ export default function Links() {
                     </span>
                   </div>
                 </button>
+              )}
+
+              {currentPage && (
+                <div className="pr-6 pl-4 flex items-center shrink-0 border-l border-white/10 h-full hidden md:flex">
+                   {(() => {
+                      const isDirect = currentPage.landingMode === "direct";
+                      const isDual = currentPage.landingMode === "dual";
+                      const hasPair = pages.some(p => p.modelName === currentPage.modelName && p.modelName && p.id !== currentPage.id);
+                      
+                      if (hasPair || isDual) {
+                        return (
+                          <div className="flex items-center gap-3 py-1.5 px-3 rounded-xl border bg-purple-500/10 border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.1)]">
+                            <div className="flex items-center gap-1">
+                              <div className="w-4 h-4"><Icons.Instagram /></div>
+                              <span className="text-purple-400 font-bold text-[10px]">+</span>
+                              <div className="w-4 h-4"><Icons.Facebook /></div>
+                              <span className="text-purple-400 font-bold text-[10px]">+</span>
+                              <div className="w-4 h-4"><Icons.TikTok /></div>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[6px] font-black uppercase tracking-[0.2em] text-silver/40 leading-none mb-0.5 whitespace-nowrap">Conexión Dual</span>
+                              <span className="text-[9px] font-black text-white uppercase tracking-wider leading-none whitespace-nowrap">
+                                Instagram + TikTok
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      }
+  
+                      if (isDirect) {
+                        return (
+                          <div className="flex items-center gap-3 py-1.5 px-3 rounded-xl border bg-red-500/10 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+                            <div className="flex items-center gap-0.5">
+                              <div className="w-4 h-4"><Icons.Instagram /></div>
+                              <span className="text-red-500/50 font-black text-[8px]">+</span>
+                              <div className="w-4 h-4"><Icons.Facebook /></div>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[6px] font-black uppercase tracking-[0.2em] text-silver/40 leading-none mb-0.5 whitespace-nowrap">Conexión</span>
+                              <span className="text-[9px] font-black text-white uppercase tracking-wider leading-none whitespace-nowrap">Instagram & FB</span>
+                            </div>
+                          </div>
+                        )
+                      }
+  
+                      return (
+                          <div className="flex items-center gap-3 py-1.5 px-3 rounded-xl border bg-blue-500/10 border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                            <div className="w-5 h-5 flex-shrink-0"><Icons.TikTok /></div>
+                            <div className="flex flex-col">
+                              <span className="text-[6px] font-black uppercase tracking-[0.2em] text-silver/40 leading-none mb-0.5 whitespace-nowrap">Conexión</span>
+                              <span className="text-[9px] font-black text-white uppercase tracking-wider leading-none whitespace-nowrap">TikTok Link</span>
+                            </div>
+                          </div>
+                      )
+                   })()}
+                </div>
               )}
             </div>
 
@@ -2046,11 +2074,11 @@ export default function Links() {
               </div>
 
               {/* MAIN EDITOR AREA */}
-              <div className="flex-1 flex flex-col relative bg-[#050505] overflow-hidden">
+              <div className={`flex-1 flex flex-col relative overflow-hidden transition-all duration-700 ${currentPage.landingMode === 'dual' ? 'bg-[#080808] border-x border-purple-500/30 shadow-[inset_0_0_50px_rgba(168,85,247,0.05)]' : 'bg-[#050505]'}`}>
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-8 pb-32">
                   <div className="max-w-2xl mx-auto">
                     {/* ANUNCIO FLUJO DUAL */}
-                    {pages.some(p => p.modelName === currentPage.modelName && p.modelName && p.id !== currentPage.id) && (
+                    {(pages.some(p => p.modelName === currentPage.modelName && p.modelName && p.id !== currentPage.id) || currentPage.landingMode === 'dual') && (
                       <div className="mb-8 p-6 rounded-[2rem] bg-gradient-to-br from-purple-600/20 via-indigo-600/10 to-transparent border border-purple-500/30 relative overflow-hidden group animate-in slide-in-from-top-4 duration-700">
                         {/* Decorative elements */}
                         <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-[50px] rounded-full -mr-16 -mt-16 group-hover:bg-purple-500/20 transition-all duration-1000" />
@@ -2601,15 +2629,18 @@ export default function Links() {
 
                         {true && (
                           <div className="space-y-8 animate-fade-in">
-                            <section className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-                              <div className="p-4 border-b border-white/5 bg-white/[0.02]">
-                                <h3 className="text-sm font-bold flex items-center gap-2">
-                                  <span className="material-symbols-outlined text-silver/40">
+                            <section className={`rounded-2xl overflow-hidden transition-all duration-500 ${currentPage.landingMode === 'dual' ? 'bg-purple-900/10 border border-purple-500/40 shadow-[0_0_30px_rgba(168,85,247,0.1)]' : 'bg-white/5 border border-white/10'}`}>
+                              <div className={`p-4 border-b transition-all duration-500 ${currentPage.landingMode === 'dual' ? 'border-purple-500/20 bg-gradient-to-r from-purple-500/20 to-transparent' : 'border-white/5 bg-white/[0.02]'}`}>
+                                <h3 className={`text-sm font-bold flex items-center gap-2 ${currentPage.landingMode === 'dual' ? 'text-white' : ''}`}>
+                                  <span className={`material-symbols-outlined ${currentPage.landingMode === 'dual' ? 'text-purple-400' : 'text-silver/40'}`}>
                                     {(currentPage.landingMode as string) === "direct" ? "settings" : "person"}
                                   </span>
                                   {(currentPage.landingMode as string) === "direct"
                                     ? "Configuración del Enlace Directo"
                                     : t("dashboard.links.profileIdentity")}
+                                  {currentPage.landingMode === 'dual' && (
+                                    <span className="ml-auto text-[9px] font-black bg-white/10 text-silver px-2 py-0.5 rounded border border-white/5 uppercase tracking-widest">Premium Dual</span>
+                                  )}
                                 </h3>
                               </div>
                               <div className="p-6">
@@ -2743,81 +2774,108 @@ export default function Links() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <div className="flex gap-6 items-start">
-                                    <div className="space-y-3 shrink-0">
-                                      <div
-                                        className="group relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-white/20 hover:border-primary transition-colors"
-                                        style={{
-                                          backgroundColor:
-                                            currentPage.theme.backgroundType ===
-                                              "solid"
-                                              ? currentPage.theme.backgroundStart
-                                              : currentPage.theme.backgroundStart,
-                                        }}
-                                      >
-                                        <img
-                                          src={currentPage.profileImage}
-                                          className="w-full h-full object-cover"
-                                        />
-                                        <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer">
-                                          <span className="material-symbols-outlined text-white text-sm mb-1">
-                                            upload
-                                          </span>
-                                          <span className="text-[8px] text-white font-bold uppercase">
-                                            {t("common.change")}
-                                          </span>
+                                  <div className="space-y-8">
+                                    {currentPage.landingMode === "dual" && (
+                                      <div className="p-5 rounded-2xl bg-gradient-to-br from-purple-600/10 to-transparent border border-purple-500/40 mb-6 shadow-xl relative overflow-hidden group">
+                                        <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 blur-2xl rounded-full" />
+                                        <div className="flex items-center gap-2 text-white mb-4 relative z-10">
+                                          <div className="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-600/20">
+                                            <span className="material-symbols-outlined text-sm">rocket_launch</span>
+                                          </div>
+                                          <span className="text-xs font-black uppercase tracking-tighter">Enlace Directo (IG/FB)</span>
+                                          <span className="ml-auto text-[8px] text-silver/40 border border-white/10 px-1.5 py-0.5 rounded">MODO DIRECTO ACTIVADO</span>
                                         </div>
-                                        <input
-                                          type="file"
-                                          ref={fileInputRef}
-                                          onChange={handleImageUpload}
-                                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                                          accept="image/*"
-                                        />
+                                        <div className="space-y-2">
+                                          <label className="text-[9px] font-black text-silver/40 uppercase pl-1">
+                                            URL para tráfico de Instagram / Facebook
+                                          </label>
+                                          <input
+                                            type="url"
+                                            placeholder="https://onlyfans.com/tu_perfil"
+                                            value={currentPage.directUrl || ""}
+                                            onChange={(e) => handleUpdatePage("directUrl", e.target.value)}
+                                            className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-purple-500 transition-all placeholder:text-silver/20"
+                                          />
+                                          <p className="text-[10px] text-silver/30 pl-1">Esta URL se usará cuando el sistema detecte que el usuario viene de Instagram o Facebook (Modo Directo).</p>
+                                        </div>
                                       </div>
-                                      <div className="space-y-1 w-24">
-                                        <label className="text-[8px] font-bold text-silver/40 uppercase block text-center">
-                                          {t("dashboard.links.size")} (
-                                          {currentPage.profileImageSize || 100}px)
-                                        </label>
-                                        <input
-                                          type="range"
-                                          min="50"
-                                          max="150"
-                                          value={
-                                            currentPage.profileImageSize || 100
-                                          }
-                                          onChange={(e) =>
-                                            handleUpdatePage(
-                                              "profileImageSize",
-                                              parseInt(e.target.value),
-                                            )
-                                          }
-                                          className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
-                                        />
-                                      </div>
-                                    </div>
-
-                                    <div className="flex-1 space-y-4">
-                                      <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-silver/40 uppercase pl-1">
-                                          {t("dashboard.links.visibleName")}
-                                        </label>
-                                        <input
-                                          type="text"
-                                          value={currentPage.profileName}
-                                          onChange={(e) => {
-                                            handleUpdatePage(
-                                              "profileName",
-                                              e.target.value,
-                                            );
-                                            handleUpdatePage(
-                                              "name",
-                                              e.target.value,
-                                            );
+                                    )}
+                                    <div className="flex gap-6 items-start">
+                                      <div className="space-y-3 shrink-0">
+                                        <div
+                                          className="group relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-dashed border-white/20 hover:border-primary transition-colors"
+                                          style={{
+                                            backgroundColor:
+                                              currentPage.theme.backgroundType ===
+                                                "solid"
+                                                ? currentPage.theme.backgroundStart
+                                                : currentPage.theme.backgroundStart,
                                           }}
-                                          className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-primary"
-                                        />
+                                        >
+                                          <img
+                                            src={currentPage.profileImage}
+                                            className="w-full h-full object-cover"
+                                          />
+                                          <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all cursor-pointer">
+                                            <span className="material-symbols-outlined text-white text-sm mb-1">
+                                              upload
+                                            </span>
+                                            <span className="text-[8px] text-white font-bold uppercase">
+                                              {t("common.change")}
+                                            </span>
+                                          </div>
+                                          <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleImageUpload}
+                                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                            accept="image/*"
+                                          />
+                                        </div>
+                                        <div className="space-y-1 w-24">
+                                          <label className="text-[8px] font-bold text-silver/40 uppercase block text-center">
+                                            {t("dashboard.links.size")} (
+                                            {currentPage.profileImageSize || 100}px)
+                                          </label>
+                                          <input
+                                            type="range"
+                                            min="50"
+                                            max="150"
+                                            value={
+                                              currentPage.profileImageSize || 100
+                                            }
+                                            onChange={(e) =>
+                                              handleUpdatePage(
+                                                "profileImageSize",
+                                                parseInt(e.target.value),
+                                              )
+                                            }
+                                            className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white"
+                                          />
+                                        </div>
+                                      </div>
+
+                                      <div className="flex-1 space-y-4">
+                                        <div className="space-y-1">
+                                          <label className="text-[10px] font-bold text-silver/40 uppercase pl-1">
+                                            {t("dashboard.links.visibleName")}
+                                          </label>
+                                          <input
+                                            type="text"
+                                            value={currentPage.profileName}
+                                            onChange={(e) => {
+                                              handleUpdatePage(
+                                                "profileName",
+                                                e.target.value,
+                                              );
+                                              handleUpdatePage(
+                                                "name",
+                                                e.target.value,
+                                              );
+                                            }}
+                                            className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-primary"
+                                          />
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
@@ -3262,14 +3320,19 @@ export default function Links() {
                       if (p.landingMode === "direct") return true;
                       return p.buttons?.some((b: any) => b.metaShield);
                     });
+                    
+                    const hasRotator = validDrafts.some((p: any) => 
+                      p.buttons?.some((b: any) => b.rotatorActive)
+                    );
 
-                    navigate("/dashboard/checkout", {
+                    navigate("/dashboard/payments", {
                       state: {
                         pendingPurchase: {
                           type: "links_bundle",
                           linksData: validDrafts,
                           amount: null,
                           hasInstagram: hasMetaShield,
+                          hasRotator: hasRotator,
                         },
                       },
                     });
