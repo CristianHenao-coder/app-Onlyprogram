@@ -41,7 +41,8 @@ import Telegram from '@/pages/Dashboard/Telegram';
 import Domains from '@/pages/Dashboard/Domains';
 import Settings from '@/pages/Dashboard/Settings';
 import Payments from '@/pages/Dashboard/Payments';
-import Checkout from '@/pages/Dashboard/Checkout';
+import DashboardPricing from '@/pages/Dashboard/Pricing';
+import Affiliates from '@/pages/Dashboard/Affiliates';
 
 
 import Support from '@/pages/Dashboard/Support';
@@ -55,6 +56,7 @@ import CouponManager from '@/pages/Admin/CouponManager';
 import AdminSettings from '@/pages/Admin/Settings';
 import DomainRequests from '@/pages/Admin/DomainRequests';
 import Inbox from '@/pages/Admin/Inbox';
+import AdminAffiliates from '@/pages/Admin/AdminAffiliates';
 
 import '@/styles/index.css';
 
@@ -115,8 +117,9 @@ function App() {
                 <Route path="telegram" element={<Telegram />} />
                 <Route path="domains" element={<Domains />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="pricing" element={<DashboardPricing />} />
                 <Route path="payments" element={<Payments />} />
-                <Route path="checkout" element={<Checkout />} />
+                <Route path="affiliates" element={<Affiliates />} />
                 <Route path="support" element={<Support />} />
               </Route>
 
@@ -138,6 +141,7 @@ function App() {
                   <Route path="coupons" element={<CouponManager />} />
                   <Route path="settings" element={<AdminSettings />} />
                   <Route path="domains" element={<DomainRequests />} />
+                  <Route path="affiliates" element={<AdminAffiliates />} />
                   <Route path="inbox" element={<Inbox />} />
                 </Route>
               </Route>

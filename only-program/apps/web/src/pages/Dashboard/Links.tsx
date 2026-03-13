@@ -116,7 +116,7 @@ interface LinkPage {
   profileImage: string;
   profileImageSize?: number; // 0-100 scale
   template: TemplateType;
-  landingMode?: "circle" | "full" | "direct";
+  landingMode?: "circle" | "full" | "direct" | "dual";
   security_config?: {
     geoblocking?: string[];
     device_redirections?: {
@@ -142,6 +142,7 @@ interface LinkPage {
   dbStatus?: string; // Real status from DB (pending, active, etc.)
   telegramMaxCapacity?: number; // Max clicks per rotator link before rotating
   telegramRotationLimit?: number; // Rotate every N clicks (1 = round robin)
+  modelName?: string; // Internal name for domain identification
 }
 
 export type PageData = LinkPage;
@@ -154,6 +155,11 @@ const Icons = {
       alt="Instagram"
       className="w-full h-full object-contain"
     />
+  ),
+  Facebook: () => (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full text-blue-500">
+      <path d="M14 13.5h2.5l1-4H14v-2c0-1.03 0-2 2-2h1.5V2.14c-.326-.043-1.557-.14-2.857-.14-2.85 0-4.643 1.743-4.643 4.96v2.54H7.5v4h2.5v11h4v-11z" />
+    </svg>
   ),
   TikTok: () => (
     <img
@@ -224,6 +230,7 @@ const getDefaults = (t: any) => ({
     template: "minimal" as TemplateType,
     landingMode: "circle" as const,
     directUrl: "",
+    modelName: "",
     theme: {
       pageBorderColor: "#333333",
       overlayOpacity: 40,
@@ -335,10 +342,6 @@ const getBackgroundStyle = (page: LinkPage) => {
   };
 };
 
-// Helper to check if page has rotator
-const hasRotatorActive = (page: LinkPage) =>
-  page.buttons.some((b) => b.type === "telegram" && b.rotatorActive);
-
 export default function Links() {
   const { t } = useTranslation();
   const DEFAULTS = getDefaults(t);
@@ -410,25 +413,7 @@ export default function Links() {
       localStorage.removeItem("my_links_data");
     }
 
-    return [
-      {
-        id: "page1",
-        status: "draft",
-        name: t("dashboard.links.untitledLink"),
-        profileName: t("dashboard.links.profileName"),
-        profileImage: DEFAULTS.PROFILE_IMAGE,
-        profileImageSize: 100,
-        template: "minimal",
-        theme: {
-          pageBorderColor: "#222222",
-          overlayOpacity: 40,
-          backgroundType: "solid",
-          backgroundStart: "#000000",
-          backgroundEnd: "#1a1a1a",
-        },
-        buttons: [],
-      },
-    ];
+    return [];
   });
 
   const [selectedPageId, setSelectedPageId] = useState<string>(
@@ -466,19 +451,14 @@ export default function Links() {
     }
   }, [searchParams, pages, selectedPageId]);
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
+
   // Derived
   const currentPage = pages.find((p) => p.id === selectedPageId) || pages[0];
 
-  // GUARD: Prevents crash if pages is empty
-  if (!currentPage) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
-  const selectedButton = currentPage.buttons?.find(
+  const selectedButton = currentPage?.buttons?.find(
     (b) => b.id === selectedButtonId,
   );
 
@@ -512,9 +492,6 @@ export default function Links() {
   const allActivePages = pages.filter((p) => p.status === "active");
   const allDraftPages = pages.filter((p) => p.status === "draft");
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [initialLoad, setInitialLoad] = useState(true);
-
   // Sidebar Collapse State - Auto-collapse on mobile
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     // Auto-collapse on mobile/tablet screens
@@ -536,6 +513,28 @@ export default function Links() {
 
   // --- NEW CREATE FLOW STATE ---
   const [showLinkTypeSelector, setShowLinkTypeSelector] = useState(false);
+
+  // Delete a draft link from state + localStorage
+  const handleDeleteDraftPage = async (pageId: string, pageName: string) => {
+    const confirmed = await showConfirm({
+      title: "¿Eliminar este link?",
+      message: `"${pageName || 'Link sin nombre'}" se eliminará de tus borradores. Esta acción no se puede deshacer.`,
+      confirmText: "Sí, eliminar",
+      type: "info",
+    });
+    if (!confirmed) return;
+
+    setPages((prev) => {
+      const updated = prev.filter((p) => p.id !== pageId);
+      try {
+        const drafts = updated.filter((p) => !p.dbStatus && p.status === "draft");
+        localStorage.setItem("my_links_data", JSON.stringify(drafts));
+      } catch { }
+      return updated;
+    });
+    if (selectedPageId === pageId) setSelectedPageId("");
+    toast.success("Borrador eliminado", { icon: "🗑️" });
+  };
 
   const handleCreateFolder = () => {
     const name = window.prompt(t("dashboard.links.newFolderPrompt"));
@@ -740,17 +739,7 @@ export default function Links() {
 
         const allPages = Array.from(pagesMap.values());
 
-        // FORCE DEFAULT: If user has NO links, create one
-        if (allPages.length === 0) {
-          const newId = `page${Date.now()}`;
-          allPages.push({
-            ...DEFAULTS.PAGE,
-            id: newId,
-            status: "draft",
-            name: t("dashboard.links.untitledLink") + " 1",
-          });
-        }
-
+        // Removed force default creation logic to allow empty links state
         setPages(allPages);
         if (allPages.length > 0) {
           const exists = allPages.find((p) => p.id === selectedPageId);
@@ -808,6 +797,7 @@ export default function Links() {
               folder: currentPageToSave.folder,
               landingMode: currentPageToSave.landingMode,
               profileImageSize: currentPageToSave.profileImageSize,
+              modelName: currentPageToSave.modelName,
             },
             // Telegram Rotator capacity persisted as dedicated columns
             ...(currentPageToSave.telegramMaxCapacity !== undefined
@@ -930,8 +920,35 @@ export default function Links() {
     setShowLinkTypeSelector(true);
   };
 
-  const confirmCreation = (type: "direct" | "landing") => {
+  const confirmCreation = (type: "direct" | "landing" | "both") => {
     setShowLinkTypeSelector(false);
+
+    if (type === "both") {
+      const now = Date.now();
+      const page1: LinkPage = {
+        ...DEFAULTS.PAGE,
+        id: `page${now}`,
+        status: "draft",
+        name: `Pack Dual ${allDraftPages.length + 1}`,
+        modelName: `Pack ${allDraftPages.length + 1}`,
+        landingMode: "dual",
+        directUrl: "",
+        buttons: [],
+        theme: {
+          ...DEFAULTS.PAGE.theme,
+          pageBorderColor: "#C9CCD1", // Silver premium
+          backgroundType: "blur",
+          backgroundStart: "#111111",
+        }
+      };
+
+      setPages((prev) => [...prev, page1]);
+      setSelectedPageId(page1.id);
+      setView("editor");
+      toast.success("¡Flujo Dual creado!", { icon: "🚀" });
+      return;
+    }
+
     const newId = `page${Date.now()}`;
     const newPage: LinkPage = {
       ...DEFAULTS.PAGE,
@@ -1102,6 +1119,15 @@ export default function Links() {
     setShowLinkTypeSelector(true);
   };
 
+  // GUARD: Prevents crash while loading
+  if (initialLoad) {
+    return (
+      <div className="flex items-center justify-center min-h-[100vh] bg-[#050505]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-full flex flex-col bg-[#050505] text-white font-sans overflow-hidden">
       <Toaster
@@ -1111,7 +1137,13 @@ export default function Links() {
 
       {/* Header */}
       <header className="h-16 px-6 flex items-center justify-between border-b border-white/5 bg-[#050505] z-30 shrink-0">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          {view === "editor" && (
+            <div className="flex items-center animate-in fade-in slide-in-from-left-4 duration-700 mr-4 pr-4 border-r border-white/10 h-10">
+               {/* Empty placeholder or removed badge container */}
+            </div>
+          )}
+
           {view === "editor" && (
             <button
               onClick={() => setView("list")}
@@ -1121,7 +1153,7 @@ export default function Links() {
                 arrow_back
               </span>
               <span className="hidden sm:inline">
-                {t("dashboard.links.linksListBack")}
+                {t("dashboard.links.linksListBack") || "Mis Links"}
               </span>
             </button>
           )}
@@ -1130,11 +1162,13 @@ export default function Links() {
               {view === "editor" ? "edit" : "layers"}
             </span>
           </div>
-          <h1 className="text-sm font-bold uppercase tracking-wider">
-            {view === "editor"
-              ? currentPage?.name || t("dashboard.links.editorTitle")
-              : t("dashboard.links.managerTitle")}
-          </h1>
+          <div className="flex items-center gap-3">
+             <h1 className="text-sm font-black uppercase tracking-widest text-white">
+               {view === "editor"
+                 ? currentPage?.modelName || currentPage?.name || t("dashboard.links.editorTitle")
+                 : t("dashboard.links.managerTitle")}
+             </h1>
+           </div>
         </div>
         <div className="flex items-center gap-4">
           <LanguageSwitcher />
@@ -1189,6 +1223,25 @@ export default function Links() {
               </button>
             </div>
 
+            {/* Empty State */}
+            {pages.length === 0 && (
+              <div className="mt-20 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-500">
+                <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mb-6 border border-primary/20 shadow-[0_0_30px_rgba(29,161,242,0.1)]">
+                  <span className="material-symbols-outlined text-4xl text-primary animate-pulse">link_off</span>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">No tienes links creados</h3>
+                <p className="text-silver/50 max-w-xs mx-auto mb-8">
+                  Comienza a potenciar tu contenido blindando tus redes hoy mismo.
+                </p>
+                <button
+                  onClick={handleCreateNew}
+                  className="px-8 py-3 bg-primary text-white font-black rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 uppercase tracking-widest text-xs"
+                >
+                  Crea tu primer link
+                </button>
+              </div>
+            )}
+
             {/* DB Links (activos + pendientes) */}
             {pages.filter((p) => p.dbStatus).length > 0 && (
               <div className="mb-8">
@@ -1198,12 +1251,46 @@ export default function Links() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {pages
                     .filter((p) => p.dbStatus)
-                    .map((page) => (
+                    .map((page) => {
+                      const isDirect = page.landingMode === "direct";
+                      const isDual = page.landingMode === "dual";
+                      const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
+                      let borderClass = "border-white/[0.06] hover:border-primary/40 hover:shadow-primary/10";
+                      let bgTrash = "bg-primary/20 hover:bg-primary/40 border-primary/40 text-primary";
+                      let accentColor = "text-primary";
+                      let accentBg = "bg-primary/10";
+                      let accentBorder = "border-primary/20 hover:border-primary/40";
+                      
+                      if (hasPair || isDual) {
+                        borderClass = "border-purple-500/30 hover:border-purple-500/60 shadow-[0_0_15px_rgba(168,85,247,0.1)] hover:shadow-[0_0_20px_rgba(168,85,247,0.2)]";
+                        bgTrash = "bg-purple-500/20 hover:bg-purple-500/40 border-purple-500/40 text-purple-400";
+                        accentColor = "text-purple-400";
+                        accentBg = "bg-purple-500/10";
+                        accentBorder = "border-purple-500/20 hover:border-purple-500/40 shadow-[0_0_10px_rgba(168,85,247,0.1)]";
+                      } else if (isDirect) {
+                        borderClass = "border-red-500/30 hover:border-red-500/60 shadow-[0_0_15px_rgba(239,68,68,0.1)] hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]";
+                        bgTrash = "bg-red-500/20 hover:bg-red-500/40 border-red-500/40 text-red-400";
+                        accentColor = "text-red-400";
+                      } else {
+                        borderClass = "border-blue-500/30 hover:border-blue-500/60 shadow-[0_0_15px_rgba(59,130,246,0.1)] hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]";
+                        bgTrash = "bg-blue-500/20 hover:bg-blue-500/40 border-blue-500/40 text-blue-400";
+                        accentColor = "text-blue-400";
+                      }
+
+                      return (
                       <div
                         key={page.id}
                         onClick={() => openEditor(page.id)}
-                        className="relative group rounded-2xl border border-white/[0.06] bg-white/[0.02] overflow-hidden hover:border-primary/40 hover:shadow-lg hover:shadow-primary/10 hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+                        className={`relative group rounded-2xl border bg-white/[0.02] overflow-hidden hover:shadow-lg hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer ${borderClass}`}
                       >
+                        {/* Delete button - top left */}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleDeleteDraftPage(page.id, page.profileName || page.name); }}
+                          title="Eliminar link"
+                          className={`absolute top-2 left-2 z-20 w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg border ${bgTrash}`}
+                        >
+                          <span className="material-symbols-outlined text-[14px]">delete</span>
+                        </button>
                         {/* Mini preview background */}
                         <div
                           className="h-28 w-full relative"
@@ -1285,7 +1372,7 @@ export default function Links() {
                           {/* Folder badge */}
                           {page.folder && (
                             <div className="mt-2 flex justify-center">
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[9px] font-bold text-primary">
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[9px] font-bold ${accentBg} ${accentBorder} ${accentColor}`}>
                                 <span className="material-symbols-outlined text-[10px]">folder</span>
                                 {page.folder}
                               </span>
@@ -1294,9 +1381,9 @@ export default function Links() {
 
                           {/* Buttons */}
                           <div className="mt-3 flex gap-2">
-                            <button
+                             <button
                               onClick={(e) => { e.stopPropagation(); openEditor(page.id); }}
-                              className="flex-1 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 border border-primary/20 hover:border-primary/40 text-xs font-bold text-primary transition-all flex items-center justify-center gap-1"
+                              className={`flex-1 py-2 rounded-xl border transition-all flex items-center justify-center gap-1 text-xs font-bold ${accentBg} ${accentBorder} ${accentColor}`}
                             >
                               <span className="material-symbols-outlined text-sm">
                                 edit
@@ -1320,7 +1407,8 @@ export default function Links() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1335,12 +1423,38 @@ export default function Links() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {pages
                       .filter((p) => !p.dbStatus && p.status === "draft")
-                      .map((page) => (
+                      .map((page) => {
+                        const isDirect = page.landingMode === "direct";
+                        const isDual = page.landingMode === "dual";
+                        const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
+                        let borderClass = "border-white/[0.08] hover:border-yellow-500/40 hover:shadow-yellow-500/10";
+                        let bgTrash = "bg-primary/20 hover:bg-primary/40 border-primary/40 text-primary";
+                        
+                        if (hasPair || isDual) {
+                          borderClass = "border-purple-500/30 border-dashed hover:border-purple-500/60 shadow-[0_0_15px_rgba(168,85,247,0.1)] hover:shadow-[0_0_20px_rgba(168,85,247,0.2)]";
+                          bgTrash = "bg-purple-500/20 hover:bg-purple-500/40 border-purple-500/40 text-purple-400";
+                        } else if (isDirect) {
+                          borderClass = "border-red-500/30 border-dashed hover:border-red-500/60 shadow-[0_0_15px_rgba(239,68,68,0.1)] hover:shadow-[0_0_20px_rgba(239,68,68,0.2)]";
+                          bgTrash = "bg-red-500/20 hover:bg-red-500/40 border-red-500/40 text-red-400";
+                        } else {
+                          borderClass = "border-blue-500/30 border-dashed hover:border-blue-500/60 shadow-[0_0_15px_rgba(59,130,246,0.1)] hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]";
+                          bgTrash = "bg-blue-500/20 hover:bg-blue-500/40 border-blue-500/40 text-blue-400";
+                        }
+
+                        return (
                         <div
                           key={page.id}
                           onClick={() => openEditor(page.id)}
-                          className="relative group rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.01] overflow-hidden hover:border-yellow-500/40 hover:shadow-lg hover:shadow-yellow-500/10 hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer"
+                          className={`relative group rounded-2xl border bg-white/[0.01] overflow-hidden hover:shadow-lg hover:scale-[1.02] hover:-translate-y-0.5 transition-all duration-200 cursor-pointer ${borderClass}`}
                         >
+                          {/* Delete button - top left */}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteDraftPage(page.id, page.name); }}
+                            title="Eliminar borrador"
+                            className={`absolute top-2 left-2 z-20 w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg border ${bgTrash}`}
+                          >
+                            <span className="material-symbols-outlined text-[14px]">delete</span>
+                          </button>
                           <div
                             className="h-28 w-full relative"
                             style={getBackgroundStyle(page)}
@@ -1386,7 +1500,7 @@ export default function Links() {
                             <div className="mt-3">
                               <button
                                 onClick={(e) => { e.stopPropagation(); openEditor(page.id); }}
-                                className="w-full py-2 rounded-xl bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 hover:border-yellow-500/40 text-xs font-bold text-yellow-400 transition-all flex items-center justify-center gap-1"
+                                className="w-full py-2 rounded-xl bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/20 text-xs font-bold text-yellow-400 transition-all flex items-center justify-center gap-1"
                               >
                                 <span className="material-symbols-outlined text-sm">
                                   edit
@@ -1396,28 +1510,13 @@ export default function Links() {
                             </div>
                           </div>
                         </div>
-                      ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
 
-            {/* Empty state */}
-            {pages.length === 0 && (
-              <div className="text-center py-20">
-                <span className="material-symbols-outlined text-6xl text-white/10">
-                  link
-                </span>
-                <p className="text-silver/40 mt-4">
-                  {t("dashboard.links.noLinksYet")}
-                </p>
-                <button
-                  onClick={handleCreateNew}
-                  className="mt-4 px-6 py-3 bg-primary rounded-xl font-bold text-sm hover:scale-105 transition-all"
-                >
-                  {t("dashboard.links.createFirstLink")}
-                </button>
-              </div>
-            )}
+
           </div>
         </div>
       )}
@@ -1444,7 +1543,7 @@ export default function Links() {
               )}
 
               <div
-                className="flex items-center gap-2 overflow-x-auto hide-scrollbar scroll-smooth px-4 h-full"
+                className="flex-1 flex items-center gap-2 overflow-x-auto hide-scrollbar scroll-smooth px-4 h-full"
                 ref={scrollContainerRef}
               >
                 <button
@@ -1460,16 +1559,33 @@ export default function Links() {
                 </button>
 
                 <div className="h-8 w-px bg-white/10 shrink-0 mx-2"></div>
+                {allActivePages.map((page) => {
+                    const isDirect = page.landingMode === "direct";
+                    const isDual = page.landingMode === "dual";
+                    const isSelected = selectedPageId === page.id;
+                    const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
+                    
+                    let buttonClass = "bg-transparent border-transparent hover:bg-white/5 hover:border-white/10";
 
-                {allActivePages.map((page) => (
-                  <button
-                    key={page.id}
-                    onClick={() => {
-                      setSelectedPageId(page.id);
-                      setSelectedButtonId(null);
-                    }}
-                    className={`relative group flex items-center gap-3 pr-4 pl-1 py-1 rounded-full transition-all border ${selectedPageId === page.id ? "bg-white/10 border-primary/50" : "bg-transparent border-transparent hover:bg-white/5 hover:border-white/10"}`}
-                  >
+                    if (isSelected) {
+                      if (hasPair || isDual) {
+                        buttonClass = "bg-purple-500/10 border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.15)]";
+                      } else if (isDirect) {
+                        buttonClass = "bg-red-500/10 border-red-500/50 shadow-[0_0_15px_rgba(239,68,68,0.1)]";
+                      } else {
+                        buttonClass = "bg-blue-500/10 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.15)]";
+                      }
+                    }
+                   
+                   return (
+                     <button
+                       key={page.id}
+                       onClick={() => {
+                         setSelectedPageId(page.id);
+                         setSelectedButtonId(null);
+                       }}
+                       className={`relative group flex items-center gap-3 pr-4 pl-1 py-1 rounded-full transition-all border ${buttonClass}`}
+                     >
                     <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 shrink-0">
                       {page.profileImage &&
                         page.profileImage !== DEFAULTS.PROFILE_IMAGE ? (
@@ -1487,9 +1603,9 @@ export default function Links() {
                     </div>
                     <div className="text-left min-w-[60px]">
                       <p
-                        className={`text-xs font-bold leading-tight ${selectedPageId === page.id ? "text-white" : "text-silver/60"}`}
+                        className={`text-xs font-bold leading-tight ${isSelected ? "text-white" : "text-silver/60"}`}
                       >
-                        {page.name}
+                        {page.modelName || page.name}
                       </p>
                       <span className="inline-flex items-center gap-1 mt-0.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -1498,25 +1614,43 @@ export default function Links() {
                         </span>
                       </span>
                     </div>
-                    {selectedPageId === page.id && (
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-[#080808]"></div>
-                    )}
-                  </button>
-                ))}
+                     {isSelected && (
+                       <div className={`absolute -top-1 -right-1 w-3 h-3 ${(hasPair || isDual) ? 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]' : (isDirect ? 'bg-red-500' : 'bg-blue-500')} rounded-full border-2 border-[#080808]`}></div>
+                     )}
+                   </button>
+                 );
+               })}
 
                 {/* Drafts */}
                 {allDraftPages.length > 0 && (
                   <div className="h-8 w-px bg-white/10 shrink-0 mx-2"></div>
                 )}
-                {allDraftPages.map((page) => (
-                  <button
-                    key={page.id}
-                    onClick={() => {
-                      setSelectedPageId(page.id);
-                      setSelectedButtonId(null);
-                    }}
-                    className={`relative group flex items-center gap-3 pr-4 pl-1 py-1 rounded-full transition-all border ${selectedPageId === page.id ? "bg-white/10 border-yellow-500/50" : "bg-transparent border-transparent hover:bg-white/5 hover:border-white/10"}`}
-                  >
+                 {allDraftPages.map((page) => {
+                   const isDirect = page.landingMode === "direct";
+                   const isDual = page.landingMode === "dual";
+                   const isSelected = selectedPageId === page.id;
+                   const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
+                   let buttonClass = "bg-transparent border-transparent hover:bg-white/5 hover:border-white/10";
+
+                   if (isSelected) {
+                     if (hasPair || isDual) {
+                       buttonClass = "bg-purple-500/10 border-purple-500/50 shadow-[0_0_20px_rgba(168,85,247,0.15)]";
+                     } else if (isDirect) {
+                       buttonClass = "bg-red-500/10 border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.15)]";
+                     } else {
+                       buttonClass = "bg-blue-500/10 border-blue-500/50 shadow-[0_0_20px_rgba(59,130,246,0.15)]";
+                     }
+                   }
+
+                   return (
+                     <button
+                       key={page.id}
+                       onClick={() => {
+                         setSelectedPageId(page.id);
+                         setSelectedButtonId(null);
+                       }}
+                       className={`relative group flex items-center gap-3 pr-4 pl-1 py-1 rounded-full transition-all border ${buttonClass}`}
+                     >
                     <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 shrink-0">
                       {page.profileImage &&
                         page.profileImage !== DEFAULTS.PROFILE_IMAGE ? (
@@ -1534,9 +1668,9 @@ export default function Links() {
                     </div>
                     <div className="text-left min-w-[60px]">
                       <p
-                        className={`text-xs font-bold leading-tight ${selectedPageId === page.id ? "text-white" : "text-silver/60"}`}
+                        className={`text-xs font-bold leading-tight ${isSelected ? "text-white" : "text-silver/60"}`}
                       >
-                        {page.name}
+                        {page.modelName || page.name}
                       </p>
                       {page.dbStatus ? (
                         <span className="inline-flex items-center gap-1 mt-0.5">
@@ -1546,20 +1680,17 @@ export default function Links() {
                           </span>
                         </span>
                       ) : (
-                        <p className="text-[9px] text-yellow-500 font-bold uppercase tracking-wider">
+                        <p className={`text-[9px] font-black uppercase tracking-wider ${(isDual || hasPair) ? 'text-purple-400' : 'text-yellow-500'}`}>
                           {t("dashboard.links.creatingDraft")}
                         </p>
                       )}
                     </div>
-                    {hasRotatorActive(page) && (
-                      <div className="absolute -top-1 -left-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-[#080808] flex items-center justify-center">
-                        <span className="material-symbols-outlined text-[8px] text-white">
-                          sync
-                        </span>
-                      </div>
-                    )}
-                  </button>
-                ))}
+                     {isSelected && (
+                       <div className={`absolute -top-1 -right-1 w-3 h-3 ${(hasPair || isDual) ? 'bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]' : (isDirect ? 'bg-red-500' : 'bg-blue-500')} rounded-full border-2 border-[#080808]`}></div>
+                     )}
+                   </button>
+                 );   
+               })}
               </div>
 
               {/* Right Arrow */}
@@ -1574,6 +1705,62 @@ export default function Links() {
                     </span>
                   </div>
                 </button>
+              )}
+
+              {currentPage && (
+                <div className="pr-6 pl-4 flex items-center shrink-0 border-l border-white/10 h-full hidden md:flex">
+                   {(() => {
+                      const isDirect = currentPage.landingMode === "direct";
+                      const isDual = currentPage.landingMode === "dual";
+                      const hasPair = pages.some(p => p.modelName === currentPage.modelName && p.modelName && p.id !== currentPage.id);
+                      
+                      if (hasPair || isDual) {
+                        return (
+                          <div className="flex items-center gap-3 py-1.5 px-3 rounded-xl border bg-purple-500/10 border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.1)]">
+                            <div className="flex items-center gap-1">
+                              <div className="w-4 h-4"><Icons.Instagram /></div>
+                              <span className="text-purple-400 font-bold text-[10px]">+</span>
+                              <div className="w-4 h-4"><Icons.Facebook /></div>
+                              <span className="text-purple-400 font-bold text-[10px]">+</span>
+                              <div className="w-4 h-4"><Icons.TikTok /></div>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[6px] font-black uppercase tracking-[0.2em] text-silver/40 leading-none mb-0.5 whitespace-nowrap">Conexión Dual</span>
+                              <span className="text-[9px] font-black text-white uppercase tracking-wider leading-none whitespace-nowrap">
+                                Instagram + TikTok
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      }
+  
+                      if (isDirect) {
+                        return (
+                          <div className="flex items-center gap-3 py-1.5 px-3 rounded-xl border bg-red-500/10 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+                            <div className="flex items-center gap-0.5">
+                              <div className="w-4 h-4"><Icons.Instagram /></div>
+                              <span className="text-red-500/50 font-black text-[8px]">+</span>
+                              <div className="w-4 h-4"><Icons.Facebook /></div>
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[6px] font-black uppercase tracking-[0.2em] text-silver/40 leading-none mb-0.5 whitespace-nowrap">Conexión</span>
+                              <span className="text-[9px] font-black text-white uppercase tracking-wider leading-none whitespace-nowrap">Instagram & FB</span>
+                            </div>
+                          </div>
+                        )
+                      }
+  
+                      return (
+                          <div className="flex items-center gap-3 py-1.5 px-3 rounded-xl border bg-blue-500/10 border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]">
+                            <div className="w-5 h-5 flex-shrink-0"><Icons.TikTok /></div>
+                            <div className="flex flex-col">
+                              <span className="text-[6px] font-black uppercase tracking-[0.2em] text-silver/40 leading-none mb-0.5 whitespace-nowrap">Conexión</span>
+                              <span className="text-[9px] font-black text-white uppercase tracking-wider leading-none whitespace-nowrap">TikTok Link</span>
+                            </div>
+                          </div>
+                      )
+                   })()}
+                </div>
               )}
             </div>
 
@@ -1883,9 +2070,34 @@ export default function Links() {
               </div>
 
               {/* MAIN EDITOR AREA */}
-              <div className="flex-1 flex flex-col relative bg-[#050505] overflow-hidden">
+              <div className={`flex-1 flex flex-col relative overflow-hidden transition-all duration-700 ${currentPage.landingMode === 'dual' ? 'bg-[#080808] border-x border-purple-500/30 shadow-[inset_0_0_50px_rgba(168,85,247,0.05)]' : 'bg-[#050505]'}`}>
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-8 pb-32">
                   <div className="max-w-2xl mx-auto">
+                    {/* ANUNCIO FLUJO DUAL */}
+                    {(pages.some(p => p.modelName === currentPage.modelName && p.modelName && p.id !== currentPage.id) || currentPage.landingMode === 'dual') && (
+                      <div className="mb-8 p-6 rounded-[2rem] bg-gradient-to-br from-purple-600/20 via-indigo-600/10 to-transparent border border-purple-500/30 relative overflow-hidden group animate-in slide-in-from-top-4 duration-700">
+                        {/* Decorative elements */}
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-[50px] rounded-full -mr-16 -mt-16 group-hover:bg-purple-500/20 transition-all duration-1000" />
+                        
+                        <div className="flex items-start gap-5 relative z-10">
+                          <div className="w-12 h-12 rounded-2xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-600/40 shrink-0">
+                            <span className="material-symbols-outlined text-white text-2xl animate-bounce">auto_awesome</span>
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-black text-white mb-2 flex items-center gap-2">
+                              Conectividad Dual Activada
+                              <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30 uppercase tracking-widest font-black">PRO</span>
+                            </h3>
+                            <p className="text-sm text-silver/60 leading-relaxed">
+                              Estás usando nuestro <span className="text-white font-bold">sistema híbrido inteligente</span>: 
+                              Tu landing page está optimizada para <span className="text-blue-400 font-bold">TikTok</span>, mientras que el sistema <span className="text-red-400 font-bold">Directo de Instagram/FB</span> ya está integrado. 
+                              <br /><br />
+                              <span className="text-[11px] font-bold text-purple-400">Puedes usar tu link final en cualquier red social y el sistema detectará automáticamente la mejor experiencia para el usuario.</span>
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {/* BUTTON CREATOR */}
                     {showButtonCreator && (
                       <div className="animate-fade-in space-y-6">
@@ -2413,15 +2625,18 @@ export default function Links() {
 
                         {true && (
                           <div className="space-y-8 animate-fade-in">
-                            <section className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-                              <div className="p-4 border-b border-white/5 bg-white/[0.02]">
-                                <h3 className="text-sm font-bold flex items-center gap-2">
-                                  <span className="material-symbols-outlined text-silver/40">
+                            <section className={`rounded-2xl overflow-hidden transition-all duration-500 ${currentPage.landingMode === 'dual' ? 'bg-purple-900/10 border border-purple-500/40 shadow-[0_0_30px_rgba(168,85,247,0.1)]' : 'bg-white/5 border border-white/10'}`}>
+                              <div className={`p-4 border-b transition-all duration-500 ${currentPage.landingMode === 'dual' ? 'border-purple-500/20 bg-gradient-to-r from-purple-500/20 to-transparent' : 'border-white/5 bg-white/[0.02]'}`}>
+                                <h3 className={`text-sm font-bold flex items-center gap-2 ${currentPage.landingMode === 'dual' ? 'text-white' : ''}`}>
+                                  <span className={`material-symbols-outlined ${currentPage.landingMode === 'dual' ? 'text-purple-400' : 'text-silver/40'}`}>
                                     {(currentPage.landingMode as string) === "direct" ? "settings" : "person"}
                                   </span>
                                   {(currentPage.landingMode as string) === "direct"
                                     ? "Configuración del Enlace Directo"
                                     : t("dashboard.links.profileIdentity")}
+                                  {currentPage.landingMode === 'dual' && (
+                                    <span className="ml-auto text-[9px] font-black bg-white/10 text-silver px-2 py-0.5 rounded border border-white/5 uppercase tracking-widest">Premium Dual</span>
+                                  )}
                                 </h3>
                               </div>
                               <div className="p-6">
@@ -2510,6 +2725,30 @@ export default function Links() {
 
                                 {(currentPage.landingMode as string) === "direct" ? (
                                   <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-2xl animate-fade-in text-center">
+                                    {/* Model Name Input (Internal) */}
+                                    <div className="mb-8 p-4 bg-white/5 border border-white/10 rounded-xl text-left max-w-lg mx-auto">
+                                      <label className="text-[10px] font-bold text-silver/40 uppercase pl-1 block mb-2">
+                                        {t("dashboard.links.modelNameLabel")}
+                                      </label>
+                                      <div className="relative">
+                                        <span className="material-symbols-outlined absolute left-3 top-2.5 text-silver/20 text-lg">
+                                          person
+                                        </span>
+                                        <input
+                                          type="text"
+                                          value={currentPage.modelName || ""}
+                                          onChange={(e) =>
+                                            handleUpdatePage(
+                                              "modelName",
+                                              e.target.value,
+                                            )
+                                          }
+                                          placeholder={t("dashboard.links.modelNamePlaceholder")}
+                                          className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-primary placeholder:text-silver/20 transition-all"
+                                        />
+                                      </div>
+                                    </div>
+
                                     <span className="material-symbols-outlined text-4xl text-red-500 mb-4 block animate-bounce-subtle">
                                       rocket_launch
                                     </span>
@@ -2531,7 +2770,32 @@ export default function Links() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <>
+                                  <div className="space-y-8">
+                                    {currentPage.landingMode === "dual" && (
+                                      <div className="p-5 rounded-2xl bg-gradient-to-br from-purple-600/10 to-transparent border border-purple-500/40 mb-6 shadow-xl relative overflow-hidden group">
+                                        <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 blur-2xl rounded-full" />
+                                        <div className="flex items-center gap-2 text-white mb-4 relative z-10">
+                                          <div className="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-600/20">
+                                            <span className="material-symbols-outlined text-sm">rocket_launch</span>
+                                          </div>
+                                          <span className="text-xs font-black uppercase tracking-tighter">Enlace Directo (IG/FB)</span>
+                                          <span className="ml-auto text-[8px] text-silver/40 border border-white/10 px-1.5 py-0.5 rounded">MODO DIRECTO ACTIVADO</span>
+                                        </div>
+                                        <div className="space-y-2">
+                                          <label className="text-[9px] font-black text-silver/40 uppercase pl-1">
+                                            URL para tráfico de Instagram / Facebook
+                                          </label>
+                                          <input
+                                            type="url"
+                                            placeholder="https://onlyfans.com/tu_perfil"
+                                            value={currentPage.directUrl || ""}
+                                            onChange={(e) => handleUpdatePage("directUrl", e.target.value)}
+                                            className="w-full bg-[#111] border border-white/10 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-purple-500 transition-all placeholder:text-silver/20"
+                                          />
+                                          <p className="text-[10px] text-silver/30 pl-1">Esta URL se usará cuando el sistema detecte que el usuario viene de Instagram o Facebook (Modo Directo).</p>
+                                        </div>
+                                      </div>
+                                    )}
                                     <div className="flex gap-6 items-start">
                                       <div className="space-y-3 shrink-0">
                                         <div
@@ -2610,7 +2874,7 @@ export default function Links() {
                                         </div>
                                       </div>
                                     </div>
-                                  </>
+                                  </div>
                                 )}
 
                                 {(currentPage.landingMode as string) !== "direct" && (
@@ -2981,7 +3245,7 @@ export default function Links() {
                       if ((currentPage.landingMode as string) === "direct") {
                         if (!currentPage.directUrl || !currentPage.directUrl.trim()) {
                           toast.error(
-                            `"${currentPage.name}" no tiene URL de destino. Agrégala antes de continuar.`,
+                            `"${currentPage.name}" no tiene URL de destino. Agregue una URL antes de continuar.`,
                             { duration: 5000 }
                           );
                           return;
@@ -3004,7 +3268,7 @@ export default function Links() {
                         for (const btn of currentPage.buttons) {
                           if (!btn.url || !btn.url.trim()) {
                             toast.error(
-                              `El botón "${btn.title}" en "${currentPage.name}" no tiene URL. Agrégala antes de continuar.`,
+                              `El botón "${btn.title}" en "${currentPage.name}" no tiene URL. Agregue una URL antes de continuar.`,
                               { duration: 4000 }
                             );
                             return;
@@ -3052,14 +3316,19 @@ export default function Links() {
                       if (p.landingMode === "direct") return true;
                       return p.buttons?.some((b: any) => b.metaShield);
                     });
+                    
+                    const hasRotator = validDrafts.some((p: any) => 
+                      p.buttons?.some((b: any) => b.rotatorActive)
+                    );
 
-                    navigate("/dashboard/checkout", {
+                    navigate("/dashboard/payments", {
                       state: {
                         pendingPurchase: {
                           type: "links_bundle",
                           linksData: validDrafts,
                           amount: null,
                           hasInstagram: hasMetaShield,
+                          hasRotator: hasRotator,
                         },
                       },
                     });
@@ -3240,54 +3509,81 @@ export default function Links() {
 
               <div className="relative z-10 text-center mb-10">
                 <h3 className="text-3xl font-black text-white mb-2 tracking-tight">
-                  ¿Qué tipo de link quieres crear?
+                  {t("dashboard.links.createLinkModalTitle")}
                 </h3>
-                <p className="text-silver/40 text-sm">
-                  Escoge el flujo que mejor se adapte a tu publicidad
+                <p className="text-silver/40 text-sm font-medium">
+                  {t("dashboard.links.createLinkModalSubtitle")}
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                 {/* Opción 1: Enlace Directo */}
                 <button
                   onClick={() => confirmCreation("direct")}
-                  className="group relative flex flex-col text-left p-6 rounded-[2rem] bg-white/5 border border-white/10 hover:border-red-500/50 hover:bg-red-500/5 transition-all duration-300"
+                  className="group relative flex flex-col p-6 rounded-3xl bg-secondary/30 border border-white/5 hover:border-red-500/50 hover:bg-black transition-all text-left overflow-hidden h-full shadow-lg"
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-red-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-red-500 text-3xl">rocket_launch</span>
+                  <div className="absolute top-4 right-4 px-2 py-1 rounded bg-red-500/10 border border-red-500/20">
+                    <span className="text-[10px] font-black text-red-400 uppercase tracking-tighter">
+                      {t("dashboard.links.directLinkPlatform")}
+                    </span>
                   </div>
-                  <h4 className="text-xl font-bold text-white mb-2">Escudo Directo</h4>
-                  <p className="text-silver/60 text-xs leading-relaxed mb-6">
-                    Redirección instantánea a OnlyFans con <b>Protección de Meta activa</b> por defecto. Ideal para anuncios directos.
+
+                  <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-3xl text-red-500">
+                      rocket_launch
+                    </span>
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-2">
+                    {t("dashboard.links.directLinkTitle")}
+                  </h4>
+                  <p className="text-silver/40 text-xs leading-relaxed mb-4">
+                    {t("dashboard.links.directLinkDesc")}
                   </p>
-                  <div className="mt-auto flex items-center gap-2 text-red-400 text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                    Seleccionar <span className="material-symbols-outlined text-xs">arrow_forward</span>
-                  </div>
                 </button>
 
                 {/* Opción 2: Landing Page */}
                 <button
                   onClick={() => confirmCreation("landing")}
-                  className="group relative flex flex-col text-left p-6 rounded-[2rem] bg-white/5 border border-white/10 hover:border-primary/50 hover:bg-primary/5 transition-all duration-300"
+                  className="group relative flex flex-col p-6 rounded-3xl bg-secondary/30 border border-white/5 hover:border-blue-500/50 hover:bg-black transition-all text-left overflow-hidden h-full shadow-lg"
                 >
-                  <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                    <span className="material-symbols-outlined text-primary text-3xl">view_list</span>
+                  <div className="absolute top-4 right-4 px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20">
+                    <span className="text-[10px] font-black text-blue-400 uppercase tracking-tighter">
+                      {t("dashboard.links.landingPagePlatform")}
+                    </span>
                   </div>
-                  <h4 className="text-xl font-bold text-white mb-2">Landing Page</h4>
-                  <p className="text-silver/60 text-xs leading-relaxed mb-6">
-                    Página personalizada con múltiples botones. Incluye <b>Protección de TikTok</b> por defecto.
+
+                  <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <span className="material-symbols-outlined text-3xl text-blue-500">
+                      web
+                    </span>
+                  </div>
+                  <h4 className="text-xl font-bold text-white mb-2">
+                    {t("dashboard.links.landingPageTitle")}
+                  </h4>
+                  <p className="text-silver/40 text-xs leading-relaxed mb-4">
+                    {t("dashboard.links.landingPageDesc")}
                   </p>
-                  <div className="mt-auto flex items-center gap-2 text-primary text-[10px] font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity">
-                    Seleccionar <span className="material-symbols-outlined text-xs">arrow_forward</span>
-                  </div>
                 </button>
               </div>
+
+              <button
+                onClick={() => confirmCreation("both")}
+                className="w-full flex items-center justify-center gap-3 py-5 rounded-[2rem] bg-gradient-to-r from-purple-600 to-indigo-600 hover:scale-[1.01] active:scale-[0.99] transition-all group shadow-[0_0_40px_rgba(147,51,234,0.3)] border-2 border-purple-400/50 relative overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <span className="material-symbols-outlined text-2xl text-white group-hover:rotate-12 transition-transform relative z-10">
+                  auto_awesome
+                </span>
+                <span className="font-black text-sm uppercase tracking-widest text-white relative z-10">
+                  {t("dashboard.links.createBothTitle")}
+                </span>
+              </button>
 
               <button
                 onClick={() => setShowLinkTypeSelector(false)}
                 className="mt-10 mx-auto block text-[10px] font-bold text-silver/30 uppercase tracking-widest hover:text-white transition-colors"
               >
-                Cancelar
+                {t("common.cancel")}
               </button>
             </div>
           </div>

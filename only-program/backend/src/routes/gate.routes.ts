@@ -137,8 +137,9 @@ router.get("/api/gate/:slug", async (req, res) => {
         targetUrl = ofBtn.url;
       } else if (tgBtn) {
         if (tgBtn.rotator_active) {
-          const rotatedUrl = await telegramService.rotateLink(slug);
-          targetUrl = rotatedUrl || tgBtn.url;
+          // 🔥 FIX: No rotamos en la carga inicial de la landing (eso genera clics fantasma).
+          // La rotación real ocurre en la ruta GET /t/:slug cuando el usuario hace clic.
+          targetUrl = tgBtn.url;
         } else {
           targetUrl = tgBtn.url;
         }

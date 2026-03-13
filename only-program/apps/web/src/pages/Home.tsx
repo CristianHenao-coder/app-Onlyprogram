@@ -277,10 +277,12 @@ export default function Home({
             </div>
           </div>
 
-          {/* Soft Gradient Transition & Ambient Glow */}
+        {/* Soft Gradient Transition & Ambient Glow */}
           <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-b from-transparent to-background z-20" />
           <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-primary/20 blur-[120px] rounded-full z-10 opacity-50 pointer-events-none" />
         </section>
+
+
 
         {/* ✅ FEATURES: CENTRO DE CONTROL DE ENLACES (NUEVO DISEÑO) */}
         <LinkControlCenter />
