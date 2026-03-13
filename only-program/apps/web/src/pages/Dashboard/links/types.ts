@@ -3,6 +3,7 @@ export type SocialType = "instagram" | "tiktok" | "telegram" | "onlyfans" | "cus
 export type FontType = "sans" | "serif" | "mono" | "display";
 export type PageStatus = "active" | "draft";
 export type BackgroundType = "solid" | "gradient" | "blur";
+export type LandingMode = "circle" | "full" | "dual" | "direct" | "tiktok" | "landing" | "both";
 
 export interface ButtonLink {
   id: string;
@@ -39,7 +40,7 @@ export interface LinkPage {
   profileImage: string;
   profileImageSize?: number;
   template: TemplateType;
-  landingMode?: "circle" | "full" | "direct" | "dual";
+  landingMode?: LandingMode;
   security_config?: {
     geoblocking?: string[];
     device_redirections?: {
@@ -66,7 +67,11 @@ export interface LinkPage {
   telegramMaxCapacity?: number;
   telegramRotationLimit?: number;
   modelName?: string;
+  metaShield?: boolean;
+  tiktokShield?: boolean;
 }
+
+export type PageData = LinkPage;
 
 export const UNIQUE_SOCIAL_TYPES: SocialType[] = [
   "instagram",

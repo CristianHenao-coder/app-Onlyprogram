@@ -70,26 +70,27 @@ export default function Payments() {
   }, []);
 
   // Prices calculation
-  const calculatedBaseTotal = linksData.reduce((acc, link) => {
+  const calculatedBaseTotal = linksData.reduce((acc: number, link: any) => {
     let linkPrice = 0;
     
     // Choose base price based on landing mode
     if (link.landingMode === "dual") {
-      linkPrice = pricingCfg.link.dual;
+      linkPrice = pricingCfg.link.dual ?? 0;
     } else if (link.landingMode === "direct") {
-      linkPrice = pricingCfg.link.instagram;
+      linkPrice = pricingCfg.link.instagram ?? 0;
     } else {
       // Default / TikTok template
-      linkPrice = pricingCfg.link.tiktok;
+      linkPrice = pricingCfg.link.tiktok ?? 0;
     }
 
     // Addons - Check if any button has rotator active
-    if (link.buttons?.some((b: any) => b.rotator_active)) {
-      linkPrice += pricingCfg.link.telegramAddon;
+    if (link.buttons?.some((b: any) => b.rotator_active || b.rotatorActive)) {
+      linkPrice += pricingCfg.link.telegramAddon ?? 0;
     }
     
     return acc + linkPrice;
   }, 0);
+
 
   const baseTotal = pendingPurchase?.baseAmount || (
     isFromLinks
@@ -241,6 +242,7 @@ export default function Payments() {
                       </div>
                     );
                   })}
+
                 </div>
 
                 {/* Totals */}

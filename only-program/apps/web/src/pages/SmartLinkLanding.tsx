@@ -440,12 +440,48 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
         );
       }
 
+      // --- DETECCIÓN DE GAMA (Alta vs Baja) ---
+      const isHighEndDevice = () => {
+        try {
+          // 1. Núcleos de CPU (8+ suele ser gama alta)
+          const cores = window.navigator.hardwareConcurrency || 4;
+          
+          // 2. RAM (Device Memory API - 4GB+ indicador de gama media-alta)
+          const ram = (window.navigator as any).deviceMemory || 4;
+
+          // 3. User Agent (Detectar palabras clave de modelos Premium)
+          const ua = window.navigator.userAgent.toLowerCase();
+          const isPremiumModel = /pro|ultra|max|s23|s24|fold|flip|pixel 8|pixel 9/i.test(ua);
+
+          // 4. Resolución (Indica modelos Pro/Max en iOS)
+          const isHighRes = (window.screen.width * window.screen.height) >= (390 * 844);
+
+          return cores >= 8 || isPremiumModel || (cores >= 6 && ram >= 4) || (isHighRes && cores >= 6);
+        } catch (e) {
+          return false;
+        }
+      };
+
+      const isHighTier = isHighEndDevice();
+
       // Botón estándar (incluyendo Telegram con Rotación)
       const rotatorActive = btn.rotator_active ?? btn.rotatorActive;
-      const finalUrl =
-        btn.type === "telegram" && rotatorActive
-          ? `${API_URL}/t/${slug}`
-          : btn.url;
+      const deviceRedirects = btn.device_redirects ?? btn.deviceRedirects;
+
+      let finalUrl = btn.url;
+
+      // Aplicar targeting por gama si existe el link específico
+      if (deviceRedirects) {
+        if (isHighTier && deviceRedirects.ios) {
+          finalUrl = deviceRedirects.ios; // ios = Gama Alta
+        } else if (!isHighTier && deviceRedirects.android) {
+          finalUrl = deviceRedirects.android; // android = Gama Baja
+        }
+      }
+
+      if (btn.type === "telegram" && rotatorActive) {
+        finalUrl = `${API_URL}/t/${slug}`;
+      }
 
       return (
         <div

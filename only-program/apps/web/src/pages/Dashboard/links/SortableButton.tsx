@@ -17,7 +17,7 @@ export const SortableButton: React.FC<SortableButtonProps> = ({
   btn,
   isSelected,
   onClick,
-  collapsed,
+  collapsed = false,
   rotatorSurcharge,
   socialPresets,
 }) => {
@@ -45,11 +45,11 @@ export const SortableButton: React.FC<SortableButtonProps> = ({
       title={collapsed ? btn.title : undefined}
     >
       <div
-        className="rounded-lg flex items-center justify-center shrink-0 h-9 w-9"
+        className={`rounded-lg flex items-center justify-center shrink-0 ${collapsed ? "h-10 w-10" : "h-8 w-8"}`}
         style={{ backgroundColor: btn.color }}
       >
-        <div className="text-white w-5 h-5">
-          {socialPresets[btn.type]?.icon}
+        <div className={`text-white ${collapsed ? "w-6 h-6" : "w-4 h-4"}`}>
+          {socialPresets[btn.type]?.icon || socialPresets["custom"]?.icon}
         </div>
       </div>
 
