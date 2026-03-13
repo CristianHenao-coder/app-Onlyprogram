@@ -4,19 +4,19 @@ import { LinkPage } from "./types";
 
 interface DesktopFooterProps {
   currentPage: LinkPage;
-  handleDeleteDraftPage: (id: string, name: string) => Promise<void>;
+  handleDeletePage: (id: string, name: string) => Promise<void>;
   sidebarCollapsed: boolean;
 }
 
 const DesktopFooter: React.FC<DesktopFooterProps> = ({
   currentPage,
-  handleDeleteDraftPage,
+  handleDeletePage,
   sidebarCollapsed,
 }) => {
   const { t } = useTranslation();
 
   const onDeleteClick = () => {
-    handleDeleteDraftPage(currentPage.id, currentPage.name);
+    handleDeletePage(currentPage.id, currentPage.name);
   };
 
   return (

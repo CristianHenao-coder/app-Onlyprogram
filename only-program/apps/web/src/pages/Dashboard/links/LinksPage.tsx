@@ -18,6 +18,7 @@ import { useTranslation } from "@/contexts/I18nContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useModal } from "@/contexts/ModalContext";
 import { supabase } from "@/services/supabase";
+import { storageService } from "@/services/storageService";
 import { productPricingService, DEFAULT_PRODUCT_PRICING, type ProductPricingConfig } from "@/services/productPricing.service";
 
 import LanguageSwitcher from "@/components/LanguageSwitcher";
@@ -185,6 +186,7 @@ const LinksPage: React.FC = () => {
   const [showFolderModal, setShowFolderModal] = useState<{ show: boolean, folder?: Folder }>({ show: false });
   const [showMobilePreview, setShowMobilePreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [showLinkTypeSelector, setShowLinkTypeSelector] = useState(false);
 
   // Folders logic
   const [extraFolders, setExtraFolders] = useState<Folder[]>(() => {
@@ -375,26 +377,55 @@ const LinksPage: React.FC = () => {
 
   // Handlers
   const handleCreateNew = () => {
+    setShowLinkTypeSelector(true);
+  };
+
+  const confirmCreation = (type: "direct" | "landing" | "both") => {
+    setShowLinkTypeSelector(false);
+
+    if (type === "both") {
+      const now = Date.now();
+      const page1: LinkPage = {
+        ...DEFAULTS.PAGE,
+        id: `page${now}`,
+        status: "draft",
+        name: `Pack Dual ${allDraftPages.length + 1}`,
+        modelName: `Pack ${allDraftPages.length + 1}`,
+        landingMode: "dual",
+        directUrl: "",
+        buttons: [],
+        theme: {
+          ...DEFAULTS.PAGE.theme,
+          pageBorderColor: "#C9CCD1",
+          backgroundType: "blur",
+          backgroundStart: "#111111",
+        }
+      };
+
+      setPages((prev) => [page1, ...prev]);
+      setSelectedPageId(page1.id);
+      setView("editor");
+      toast.success("¡Flujo Dual creado!", { icon: "🚀" });
+      return;
+    }
+
+    const newId = `page${Date.now()}`;
     const newPage: LinkPage = {
-      id: Math.random().toString(36).substring(2, 9),
-      name: "Nuevo Link",
-      profileName: "Tu Nombre",
-      profileImage: DEFAULTS.PROFILE_IMAGE,
-      buttons: [],
+      ...DEFAULTS.PAGE,
+      id: newId,
       status: "draft",
-      template: "minimal",
-      landingMode: "circle",
-      theme: { 
-        backgroundType: "solid", 
-        backgroundStart: "#050505",
-        backgroundEnd: "#050505",
-        pageBorderColor: "#333333",
-        overlayOpacity: 40
-      },
+      name:
+        type === "direct"
+          ? `Directo ${allDraftPages.length + 1}`
+          : `Landing ${allDraftPages.length + 1}`,
+      landingMode: type === "direct" ? "direct" : "circle",
+      directUrl: "",
     };
-    setPages([newPage, ...pages]);
-    setSelectedPageId(newPage.id);
+
+    setPages((prev) => [newPage, ...prev]);
+    setSelectedPageId(newId);
     setView("editor");
+    toast.success(t("dashboard.links.designStartedToast"));
   };
 
   const openEditor = (id: string) => {
@@ -528,23 +559,55 @@ const LinksPage: React.FC = () => {
     }
   };
 
-  const handleDeleteDraftPage = async (id: string, name: string) => {
+  const handleDeletePage = async (id: string, name: string) => {
+    const isDraft = !pages.find(p => p.id === id)?.dbStatus;
+    
     const confirmed = await showConfirm({
-      title: "¿Eliminar borrador?",
-      message: `"${name}" se eliminará permanentemente.`,
-      confirmText: "Eliminar",
+      title: isDraft ? "¿Eliminar borrador?" : "¿Eliminar link activo?",
+      message: `"${name}" se eliminará permanentemente de nuestros servidores y de la red. Esta acción no se puede deshacer.`,
+      confirmText: "Eliminar definitivamente",
       type: "info"
     });
+    
     if (!confirmed) return;
-    setPages(prev => {
+
+    try {
+      const pageToDelete = pages.find(p => p.id === id);
+      if (!pageToDelete) return;
+
+      if (!isDraft) {
+        // 1. Delete Profile Image from Storage if exists
+        if (pageToDelete.profileImage && pageToDelete.profileImage.includes("cms-assets")) {
+          await storageService.deleteImage(pageToDelete.profileImage);
+        }
+
+        // 2. Delete from Supabase (Cascade will handle buttons, profiles, events)
+        const { error } = await supabase
+          .from("smart_links")
+          .delete()
+          .eq("id", id);
+
+        if (error) throw error;
+      }
+
+      // Update Local State for both types
+      setPages(prev => {
         const updated = prev.filter(p => p.id !== id);
         try {
-            const drafts = updated.filter(p => !p.dbStatus && p.status === "draft");
-            localStorage.setItem("my_links_data", JSON.stringify(drafts));
+          // ALWAYS update localStorage drafts to ensure the deleted ID is removed 
+          // from localStorage too, preventing resurrection on reload.
+          const drafts = updated.filter(p => !p.dbStatus && p.status === "draft");
+          localStorage.setItem("my_links_data", JSON.stringify(drafts));
         } catch {}
         return updated;
-    });
-    if (selectedPageId === id) setSelectedPageId("");
+      });
+
+      if (selectedPageId === id) setSelectedPageId("");
+      toast.success(isDraft ? "Borrador eliminado" : "Link eliminado de la red");
+    } catch (err) {
+      console.error("Error deleting page:", err);
+      toast.error("Error al eliminar el link");
+    }
   };
 
   const handleSaveFolder = (name: string, color: string, id?: string) => {
@@ -728,7 +791,7 @@ const LinksPage: React.FC = () => {
             handleCreateNew={handleCreateNew}
             handleOpenFolderModal={(f: Folder | undefined) => setShowFolderModal({ show: true, folder: f })}
             handleDeleteFolder={handleDeleteFolder}
-            handleDeleteDraftPage={handleDeleteDraftPage}
+            handleDeletePage={handleDeletePage}
             openEditor={openEditor}
             DEFAULTS={DEFAULTS}
             loadLinks={loadLinks}
@@ -763,7 +826,7 @@ const LinksPage: React.FC = () => {
                 handleUpdateButton={handleUpdateButton}
                 handleUpdatePage={handleUpdatePage}
                 handleNextStep={handleNextStep}
-                handleDeleteDraftPage={handleDeleteDraftPage}
+                handleDeletePage={handleDeletePage}
                 ROTATOR_SURCHARGE={ROTATOR_SURCHARGE}
                 SOCIAL_PRESETS={SOCIAL_PRESETS}
                 DEFAULTS={DEFAULTS}
@@ -788,6 +851,100 @@ const LinksPage: React.FC = () => {
             </div>
         )}
         </div>
+
+      {/* SELECTOR DE TIPO DE LINK */}
+      {showLinkTypeSelector && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/90 backdrop-blur-xl animate-fade-in"
+            onClick={() => setShowLinkTypeSelector(false)}
+          />
+          <div className="relative w-full max-w-2xl bg-zinc-900 border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl animate-scale-up overflow-hidden">
+            {/* Background Decorations */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -mr-32 -mt-32" />
+            <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] -ml-32 -mb-32" />
+
+            <div className="relative z-10 text-center mb-10">
+              <h3 className="text-3xl font-black text-white mb-2 tracking-tight">
+                {t("dashboard.links.createLinkModalTitle", { defaultValue: "¿Qué tipo de Link necesitas?" })}
+              </h3>
+              <p className="text-silver/40 text-sm font-medium">
+                {t("dashboard.links.createLinkModalSubtitle", { defaultValue: "Selecciona el formato que mejor se adapte a tu estrategia." })}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              {/* Opción 1: Enlace Directo */}
+              <button
+                onClick={() => confirmCreation("direct")}
+                className="group relative flex flex-col p-6 rounded-3xl bg-secondary/30 border border-white/5 hover:border-red-500/50 hover:bg-black transition-all text-left overflow-hidden h-full shadow-lg"
+              >
+                <div className="absolute top-4 right-4 px-2 py-1 rounded bg-red-500/10 border border-red-500/20">
+                  <span className="text-[10px] font-black text-red-400 uppercase tracking-tighter">
+                    {t("dashboard.links.directLinkPlatform", { defaultValue: "INSTAGRAM / FB" })}
+                  </span>
+                </div>
+
+                <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-3xl text-red-500">
+                    rocket_launch
+                  </span>
+                </div>
+                <h4 className="text-xl font-bold text-white mb-2">
+                  {t("dashboard.links.directLinkTitle", { defaultValue: "Enlace Directo" })}
+                </h4>
+                <p className="text-silver/40 text-xs leading-relaxed mb-4">
+                  {t("dashboard.links.directLinkDesc", { defaultValue: "Redirige automáticamente a los usuarios a tu destino sin mostrar botones intermedios. Ideal para campañas rápidas en Meta (Instagram/Facebook)." })}
+                </p>
+              </button>
+
+              {/* Opción 2: Landing Page */}
+              <button
+                onClick={() => confirmCreation("landing")}
+                className="group relative flex flex-col p-6 rounded-3xl bg-secondary/30 border border-white/5 hover:border-blue-500/50 hover:bg-black transition-all text-left overflow-hidden h-full shadow-lg"
+              >
+                <div className="absolute top-4 right-4 px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20">
+                  <span className="text-[10px] font-black text-blue-400 uppercase tracking-tighter">
+                    {t("dashboard.links.landingPagePlatform", { defaultValue: "TIKTOK / BIO" })}
+                  </span>
+                </div>
+
+                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-3xl text-blue-500">
+                    web
+                  </span>
+                </div>
+                <h4 className="text-xl font-bold text-white mb-2">
+                  {t("dashboard.links.landingPageTitle", { defaultValue: "Landing Page" })}
+                </h4>
+                <p className="text-silver/40 text-xs leading-relaxed mb-4">
+                  {t("dashboard.links.landingPageDesc", { defaultValue: "Un perfil interactivo con múltiples botones, imágenes personalizadas y diseños avanzados. La mejor opción para TikTok y Link en Bio." })}
+                </p>
+              </button>
+            </div>
+
+            <button
+              onClick={() => confirmCreation("both")}
+              className="w-full flex items-center justify-center gap-3 py-5 rounded-[2rem] bg-gradient-to-r from-purple-600 to-indigo-600 hover:scale-[1.01] active:scale-[0.99] transition-all group shadow-[0_0_40px_rgba(147,51,234,0.3)] border-2 border-purple-400/50 relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <span className="material-symbols-outlined text-2xl text-white group-hover:rotate-12 transition-transform relative z-10">
+                auto_awesome
+              </span>
+              <span className="font-black text-sm uppercase tracking-widest text-white relative z-10">
+                {t("dashboard.links.createBothTitle", { defaultValue: "CREAR PACK DUAL (AMBOS LADOS)" })}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setShowLinkTypeSelector(false)}
+              className="mt-10 mx-auto block text-[10px] font-bold text-silver/30 uppercase tracking-widest hover:text-white transition-colors"
+            >
+              {t("common.cancel", { defaultValue: "CANCELAR" })}
+            </button>
+          </div>
+        </div>
+      )}
     </DndContext>
   );
 };
