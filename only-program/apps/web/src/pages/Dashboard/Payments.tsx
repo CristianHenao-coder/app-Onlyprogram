@@ -62,9 +62,9 @@ export default function Payments() {
   }, []);
 
   // Prices
-  const perLinkBase = pricingCfg.link.base
-    + (pendingPurchase?.hasRotator ? pricingCfg.link.telegramAddon : 0)
-    + (pendingPurchase?.hasInstagram ? pricingCfg.link.instagramAddon : 0);
+  const perLinkBase = (pricingCfg?.link?.base ?? 0)
+    + (pendingPurchase?.hasRotator ? (pricingCfg?.link?.telegramAddon ?? 0) : 0)
+    + (pendingPurchase?.hasInstagram ? (pricingCfg?.link?.instagramAddon ?? 0) : 0);
 
   const baseTotal = pendingPurchase?.baseAmount || (
     isFromLinks
