@@ -2,11 +2,10 @@
 // Full editor for a single button: title, URL, appearance, smart targeting,
 // and the Telegram rotator feature.
 
-import type { ButtonLink, FontType, SocialType, LinkPage } from "./types";
+import type { ButtonLink, FontType, LinkPage } from "./types";
 import { FONT_MAP } from "./constants";
 import { useTranslation } from "@/contexts/I18nContext";
 import { useModal } from "@/contexts/ModalContext";
-import { useState } from "react";
 import toast from "react-hot-toast";
 
 interface ButtonEditorPanelProps {
