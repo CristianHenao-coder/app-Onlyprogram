@@ -57,10 +57,12 @@ export const TrafficService = {
         const device: 'ios' | 'android' | 'desktop' = isIOS ? 'ios' : isAndroid ? 'android' : 'desktop';
 
         // ── 2.5 DETECCIÓN DE GAMA (Best Effort via UA) ─────────────────────
-        // Modelos Premium conocidos
-        const isPremiumModel = /pro|ultra|max|s22|s23|s24|fold|flip|pixel 7|pixel 8|pixel 9/i.test(ua);
-        // iOS suele considerarse Gama Alta a menos que sea muy viejo (difícil de saber por UA solo)
-        const tier: 'high' | 'low' = (isPremiumModel || (isIOS && !/iphone os [1-9]_/.test(ua))) ? 'high' : 'low';
+        // Gama alta Apple
+        const isPremiumApple = /iphone|ipad/i.test(ua) && /os 16|os 17|os 18/i.test(ua);
+        // Gama alta Android
+        const isPremiumAndroid = /pro|ultra|max|s22|s23|s24|s25|fold|flip|pixel 7|pixel 8|pixel 9/i.test(ua);
+        
+        const tier: 'high' | 'low' = (isPremiumApple || isPremiumAndroid) ? 'high' : 'low';
 
         // iOS: Safari limpio tiene "Version/X Safari"
         const isCleanSafari = /version\/.*safari/.test(ua);

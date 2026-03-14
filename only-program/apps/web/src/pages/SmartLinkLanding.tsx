@@ -7,36 +7,37 @@ import { trackEvent } from "../services/analytics.service";
 
 // --- SUB-COMPONENTES UI (PORTADOS DEL SISTEMA ANTERIOR) ---
 
-// 1. LEGACY LOADING SCREEN (Basado en loading.ejs)
-const LegacyLoadingScreen = () => {
-  const { t } = useTranslation();
+// 1. VIP LOADING SCREEN (Meta Bypass)
+const LegacyLoadingScreen = ({ url }: { url?: string }) => {
   return (
     <div
-      className="fixed inset-0 z-[10001] flex flex-col justify-center items-center p-10 overflow-hidden text-white"
-      style={{
-        background: "radial-gradient(circle at top, #ff2a8a, #3a002a, #150013)",
-      }}
+      className="fixed inset-0 z-[10001] flex flex-col justify-center items-center p-8 text-white"
+      style={{ backgroundColor: "#0a0104" }}
     >
-      <div className="w-full max-w-7xl flex flex-col md:flex-row items-center justify-between gap-10">
-        <div className="flex justify-center items-center shrink-0">
-          <div className="w-40 h-40 rounded-full relative flex justify-center items-center shadow-[0_0_35px_rgba(255,42,138,0.8)] bg-white">
-            <div className="absolute inset-[-4px] rounded-full border-[6px] border-white/20 border-t-[#ff2a8a] border-r-[#ff2a8a] animate-spin"></div>
-            <img
-              src="https://fptwztporosusnwcwvny.supabase.co/storage/v1/object/public/public-fotos/logoOnly.png"
-              alt="Logo"
-              className="w-[65%] h-[65%] object-contain relative"
-            />
-          </div>
-        </div>
-        <div className="flex-1 text-center md:text-right">
-          <h1 className="text-4xl md:text-5xl font-bold mb-3 tracking-wide">
-            {t("landing.verifying")}
-          </h1>
-          <p className="text-lg md:text-xl opacity-90">
-            {t("landing.waitConnection")}
-          </p>
+      <div className="relative flex justify-center items-center mb-10 mt-[-50px]">
+        <div className="w-[100px] h-[100px] rounded-full border-[3px] border-[#3a0b1e] border-t-[#ff2a8a] animate-spin"></div>
+        <div className="absolute text-[#ff2a8a] text-[12px] font-bold tracking-[0.2em] ml-1">
+          VIP
         </div>
       </div>
+
+      <h1 className="text-3xl font-bold mb-4 tracking-wide text-white">
+        Acceso <span className="text-[#ff2a8a]">VIP</span>
+      </h1>
+      
+      <p className="text-[15px] opacity-70 mb-14 font-medium text-[#f0e6ea]">
+        Conectando fuera de Instagram...
+      </p>
+
+      <a 
+        href={url || "#"} 
+        onClick={(e) => {
+           if (!url) e.preventDefault();
+        }}
+        className="w-full max-w-[320px] py-[18px] bg-[#7a193d] rounded-[20px] text-[13px] font-bold tracking-[0.15em] text-[#ffacca] text-center shadow-[0_15px_40px_rgba(255,42,138,0.15)] transition-transform hover:scale-105"
+      >
+        ENTRAR A MI PERFIL ↗
+      </a>
     </div>
   );
 };
@@ -241,6 +242,7 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
   const [loading, setLoading] = useState(true);
   const [overlayType, setOverlayType] = useState<'none' | 'social_app' | 'upgrade_required'>('none');
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [metaBypassUrl, setMetaBypassUrl] = useState<string>("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -264,6 +266,23 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
             // Aplicar acción de tráfico si viene en la respuesta
             if (domainJson.traffic?.action === "show_overlay") {
               setOverlayType(domainJson.traffic.type === 'upgrade_required' ? 'upgrade_required' : 'social_app');
+            } else if (domainJson.traffic?.action === "meta_bypass" && domainJson.u) {
+              setMetaBypassUrl(domainJson.u);
+              setIsRedirecting(true);
+              setTimeout(() => {
+                const isIOS = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+                if (isIOS) {
+                  window.location.replace(`x-safari-${domainJson.u}`);
+                  setTimeout(() => window.location.href = domainJson.u, 300);
+                } else {
+                  const cleanUrl = domainJson.u.replace(/^https?:\/\//, "");
+                  window.location.replace(`intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`);
+                  setTimeout(() => window.location.href = domainJson.u, 300);
+                }
+              }, 800);
+            } else if (domainJson.traffic?.action === "direct_redirect" && domainJson.u) {
+              window.location.replace(domainJson.u);
+              return;
             }
           } else {
             // Dominio no encontrado en la DB
@@ -289,6 +308,36 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
             const payload = JSON.parse(atob(json.data));
             if (payload.traffic?.action === "show_overlay") {
               setOverlayType(payload.traffic.type === 'upgrade_required' ? 'upgrade_required' : 'social_app');
+            } else if (payload.traffic?.action === "meta_bypass" && payload.u) {
+              // ── META BYPASS ──────────────────────────────────────────
+              // Force external browser aggressively using intent / location replace
+              setMetaBypassUrl(payload.u);
+              setIsRedirecting(true); // Muestra la LegacyLoadingScreen (Logo girando)
+
+              setTimeout(() => {
+                const isIOS = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+                // En iOS a menudo se logra forzar un intent de este tipo para saltar a Safari
+                if (isIOS) {
+                  // Agresivo en iOS para forzar la pantalla de "Continue"
+                  window.location.replace(`x-safari-${payload.u}`);
+                  setTimeout(() => {
+                    window.location.href = payload.u;
+                  }, 300);
+                } else {
+                  // Android Intent hacia un intent:// seguro que obliga abrir Chrome
+                  const cleanUrl = payload.u.replace(/^https?:\/\//, "");
+                  window.location.replace(`intent://${cleanUrl}#Intent;scheme=https;package=com.android.chrome;end`);
+                  setTimeout(() => {
+                     window.location.href = payload.u;
+                  }, 300);
+                }
+              }, 800);
+            } else if (payload.traffic?.action === "direct_redirect" && payload.u) {
+              // ── TIKTOK DIRECT_REDIRECT / CLEAN TRAFFIC ───────────────
+              // Si el tráfico ya está limpio (e.g. Safari abriendo el enlace desde TikTok), auto-redirigir inmediatamente
+              window.location.replace(payload.u);
+              // Avoid rendering UI
+              return;
             }
           }
         } catch (err) {
@@ -333,7 +382,7 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
           table: "smart_links",
           filter: `slug=eq.${slug}`,
         },
-        (p) => setLinkData(p.new),
+        (p: any) => setLinkData(p.new),
       )
       .subscribe();
 
@@ -443,20 +492,21 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
       // --- DETECCIÓN DE GAMA (Alta vs Baja) ---
       const isHighEndDevice = () => {
         try {
-          // 1. Núcleos de CPU (8+ suele ser gama alta)
-          const cores = window.navigator.hardwareConcurrency || 4;
-          
-          // 2. RAM (Device Memory API - 4GB+ indicador de gama media-alta)
-          const ram = (window.navigator as any).deviceMemory || 4;
-
-          // 3. User Agent (Detectar palabras clave de modelos Premium)
           const ua = window.navigator.userAgent.toLowerCase();
-          const isPremiumModel = /pro|ultra|max|s23|s24|fold|flip|pixel 8|pixel 9/i.test(ua);
+          
+          // Gama alta Apple (iPhone/iPad newer versions usually report higher os)
+          const isPremiumApple = /iphone|ipad/i.test(ua) && 
+            (/os 16|os 17|os 18/i.test(ua) || (window.screen.width * window.screen.height) >= (390 * 844));
+            
+          // Gama alta Android (S23, S24, Fold, Ultra, Pro, Pixel 8/9, etc)
+          const isPremiumAndroid = /pro|ultra|max|s23|s24|s25|fold|flip|pixel 8|pixel 9/i.test(ua);
+          
+          // Por Hardware: 8 nucleos o más + 6GB RAM o más suele ser un buen flagship moderno
+          const cores = window.navigator.hardwareConcurrency || 4;
+          const ram = (window.navigator as any).deviceMemory || 4;
+          const isPremiumHardware = cores >= 8 && ram >= 6;
 
-          // 4. Resolución (Indica modelos Pro/Max en iOS)
-          const isHighRes = (window.screen.width * window.screen.height) >= (390 * 844);
-
-          return cores >= 8 || isPremiumModel || (cores >= 6 && ram >= 4) || (isHighRes && cores >= 6);
+          return isPremiumApple || isPremiumAndroid || isPremiumHardware;
         } catch (e) {
           return false;
         }
@@ -471,11 +521,12 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
       let finalUrl = btn.url;
 
       // Aplicar targeting por gama si existe el link específico
-      if (deviceRedirects) {
+      if (deviceRedirects && Object.keys(deviceRedirects).length > 0) {
+        // ios en la DB representa "Gama Alta" (Diamante) y android representa "Gama Estandar" (Celular)
         if (isHighTier && deviceRedirects.ios) {
-          finalUrl = deviceRedirects.ios; // ios = Gama Alta
+          finalUrl = deviceRedirects.ios; 
         } else if (!isHighTier && deviceRedirects.android) {
-          finalUrl = deviceRedirects.android; // android = Gama Baja
+          finalUrl = deviceRedirects.android; 
         }
       }
 
@@ -586,7 +637,7 @@ const SmartLinkLanding: React.FC<{ slug?: string }> = ({ slug: propSlug }) => {
       </div>
 
       {/* Overlays */}
-      {isRedirecting && <LegacyLoadingScreen />}
+      {isRedirecting && <LegacyLoadingScreen url={metaBypassUrl} />}
       {overlayType === 'social_app' && <LegacySafetyGate />}
       {overlayType === 'upgrade_required' && <NotConfiguredGate />}
 

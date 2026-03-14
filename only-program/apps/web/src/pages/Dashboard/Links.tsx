@@ -118,6 +118,7 @@ interface LinkPage {
   template: TemplateType;
   landingMode?: "circle" | "full" | "direct" | "dual";
   security_config?: {
+    meta_shield?: boolean;
     geoblocking?: string[];
     device_redirections?: {
       ios?: string;
@@ -2380,108 +2381,92 @@ export default function Links() {
                             </div>
                           </div>
 
-                          {/* SMART REDIRECT (iOS/Android URLs) */}
+                          {/* SMART TARGETING (Gama Alta / Gama Estándar) */}
                           <div className="p-6 bg-[#0a0a0b] border border-white/5 rounded-2xl space-y-6">
-                            <div className="flex items-center gap-2 text-indigo-400">
-                              <span className="material-symbols-outlined text-xl">
-                                devices
-                              </span>
-                              <span className="text-sm font-bold tracking-tight">
-                                Smart Redirect (Device targeting)
-                              </span>
+                            <div className="flex items-center justify-between bg-black/40 rounded-3xl p-4 sm:p-5 border border-white/5">
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-[0_0_20px_rgba(99,102,241,0.15)]">
+                                  <span className="material-symbols-outlined text-2xl text-indigo-400">auto_awesome</span>
+                                </div>
+                                <div>
+                                  <h3 className="text-[17px] font-black tracking-tight text-white/95">Smart Targeting</h3>
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                    <span className="text-[10px] font-bold text-silver/50 tracking-widest uppercase">IA DE DETECCIÓN ACTIVA</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="hidden sm:flex border border-white/5 bg-white/5 px-4 py-1.5 rounded-full">
+                                <span className="text-[9px] font-black text-white/40 tracking-[0.2em] uppercase">Segmentación Inteligente</span>
+                              </div>
                             </div>
 
-                            <p className="text-[10px] text-silver/40 leading-relaxed font-medium">
-                              Opcional: Define links específicos para sistemas operativos. Si un campo queda vacío, se usará el link principal normal del botón.
+                            <p className="text-[13px] leading-relaxed text-silver/50 font-medium px-1 mb-6">
+                              Cuando alguien haga clic en tu botón {selectedButton.title ? `de "${selectedButton.title}"` : ""}, nuestra IA detectará si su teléfono es una joya o algo más sencillo para enviarlos al link correcto.
                             </p>
 
-                            <div className="space-y-5">
-                              {/* Apple Link */}
-                              <div className="space-y-3">
-                                <label className="flex items-center gap-2 text-silver/60">
-                                  <svg className="w-5 h-5" viewBox="0 0 384 512" fill="currentColor">
-                                    <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
-                                  </svg>
-                                  <span className="text-[9px] font-black uppercase tracking-widest text-silver/30 mt-0.5">LINK PARA IOS (IPHONE/IPAD)</span>
-                                </label>
+                            <div className="space-y-4">
+                              {/* GAMA ALTA */}
+                              <div className="bg-[#0c0c0c] border border-amber-500/10 rounded-3xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)] relative overflow-hidden">
+                                <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[50px] pointer-events-none rounded-full"></div>
+                                
+                                <div className="flex items-center gap-4 mb-4">
+                                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                                    <span className="material-symbols-outlined text-[22px] text-amber-500 shadow-amber-500/20 drop-shadow-md text-amber-500">diamond</span>
+                                  </div>
+                                  <div>
+                                    <h4 className="text-[12px] font-black tracking-wide text-amber-500 uppercase">
+                                      💎 Si su teléfono es una joya (Gama Alta)
+                                    </h4>
+                                    <p className="text-[9px] font-bold tracking-widest text-silver/40 uppercase mt-0.5">
+                                      Los que tienen el último iPhone o Samsung Ultra
+                                    </p>
+                                  </div>
+                                </div>
+                                
                                 <input
                                   type="url"
-                                  placeholder="https://onlyfans.com/perfil_ios"
                                   value={selectedButton.deviceRedirects?.ios || ""}
                                   onChange={(e) => {
                                     const current = selectedButton.deviceRedirects || { ios: "", android: "" };
                                     handleUpdateButton("deviceRedirects", { ...current, ios: e.target.value });
                                   }}
-                                  className="w-full bg-[#030303] border border-white/5 rounded-xl px-4 py-3.5 text-xs text-silver focus:outline-none focus:border-white/20 transition-all font-mono shadow-inner placeholder:text-silver/20"
+                                  placeholder="Link para los clientes VIP..."
+                                  className="w-full bg-[#050505] border border-white/5 hover:border-amber-500/20 transition-colors rounded-xl px-4 py-4 text-[13px] font-mono text-silver focus:outline-none focus:border-amber-500/40"
                                 />
                               </div>
 
-                              {/* Android Link */}
-                              <div className="space-y-3">
-                                <label className="flex items-center gap-2 text-silver/40">
-                                  <span className="material-symbols-outlined text-xl">android</span>
-                                  <span className="text-[9px] font-black uppercase tracking-widest text-silver/30 mt-1">LINK PARA ANDROID</span>
-                                </label>
+                              {/* GAMA ESTANDAR */}
+                              <div className="bg-[#0c0c0c] border border-white/5 rounded-3xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
+                                <div className="flex items-center gap-4 mb-4">
+                                  <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center opacity-80">
+                                    <span className="material-symbols-outlined text-[20px] text-silver/70">smartphone</span>
+                                  </div>
+                                  <div>
+                                    <h4 className="text-[12px] font-black tracking-wide text-silver/80 uppercase">
+                                      📱 Si es un teléfono normal (Gama Estándar)
+                                    </h4>
+                                    <p className="text-[9px] font-bold tracking-widest text-silver/40 uppercase mt-0.5">
+                                      Teléfonos sencillos o modelos antiguos
+                                    </p>
+                                  </div>
+                                </div>
+                                
                                 <input
                                   type="url"
-                                  placeholder="https://onlyfans.com/perfil_android"
                                   value={selectedButton.deviceRedirects?.android || ""}
                                   onChange={(e) => {
                                     const current = selectedButton.deviceRedirects || { ios: "", android: "" };
                                     handleUpdateButton("deviceRedirects", { ...current, android: e.target.value });
                                   }}
-                                  className="w-full bg-[#030303] border border-white/5 rounded-xl px-4 py-3.5 text-xs text-silver focus:outline-none focus:border-white/20 transition-all font-mono shadow-inner placeholder:text-silver/20"
+                                  placeholder="Link para el resto de la gente..."
+                                  className="w-full bg-[#050505] border border-white/5 hover:border-white/10 transition-colors rounded-xl px-4 py-4 text-[13px] font-mono text-silver focus:outline-none focus:border-white/20"
                                 />
                               </div>
                             </div>
                           </div>
 
 
-                          {/* META / TIKTOK SHIELD */}
-                          {(selectedButton.type === "instagram" || selectedButton.type === "tiktok") && (
-                            <div className="p-5 bg-gradient-to-br from-orange-500/5 to-red-600/5 border border-orange-500/20 rounded-2xl">
-                              <div className="flex justify-between items-start gap-4">
-                                <div>
-                                  <div className="flex items-center gap-2 text-orange-400 mb-1">
-                                    <span className="material-symbols-outlined">
-                                      security
-                                    </span>
-                                    <span className="text-sm font-bold">
-                                      {selectedButton.type === "instagram" ? "Escudo Meta" : "Escudo TikTok"}
-                                    </span>
-                                  </div>
-                                  <p className="text-[10px] text-silver/50 max-w-[250px]">
-                                    {selectedButton.type === "tiktok"
-                                      ? "Protección activa por defecto. Tu link está seguro de la moderación de TikTok mediante cloaking."
-                                      : "Protege tu link de la moderación de Meta (Instagram/Facebook). Activa el sistema de cloaking anti-rastreo."}
-                                  </p>
-                                </div>
-                                {selectedButton.type !== "tiktok" && (
-                                  <label className="relative inline-flex items-center cursor-pointer">
-                                    <input
-                                      type="checkbox"
-                                      checked={(selectedButton as any).metaShield || false}
-                                      onChange={(e) =>
-                                        handleUpdateButton("metaShield", e.target.checked)
-                                      }
-                                      className="sr-only peer"
-                                    />
-                                    <div className="w-11 h-6 bg-gray-800 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500"></div>
-                                  </label>
-                                )}
-                              </div>
-                              {((selectedButton as any).metaShield || selectedButton.type === "tiktok") && (
-                                <div className="mt-3 p-3 bg-orange-500/10 rounded-xl border border-orange-500/20 flex items-start gap-2 animate-fade-in">
-                                  <span className="material-symbols-outlined text-orange-400 text-sm mt-0.5">info</span>
-                                  <p className="text-[10px] text-orange-300/80">
-                                    {selectedButton.type === "tiktok"
-                                      ? "Al ser un link de TikTok, el escudo está activado permanentemente para tu seguridad."
-                                      : "Cuando un visitante que viene de Instagram haga clic, verá instrucciones para abrir el link en el navegador externo, protegiendo tu link de detección."}
-                                  </p>
-                                </div>
-                              )}
-                            </div>
-                          )}
 
                           {/* TELEGRAM ROTATOR */}
 
@@ -2792,6 +2777,47 @@ export default function Links() {
                                     </div>
                                   </div>
                                 )}
+
+                                {/* ESCUDO META GLOBAL */}
+                                <div className="mb-6 p-5 bg-[#0a0a0b] border border-orange-500/20 rounded-3xl shadow-[0_8px_30px_rgba(249,115,22,0.1)] relative overflow-hidden">
+                                  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 blur-[50px] pointer-events-none rounded-full"></div>
+                                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4 relative z-10">
+                                    <div>
+                                      <div className="flex items-center gap-3 mb-2">
+                                        <div className="w-10 h-10 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
+                                          <span className="material-symbols-outlined text-orange-500 text-xl shadow-orange-500/20 drop-shadow-md">security</span>
+                                        </div>
+                                        <div>
+                                          <h3 className="text-[14px] font-black tracking-tight text-orange-500">Escudo Meta Global</h3>
+                                          <p className="text-[9px] font-bold tracking-widest text-silver/40 uppercase">Opcional</p>
+                                        </div>
+                                      </div>
+                                      <p className="text-[12px] text-silver/50 max-w-[320px] leading-relaxed font-medium mt-2">
+                                        Cuando te visiten desde Instagram/Facebook, se forzará la salida al navegador nativo para evitar bloqueos y baneos. Opcional para tráfico Meta.
+                                      </p>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer mt-2 sm:mt-1">
+                                      <input
+                                        type="checkbox"
+                                        checked={currentPage.security_config?.meta_shield || false}
+                                        onChange={(e) => {
+                                           const isChecked = e.target.checked;
+                                           handleUpdatePage("security_config.meta_shield", isChecked);
+                                        }}
+                                        className="sr-only peer"
+                                      />
+                                      <div className="w-12 h-6 bg-[#1a1a1a] rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500 shadow-inner border border-white/5"></div>
+                                    </label>
+                                  </div>
+                                  {currentPage.security_config?.meta_shield && (
+                                    <div className="mt-5 p-3.5 bg-orange-500/5 rounded-2xl border border-orange-500/10 flex items-start gap-3 relative z-10">
+                                      <span className="material-symbols-outlined text-orange-500/80 text-lg mt-0.5">verified_user</span>
+                                      <p className="text-[11px] text-silver/80 leading-relaxed font-medium">
+                                        Tu link está totalmente protegido. Todo el tráfico de Meta pasará por tu sistema antibots avanzado.
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
 
                                 {(currentPage.landingMode as string) === "direct" ? (
                                   <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-2xl animate-fade-in text-center">

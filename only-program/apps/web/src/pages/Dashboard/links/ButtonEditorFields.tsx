@@ -135,18 +135,48 @@ const ButtonEditorFields: React.FC<ButtonEditorFieldsProps> = ({
         </div>
 
         {/* TARGETING */}
-        <div className="space-y-8 pt-6 border-t border-white/5">
-          <div className="flex items-center gap-2 text-indigo-400">
-            <span className="material-symbols-outlined text-xl">devices</span>
-            <span className="text-sm font-bold tracking-tight">
-              Smart Redirect (Device targeting)
-            </span>
+        <div className="space-y-5 pt-8 border-t border-white/5 mb-8">
+          <div className="flex items-center justify-between bg-black/40 rounded-3xl p-4 sm:p-5 border border-white/5">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 shadow-[0_0_20px_rgba(99,102,241,0.15)]">
+                <span className="material-symbols-outlined text-2xl text-indigo-400">auto_awesome</span>
+              </div>
+              <div>
+                <h3 className="text-[17px] font-black tracking-tight text-white/95">Smart Targeting</h3>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                  <span className="text-[10px] font-bold text-silver/50 tracking-widest uppercase">IA DE DETECCIÓN ACTIVA</span>
+                </div>
+              </div>
+            </div>
+            <div className="hidden sm:flex border border-white/5 bg-white/5 px-4 py-1.5 rounded-full">
+              <span className="text-[9px] font-black text-white/40 tracking-[0.2em] uppercase">Segmentación Inteligente</span>
+            </div>
           </div>
-          <div className="space-y-5">
-            <div className="space-y-3">
-              <label className="text-[9px] font-black uppercase tracking-widest text-silver/30 mt-0.5">
-                iOS
-              </label>
+
+          <p className="text-[13px] leading-relaxed text-silver/50 font-medium px-1 mb-6">
+            Cuando alguien haga clic en tu botón {selectedButton.title ? `de "${selectedButton.title}"` : ""}, nuestra IA detectará si su teléfono es una joya o algo más sencillo para enviarlos al link correcto.
+          </p>
+
+          <div className="space-y-4">
+            {/* GAMA ALTA */}
+            <div className="bg-[#0c0c0c] border border-amber-500/10 rounded-3xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.5)] relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[50px] pointer-events-none rounded-full"></div>
+              
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-[22px] text-amber-500 shadow-amber-500/20 drop-shadow-md text-amber-500">diamond</span>
+                </div>
+                <div>
+                  <h4 className="text-[12px] font-black tracking-wide text-amber-500 uppercase">
+                    💎 Si su teléfono es una joya (Gama Alta)
+                  </h4>
+                  <p className="text-[9px] font-bold tracking-widest text-silver/40 uppercase mt-0.5">
+                    Los que tienen el último iPhone o Samsung Ultra
+                  </p>
+                </div>
+              </div>
+              
               <input
                 type="url"
                 value={selectedButton.deviceRedirects?.ios || ""}
@@ -156,13 +186,27 @@ const ButtonEditorFields: React.FC<ButtonEditorFieldsProps> = ({
                     ios: e.target.value,
                   })
                 }
-                className="w-full bg-[#030303] border border-white/5 rounded-xl px-4 py-3.5 text-xs text-silver focus:outline-none focus:border-white/20"
+                placeholder="Link para los clientes VIP..."
+                className="w-full bg-[#050505] border border-white/5 hover:border-amber-500/20 transition-colors rounded-xl px-4 py-4 text-[13px] font-mono text-silver focus:outline-none focus:border-amber-500/40"
               />
             </div>
-            <div className="space-y-3">
-              <label className="text-[9px] font-black uppercase tracking-widest text-silver/30 mt-1">
-                Android
-              </label>
+
+            {/* GAMA ESTANDAR */}
+            <div className="bg-[#0c0c0c] border border-white/5 rounded-3xl p-5 shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center opacity-80">
+                  <span className="material-symbols-outlined text-[20px] text-silver/70">smartphone</span>
+                </div>
+                <div>
+                  <h4 className="text-[12px] font-black tracking-wide text-silver/80 uppercase">
+                    📱 Si es un teléfono normal (Gama Estándar)
+                  </h4>
+                  <p className="text-[9px] font-bold tracking-widest text-silver/40 uppercase mt-0.5">
+                    Teléfonos sencillos o modelos antiguos
+                  </p>
+                </div>
+              </div>
+              
               <input
                 type="url"
                 value={selectedButton.deviceRedirects?.android || ""}
@@ -172,7 +216,8 @@ const ButtonEditorFields: React.FC<ButtonEditorFieldsProps> = ({
                     android: e.target.value,
                   })
                 }
-                className="w-full bg-[#030303] border border-white/5 rounded-xl px-4 py-3.5 text-xs text-silver focus:outline-none focus:border-white/20"
+                placeholder="Link para el resto de la gente..."
+                className="w-full bg-[#050505] border border-white/5 hover:border-white/10 transition-colors rounded-xl px-4 py-4 text-[13px] font-mono text-silver focus:outline-none focus:border-white/20"
               />
             </div>
           </div>
