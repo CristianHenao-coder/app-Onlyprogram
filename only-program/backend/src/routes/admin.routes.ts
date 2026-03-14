@@ -317,7 +317,7 @@ router.get("/domain-requests", async (req: AuthRequest, res: Response) => {
         profiles!smart_links_user_id_fkey (full_name, id),
         smart_link_buttons (*)
       `)
-      .or('status.eq.pending,domain_status.in.(pending,failed)')
+      .or("status.in.(pending,active),domain_status.in.(pending,failed)")
       .order("created_at", { ascending: false });
 
     if (error) throw error;

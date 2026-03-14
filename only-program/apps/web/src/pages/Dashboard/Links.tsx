@@ -524,6 +524,19 @@ export default function Links() {
     });
     if (!confirmed) return;
 
+    if (user?.id) {
+       try {
+         const pageToDelete = pages.find(p => p.id === pageId);
+         if (pageToDelete?.profileImage && pageToDelete.profileImage.includes('supabase.co')) {
+             const { storageService } = await import('@/services/storageService');
+             await storageService.deleteImage(pageToDelete.profileImage);
+         }
+         await supabase.from("smart_links").delete().eq("id", pageId).eq("user_id", user.id);
+       } catch (e) {
+         console.error("Error deleting pending draft from DB:", e);
+       }
+    }
+
     setPages((prev) => {
       const updated = prev.filter((p) => p.id !== pageId);
       try {
@@ -756,6 +769,60 @@ export default function Links() {
     fetchLinks();
   }, [user?.id]);
 
+  // --- REAL-TIME ACTIVATION NOTIFICATION ---
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`activation-notif-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "smart_links",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const oldRecord = payload.old as any;
+          const newRecord = payload.new as any;
+          
+          // Detect status change to active
+          if (
+            (oldRecord.status === "pending" || oldRecord.status === "draft") &&
+            newRecord.status === "active"
+          ) {
+            const linkName = newRecord.title || newRecord.profile_name || "Tu link";
+            
+            toast.success(`¡Tu link "${linkName}" ha sido activado exitosamente!`, {
+              duration: 30000,
+              icon: "🚀",
+              style: {
+                background: "#22c55e",
+                color: "#fff",
+                fontWeight: "bold",
+                padding: "16px",
+                borderRadius: "12px",
+                border: "1px solid rgba(255,255,255,0.2)"
+              },
+            });
+
+            // Trigger fetchLinks if it was defined in a way we can call it, 
+            // but since it's local to the other effect, we just rely on state 
+            // management or we could re-trigger the other effect if we added 
+            // a 'refreshCount' state. For now, the user can refresh or 
+            // wait for the next periodic sync if any. 
+            // Pro-tip: adding a manual refresh trigger is better.
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
   // 2. Sync to DB (Debounced + Visibility Change)
   useEffect(() => {
     if (initialLoad) return;
@@ -764,6 +831,14 @@ export default function Links() {
     const syncToDb = async () => {
       setIsSaving(true);
       try {
+        // SAFETY: Always backup ALL current pages to localStorage
+        // This ensures that even if DB sync fails, the user's local work isn't lost.
+        try {
+          localStorage.setItem("my_links_data", JSON.stringify(pages));
+        } catch (e) {
+          console.error("Error backing up to localStorage:", e);
+        }
+
         const currentPageToSave = pages.find((p) => p.id === selectedPageId);
         if (!currentPageToSave) return;
 
@@ -771,13 +846,8 @@ export default function Links() {
           currentPageToSave.status === "draft" && !currentPageToSave.dbStatus;
 
         if (isDraft) {
-          // DRAFT: Save ALL drafts from state to localStorage (single source of truth)
-          try {
-            const allDrafts = pages.filter((p) => p.status === "draft");
-            localStorage.setItem("my_links_data", JSON.stringify(allDrafts));
-          } catch (e) {
-            console.error("Error saving draft to localStorage:", e);
-          }
+          // Drafts are already backed up above
+          return;
         } else {
           // ACTIVE LINK: Save to Supabase
           const updates = {
@@ -3445,6 +3515,16 @@ export default function Links() {
                       // DELETE FROM DB (for active/paid links)
                       const pageId = selectedPageId;
                       if (pageId && user) {
+                        try {
+                          const pageToDelete = pages.find(p => p.id === pageId);
+                          if (pageToDelete?.profileImage && pageToDelete.profileImage.includes('supabase.co')) {
+                            const { storageService } = await import('@/services/storageService');
+                            await storageService.deleteImage(pageToDelete.profileImage);
+                          }
+                        } catch (e) {
+                          console.error("Error deleting images:", e);
+                        }
+
                         const { error } = await supabase
                           .from("smart_links")
                           .delete()

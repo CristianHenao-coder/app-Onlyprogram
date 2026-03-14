@@ -141,65 +141,7 @@ export async function sendWelcomeEmail(
   });
 }
 
-/**
- * Envía email de recuperación de contraseña
- */
-export async function sendPasswordResetEmail(
-  email: string,
-  resetToken: string,
-): Promise<boolean> {
-  const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
 
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        body { font-family: 'Inter', Arial, sans-serif; background-color: #0B0B0B; color: #C9CCD1; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: 40px auto; background: #161616; border: 1px solid #2A2A2A; border-radius: 12px; padding: 40px; }
-        .logo { text-align: center; margin-bottom: 30px; }
-        .logo h1 { color: #1DA1F2; font-size: 24px; margin: 0; }
-        .content { line-height: 1.6; }
-        .button { display: inline-block; background: linear-gradient(to right, #1DA1F2, #1E90FF); color: white; padding: 12px 32px; text-decoration: none; border-radius: 8px; margin-top: 20px; font-weight: bold; }
-        .warning { background: #FFA50020; border-left: 4px solid #FFA500; padding: 12px; margin: 20px 0; border-radius: 4px; }
-        .footer { text-align: center; margin-top: 30px; font-size: 12px; color: #666; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="logo">
-          <h1>🛡️ ONLY <span style="font-size: 14px;">PROGRAM</span></h1>
-        </div>
-        <div class="content">
-          <h2 style="color: white;">Recuperación de Contraseña</h2>
-          <p>Hemos recibido una solicitud para restablecer tu contraseña.</p>
-          <p>Haz clic en el botón de abajo para crear una nueva contraseña:</p>
-          <a href="${resetUrl}" class="button">Restablecer Contraseña</a>
-          <div class="warning">
-            <strong>⚠️ Importante:</strong> Este enlace expirará en 1 hora.
-            Si no solicitaste este cambio, ignora este email.
-          </div>
-          <p style="font-size: 12px; color: #888;">
-            Si el botón no funciona, copia y pega este enlace en tu navegador:<br>
-            <a href="${resetUrl}" style="color: #1DA1F2;">${resetUrl}</a>
-          </p>
-        </div>
-        <div class="footer">
-          <p>© 2024 Only Program. Todos los derechos reservados.</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-
-  return await sendEmail({
-    to: email,
-    subject: "Recuperación de Contraseña - Only Program",
-    htmlContent,
-    textContent: `Restablece tu contraseña aquí: ${resetUrl}. Este enlace expira en 1 hora.`,
-  });
-}
 
 /**
  * Envía email de notificación de enlace sospechoso
@@ -293,58 +235,6 @@ export async function sendAdminVerificationCode(
   });
 }
 
-/**
- * Envía un enlace de recuperación de contraseña
- */
-export async function sendPasswordResetEmail(
-  email: string,
-  resetLink: string,
-): Promise<boolean> {
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        body { font-family: 'Inter', Arial, sans-serif; background-color: #0B0B0B; color: #C9CCD1; margin: 0; padding: 0; }
-        .container { max-width: 600px; margin: 40px auto; background: #161616; border: 1px solid #2A2A2A; border-radius: 24px; padding: 48px; text-align: center; }
-        .logo { margin-bottom: 32px; }
-        .logo h1 { color: #1DA1F2; font-size: 24px; margin: 0; font-weight: 900; letter-spacing: -0.05em; }
-        .content { margin-bottom: 32px; }
-        .button { display: inline-block; background: linear-gradient(to right, #1DA1F2, #1E90FF); color: white; padding: 16px 32px; text-decoration: none; border-radius: 12px; margin-top: 24px; font-weight: bold; font-size: 16px; }
-        .warning { font-size: 13px; color: #1DA1F2; margin-top: 24px; }
-        .footer { font-size: 12px; color: #555; margin-top: 48px; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="logo">
-          <h1>🛡️ ONLY PROGRAM</h1>
-        </div>
-        <div class="content">
-          <h2 style="color: white; font-size: 20px;">Restablecer Contraseña</h2>
-          <p>Hemos recibido una solicitud para restablecer tu contraseña. Haz clic en el siguiente botón para crear una nueva:</p>
-          
-          <a href="\${resetLink}" class="button">Restablecer Mi Contraseña</a>
-          
-          <p class="warning">Este enlace expirará por razones de seguridad en unos minutos.</p>
-        </div>
-        <div class="footer">
-          <p>Si no solicitaste este cambio, puedes ignorar este mensaje.</p>
-          <p>© \${new Date().getFullYear()} Only Program. All rights reserved.</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-
-  return await sendEmail({
-    to: email,
-    subject: "🔐 Restablecer tu contraseña",
-    htmlContent,
-    textContent: `Haz clic en el siguiente enlace para restablecer tu contraseña: \${resetLink}`,
-  });
-}
 
 /**
  * Envía email de confirmación de pago con instrucciones de activación

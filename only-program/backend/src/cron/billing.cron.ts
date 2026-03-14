@@ -22,45 +22,64 @@ export async function checkLinkExpirations() {
 
   try {
     const now = new Date();
-    const alertThreshold = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
 
-    // 1. ALERT: Links expiring in less than 24h that haven't been alerted
-    const { data: expiringLinks } = await supabase
-      .from("smart_links")
-      .select("*, profiles(full_name)")
-      .eq("is_active", true)
-      .eq("expiry_alert_sent", false)
-      .lte("expires_at", alertThreshold.toISOString())
-      .gt("expires_at", now.toISOString());
-
-    if (expiringLinks && expiringLinks.length > 0) {
-      console.log(
-        `⏳ Sending expiration alerts for ${expiringLinks.length} links`,
+    // Helper for processing alerts
+    const processAlertLevel = async (
+      daysThreshold: number,
+      alertColumn: "alert_5d_sent" | "alert_3d_sent" | "alert_1d_sent",
+    ) => {
+      const thresholdTime = new Date(
+        now.getTime() + daysThreshold * 24 * 60 * 60 * 1000,
       );
-      for (const link of expiringLinks) {
-        const { data: userData } = await supabase.auth.admin.getUserById(
-          link.user_id,
+
+      const { data: expiringLinks } = await supabase
+        .from("smart_links")
+        .select("*, profiles(full_name)")
+        .eq("is_active", true)
+        .eq(alertColumn, false)
+        .lte("expires_at", thresholdTime.toISOString())
+        .gt("expires_at", now.toISOString());
+
+      if (expiringLinks && expiringLinks.length > 0) {
+        console.log(
+          `⏳ Sending ${daysThreshold}-day expiration alerts for ${expiringLinks.length} links`,
         );
-        if (userData.user?.email) {
-          const userName =
-            (link as any).profiles?.full_name ||
-            userData.user.email.split("@")[0] ||
-            "Usuario";
-          await sendExpirationAlertEmail(
-            userData.user.email,
-            userName,
-            link.slug,
-            new Date(link.expires_at),
+
+        for (const link of expiringLinks) {
+          const { data: userData } = await supabase.auth.admin.getUserById(
+            link.user_id,
           );
-          await supabase
-            .from("smart_links")
-            .update({ expiry_alert_sent: true })
-            .eq("id", link.id);
+          if (userData.user?.email) {
+            const userName =
+              (link as any).profiles?.full_name ||
+              userData.user.email.split("@")[0] ||
+              "Usuario";
+            await sendExpirationAlertEmail(
+              userData.user.email,
+              userName,
+              link.slug,
+              new Date(link.expires_at),
+              daysThreshold,
+            );
+            await supabase
+              .from("smart_links")
+              .update({ [alertColumn]: true })
+              .eq("id", link.id);
+          }
         }
       }
-    }
+    };
 
-    // 2. DEACTIVATE: Links that have expired
+    // 1. Alert 5 days before
+    await processAlertLevel(5, "alert_5d_sent");
+
+    // 2. Alert 3 days before
+    await processAlertLevel(3, "alert_3d_sent");
+
+    // 3. Alert 1 day before
+    await processAlertLevel(1, "alert_1d_sent");
+
+    // 4. DEACTIVATE: Links that have expired
     const { data: expiredLinks } = await supabase
       .from("smart_links")
       .select("*, profiles(full_name)")

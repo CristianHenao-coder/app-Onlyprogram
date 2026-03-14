@@ -186,14 +186,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             )}
           </Link>
 
-          {/* Toggle Button Below Logo */}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className={`
-              flex items-center justify-center h-10 rounded-xl border transition-all
-              ${sidebarOpen 
-                ? "w-full bg-primary text-white border-primary shadow-lg shadow-primary/20 hover:bg-primary-dark" 
-                : "w-12 bg-white/5 text-silver border-white/10 hover:text-white hover:bg-white/10"}
+              flex items-center justify-center h-10 rounded-xl border transition-all shadow-lg shadow-primary/20
+              bg-primary text-white border-primary hover:bg-blue-600 hover:border-blue-500
+              ${sidebarOpen ? "w-full" : "w-12"}
             `}
             title={sidebarOpen ? "Ocultar menú" : "Mostrar menú"}
           >

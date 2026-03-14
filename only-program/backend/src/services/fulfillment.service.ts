@@ -1,8 +1,5 @@
 import { supabase } from "./supabase.service";
-import {
-  sendPaymentConfirmationEmail,
-  sendFreeTrialInvoiceEmail,
-} from "./brevo.service";
+import { sendPaymentConfirmationEmail } from "./brevo.service";
 
 export class FulfillmentService {
   /**
@@ -29,14 +26,15 @@ export class FulfillmentService {
       const linksToCreate = payment?.metadata?.linksData || [];
       const customDomain = payment?.metadata?.customDomain;
 
+      console.log(`📊 Payment metadata:`, { 
+        linksCount: linksToCreate.length, 
+        hasCustomDomain: !!customDomain,
+        paymentId
+      });
+
       const now = new Date();
       let expiresAt = new Date();
-
-      if (amount === 0) {
-        expiresAt.setDate(now.getDate() + 30);
-      } else {
-        expiresAt.setDate(now.getDate() + 30);
-      }
+      expiresAt.setDate(now.getDate() + 30);
 
       let activatedCount = 0;
 
@@ -61,8 +59,8 @@ export class FulfillmentService {
               slug: slugToUse,
               title: draft.profileName,
               photo: draft.profileImage,
-              is_active: true,
-              status: "active",
+              is_active: true,   // ← El link es funcional/visible si se conoce el slug
+              status: "pending", // ← PERO requiere aprobación del administrador para aparecer en listas oficiales
               expires_at: expiresAt.toISOString(),
               custom_domain: (customDomain && customDomain.trim() !== "") ? customDomain.toLowerCase() : null,
               domain_status: (customDomain && customDomain.trim() !== "") ? "pending" : "none",
@@ -147,31 +145,18 @@ export class FulfillmentService {
 
       // 2. Enviar correo de confirmación adecuado
       const { data: userData } = await supabase.auth.admin.getUserById(userId);
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("id", userId)
-        .single();
-      const userName =
-        profile?.full_name || userData.user?.email?.split("@")[0] || "Usuario";
+      const userEmail = userData?.user?.email;
 
-      if (userData.user?.email) {
-        if (amount === 0) {
-          await sendFreeTrialInvoiceEmail(
-            userData.user.email,
-            userName,
-            now,
-            expiresAt,
-            paymentId,
-          );
-        } else {
-          await sendPaymentConfirmationEmail(
-            userData.user.email,
-            amount,
-            currency,
-            paymentId,
-          );
-        }
+      if (userEmail && amount > 0) {
+        console.log(`📧 Enviando confirmación de pago a ${userEmail}`);
+        await sendPaymentConfirmationEmail(
+          userEmail,
+          amount,
+          currency,
+          paymentId,
+        );
+      } else {
+        console.warn(`⚠️ No se pudo enviar email: email=${userEmail}, amount=${amount}`);
       }
 
       return { success: true, activatedCount };
@@ -179,5 +164,6 @@ export class FulfillmentService {
       console.error("❌ Error en FulfillmentService:", error);
       return { success: false, error };
     }
+
   }
 }

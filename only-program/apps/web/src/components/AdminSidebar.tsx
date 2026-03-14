@@ -112,7 +112,8 @@ const AdminSidebar = ({ isCollapsed = false, onToggle }: AdminSidebarProps) => {
           <button
             onClick={onToggle}
             className={`
-              flex items-center justify-center h-10 rounded-xl border border-white/10 bg-white/5 text-silver hover:text-white transition-all hover:bg-white/10
+              flex items-center justify-center h-10 rounded-xl border transition-all shadow-lg shadow-primary/20
+              bg-primary text-white border-primary hover:bg-blue-600 hover:border-blue-500
               ${isExpanded ? "w-full" : "w-12"}
             `}
           >
