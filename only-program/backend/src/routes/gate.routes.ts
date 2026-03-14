@@ -84,7 +84,7 @@ router.get("/api/gate/:slug", async (req, res) => {
 
     // 2. Determinar destino (SOLO si está permitido)
     let targetUrl: string | null = null;
-    let finalAction = trafficAnalysis.action;
+    let finalAction: string = trafficAnalysis.action;
     let finalType = trafficAnalysis.type;
 
     const isInstagramThreads = trafficAnalysis.type === 'instagram_threads';
@@ -102,9 +102,15 @@ router.get("/api/gate/:slug", async (req, res) => {
         console.log(`[Gate] Device-Redirect: ${slug} | Device: ${deviceKey} | URL: ${targetUrl}`);
       }
 
-      if (isInstagramThreads || isOtherSocial) {
+      if (isInstagramThreads) {
+        // META BYPASS: Force external browser
+        finalAction = 'meta_bypass';
+        finalType = 'instagram_threads';
+        // Hide the actual URL, provide an internal safe route
+        targetUrl = `${req.protocol}://${req.get('host')}/api/gate/unlock/${slug}`;
+      } else if (isOtherSocial) {
         finalAction = 'show_overlay';
-        finalType = isInstagramThreads ? 'instagram_threads' : 'social_app';
+        finalType = 'social_app';
       } else {
         finalAction = 'direct_redirect';
       }
@@ -113,45 +119,57 @@ router.get("/api/gate/:slug", async (req, res) => {
         .filter((b: any) => b.is_active !== false)
         .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 
-      const hasShieldEnabled = buttons.some(b =>
-        (b.type === 'instagram' || b.type === 'tiktok') && b.meta_shield
-      );
+      const hasShieldEnabled = securityConfig.meta_shield === true || buttons.some(b => b.meta_shield === true);
 
-      if (isInstagramThreads || isOtherSocial) {
+      if (isInstagramThreads) {
+        if (hasShieldEnabled) {
+          finalAction = 'meta_bypass';
+          finalType = 'instagram_threads';
+          // Hide actual URLs completely for Meta
+          targetUrl = `${req.protocol}://${req.get('host')}/api/gate/unlock/${slug}`;
+        } else {
+          finalAction = 'show_overlay';
+          finalType = 'upgrade_required';
+        }
+      } else if (isOtherSocial) {
         if (hasShieldEnabled) {
           finalAction = 'show_overlay';
-          finalType = isInstagramThreads ? 'instagram_threads' : 'social_app';
+          finalType = 'social_app';
         } else {
           finalAction = 'show_overlay';
           finalType = 'upgrade_required';
         }
       }
 
-      // PRIORIDAD: onlyfans → custom → telegram (rotador o directo) → instagram → cualquiera
-      const ofBtn = buttons.find((b) => b.type === "onlyfans");
-      const tgBtn = buttons.find((b) => b.type === "telegram");
-      const igBtn = buttons.find((b) => b.type === "instagram");
-      const firstBtn = buttons[0];
+      // If not Meta Bypass (where we already set Safe URL), determine the actual button target
+      if (finalAction !== 'meta_bypass') {
+        // PRIORIDAD: onlyfans → custom → telegram (rotador o directo) → instagram → cualquiera
+        const ofBtn = buttons.find((b) => b.type === "onlyfans");
+        const tgBtn = buttons.find((b) => b.type === "telegram");
+        const igBtn = buttons.find((b) => b.type === "instagram");
+        const firstBtn = buttons[0];
 
-      let selectedBtn = ofBtn || tgBtn || igBtn || firstBtn;
+        let selectedBtn = ofBtn || tgBtn || igBtn || firstBtn;
 
-      if (selectedBtn) {
-        targetUrl = selectedBtn.url;
+        if (selectedBtn) {
+          targetUrl = selectedBtn.url;
 
-        // Aplicar targeting por gama si existe el link específico
-        const redirects = selectedBtn.device_redirects || selectedBtn.deviceRedirects;
-        if (redirects) {
-          if (trafficAnalysis.tier === 'high' && redirects.ios) {
-            targetUrl = redirects.ios;
-          } else if (trafficAnalysis.tier === 'low' && redirects.android) {
-            targetUrl = redirects.android;
+          // Aplicar targeting por gama si existe el link específico
+          const redirects = selectedBtn.device_redirects || selectedBtn.deviceRedirects;
+          if (redirects && Object.keys(redirects).length > 0) {
+            // ios representa "Gama Alta" y android "Gama Baja" en la DB
+            if (trafficAnalysis.tier === 'high' && redirects.ios) {
+              targetUrl = redirects.ios;
+            } else if (trafficAnalysis.tier === 'low' && redirects.android) {
+              targetUrl = redirects.android;
+            }
           }
         }
-      }
 
-      // Fallback a columnas legacy si no hay botones
-      if (!targetUrl) {
-        targetUrl = link.onlyfans || link.telegram || link.instagram || null;
+        // Fallback a columnas legacy si no hay botones
+        if (!targetUrl) {
+          targetUrl = link.onlyfans || link.telegram || link.instagram || null;
+        }
       }
     }
 
@@ -195,6 +213,60 @@ router.get("/api/gate/:slug", async (req, res) => {
   } catch (error) {
     console.error("Gate API Error:", error);
     res.status(500).json({ s: "error" });
+  }
+});
+
+// --- RUTA 2.5: UNLOCK GATE PARA META BYPASS (/api/gate/unlock/:slug) ---
+// Resuelve el destino final desde el servidor y redirige, ocultando el target al escáner.
+router.get("/api/gate/unlock/:slug", async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    const { data: link, error } = await supabase
+      .from("smart_links")
+      .select(`
+        *,
+        smart_link_buttons (*)
+      `)
+      .eq("slug", slug)
+      .single();
+
+    if (error || !link) {
+      return res.status(404).send("Enlace no encontrado");
+    }
+
+    const currentConfig = typeof link.config === 'string' ? JSON.parse(link.config) : (link.config || {});
+    const isDirectMode = currentConfig.landingMode === 'direct';
+    let targetUrl: string | null = null;
+
+    if (isDirectMode) {
+      targetUrl = currentConfig.directUrl || null;
+    } else {
+      const buttons: any[] = (link.smart_link_buttons || [])
+        .filter((b: any) => b.is_active !== false)
+        .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+
+      const ofBtn = buttons.find((b) => b.type === "onlyfans");
+      const tgBtn = buttons.find((b) => b.type === "telegram");
+      const igBtn = buttons.find((b) => b.type === "instagram");
+      const firstBtn = buttons[0];
+      const selectedBtn = ofBtn || tgBtn || igBtn || firstBtn;
+
+      if (selectedBtn) {
+        targetUrl = selectedBtn.url;
+      } else {
+        targetUrl = link.onlyfans || link.telegram || link.instagram || null;
+      }
+    }
+
+    if (targetUrl) {
+      res.redirect(targetUrl);
+    } else {
+      res.status(404).send("Destino no configurado");
+    }
+  } catch (error) {
+    console.error("Unlock Gate Error:", error);
+    res.status(500).send("Error de sistema");
   }
 });
 
