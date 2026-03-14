@@ -33,6 +33,7 @@ export default function VerifyDevice() {
     const [lockedUntil, setLockedUntil] = useState<string | null>(null);
     const [countdown, setCountdown] = useState(60); // 1-minute OTP countdown
     const [canResend, setCanResend] = useState(false);
+    const [sessionToken, setSessionToken] = useState<string | null>(null);
 
     const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -93,12 +94,27 @@ export default function VerifyDevice() {
                     }
                     await handleProfileRedirect(signInData.user.id);
                 } else {
-                    // Login flow: session already established, get userId from state or session
+                    // Login flow: session already established OR we have a sessionToken to establish it
                     let resolvedId = userId;
-                    if (!resolvedId) {
+                    if (sessionToken) {
+                        // Establish native Supabase session
+                        const { data: magicLinkData, error: magicLinkError } = await supabase.auth.verifyOtp({ 
+                            email, 
+                            token_hash: sessionToken, 
+                            type: 'magiclink' 
+                        });
+                        if (!magicLinkError && magicLinkData?.user) {
+                            resolvedId = magicLinkData.user.id;
+                        } else {
+                            navigate('/login', { replace: true });
+                            return;
+                        }
+                    } else if (!resolvedId) {
+                        // Fallback (e.g. from password login where session is already established)
                         const { data: sessionData } = await supabase.auth.getSession();
                         resolvedId = sessionData?.session?.user?.id || '';
                     }
+                    
                     if (resolvedId) {
                         await handleProfileRedirect(resolvedId);
                     } else {
@@ -169,11 +185,14 @@ export default function VerifyDevice() {
             }
 
             // Success! Register this device
+            if (data.session_token) {
+                setSessionToken(data.session_token);
+            }
             setStep('success');
 
             // Get current user to register device token
-            const { data: sessionData } = await supabase.auth.getSession();
-            const currentUserId = userId || sessionData?.session?.user?.id;
+            // Wait shortly to make sure session establishment isn't racing this code
+            const currentUserId = userId || data.userId || (await supabase.auth.getSession()).data?.session?.user?.id;
 
             if (currentUserId) {
                 try {

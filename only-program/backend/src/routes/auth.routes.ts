@@ -273,6 +273,34 @@ router.post("/verify-otp", async (req: Request, res: Response) => {
     }
 
     // For login or reset, confirm validity
+    if (usage === 'login') {
+      try {
+        // Generate a magic link which provides a secure hashed_token we can use
+        // to establish a direct session on the client sid
+        const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
+          type: 'magiclink',
+          email,
+        });
+
+        if (linkError) {
+          console.error("Error generating session link:", linkError);
+          // Fallback if link fails, though frontend won't be able to establish session
+          return res.json({ message: "Código verificado correctamente", verified: true });
+        }
+
+        const hashedToken = linkData?.properties?.hashed_token;
+
+        return res.json({ 
+          message: "Código verificado correctamente", 
+          verified: true,
+          session_token: hashedToken 
+        });
+      } catch (err) {
+        console.error("Error in login verification session generation:", err);
+        return res.json({ message: "Código verificado correctamente", verified: true });
+      }
+    }
+
     res.json({ message: "Código verificado correctamente", verified: true });
   } catch (error) {
     console.error("Error en verify-otp:", error);
