@@ -146,6 +146,120 @@ router.post("/wompi/get-signature", authenticateToken, async (req: AuthRequest, 
 });
 
 // ─────────────────────────────────────────────────────────────
+// PAYPAL WEBHOOK (público)
+// ─────────────────────────────────────────────────────────────
+router.post("/webhook/paypal", async (req, res) => {
+  try {
+    const event = req.body;
+    console.log("💰 PayPal Webhook received event:", event.event_type);
+
+    if (
+      event.event_type === "BILLING.SUBSCRIPTION.ACTIVATED" || 
+      event.event_type === "PAYMENT.SALE.COMPLETED"
+    ) {
+      const resource = event.resource;
+      const customId = resource.custom_id; // user_id
+      const subscriptionId = resource.billing_agreement_id || resource.id; 
+
+      let userId = customId;
+      let amount = 0;
+
+      if (resource.amount && resource.amount.total) {
+        amount = parseFloat(resource.amount.total);
+      } else if (resource.plan?.billing_cycles?.[0]?.pricing_scheme?.fixed_price?.value) {
+         amount = parseFloat(resource.plan.billing_cycles[0].pricing_scheme.fixed_price.value);
+      }
+
+      if (!userId) {
+         const { data: payRec } = await supabase.from("payments").select("user_id, metadata").eq("tx_reference", subscriptionId).single();
+         if (payRec) {
+           userId = payRec.user_id;
+         }
+      }
+
+      if (userId) {
+         // Update Record Status
+         await supabase.from("payments").update({ status: "completed", confirmed_at: new Date().toISOString() }).eq("tx_reference", subscriptionId);
+
+         const { FulfillmentService } = await import("../services/fulfillment.service");
+         await FulfillmentService.activateLinkProduct(userId, subscriptionId, amount, "USD");
+         
+         const { data: userData } = await supabase.auth.admin.getUserById(userId);
+         if (userData?.user?.email && amount > 0) {
+            await sendPaymentConfirmationEmail(
+              userData.user.email,
+              amount,
+              "USD",
+              subscriptionId
+            );
+         }
+      }
+    }
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error("PayPal Webhook Error:", error);
+    res.sendStatus(500);
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// WOMPI WEBHOOK (público)
+// ─────────────────────────────────────────────────────────────
+router.post("/webhook/wompi", async (req, res) => {
+  try {
+    const event = req.body;
+    console.log("💰 Wompi Webhook received:", JSON.stringify(event, null, 2));
+
+    if (
+      event.event === "transaction.updated" &&
+      event.data.transaction.status === "APPROVED"
+    ) {
+      const tx = event.data.transaction;
+      const reference = tx.reference;
+      const transactionId = tx.id;
+
+      // 1. Update Payment Record
+      const { data: payment, error: payError } = await supabase
+        .from("payments")
+        .update({
+          status: "completed",
+          tx_reference: transactionId,
+          confirmed_at: new Date().toISOString(),
+        })
+        .eq("id", reference)
+        .select()
+        .single();
+
+      if (payError || !payment) {
+        console.error("Payment record not found for ref:", reference);
+        return res.status(200).json({ received: true }); 
+      }
+
+      // 2. FULFILLMENT: Activate links
+      const { FulfillmentService } =
+        await import("../services/fulfillment.service");
+      await FulfillmentService.activateLinkProduct(
+        payment.user_id,
+        reference,
+        payment.amount,
+        payment.currency,
+      );
+
+      console.log(
+        `✅ Payment ${reference} approved via Webhook. Links activated.`,
+      );
+    }
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error("Wompi Webhook Error:", error);
+    res.sendStatus(500);
+  }
+});
+
+
+// ─────────────────────────────────────────────────────────────
 // Todas las rutas siguientes requieren autenticación
 // ─────────────────────────────────────────────────────────────
 router.use(authenticateToken);
@@ -263,6 +377,37 @@ router.post("/paypal/capture-order", async (req: AuthRequest, res) => {
   }
 });
 
+router.post("/paypal/create-subscription", async (req: AuthRequest, res) => {
+  try {
+    const { planId, linksData, customDomain } = req.body;
+    if (!planId) return res.status(400).json({ error: "Plan ID is required" });
+
+    // Use user.id as custom_id so the webhook knows who paid
+    const customId = req.user?.id; 
+
+    const subscription = (await PayPalService.createSubscription(planId, customId)) as any;
+
+    if (req.user) {
+      const { error } = await supabase.from("payments").insert({
+        user_id: req.user.id,
+        amount: 0, 
+        currency: "USD",
+        provider: "paypal",
+        status: "pending",
+        tx_reference: subscription.id,
+        created_at: new Date().toISOString(),
+        metadata: { isSubscription: true, linksData, customDomain },
+      });
+      if (error) console.error("Error inserting subscription record:", error);
+    }
+
+    res.json(subscription);
+  } catch (error: any) {
+    console.error("Error creating PayPal subscription:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // (get-signature movido arriba del middleware de auth)
 
 router.post("/wompi/transaction", async (req: AuthRequest, res) => {
@@ -333,58 +478,6 @@ router.post("/wompi/transaction", async (req: AuthRequest, res) => {
   } catch (error: any) {
     console.error("Error creating Wompi Transaction:", error);
     res.status(500).json({ error: error.message });
-  }
-});
-
-router.post("/webhook/wompi", async (req, res) => {
-  try {
-    const event = req.body;
-    console.log("💰 Wompi Webhook received:", JSON.stringify(event, null, 2));
-
-    if (
-      event.event === "transaction.updated" &&
-      event.data.transaction.status === "APPROVED"
-    ) {
-      const tx = event.data.transaction;
-      const reference = tx.reference;
-      const transactionId = tx.id;
-
-      // 1. Update Payment Record
-      const { data: payment, error: payError } = await supabase
-        .from("payments")
-        .update({
-          status: "completed",
-          tx_reference: transactionId,
-          confirmed_at: new Date().toISOString(),
-        })
-        .eq("id", reference)
-        .select()
-        .single();
-
-      if (payError || !payment) {
-        console.error("Payment record not found for ref:", reference);
-        return res.status(200).json({ received: true }); // Acknowledge to stop retries even if not found
-      }
-
-      // 2. FULFILLMENT: Activate links
-      const { FulfillmentService } =
-        await import("../services/fulfillment.service");
-      await FulfillmentService.activateLinkProduct(
-        payment.user_id,
-        reference,
-        payment.amount,
-        payment.currency,
-      );
-
-      console.log(
-        `✅ Payment ${reference} approved via Webhook. Links activated.`,
-      );
-    }
-
-    res.sendStatus(200);
-  } catch (error) {
-    console.error("Wompi Webhook Error:", error);
-    res.sendStatus(500);
   }
 });
 

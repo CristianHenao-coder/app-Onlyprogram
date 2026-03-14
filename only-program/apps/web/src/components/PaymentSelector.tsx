@@ -10,6 +10,8 @@ interface PaymentSelectorProps {
   onSuccess?: () => void;
   linksData?: any[];
   customDomain?: string;
+  isSubscription?: boolean;
+  paypalPlanId?: string;
 }
 
 // Stablecoins aceptadas
@@ -83,7 +85,9 @@ export default function PaymentSelector({
   amount,
   onSuccess,
   linksData,
-  customDomain
+  customDomain,
+  isSubscription = false,
+  paypalPlanId = import.meta.env.VITE_PAYPAL_PLAN_ID || '' // can fallback to an env variable
 }: PaymentSelectorProps) {
   const [paymentMethod, setPaymentMethod] = useState<'qr' | 'paypal' | 'crypto'>(initialMethod);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
@@ -427,17 +431,30 @@ export default function PaymentSelector({
                   <span className="material-symbols-outlined text-[#0070ba] text-4xl">account_balance_wallet</span>
                 </div>
                 <p className="text-silver/60 text-sm font-medium max-w-xs mx-auto">
-                  Serás redirigido a PayPal para completar tu pago de forma segura.
+                  Serás redirigido a PayPal para completar tu {isSubscription ? "suscripción" : "pago"} de forma segura.
                 </p>
               </div>
+              
+              {isSubscription && !paypalPlanId && (
+                 <div className="bg-orange-500/10 border border-orange-500/20 text-orange-400 p-3 rounded-xl w-full max-w-sm text-xs text-center font-bold">
+                   Falta el ID del Plan de PayPal para la suscripción recurrente.
+                 </div>
+              )}
+
               <div className="w-full max-w-sm">
                 <button
                   onClick={async () => {
                     const toastId = toast.loading('Conectando con PayPal...');
                     try {
-                      const order = await paymentsService.createPayPalOrder(amount || 0, undefined, linksData, customDomain);
+                      let orderOrSub: any;
+                      if (isSubscription && paypalPlanId) {
+                         orderOrSub = await paymentsService.createPayPalSubscription(paypalPlanId, linksData, customDomain);
+                      } else {
+                         orderOrSub = await paymentsService.createPayPalOrder(amount || 0, undefined, linksData, customDomain);
+                      }
+                      
                       toast.dismiss(toastId);
-                      const approvalLink = order.links?.find((l: any) => l.rel === 'approve')?.href;
+                      const approvalLink = orderOrSub.links?.find((l: any) => l.rel === 'approve')?.href;
                       if (approvalLink) {
                         window.location.href = approvalLink;
                       } else {
@@ -454,11 +471,11 @@ export default function PaymentSelector({
                       );
                     }
                   }}
-                  disabled={!amount || amount <= 0}
+                  disabled={!amount || amount <= 0 || (isSubscription && !paypalPlanId)}
                   className="w-full bg-[#0070ba] hover:bg-[#003087] disabled:opacity-40 disabled:cursor-not-allowed text-white font-black py-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-3 uppercase tracking-wider text-sm"
                 >
                   <span className="material-symbols-outlined">output</span>
-                  Pagar con PayPal
+                  {isSubscription ? "Suscribirse con PayPal" : "Pagar con PayPal"}
                 </button>
               </div>
             </div>

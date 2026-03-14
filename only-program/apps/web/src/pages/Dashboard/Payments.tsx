@@ -18,6 +18,7 @@ export default function Payments() {
   const [loading, setLoading] = useState(true);
   const [pricingCfg, setPricingCfg] = useState<ProductPricingConfig>(DEFAULT_PRODUCT_PRICING);
   const [currentStep, setCurrentStep] = useState<"cart" | "payment" | "success">("cart");
+  const [isSubscription, setIsSubscription] = useState(false);
 
   // Coupon state
   const [couponCode, setCouponCode] = useState("");
@@ -321,6 +322,38 @@ export default function Payments() {
                 )}
               </div>
 
+              {/* Subscription Toggle */}
+              <div className="rounded-3xl border border-white/10 bg-[#080808] px-8 py-6 shadow-xl">
+                <label className="text-[10px] font-black text-silver/40 uppercase tracking-widest mb-4 flex items-center gap-1.5">
+                  <span className="material-symbols-outlined text-sm">autorenew</span>
+                  Tipo de Pago
+                </label>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setIsSubscription(false)}
+                    className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${
+                      !isSubscription 
+                        ? 'bg-primary/10 border-primary text-white' 
+                        : 'bg-white/5 border-white/10 text-silver/50 hover:bg-white/10'
+                    }`}
+                  >
+                    <span className="font-bold text-sm">Vitalicio</span>
+                    <span className="text-[10px] uppercase opacity-60">Pago único</span>
+                  </button>
+                  <button
+                    onClick={() => setIsSubscription(true)}
+                    className={`flex-1 py-3 px-4 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${
+                      isSubscription 
+                        ? 'bg-primary/10 border-primary text-white' 
+                        : 'bg-white/5 border-white/10 text-silver/50 hover:bg-white/10'
+                    }`}
+                  >
+                    <span className="font-bold text-sm">Suscripción</span>
+                    <span className="text-[10px] uppercase opacity-60">Recurrente</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Order summary card */}
               <div className="rounded-3xl border border-white/10 bg-[#080808] px-8 py-8 space-y-4 shadow-xl">
                 <div className="flex justify-between text-xs text-silver/40">
@@ -378,7 +411,7 @@ export default function Payments() {
               <div>
                 <p className="font-bold text-white text-sm">
                   {isFromLinks
-                    ? `${linksData.length} Link${linksData.length !== 1 ? "s" : ""} — Acceso Vitalicio`
+                    ? `${linksData.length} Link${linksData.length !== 1 ? "s" : ""} — ${isSubscription ? "Suscripción" : "Acceso Vitalicio"}`
                     : "Compra"}
                 </p>
                 {appliedCoupon && (
@@ -403,6 +436,7 @@ export default function Payments() {
               onSuccess={handlePaymentSuccess}
               linksData={linksData}
               customDomain={pendingPurchase?.customDomain}
+              isSubscription={isSubscription}
             />
           </div>
         </div>

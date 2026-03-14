@@ -84,6 +84,20 @@ export const paymentsService = {
     return handleResponse(response);
   },
 
+  async createPayPalSubscription(
+    planId: string,
+    linksData?: any[],
+    customDomain?: string,
+  ) {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_URL}/payments/paypal/create-subscription`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ planId, linksData, customDomain }),
+    });
+    return handleResponse(response);
+  },
+
   async capturePayPalOrder(orderId: string) {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_URL}/payments/paypal/capture-order`, {

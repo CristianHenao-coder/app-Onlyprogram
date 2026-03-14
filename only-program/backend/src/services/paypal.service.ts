@@ -109,4 +109,68 @@ export class PayPalService {
 
     return response.json();
   }
+
+  static async createSubscription(planId: string, customId?: string) {
+    const accessToken = await this.getAccessToken();
+
+    const payload = {
+      plan_id: planId,
+      custom_id: customId,
+      application_context: {
+        return_url: `${config.urls.frontend}/dashboard/payments?status=paypal_success`,
+        cancel_url: `${config.urls.frontend}/dashboard/payments?status=paypal_cancel`,
+        user_action: "SUBSCRIBE_NOW",
+        brand_name: "Only Program",
+      },
+    };
+
+    const response = await fetch(`${config.paypal.apiUrl}/v1/billing/subscriptions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error("PayPal create subscription failed:", error);
+      throw new Error(`PayPal create subscription failed: ${JSON.stringify(error)}`);
+    }
+
+    return response.json();
+  }
+
+  // Si necesitamos verificar el webhook de PayPal manualmente o validar eventos
+  static async verifyWebhookSignature(reqBody: any, headers: any, webhookId: string) {
+    const accessToken = await this.getAccessToken();
+
+    const payload = {
+      transmission_id: headers["paypal-transmission-id"],
+      transmission_time: headers["paypal-transmission-time"],
+      cert_url: headers["paypal-cert-url"],
+      auth_algo: headers["paypal-auth-algo"],
+      transmission_sig: headers["paypal-transmission-sig"],
+      webhook_id: webhookId,
+      webhook_event: reqBody,
+    };
+
+    const response = await fetch(`${config.paypal.apiUrl}/v1/notifications/verify-webhook-signature`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      console.error("Failed to verify PayPal Webhook signature.");
+      return false;
+    }
+
+    const data = (await response.json()) as any;
+    return data.verification_status === "SUCCESS";
+  }
 }
