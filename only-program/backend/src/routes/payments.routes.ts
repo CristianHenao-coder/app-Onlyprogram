@@ -102,7 +102,7 @@ router.post("/webhook/nowpayments", async (req, res) => {
 // ─────────────────────────────────────────────────────────────
 router.post("/wompi/get-signature", async (req: AuthRequest, res) => {
   try {
-    const { amount, currency = "COP" } = req.body;
+    const { amount, currency = "COP", linksData, customDomain } = req.body;
     if (!amount) return res.status(400).json({ error: "Amount is required" });
 
     const { WompiService } = await import("../services/wompi.service");
@@ -116,6 +116,23 @@ router.post("/wompi/get-signature", async (req: AuthRequest, res) => {
       amountInCents,
       currency,
     );
+
+    // PERSISTENCIA: Crear el registro de pago ANTES de que el usuario vaya a Wompi
+    // Esto es crucial para que el webhook tenga metadatos (linksData) cuando Wompi confirme.
+    if (req.user) {
+      const { error: payError } = await supabase.from("payments").insert({
+        id: reference, // Usamos la misma referencia de Wompi como ID de nuestra tabla
+        user_id: req.user.id,
+        amount,
+        currency: "USD",
+        provider: "wompi",
+        status: "pending",
+        tx_reference: null, // Se llenará cuando Wompi lo confirme
+        created_at: new Date().toISOString(),
+        metadata: { linksData, customDomain },
+      });
+      if (payError) console.error("❌ Error persistiendo pago Wompi (pre-redirect):", payError);
+    }
 
     res.json({
       reference,
@@ -279,18 +296,24 @@ router.post("/wompi/transaction", async (req: AuthRequest, res) => {
         .json({ error: "Missing required field: acceptanceToken" });
 
     const { WompiService } = await import("../services/wompi.service");
+    
+    // Generamos la referencia nosotros para guardarla en la DB antes (o usarla como ID)
+    const reference = WompiService.generateReference();
+
     const transaction = await WompiService.createTransaction({
       amountUSD: amount,
       email,
       token,
       installments,
       acceptanceToken,
+      reference, // Pasamos la referencia custom
     });
 
     if (req.user) {
       const status =
         transaction.status === "APPROVED" ? "completed" : "pending";
       const { error } = await supabase.from("payments").insert({
+        id: reference, // Usamos la misma referencia
         user_id: req.user.id,
         amount,
         currency: "USD",
@@ -307,7 +330,7 @@ router.post("/wompi/transaction", async (req: AuthRequest, res) => {
           await import("../services/fulfillment.service");
         await FulfillmentService.activateLinkProduct(
           req.user.id,
-          transaction.id,
+          reference, // Usamos la referencia local (ID)
           amount,
           "USD",
         );

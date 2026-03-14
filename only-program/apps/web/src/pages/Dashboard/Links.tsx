@@ -337,9 +337,6 @@ const getBackgroundStyle = (page: LinkPage) => {
   };
 };
 
-// Helper to check if page has rotator
-const hasRotatorActive = (page: LinkPage) =>
-  page.buttons.some((b) => b.type === "telegram" && b.rotatorActive);
 
 export default function Links() {
   const { t } = useTranslation();
@@ -960,7 +957,6 @@ export default function Links() {
 
     if (type === "both") {
       const now = Date.now();
-      const modelId = `model_${now}`;
       const page1: LinkPage = {
         ...DEFAULTS.PAGE,
         id: `page${now}`,
@@ -1598,7 +1594,6 @@ export default function Links() {
                    const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
                    
                    let buttonClass = "bg-transparent border-transparent hover:bg-white/5 hover:border-white/10";
-                   let dotClass = isDirect ? "bg-red-500" : "bg-blue-500";
 
                    if (isSelected) {
                      if (hasPair) {
@@ -3246,32 +3241,29 @@ export default function Links() {
                       return;
                     }
 
-                    try {
-                      localStorage.setItem(
-                        "my_links_data_backup",
-                        JSON.stringify({
-                          timestamp: Date.now(),
-                          linksData: validDrafts,
-                        }),
-                      );
-                    } catch (e) {
-                      console.warn("Could not save backup to local storage due to quota limits");
-                    }
-
                     const hasMetaShield = validDrafts.some((p: any) => {
                       if (p.landingMode === "direct") return true;
                       return p.buttons?.some((b: any) => b.metaShield);
                     });
 
+                    const pendingPurchase = {
+                      type: "links_bundle",
+                      linksData: validDrafts,
+                      amount: null,
+                      hasInstagram: hasMetaShield,
+                    };
+
+                    try {
+                      localStorage.setItem(
+                        "onlyprogram_pending_purchase",
+                        JSON.stringify(pendingPurchase),
+                      );
+                    } catch (e) {
+                      console.warn("Could not save pending purchase to local storage");
+                    }
+
                     navigate("/dashboard/checkout", {
-                      state: {
-                        pendingPurchase: {
-                          type: "links_bundle",
-                          linksData: validDrafts,
-                          amount: null,
-                          hasInstagram: hasMetaShield,
-                        },
-                      },
+                      state: { pendingPurchase },
                     });
                   } else {
                     navigate("/dashboard/home");

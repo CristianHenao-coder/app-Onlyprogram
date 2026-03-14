@@ -94,11 +94,12 @@ export const paymentsService = {
     return handleResponse(response);
   },
 
-  async getWompiSignature(amount: number, currency: string = "COP") {
+  async getWompiSignature(amount: number, currency: string = "COP", linksData?: any[], customDomain?: string) {
+    const headers = await getAuthHeaders();
     const response = await fetch(`${API_URL}/payments/wompi/get-signature`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount, currency }),
+      headers,
+      body: JSON.stringify({ amount, currency, linksData, customDomain }),
     });
     return handleResponse(response);
   },

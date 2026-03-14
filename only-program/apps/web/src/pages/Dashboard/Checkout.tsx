@@ -27,19 +27,20 @@ export default function Checkout() {
   const selectedPlan = 'standard';
 
   // Read addons that might have been selected in previous views
-  // Fallback: derive from linksData if state is missing
-  const linksDataFromState = location.state?.pendingPurchase?.linksData || [];
-  const linksData = linksDataFromState.length > 0
-    ? linksDataFromState
-    : (() => { try { return JSON.parse(localStorage.getItem('my_links_data') || '[]'); } catch { return []; } })();
+  // Fallback: recover from localStorage if state is missing
+  const recoveredPurchase = (() => {
+    if (location.state?.pendingPurchase) return location.state.pendingPurchase;
+    try {
+      const saved = localStorage.getItem('onlyprogram_pending_purchase');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  })();
 
-  const hasRotator = location.state?.pendingPurchase?.hasRotator !== undefined
-    ? location.state.pendingPurchase.hasRotator
-    : linksData.some((p: any) => p.buttons?.some((b: any) => b.rotatorActive));
-
-  const hasInstagram = location.state?.pendingPurchase?.hasInstagram !== undefined
-    ? location.state.pendingPurchase.hasInstagram
-    : linksData.some((p: any) => p.landingMode === 'direct' || p.buttons?.some((b: any) => b.metaShield));
+  const linksData = recoveredPurchase?.linksData || [];
+  const hasRotator = recoveredPurchase?.hasRotator || linksData.some((p: any) => p.buttons?.some((b: any) => b.rotatorActive));
+  const hasInstagram = recoveredPurchase?.hasInstagram || linksData.some((p: any) => p.landingMode === 'direct' || p.buttons?.some((b: any) => b.metaShield));
 
   useEffect(() => {
     if (linksData.length === 0) {

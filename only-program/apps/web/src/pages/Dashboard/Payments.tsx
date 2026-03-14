@@ -25,9 +25,61 @@ export default function Payments() {
   const [appliedCoupon, setAppliedCoupon] = useState<CouponResult | null>(null);
   const [couponError, setCouponError] = useState("");
 
-  const pendingPurchase = location.state?.pendingPurchase || null;
+  const [wompiVerifying, setWompiVerifying] = useState(false);
+
+  // Read pending purchase from state or localStorage
+  const pendingPurchase = (() => {
+    if (location.state?.pendingPurchase) return location.state.pendingPurchase;
+    try {
+      const saved = localStorage.getItem("onlyprogram_pending_purchase");
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  })();
+
   const linksData: any[] = pendingPurchase?.linksData || [];
   const isFromLinks = linksData.length > 0 && pendingPurchase?.type === "links_bundle";
+
+  // Manejar el retorno de Wompi y PayPal
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    
+    // Wompi return
+    if (params.get("status") === "wompi_return") {
+      setWompiVerifying(true);
+      toast.success("Tu pago está siendo verificado. Serás redirigido en breve.", { duration: 5000 });
+      
+      localStorage.removeItem("onlyprogram_pending_purchase");
+      
+      setTimeout(() => {
+        navigate("/dashboard/links");
+      }, 6000);
+      return;
+    }
+
+    // PayPal return (detect orderId or token)
+    const paypalOrderId = params.get("token") || params.get("orderId");
+    if (paypalOrderId && !wompiVerifying) {
+      const captureOrder = async () => {
+        const toastId = toast.loading("Capturando pago de PayPal...");
+        try {
+          const result = await paymentsService.capturePayPalOrder(paypalOrderId);
+          if (result.status === "COMPLETED") {
+            toast.success("¡Pago de PayPal completado!", { id: toastId });
+            localStorage.removeItem("onlyprogram_pending_purchase");
+            setCurrentStep("success");
+          } else {
+            toast.error("El pago no se pudo completar.", { id: toastId });
+          }
+        } catch (error) {
+          console.error("Error capturing PayPal order:", error);
+          toast.error("Error al procesar PayPal.", { id: toastId });
+        }
+      };
+      captureOrder();
+    }
+  }, [location.search, navigate]);
 
   useEffect(() => {
     const load = async () => {
@@ -127,6 +179,31 @@ export default function Payments() {
       toast.error("Error al finalizar. Contacta a soporte.", { id: toastId });
     }
   };
+
+  if (wompiVerifying) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center animate-fade-in">
+        <div className="relative">
+          <div className="w-24 h-24 border-4 border-red-500/20 border-t-red-500 rounded-full animate-spin"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="material-symbols-outlined text-red-500 text-3xl">hourglass_empty</span>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-white">Verificando tu pago</h2>
+          <p className="text-silver/60 max-w-sm">
+            Wompi está confirmando la transacción. Tus links se activarán automáticamente en unos segundos.
+          </p>
+        </div>
+        <button 
+          onClick={() => navigate("/dashboard/links")}
+          className="px-8 py-3 bg-white/5 hover:bg-white/10 text-white font-bold rounded-xl transition-all border border-white/10"
+        >
+          Volver a Mis Links
+        </button>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

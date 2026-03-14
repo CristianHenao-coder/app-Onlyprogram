@@ -94,8 +94,9 @@ export class WompiService {
     token: string;
     installments?: number;
     acceptanceToken: string;
+    reference?: string;
   }) {
-    const reference = this.generateReference();
+    const reference = data.reference || this.generateReference();
     const amountInCents = await this.calculateAmountInCents(data.amountUSD);
     // Wompi requires COP for most local methods, but supports USD if configured.
     // Assuming COP for local storage of signature.

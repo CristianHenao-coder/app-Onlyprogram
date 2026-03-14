@@ -101,6 +101,7 @@ export default function PaymentSelector({
   const [copied, setCopied] = useState<'address' | 'amount' | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+
   // ─── CLEANUP polling on unmount ──────────────────────────────
   useEffect(() => {
     return () => { if (pollingRef.current) clearInterval(pollingRef.current); };
@@ -115,11 +116,11 @@ export default function PaymentSelector({
     setWompiError(null);
     setWompiData(null);
 
-    paymentsService.getWompiSignature(amount, 'COP')
+    paymentsService.getWompiSignature(amount, 'COP', linksData, customDomain)
       .then((data) => setWompiData(data))
       .catch(() => setWompiError('No se pudo generar el QR de pago. Intenta de nuevo.'))
       .finally(() => setWompiLoading(false));
-  }, [paymentMethod, amount]);
+  }, [paymentMethod, amount, linksData, customDomain]);
 
   // Construir URL de checkout de Wompi
   const wompiCheckoutUrl = wompiData
@@ -144,6 +145,7 @@ export default function PaymentSelector({
         setPaymentStatus(s);
         if (COMPLETED_STATUSES.includes(s)) {
           clearInterval(pollingRef.current!);
+          localStorage.removeItem('onlyprogram_active_crypto');
           setCryptoStep('done');
           setPaymentSuccess(true);
           if (onSuccess) onSuccess();
@@ -156,6 +158,25 @@ export default function PaymentSelector({
       } catch { /* silently ignore poll errors */ }
     }, 10_000);
   }, [onSuccess]);
+
+  // ─── RECOVER Crypto State from localStorage ──────────────────
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('onlyprogram_active_crypto');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.cryptoInfo) {
+          setCryptoInfo(parsed.cryptoInfo);
+          setCryptoStep('paying');
+          setPaymentMethod('crypto');
+          setSelectedCrypto(parsed.cryptoInfo.pay_currency.toLowerCase());
+          startPolling(parsed.cryptoInfo.payment_id);
+        }
+      }
+    } catch (e) {
+      console.warn("Could not recover crypto state", e);
+    }
+  }, [startPolling]);
 
   const handleSelect = (method: 'qr' | 'paypal' | 'crypto') => {
     setPaymentMethod(method);
@@ -170,6 +191,13 @@ export default function PaymentSelector({
       setCryptoInfo(data);
       setPaymentStatus('waiting');
       setCryptoStep('paying');
+      
+      // Persistir para recuperarlo en caso de refresh
+      localStorage.setItem('onlyprogram_active_crypto', JSON.stringify({
+        cryptoInfo: data,
+        timestamp: Date.now()
+      }));
+
       startPolling(data.payment_id);
     } catch (error: any) {
       toast.error(error.message || 'Error al crear el pago.');
@@ -196,6 +224,7 @@ export default function PaymentSelector({
 
   const handleResetCrypto = () => {
     if (pollingRef.current) clearInterval(pollingRef.current);
+    localStorage.removeItem('onlyprogram_active_crypto');
     setCryptoStep('select');
     setCryptoInfo(null);
     setPaymentStatus('waiting');
