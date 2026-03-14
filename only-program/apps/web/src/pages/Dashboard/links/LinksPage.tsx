@@ -26,6 +26,7 @@ import FolderModal from "./FolderModal";
 import ButtonsList from "./ButtonsList";
 import LinkEditor from "./LinkEditor";
 import PreviewPane from "./PreviewPane";
+import MobileNextButton from "./MobileNextButton";
 import {
   LinkPage,
   Folder,
@@ -843,56 +844,63 @@ const LinksPage: React.FC = () => {
             onMoveToFolder={handleMoveToFolder}
             />
         ) : (
-            <div className="flex-1 flex overflow-hidden">
-            <LinkEditor
-                currentPage={currentPage}
-                selectedPageId={selectedPageId}
-                setSelectedPageId={setSelectedPageId}
-                allActivePages={allActivePages}
-                allDraftPages={allDraftPages}
-                scrollContainerRef={scrollContainerRef}
-                showLeftArrow={false}
-                showRightArrow={false}
-                scrollLeft={() => {}}
-                scrollRight={() => {}}
-                handleCreateNew={handleCreateNew}
-                setView={setView}
-                sidebarCollapsed={sidebarCollapsed}
-                setSidebarCollapsed={setSidebarCollapsed}
-                folderFilter={folderFilter}
-                showButtonCreator={showButtonCreator}
-                setShowButtonCreator={setShowButtonCreator}
-                selectedButtonId={selectedButtonId}
-                setSelectedButtonId={setSelectedButtonId}
-                sensors={sensors}
-                handleDragEnd={handleDragEnd}
-                handleDeleteButton={handleDeleteButton}
-                handleCreateButton={handleCreateButton}
-                handleUpdateButton={handleUpdateButton}
-                handleUpdatePage={handleUpdatePage}
-                handleNextStep={handleNextStep}
-                handleDeletePage={handleDeletePage}
-                ROTATOR_SURCHARGE={ROTATOR_SURCHARGE}
-                SOCIAL_PRESETS={SOCIAL_PRESETS}
-                DEFAULTS={DEFAULTS}
-                urlError={urlError}
-                setUrlError={setUrlError}
-                isValidUrl={isValidUrl}
-                fileInputRef={fileInputRef}
-                handleImageUpload={handleImageUpload}
-                handleUpdateRotatorLink={handleUpdateRotatorLink}
-                pages={pages}
-                Icons={Icons}
-                isSaving={isSaving}
-                handleSyncButtons={handleSyncButtons}
-            />
-            <PreviewPane 
-                currentPage={currentPage}
-                selectedButtonId={selectedButtonId}
-                setSelectedButtonId={setSelectedButtonId}
-                setShowButtonCreator={setShowButtonCreator}
-                handleNextStep={handleNextStep}
-            />
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 flex overflow-hidden">
+              <LinkEditor
+                  currentPage={currentPage}
+                  selectedPageId={selectedPageId}
+                  setSelectedPageId={setSelectedPageId}
+                  allActivePages={allActivePages}
+                  allDraftPages={allDraftPages}
+                  scrollContainerRef={scrollContainerRef}
+                  showLeftArrow={false}
+                  showRightArrow={false}
+                  scrollLeft={() => {}}
+                  scrollRight={() => {}}
+                  handleCreateNew={handleCreateNew}
+                  setView={setView}
+                  sidebarCollapsed={sidebarCollapsed}
+                  setSidebarCollapsed={setSidebarCollapsed}
+                  folderFilter={folderFilter}
+                  showButtonCreator={showButtonCreator}
+                  setShowButtonCreator={setShowButtonCreator}
+                  selectedButtonId={selectedButtonId}
+                  setSelectedButtonId={setSelectedButtonId}
+                  sensors={sensors}
+                  handleDragEnd={handleDragEnd}
+                  handleDeleteButton={handleDeleteButton}
+                  handleCreateButton={handleCreateButton}
+                  handleUpdateButton={handleUpdateButton}
+                  handleUpdatePage={handleUpdatePage}
+                  handleNextStep={handleNextStep}
+                  handleDeletePage={handleDeletePage}
+                  ROTATOR_SURCHARGE={ROTATOR_SURCHARGE}
+                  SOCIAL_PRESETS={SOCIAL_PRESETS}
+                  DEFAULTS={DEFAULTS}
+                  urlError={urlError}
+                  setUrlError={setUrlError}
+                  isValidUrl={isValidUrl}
+                  fileInputRef={fileInputRef}
+                  handleImageUpload={handleImageUpload}
+                  handleUpdateRotatorLink={handleUpdateRotatorLink}
+                  pages={pages}
+                  Icons={Icons}
+                  isSaving={isSaving}
+                  handleSyncButtons={handleSyncButtons}
+              />
+              <PreviewPane 
+                  currentPage={currentPage}
+                  selectedButtonId={selectedButtonId}
+                  setSelectedButtonId={setSelectedButtonId}
+                  setShowButtonCreator={setShowButtonCreator}
+                  handleNextStep={handleNextStep}
+              />
+              </div>
+              {/* Mobile Next Button - visible only on mobile (lg:hidden) */}
+              <MobileNextButton
+                  currentPage={currentPage}
+                  handleNextStep={handleNextStep}
+              />
             </div>
         )}
         </div>

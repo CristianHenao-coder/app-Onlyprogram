@@ -6,7 +6,6 @@ import { LinkPage, SocialType } from "./types";
 import { SortableButton } from "./SortableButton";
 import SecuritySection from "./SecuritySection";
 import DesktopFooter from "./DesktopFooter";
-import MobileNextButton from "./MobileNextButton";
 import ProfileSettings from "./ProfileSettings";
 import DesignSettings from "./DesignSettings";
 import ButtonEditorFields from "./ButtonEditorFields";
@@ -80,7 +79,7 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
   handleCreateButton,
   handleUpdateButton,
   handleUpdatePage,
-  handleNextStep,
+  handleNextStep: _handleNextStep,
   ROTATOR_SURCHARGE,
   SOCIAL_PRESETS,
   DEFAULTS,
@@ -534,10 +533,6 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
               )}
             </div>
           </div>
-          <MobileNextButton
-            currentPage={currentPage}
-            handleNextStep={handleNextStep}
-          />
         </div>
       </div>
     </div>

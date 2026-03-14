@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { API_URL } from '@/services/apiConfig';
@@ -36,6 +36,27 @@ export default function VerifyDevice() {
 
     const inputsRef = useRef<(HTMLInputElement | null)[]>([]);
 
+    // Redirect based on role and profile completeness
+    const handleProfileRedirect = useCallback(async (resolvedUserId: string) => {
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('role, profile_completed, full_name, country')
+            .eq('id', resolvedUserId)
+            .single();
+
+        const isComplete =
+            profile?.profile_completed ||
+            (profile?.full_name && profile?.country);
+
+        if (!isComplete) {
+            navigate('/complete-profile', { replace: true });
+        } else if (profile?.role === 'admin') {
+            navigate('/admin/dashboard', { replace: true });
+        } else {
+            navigate('/dashboard', { replace: true });
+        }
+    }, [navigate]);
+
     // Redirect if no email provided
     useEffect(() => {
         if (!email) {
@@ -63,19 +84,31 @@ export default function VerifyDevice() {
     useEffect(() => {
         if (step === 'success') {
             const timer = setTimeout(async () => {
-                // Complete the registration/login
                 if (usage === 'register' && password) {
-                    const { error } = await supabase.auth.signInWithPassword({ email, password });
-                    if (error) {
-                        navigate('/login');
+                    // Sign in after registration
+                    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+                    if (signInError || !signInData?.user) {
+                        navigate('/login', { replace: true });
                         return;
                     }
+                    await handleProfileRedirect(signInData.user.id);
+                } else {
+                    // Login flow: session already established, get userId from state or session
+                    let resolvedId = userId;
+                    if (!resolvedId) {
+                        const { data: sessionData } = await supabase.auth.getSession();
+                        resolvedId = sessionData?.session?.user?.id || '';
+                    }
+                    if (resolvedId) {
+                        await handleProfileRedirect(resolvedId);
+                    } else {
+                        navigate('/dashboard', { replace: true });
+                    }
                 }
-                navigate('/dashboard', { replace: true });
             }, 2500);
             return () => clearTimeout(timer);
         }
-    }, [step, usage, email, password, navigate]);
+    }, [step, usage, email, password, userId, navigate, handleProfileRedirect]);
 
     const handleCodeChange = (index: number, value: string) => {
         const cleaned = value.replace(/\D/g, '').slice(-1);
