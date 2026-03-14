@@ -1386,48 +1386,44 @@ export default function Links() {
                             /{page.slug || page.id.slice(0, 8)}
                           </p>
 
-                          {/* Status badge */}
-                          <div className="mt-2 flex items-center justify-center gap-1.5">
-                            {page.status === "active" ? (
-                              <>
-                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                <span className="text-[9px] font-black uppercase tracking-wider text-green-500">
-                                  {t("dashboard.links.activeBadge")}
-                                </span>
-                              </>
-                            ) : (
+                          {/* Status / Domain badge */}
+                          <div className="mt-2 flex items-center justify-center gap-1.5 h-6">
+                            {page.dbStatus === "pending" ? (
                               <>
                                 <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
                                 <span className="text-[9px] font-black uppercase tracking-wider text-orange-400">
                                   {t("dashboard.links.inReview")}
                                 </span>
                               </>
+                            ) : page.dbStatus === "active" ? (
+                              page.customDomain ? (
+                                <a
+                                  href={`https://${page.customDomain.replace(/^https?:\/\//, '')}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-[10px] font-bold text-green-400 hover:bg-green-500/20 hover:scale-105 active:scale-95 transition-all group shadow-[0_0_10px_rgba(34,197,94,0.1)]"
+                                >
+                                  {page.customDomain}
+                                  <span className="material-symbols-outlined text-[12px] opacity-70 group-hover:opacity-100 transition-opacity">open_in_new</span>
+                                </a>
+                              ) : (
+                                <>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                                  <span className="text-[9px] font-black uppercase tracking-wider text-green-500">
+                                    {t("dashboard.links.activeBadge")}
+                                  </span>
+                                </>
+                              )
+                            ) : (
+                              <>
+                                <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse" />
+                                <span className="text-[9px] font-black uppercase tracking-wider text-yellow-500">
+                                  {t("dashboard.links.creatingDraft")}
+                                </span>
+                              </>
                             )}
                           </div>
-
-                          {/* Domain row */}
-                          {page.status === 'active' && page.customDomain ? (
-                            <div className="mt-1.5 flex justify-center">
-                              <a
-                                href={`https://${page.customDomain}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-[9px] font-bold text-green-400 hover:bg-green-500/20 transition-all group"
-                              >
-                                <span className="material-symbols-outlined text-[10px]">language</span>
-                                {page.customDomain}
-                                <span className="material-symbols-outlined text-[9px] opacity-0 group-hover:opacity-100 transition-opacity">open_in_new</span>
-                              </a>
-                            </div>
-                          ) : page.status !== 'active' && (
-                            <div className="mt-1.5 flex justify-center">
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold text-silver/30">
-                                <span className="material-symbols-outlined text-[10px]">schedule</span>
-                                En espera de dominio
-                              </span>
-                            </div>
-                          )}
 
                           {/* Folder badge */}
                           {page.folder && (
