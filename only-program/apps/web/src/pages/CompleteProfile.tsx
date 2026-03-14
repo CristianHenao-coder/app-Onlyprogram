@@ -69,9 +69,7 @@ export default function CompleteProfile() {
         .from('profiles')
         .update({
           full_name: fullName,
-          phone,
           country,
-          profile_completed: true,
           is_suspended: false,
         })
         .eq('id', user?.id);

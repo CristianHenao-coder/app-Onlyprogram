@@ -99,13 +99,14 @@ export default function VerifyDevice() {
                     if (sessionToken) {
                         // Establish native Supabase session
                         const { data: magicLinkData, error: magicLinkError } = await supabase.auth.verifyOtp({ 
-                            email, 
                             token_hash: sessionToken, 
                             type: 'magiclink' 
                         });
+                        console.log("verifyOtp magiclink result:", { magicLinkData, magicLinkError });
                         if (!magicLinkError && magicLinkData?.user) {
                             resolvedId = magicLinkData.user.id;
                         } else {
+                            console.error("Failed to establish session natively with token:", magicLinkError);
                             navigate('/login', { replace: true });
                             return;
                         }
