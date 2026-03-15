@@ -37,8 +37,6 @@ export class WompiService {
     if (!eventsSecret) return false;
 
     // Wompi signature for events: SHA256(transaction.id + transaction.status + transaction.amount_in_cents + events_secret)
-    // Note: status from Wompi is usually uppercase in the signature check, verifying documentation is key.
-    // Assuming standard concatenation:
     const data = `${transactionId}${status}${amountInCents}${eventsSecret}`;
     const calculated = crypto.createHash("sha256").update(data).digest("hex");
 
@@ -63,7 +61,7 @@ export class WompiService {
         throw new Error(`Failed to fetch transaction: ${response.statusText}`);
       }
 
-      return await response.json();
+      return await response.json() as any;
     } catch (error) {
       console.error("Error fetching Wompi transaction:", error);
       return null;
@@ -97,8 +95,6 @@ export class WompiService {
   }) {
     const reference = this.generateReference();
     const amountInCents = await this.calculateAmountInCents(data.amountUSD);
-    // Wompi requires COP for most local methods, but supports USD if configured.
-    // Assuming COP for local storage of signature.
     const currency = "COP";
 
     const signature = this.generateSignature(
@@ -126,14 +122,6 @@ export class WompiService {
       JSON.stringify(payload, null, 2),
     );
 
-    // Use apiUrl from config (which defaults to production in env.ts now)
-    // Note: config.wompi.url vs config.wompi.apiUrl - let's unify or use what env.ts has.
-    // env.ts has 'url' and 'apiUrl' (likely duplicate in my fix? let's check env.ts content if it had redundant keys)
-    // Checking env.ts content from previous step: lines 66 'url': ..., line 79 'apiUrl': ...
-    // In my env.ts fix I am removing the second duplicate block (lines 74-80).
-    // The first block (lines 61-67) has 'url'.
-    // So I should use `config.wompi.url`.
-
     const response = await fetch(`${config.wompi.url}/transactions`, {
       method: "POST",
       headers: {
@@ -143,8 +131,6 @@ export class WompiService {
       body: JSON.stringify(payload),
     });
 
-
-
     const responseData = (await response.json()) as any;
 
     if (!response.ok || responseData.error) {
@@ -153,6 +139,100 @@ export class WompiService {
       throw new Error(`Wompi Error: ${errorMessage}`);
     }
 
+    return responseData.data;
+  }
+
+  /**
+   * Obtiene el token de aceptación de términos y condiciones de Wompi
+   */
+  static async getAcceptanceToken() {
+    const url = `${config.wompi.url}/merchants/${config.wompi.pubKey}`;
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${config.wompi.pubKey}`,
+        },
+      });
+      const data = await response.json() as any;
+      return data.data.presigned_acceptance.acceptance_token;
+    } catch (error) {
+      console.error("Error fetching Wompi acceptance token:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Crea una fuente de pago (tarjeta tokenizada) para cobros recurrentes
+   */
+  static async createPaymentSource(data: {
+    token: string;
+    customerEmail: string;
+    acceptanceToken: string;
+  }) {
+    const url = `${config.wompi.url}/payment_sources`;
+    const payload = {
+      type: "CARD",
+      token: data.token,
+      customer_email: data.customerEmail,
+      acceptance_token: data.acceptanceToken,
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.wompi.prvKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const responseData = await response.json() as any;
+    if (!response.ok) {
+      throw new Error(responseData.error?.type || "Failed to create payment source");
+    }
+    return responseData.data;
+  }
+
+  /**
+   * Realiza un cobro a una fuente de pago existente (recurrido)
+   */
+  static async chargePaymentSource(data: {
+    amountUSD: number;
+    email: string;
+    paymentSourceId: number;
+    reference: string;
+  }) {
+    const amountInCents = await this.calculateAmountInCents(data.amountUSD);
+    const currency = "COP";
+    const signature = this.generateSignature(data.reference, amountInCents, currency);
+
+    const payload = {
+      amount_in_cents: amountInCents,
+      currency: currency,
+      customer_email: data.email,
+      payment_method: {
+        type: "CARD",
+        payment_source_id: data.paymentSourceId,
+        installments: 1,
+      },
+      reference: data.reference,
+      signature: signature,
+    };
+
+    const response = await fetch(`${config.wompi.url}/transactions`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.wompi.prvKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const responseData = await response.json() as any;
+    if (!response.ok) {
+      throw new Error(responseData.error?.type || "Subscription charge failed");
+    }
     return responseData.data;
   }
 }

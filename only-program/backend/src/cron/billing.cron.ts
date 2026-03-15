@@ -11,7 +11,125 @@ import {
  * Charges active subscriptions that are due for renewal
  */
 export async function processSubscriptionBilling() {
-  // ... (existing code stays same)
+  console.log("💳 Running subscription billing cycle...");
+
+  try {
+    const now = new Date();
+
+    // 1. Fetch active subscriptions reaching billing date
+    const { data: dueSubscriptions, error: fetchError } = await supabase
+      .from("subscriptions")
+      .select("*, profiles!inner(email, full_name)")
+      .eq("status", "active")
+      .lte("next_billing_date", now.toISOString());
+
+    if (fetchError) {
+      console.error("❌ Error fetching due subscriptions:", fetchError);
+      return;
+    }
+
+    if (!dueSubscriptions || dueSubscriptions.length === 0) {
+      console.log("📅 No subscriptions due for billing today.");
+      return;
+    }
+
+    console.log(`🚀 Processing ${dueSubscriptions.length} subscriptions...`);
+
+    for (const sub of dueSubscriptions) {
+      try {
+        console.log(`💰 Charging subscription ${sub.id} for user ${sub.user_id}`);
+
+        const reference = WompiService.generateReference();
+        const transaction = await WompiService.chargePaymentSource({
+          amountUSD: Number(sub.amount),
+          email: sub.profiles.email,
+          paymentSourceId: parseInt(sub.wompi_token), // wompi_token stores the source_id
+          reference
+        });
+
+        if (transaction.status === "APPROVED") {
+          // A. Success: Update Subscription Dates
+          const nextDate = new Date(sub.next_billing_date);
+          if (sub.frequency === "yearly") nextDate.setFullYear(nextDate.getFullYear() + 1);
+          else nextDate.setMonth(nextDate.getMonth() + 1);
+
+          await supabase.from("subscriptions").update({
+            last_charged_at: now.toISOString(),
+            next_billing_date: nextDate.toISOString(),
+            payment_retries: 0,
+            status: "active"
+          }).eq("id", sub.id);
+
+          // B. Register Payment
+          const { data: payRecord } = await supabase.from("payments").insert({
+            user_id: sub.user_id,
+            amount: sub.amount,
+            currency: sub.currency,
+            provider: "wompi",
+            status: "completed",
+            tx_reference: transaction.id,
+            subscription_id: sub.id,
+            metadata: { is_recurring: true }
+          }).select().single();
+
+          // C. Extended Smart Links (Fulfillment)
+          // We look for links previously created under this subscription or just general user links
+          const expiresAt = new Date(nextDate);
+          expiresAt.setDate(expiresAt.getDate() + 3); // Extra buffer
+
+          await supabase.from("smart_links")
+            .update({ expires_at: expiresAt.toISOString(), is_active: true, status: "active" })
+            .eq("user_id", sub.user_id)
+            .eq("is_active", true);
+
+          // D. Email Notification
+          await sendPaymentConfirmationEmail(
+            sub.profiles.email,
+            Number(sub.amount),
+            sub.currency,
+            transaction.id
+          );
+
+          console.log(`✅ Subscription ${sub.id} renewed successfully.`);
+        } else {
+          // B. Failed Charge (DECLINED, etc.)
+          console.warn(`⚠️ Payment declined for subscription ${sub.id}: ${transaction.status}`);
+          await handleBillingFailure(sub);
+        }
+      } catch (error) {
+        console.error(`❌ Fatal error charging subscription ${sub.id}:`, error);
+        await handleBillingFailure(sub);
+      }
+    }
+  } catch (error) {
+    console.error("Fatal error in billing cron job:", error);
+  }
+}
+
+async function handleBillingFailure(sub: any) {
+  const retries = (sub.payment_retries || 0) + 1;
+  const maxRetries = 3;
+
+  if (retries >= maxRetries) {
+    // Cancel subscription after 3 failures
+    await supabase.from("subscriptions").update({
+      status: "past_due",
+      payment_retries: retries
+    }).eq("id", sub.id);
+
+    // Deactivate links
+    await supabase.from("smart_links")
+      .update({ is_active: false, status: "expired" })
+      .eq("user_id", sub.user_id);
+      
+    console.log(`🚫 Subscription ${sub.id} marked as past_due after ${retries} failures.`);
+  } else {
+    // Just increment retries
+    await supabase.from("subscriptions").update({
+      payment_retries: retries
+    }).eq("id", sub.id);
+    console.log(`🔄 Retry ${retries}/${maxRetries} scheduled for tomorrow.`);
+  }
 }
 
 /**

@@ -18,7 +18,7 @@ export function LinkTypeSelector({ onConfirm, onClose }: LinkTypeSelectorProps) 
         className="absolute inset-0 bg-black/90 backdrop-blur-xl animate-fade-in"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-2xl bg-zinc-900 border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl animate-scale-up overflow-hidden">
+      <div className="relative w-full max-w-2xl bg-zinc-900 border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl animate-scale-up overflow-y-auto max-h-[90vh] custom-scrollbar">
         {/* Decorative backgrounds */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -mr-32 -mt-32" />
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] -ml-32 -mb-32" />

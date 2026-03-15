@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { paymentsService } from '@/services/payments.service';
 import toast from 'react-hot-toast';
 import { QRCodeSVG } from 'qrcode.react';
+import { supabase } from '@/services/supabase';
+import WompiCreditCardForm, { WompiPaymentData } from './WompiCreditCardForm';
 
 interface PaymentSelectorProps {
   onSelect?: (method: 'qr' | 'paypal' | 'crypto') => void;
@@ -137,6 +139,17 @@ export default function PaymentSelector({
 
 
 
+
+
+  // ─── USER DATA STATE ──────────────────────────────────────────
+  const [userEmail, setUserEmail] = useState<string>('');
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user?.email) setUserEmail(data.user.email);
+    });
+  }, []);
+
   // ─── POLLING: check payment status every 10s ─────────────────
   const startPolling = useCallback((paymentId: string) => {
     if (pollingRef.current) clearInterval(pollingRef.current);
@@ -159,6 +172,18 @@ export default function PaymentSelector({
       } catch { /* silently ignore poll errors */ }
     }, 10_000);
   }, [onSuccess]);
+
+  const handleWompiSubscription = async ({ token, acceptanceToken, email, amount }: WompiPaymentData) => {
+    return paymentsService.createWompiSubscription({
+      amount,
+      email,
+      token,
+      acceptanceToken,
+      linksData,
+      customDomain,
+      frequency: 'monthly' // Default for now
+    });
+  };
 
   const handleSelect = (method: 'qr' | 'paypal' | 'crypto') => {
     setPaymentMethod(method);
@@ -244,7 +269,12 @@ export default function PaymentSelector({
       {/* ── METHOD TABS ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
-          { id: 'qr', label: 'Pago QR (COP)', icon: 'qr_code_2', color: 'bg-red-500' },
+          { 
+            id: 'qr', 
+            label: isSubscription ? 'Tarjeta Crédito' : 'Pago QR (COP)', 
+            icon: isSubscription ? 'credit_card' : 'qr_code_2', 
+            color: 'bg-red-500' 
+          },
           { id: 'paypal', label: 'PayPal', icon: 'account_balance_wallet', color: 'bg-yellow-500' },
           { id: 'crypto', label: 'Criptomonedas', icon: 'currency_bitcoin', color: 'bg-orange-500' },
         ].map((m) => (
@@ -289,131 +319,156 @@ export default function PaymentSelector({
           </div>
         ) : (
           <>
-            {/* ── QR WOMPI ── */}
+            {/* ── WOMPI (QR or Card) ── */}
             {paymentMethod === 'qr' && (
               <div className="animate-fade-in space-y-6">
-                <div className="flex items-center justify-between mx-1">
-                  <h4 className="text-lg font-black text-white">Pagar con QR Wompi</h4>
-                  <span className="text-[10px] font-black bg-red-500/20 text-red-400 border border-red-500/20 px-3 py-1 rounded-full uppercase">
-                    Nequi · PSE · Tarjeta
-                  </span>
-                </div>
-
-                {/* Monto en USD */}
-                <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
-                  <span className="material-symbols-outlined text-red-400 text-xl">payments</span>
-                  <div>
-                    <p className="text-silver/40 text-[10px] uppercase tracking-widest font-bold">Total a pagar</p>
-                    <p className="text-white text-2xl font-black mt-0.5">${amount.toFixed(2)} USD</p>
-                  </div>
-                </div>
-
-                {/* Estado de carga */}
-                {wompiLoading && (
-                  <div className="flex flex-col items-center justify-center py-10 gap-3">
-                    <span className="material-symbols-outlined animate-spin text-4xl text-red-400">progress_activity</span>
-                    <p className="text-silver/50 text-sm font-bold">Generando QR de pago...</p>
-                  </div>
-                )}
-
-                {/* Error */}
-                {wompiError && !wompiLoading && (
-                  <div className="flex flex-col items-center justify-center py-8 gap-4 text-center">
-                    <span className="material-symbols-outlined text-4xl text-red-400">error</span>
-                    <p className="text-red-300 text-sm font-bold">{wompiError}</p>
-                    <button
-                      onClick={() => {
-                        setWompiError(null);
-                        setWompiLoading(true);
-                        paymentsService.getWompiSignature(amount, 'COP')
-                          .then(setWompiData)
-                          .catch(() => setWompiError('No se pudo generar el QR. Intenta de nuevo.'))
-                          .finally(() => setWompiLoading(false));
-                      }}
-                      className="px-6 py-2.5 bg-red-500/20 border border-red-500/30 text-red-400 font-bold text-sm rounded-xl hover:bg-red-500/30 transition-all flex items-center gap-2"
-                    >
-                      <span className="material-symbols-outlined text-base">refresh</span>
-                      Reintentar
-                    </button>
-                  </div>
-                )}
-
-                {/* QR listo */}
-                {wompiData && !wompiLoading && (
-                  <div className="grid md:grid-cols-2 gap-8 items-center">
-                    {/* QR Visual */}
-                    <div className="flex flex-col items-center gap-4">
-                      <div className="bg-white p-4 rounded-2xl shadow-xl shadow-red-500/10 relative">
-                        <QRCodeSVG
-                          value={wompiCheckoutUrl}
-                          size={200}
-                          level="M"
-                          includeMargin={false}
-                        />
-                        {/* Wompi logo overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="bg-white rounded-lg p-1 shadow-sm">
-                            <div className="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
-                              <span className="material-symbols-outlined text-white text-sm">qr_code_2</span>
-                            </div>
-                          </div>
-                        </div>
+                {isSubscription ? (
+                   <div className="space-y-6">
+                      <div className="flex items-center justify-between mx-1">
+                        <h4 className="text-lg font-black text-white">Suscripción con Tarjeta</h4>
+                        <span className="text-[10px] font-black bg-red-500/20 text-red-400 border border-red-500/20 px-3 py-1 rounded-full uppercase">
+                           Cobro automático mensual
+                        </span>
                       </div>
-                      <p className="text-[10px] text-silver/40 font-bold uppercase tracking-widest text-center">
-                        Escanea con tu celular
-                      </p>
+                      
+                      <WompiCreditCardForm 
+                        amount={amount}
+                        email={userEmail}
+                        onSuccess={() => {
+                          setPaymentSuccess(true);
+                          if (onSuccess) onSuccess();
+                        }}
+                        onProcessPayment={handleWompiSubscription}
+                        linksData={linksData}
+                        customDomain={customDomain}
+                      />
+                   </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between mx-1">
+                      <h4 className="text-lg font-black text-white">Pagar con QR Wompi</h4>
+                      <span className="text-[10px] font-black bg-red-500/20 text-red-400 border border-red-500/20 px-3 py-1 rounded-full uppercase">
+                        Nequi · PSE · Tarjeta
+                      </span>
                     </div>
 
-                    {/* Info */}
-                    <div className="space-y-4">
-                      <div className="space-y-3">
-                        <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
-                          <span className="material-symbols-outlined text-green-400 text-base">check_circle</span>
-                          <span className="text-xs text-silver/70 font-bold">Nequi</span>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
-                          <span className="material-symbols-outlined text-blue-400 text-base">check_circle</span>
-                          <span className="text-xs text-silver/70 font-bold">PSE — Transferencia bancaria</span>
-                        </div>
-                        <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
-                          <span className="material-symbols-outlined text-purple-400 text-base">check_circle</span>
-                          <span className="text-xs text-silver/70 font-bold">Tarjeta Crédito / Débito</span>
-                        </div>
+                    {/* Monto en USD */}
+                    <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+                      <span className="material-symbols-outlined text-red-400 text-xl">payments</span>
+                      <div>
+                        <p className="text-silver/40 text-[10px] uppercase tracking-widest font-bold">Total a pagar</p>
+                        <p className="text-white text-2xl font-black mt-0.5">${amount.toFixed(2)} USD</p>
                       </div>
+                    </div>
 
-                      <a
-                        href={wompiCheckoutUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="w-full flex items-center justify-center gap-2 py-3.5 bg-red-500 hover:bg-red-600 text-white font-black text-sm rounded-xl transition-all shadow-lg shadow-red-500/20 uppercase tracking-wider"
-                      >
-                        <span className="material-symbols-outlined text-base">open_in_new</span>
-                        Abrir en navegador
-                      </a>
+                    {/* Estado de carga */}
+                    {wompiLoading && (
+                      <div className="flex flex-col items-center justify-center py-10 gap-3">
+                        <span className="material-symbols-outlined animate-spin text-4xl text-red-400">progress_activity</span>
+                        <p className="text-silver/50 text-sm font-bold">Generando QR de pago...</p>
+                      </div>
+                    )}
 
-                      <div className="flex items-center justify-between pt-1">
-                        <p className="text-[10px] text-silver/25 leading-relaxed">
-                          Si el QR no funciona, genera uno nuevo
-                        </p>
+                    {/* Error */}
+                    {wompiError && !wompiLoading && (
+                      <div className="flex flex-col items-center justify-center py-8 gap-4 text-center">
+                        <span className="material-symbols-outlined text-4xl text-red-400">error</span>
+                        <p className="text-red-300 text-sm font-bold">{wompiError}</p>
                         <button
                           onClick={() => {
-                            if (!amount || amount <= 0) return;
-                            setWompiData(null);
                             setWompiError(null);
                             setWompiLoading(true);
                             paymentsService.getWompiSignature(amount, 'COP')
                               .then(setWompiData)
-                              .catch(() => setWompiError('No se pudo regenerar el QR. Intenta de nuevo.'))
+                              .catch(() => setWompiError('No se pudo generar el QR. Intenta de nuevo.'))
                               .finally(() => setWompiLoading(false));
                           }}
-                          className="flex items-center gap-1.5 text-[10px] font-black text-silver/40 hover:text-red-400 transition-all border border-white/10 hover:border-red-500/30 px-3 py-1.5 rounded-lg"
+                          className="px-6 py-2.5 bg-red-500/20 border border-red-500/30 text-red-400 font-bold text-sm rounded-xl hover:bg-red-500/30 transition-all flex items-center gap-2"
                         >
-                          <span className="material-symbols-outlined text-sm">refresh</span>
-                          Nuevo QR
+                          <span className="material-symbols-outlined text-base">refresh</span>
+                          Reintentar
                         </button>
                       </div>
-                    </div>
-                  </div>
+                    )}
+
+                    {/* QR listo */}
+                    {wompiData && !wompiLoading && (
+                      <div className="grid md:grid-cols-2 gap-8 items-center">
+                        {/* QR Visual */}
+                        <div className="flex flex-col items-center gap-4">
+                          <div className="bg-white p-4 rounded-2xl shadow-xl shadow-red-500/10 relative">
+                            <QRCodeSVG
+                              value={wompiCheckoutUrl}
+                              size={200}
+                              level="M"
+                              includeMargin={false}
+                            />
+                            {/* Wompi logo overlay */}
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                              <div className="bg-white rounded-lg p-1 shadow-sm">
+                                <div className="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                                  <span className="material-symbols-outlined text-white text-sm">qr_code_2</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          <p className="text-[10px] text-silver/40 font-bold uppercase tracking-widest text-center">
+                            Escanea con tu celular
+                          </p>
+                        </div>
+
+                        {/* Info */}
+                        <div className="space-y-4">
+                          <div className="space-y-3">
+                            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
+                              <span className="material-symbols-outlined text-green-400 text-base">check_circle</span>
+                              <span className="text-xs text-silver/70 font-bold">Nequi</span>
+                            </div>
+                            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
+                              <span className="material-symbols-outlined text-blue-400 text-base">check_circle</span>
+                              <span className="text-xs text-silver/70 font-bold">PSE — Transferencia bancaria</span>
+                            </div>
+                            <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
+                              <span className="material-symbols-outlined text-purple-400 text-base">check_circle</span>
+                              <span className="text-xs text-silver/70 font-bold">Tarjeta Crédito / Débito</span>
+                            </div>
+                          </div>
+
+                          <a
+                            href={wompiCheckoutUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full flex items-center justify-center gap-2 py-3.5 bg-red-500 hover:bg-red-600 text-white font-black text-sm rounded-xl transition-all shadow-lg shadow-red-500/20 uppercase tracking-wider"
+                          >
+                            <span className="material-symbols-outlined text-base">open_in_new</span>
+                            Abrir en navegador
+                          </a>
+
+                          <div className="flex items-center justify-between pt-1">
+                            <p className="text-[10px] text-silver/25 leading-relaxed">
+                              Si el QR no funciona, genera uno nuevo
+                            </p>
+                            <button
+                              onClick={() => {
+                                if (!amount || amount <= 0) return;
+                                setWompiData(null);
+                                setWompiError(null);
+                                setWompiLoading(true);
+                                paymentsService.getWompiSignature(amount, 'COP')
+                                  .then(setWompiData)
+                                  .catch(() => setWompiError('No se pudo regenerar el QR. Intenta de nuevo.'))
+                                  .finally(() => setWompiLoading(false));
+                              }}
+                              className="flex items-center gap-1.5 text-[10px] font-black text-silver/40 hover:text-red-400 transition-all border border-white/10 hover:border-red-500/30 px-3 py-1.5 rounded-lg"
+                            >
+                              <span className="material-symbols-outlined text-sm">refresh</span>
+                              Nuevo QR
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}

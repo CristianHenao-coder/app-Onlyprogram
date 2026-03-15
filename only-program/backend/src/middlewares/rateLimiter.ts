@@ -14,8 +14,8 @@ export const generalLimiter = rateLimit({
 
 // Limitador estricto para rutas de autenticación y pagos
 export const strictLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hora
-  max: 10, // Limita cada IP a 10 solicitudes de auth/pago por hora
+  windowMs: 15 * 60 * 1000, // 15 minutos (antes 1 hora)
+  max: 100, // Limita cada IP a 100 solicitudes (antes 10)
   message: {
     error: "Se ha excedido el límite de intentos. Por seguridad, su IP ha sido restringida temporalmente.",
     code: "STRICT_RATE_LIMIT_EXCEEDED",

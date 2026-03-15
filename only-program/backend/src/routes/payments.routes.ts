@@ -410,73 +410,96 @@ router.post("/paypal/create-subscription", async (req: AuthRequest, res) => {
 
 // (get-signature movido arriba del middleware de auth)
 
-router.post("/wompi/transaction", async (req: AuthRequest, res) => {
+router.get("/wompi/acceptance-token", async (_req, res) => {
   try {
-    const {
-      amount,
-      email,
-      token,
-      installments,
-      acceptanceToken,
-      linksData,
-      customDomain,
-    } = req.body;
+    const { WompiService } = await import("../services/wompi.service");
+    const token = await WompiService.getAcceptanceToken();
+    res.json({ acceptance_token: token });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-    console.log(
-      "💰 Wompi Transaction Initiated. Body:",
-      JSON.stringify(req.body, null, 2),
-    );
+router.post("/wompi/create-subscription", async (req: AuthRequest, res) => {
+  try {
+    const { amount, email, token, acceptanceToken, linksData, customDomain, frequency = "monthly" } = req.body;
 
-    if (!amount)
-      return res.status(400).json({ error: "Missing required field: amount" });
-    if (!token)
-      return res.status(400).json({ error: "Missing required field: token" });
-    if (!email)
-      return res.status(400).json({ error: "Missing required field: email" });
-    if (!acceptanceToken)
-      return res
-        .status(400)
-        .json({ error: "Missing required field: acceptanceToken" });
+    if (!amount || !token || !email || !acceptanceToken) {
+      return res.status(400).json({ error: "Missing required fields for Wompi subscription" });
+    }
 
     const { WompiService } = await import("../services/wompi.service");
-    const transaction = await WompiService.createTransaction({
-      amountUSD: amount,
-      email,
+
+    /**
+     * PASS 1: Create Payment Source (Tokenizer card for recurring use)
+     */
+    const paymentSource = await WompiService.createPaymentSource({
       token,
-      installments,
-      acceptanceToken,
+      customerEmail: email,
+      acceptanceToken
     });
 
+    /**
+     * PASS 2: Charge the first period immediately
+     */
+    const reference = WompiService.generateReference();
+    const transaction = await WompiService.chargePaymentSource({
+      amountUSD: amount,
+      email,
+      paymentSourceId: paymentSource.id,
+      reference
+    });
+
+    /**
+     * PASS 3: Save Subscription and Payment Record
+     */
     if (req.user) {
-      const status =
-        transaction.status === "APPROVED" ? "completed" : "pending";
-      const { error } = await supabase.from("payments").insert({
+      const nextDate = new Date();
+      if (frequency === "yearly") nextDate.setFullYear(nextDate.getFullYear() + 1);
+      else nextDate.setMonth(nextDate.getMonth() + 1);
+
+      // Create Subscription record
+      const { data: subscription, error: subError } = await supabase
+        .from("subscriptions")
+        .insert({
+          user_id: req.user.id,
+          wompi_token: paymentSource.id.toString(), // We store the source ID
+          wompi_acceptance_token: acceptanceToken,
+          status: transaction.status === "APPROVED" ? "active" : "past_due",
+          amount: amount,
+          currency: "USD",
+          frequency: frequency,
+          last_charged_at: new Date().toISOString(),
+          next_billing_date: nextDate.toISOString()
+        })
+        .select()
+        .single();
+
+      if (subError) console.error("Error creating subscription record:", subError);
+
+      // Create initial payment record
+      await supabase.from("payments").insert({
         user_id: req.user.id,
         amount,
         currency: "USD",
         provider: "wompi",
-        status,
+        status: transaction.status === "APPROVED" ? "completed" : "pending",
         tx_reference: transaction.id,
+        subscription_id: subscription?.id || null,
         created_at: new Date().toISOString(),
-        metadata: { linksData, customDomain },
+        metadata: { linksData, customDomain, isSubscription: true }
       });
-      if (error) console.error("Error saving payment:", error);
 
-      if (status === "completed") {
-        const { FulfillmentService } =
-          await import("../services/fulfillment.service");
-        await FulfillmentService.activateLinkProduct(
-          req.user.id,
-          transaction.id,
-          amount,
-          "USD",
-        );
+      // Fulfillment
+      if (transaction.status === "APPROVED") {
+        const { FulfillmentService } = await import("../services/fulfillment.service");
+        await FulfillmentService.activateLinkProduct(req.user.id, transaction.id, amount, "USD");
       }
     }
 
     res.json(transaction);
   } catch (error: any) {
-    console.error("Error creating Wompi Transaction:", error);
+    console.error("Error creating Wompi subscription:", error);
     res.status(500).json({ error: error.message });
   }
 });

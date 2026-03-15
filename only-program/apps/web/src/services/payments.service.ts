@@ -61,6 +61,33 @@ export const paymentsService = {
     return handleResponse(response);
   },
 
+  async createWompiSubscription(data: {
+    amount: number;
+    email: string;
+    token: string;
+    acceptanceToken: string;
+    linksData?: any[];
+    customDomain?: string;
+    frequency?: 'monthly' | 'yearly';
+  }) {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_URL}/payments/wompi/create-subscription`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+  },
+
+  async getWompiAcceptanceToken() {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_URL}/payments/wompi/acceptance-token`, {
+      method: "GET",
+      headers: { Authorization: headers.Authorization },
+    });
+    return handleResponse(response);
+  },
+
   async getHistory() {
     const headers = await getAuthHeaders();
     const response = await fetch(`${API_URL}/payments`, {

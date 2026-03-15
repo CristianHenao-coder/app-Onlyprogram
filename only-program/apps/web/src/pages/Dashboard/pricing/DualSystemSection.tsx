@@ -1,5 +1,4 @@
 import React from "react";
-import instagramLogo from "@/assets/animations/instagram.png";
 import tiktokLogo from "@/assets/animations/tik-tok.png";
 
 interface DualSystemSectionProps {
@@ -146,20 +145,24 @@ const DualSystemSection: React.FC<DualSystemSectionProps> = ({
                       </div>
                       <div className="px-3 py-1.5 bg-[#0A0A0A] border border-rose-500/30 text-[10px] text-rose-400 font-bold rounded shadow-lg text-center leading-tight">Landing Page<br/>VIP</div>
                       <div className="h-4 w-px bg-rose-500/50" />
-                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border-2 border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.4)]">
-                        <span className="text-[8px] font-black text-blue-500">OF</span>
+                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border-2 border-[#00aff0] shadow-[0_0_15px_rgba(0,175,240,0.4)]">
+                        <svg className="w-4 h-4 text-[#00aff0] fill-current" viewBox="0 0 24 24">
+                          <path d="M12,14.66C8.32,14.66,5.33,11.67,5.33,8S8.32,1.33,12,1.33S18.66,4.32,18.66,8S15.68,14.66,12,14.66z M12,4.66c-1.84,0-3.33,1.5-3.33,3.33S10.16,11.33,12,11.33s3.33-1.5,3.33-3.33S13.84,4.66,12,4.66z M12,22.66c-3.68,0-6.66-2.98-6.66-6.66c0-0.74,0.12-1.45,0.34-2.11c0.16-0.49,0.59-0.84,1.1-0.9c0.51-0.06,1.01,0.17,1.26,0.61c0.41,0.72,0.63,1.54,0.63,2.4c0,2.02,1.64,3.66,3.66,3.66s3.66-1.64,3.66-3.66c0-0.86-0.22-1.68-0.63-2.4c-0.25-0.44-0.17-0.99,0.19-1.34c0.36-0.35,0.91-0.4,1.32-0.12c0.88,0.6,1.45,1.6,1.45,2.73C18.66,19.68,15.68,22.66,12,22.66z" />
+                        </svg>
                       </div>
                     </div>
 
                     {/* Meta Path */}
                     <div className="flex flex-col items-center gap-3">
                       <div className="w-12 h-12 rounded-xl bg-black border border-blue-500/50 flex items-center justify-center p-2 shadow-[0_0_15px_rgba(59,130,246,0.2)]">
-                        <img src={instagramLogo} alt="Meta" className="w-full h-full object-contain opacity-90" />
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Instagram_icon.png/1024px-Instagram_icon.png" alt="Meta" className="w-full h-full object-contain opacity-90" />
                       </div>
                       <div className="px-3 py-1.5 bg-[#0A0A0A] border border-blue-500/30 text-[10px] text-blue-400 font-bold rounded shadow-lg text-center leading-tight">Cloaking<br/>Link Directo</div>
                       <div className="h-4 w-px bg-blue-500/50" />
-                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border-2 border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.4)]">
-                        <span className="text-[8px] font-black text-blue-500">OF</span>
+                      <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center border-2 border-[#00aff0] shadow-[0_0_15px_rgba(0,175,240,0.4)]">
+                        <svg className="w-4 h-4 text-[#00aff0] fill-current" viewBox="0 0 24 24">
+                          <path d="M12,14.66C8.32,14.66,5.33,11.67,5.33,8S8.32,1.33,12,1.33S18.66,4.32,18.66,8S15.68,14.66,12,14.66z M12,4.66c-1.84,0-3.33,1.5-3.33,3.33S10.16,11.33,12,11.33s3.33-1.5,3.33-3.33S13.84,4.66,12,4.66z M12,22.66c-3.68,0-6.66-2.98-6.66-6.66c0-0.74,0.12-1.45,0.34-2.11c0.16-0.49,0.59-0.84,1.1-0.9c0.51-0.06,1.01,0.17,1.26,0.61c0.41,0.72,0.63,1.54,0.63,2.4c0,2.02,1.64,3.66,3.66,3.66s3.66-1.64,3.66-3.66c0-0.86-0.22-1.68-0.63-2.4c-0.25-0.44-0.17-0.99,0.19-1.34c0.36-0.35,0.91-0.4,1.32-0.12c0.88,0.6,1.45,1.6,1.45,2.73C18.66,19.68,15.68,22.66,12,22.66z" />
+                        </svg>
                       </div>
                     </div>
                  </div>
@@ -198,7 +201,9 @@ const DualSystemSection: React.FC<DualSystemSectionProps> = ({
                    </div>
                    <div className="w-[100px] h-[100px] bg-white border-[3px] border-green-500 rounded-xl flex flex-col items-center justify-center p-2 shadow-[0_0_20px_rgba(34,197,94,0.4)] relative">
                       <div className="absolute -top-3 bg-green-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase">Acceso Libre</div>
-                      <span className="text-[14px] font-black text-blue-500 mt-2">Only<span className="text-black">Fans</span></span>
+                      <svg className="w-8 h-8 text-[#00aff0] fill-current mt-2" viewBox="0 0 24 24">
+                        <path d="M12,14.66C8.32,14.66,5.33,11.67,5.33,8S8.32,1.33,12,1.33S18.66,4.32,18.66,8S15.68,14.66,12,14.66z M12,4.66c-1.84,0-3.33,1.5-3.33,3.33S10.16,11.33,12,11.33s3.33-1.5,3.33-3.33S13.84,4.66,12,4.66z M12,22.66c-3.68,0-6.66-2.98-6.66-6.66c0-0.74,0.12-1.45,0.34-2.11c0.16-0.49,0.59-0.84,1.1-0.9c0.51-0.06,1.01,0.17,1.26,0.61c0.41,0.72,0.63,1.54,0.63,2.4c0,2.02,1.64,3.66,3.66,3.66s3.66-1.64,3.66-3.66c0-0.86-0.22-1.68-0.63-2.4c-0.25-0.44-0.17-0.99,0.19-1.34c0.36-0.35,0.91-0.4,1.32-0.12c0.88,0.6,1.45,1.6,1.45,2.73C18.66,19.68,15.68,22.66,12,22.66z" />
+                      </svg>
                       <span className="text-[8px] font-black text-white bg-red-600 px-1 py-0.5 mt-1 rounded uppercase">+18 Explícito</span>
                    </div>
                  </div>
@@ -234,9 +239,11 @@ const DualSystemSection: React.FC<DualSystemSectionProps> = ({
 
                  <div className="h-10 w-px bg-blue-500/50 my-1 animate-pulse shadow-[0_0_10px_rgba(59,130,246,0.3)]" />
 
-                 <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center border-[3px] border-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.4)]">
-                    <span className="text-xs font-black text-blue-500">OF</span>
-                 </div>
+                  <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center border-[3px] border-[#00aff0] shadow-[0_0_20px_rgba(0,175,240,0.4)]">
+                    <svg className="w-8 h-8 text-[#00aff0] fill-current" viewBox="0 0 24 24">
+                      <path d="M12,14.66C8.32,14.66,5.33,11.67,5.33,8S8.32,1.33,12,1.33S18.66,4.32,18.66,8S15.68,14.66,12,14.66z M12,4.66c-1.84,0-3.33,1.5-3.33,3.33S10.16,11.33,12,11.33s3.33-1.5,3.33-3.33S13.84,4.66,12,4.66z M12,22.66c-3.68,0-6.66-2.98-6.66-6.66c0-0.74,0.12-1.45,0.34-2.11c0.16-0.49,0.59-0.84,1.1-0.9c0.51-0.06,1.01,0.17,1.26,0.61c0.41,0.72,0.63,1.54,0.63,2.4c0,2.02,1.64,3.66,3.66,3.66s3.66-1.64,3.66-3.66c0-0.86-0.22-1.68-0.63-2.4c-0.25-0.44-0.17-0.99,0.19-1.34c0.36-0.35,0.91-0.4,1.32-0.12c0.88,0.6,1.45,1.6,1.45,2.73C18.66,19.68,15.68,22.66,12,22.66z" />
+                    </svg>
+                  </div>
               </div>
             )}
            </div>
