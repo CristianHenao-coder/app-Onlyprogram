@@ -9,7 +9,7 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { LinkPage, Folder } from './types';
-import DraggableLinkCard from './DraggableLinkCard';
+import LinkCard from './components/LinkCard';
 import { FolderSidebar } from './FolderSidebar';
 
 interface LinkListViewProps {
@@ -111,7 +111,7 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
                   .map((page) => {
                     const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
                     return (
-                      <DraggableLinkCard 
+                      <LinkCard 
                         key={page.id} 
                         page={page} 
                         folders={folders} 
@@ -139,7 +139,7 @@ export const LinkListView: React.FC<LinkListViewProps> = ({
                   .map((page) => {
                     const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
                     return (
-                      <DraggableLinkCard 
+                      <LinkCard 
                         key={page.id} 
                         page={page} 
                         folders={folders} 

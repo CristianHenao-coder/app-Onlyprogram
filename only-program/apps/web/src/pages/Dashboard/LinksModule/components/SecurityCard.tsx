@@ -1,17 +1,19 @@
 import React from "react";
 import { useTranslation } from "@/contexts/I18nContext";
-import { LinkPage } from "./types";
+import { LinkPage } from "../types";
+import { useBots } from "@/hooks/useBots";
 
-interface SecuritySectionProps {
+interface SecurityCardProps {
   currentPage: LinkPage;
   handleUpdatePage: (field: string, value: any) => void;
 }
 
-const SecuritySection: React.FC<SecuritySectionProps> = ({
+const SecurityCard: React.FC<SecurityCardProps> = ({
   currentPage,
   handleUpdatePage,
 }) => {
   const { } = useTranslation();
+  const { geoblocking, deviceRedirections, addBlockedCountry, removeBlockedCountry, updateDeviceRedirection } = useBots(currentPage, handleUpdatePage);
 
   return (
     <section className="bg-white/5 border-y border-primary/20 overflow-hidden shadow-[0_0_20px_rgba(37,99,235,0.05)] mt-12">
@@ -31,24 +33,18 @@ const SecuritySection: React.FC<SecuritySectionProps> = ({
             <p className="text-[10px] text-silver/40">Bloquea el acceso a este link desde países específicos (ej: auditores, competidores).</p>
           </div>
           <div className="flex flex-wrap gap-2 mb-3">
-            {(currentPage.security_config?.geoblocking || []).map((code: string) => (
+            {geoblocking.map((code: string) => (
               <div key={code} className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 px-3 py-1.5 rounded-xl">
                 <span className="text-[10px] font-black text-red-100 uppercase">{code}</span>
                 <button
-                  onClick={() => {
-                    const current = currentPage.security_config?.geoblocking || [];
-                    handleUpdatePage("security_config", {
-                      ...currentPage.security_config,
-                      geoblocking: current.filter((c: string) => c !== code)
-                    });
-                  }}
+                  onClick={() => removeBlockedCountry(code)}
                   className="material-symbols-outlined text-sm text-red-500 hover:text-red-400 transition-colors"
                 >
                   close
                 </button>
               </div>
             ))}
-            {(!currentPage.security_config?.geoblocking || currentPage.security_config.geoblocking.length === 0) && (
+            {geoblocking.length === 0 && (
               <p className="text-[10px] text-silver/20 italic">No hay países bloqueados. Acceso global permitido.</p>
             )}
           </div>
@@ -56,12 +52,7 @@ const SecuritySection: React.FC<SecuritySectionProps> = ({
             <select
               onChange={(e) => {
                 if (!e.target.value) return;
-                const current = currentPage.security_config?.geoblocking || [];
-                if (current.includes(e.target.value)) return;
-                handleUpdatePage("security_config", {
-                  ...currentPage.security_config,
-                  geoblocking: [...current, e.target.value]
-                });
+                addBlockedCountry(e.target.value);
                 e.target.value = "";
               }}
               className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-xs font-bold text-silver focus:outline-none focus:border-red-500/50"
@@ -94,14 +85,8 @@ const SecuritySection: React.FC<SecuritySectionProps> = ({
               <input
                 type="url"
                 placeholder="https://..."
-                value={currentPage.security_config?.device_redirections?.ios || ""}
-                onChange={(e) => handleUpdatePage("security_config", {
-                  ...currentPage.security_config,
-                  device_redirections: {
-                    ...currentPage.security_config?.device_redirections,
-                    ios: e.target.value
-                  }
-                })}
+                value={deviceRedirections.ios || ""}
+                onChange={(e) => updateDeviceRedirection("ios", e.target.value)}
                 className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-primary transition-all"
               />
             </div>
@@ -110,14 +95,8 @@ const SecuritySection: React.FC<SecuritySectionProps> = ({
               <input
                 type="url"
                 placeholder="https://..."
-                value={currentPage.security_config?.device_redirections?.android || ""}
-                onChange={(e) => handleUpdatePage("security_config", {
-                  ...currentPage.security_config,
-                  device_redirections: {
-                    ...currentPage.security_config?.device_redirections,
-                    android: e.target.value
-                  }
-                })}
+                value={deviceRedirections.android || ""}
+                onChange={(e) => updateDeviceRedirection("android", e.target.value)}
                 className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-primary transition-all"
               />
             </div>
@@ -128,4 +107,4 @@ const SecuritySection: React.FC<SecuritySectionProps> = ({
   );
 };
 
-export default SecuritySection;
+export default SecurityCard;

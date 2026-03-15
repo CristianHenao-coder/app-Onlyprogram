@@ -4,8 +4,8 @@ import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable"
 import { useTranslation } from "@/contexts/I18nContext";
 import { LinkPage, SocialType } from "./types";
 import { SortableButton } from "./SortableButton";
-import SecuritySection from "./SecuritySection";
-import DesktopFooter from "./DesktopFooter";
+import SecurityCard from "./components/SecurityCard";
+import DesktopFooter from "./components/DesktopFooter";
 import ProfileSettings from "./ProfileSettings";
 import DesignSettings from "./DesignSettings";
 import ButtonEditorFields from "./ButtonEditorFields";
@@ -569,7 +569,7 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
                     </>
                   )}
 
-                  <SecuritySection
+                  <SecurityCard
                     currentPage={currentPage}
                     handleUpdatePage={handleUpdatePage}
                   />

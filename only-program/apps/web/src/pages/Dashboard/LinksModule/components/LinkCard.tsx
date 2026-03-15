@@ -1,9 +1,9 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { LinkPage, Folder, getBackgroundStyle } from './types';
+import { LinkPage, Folder, getBackgroundStyle } from '../types';
 
-interface DraggableLinkCardProps {
+interface LinkCardProps {
   page: LinkPage;
   folders: Folder[];
   t: any;
@@ -13,7 +13,7 @@ interface DraggableLinkCardProps {
   hasPair?: boolean;
 }
 
-const DraggableLinkCard: React.FC<DraggableLinkCardProps> = ({
+const LinkCard: React.FC<LinkCardProps> = ({
   page,
   folders,
   t,
@@ -206,5 +206,5 @@ const DraggableLinkCard: React.FC<DraggableLinkCardProps> = ({
   );
 };
 
-export default DraggableLinkCard;
+export default LinkCard;
 

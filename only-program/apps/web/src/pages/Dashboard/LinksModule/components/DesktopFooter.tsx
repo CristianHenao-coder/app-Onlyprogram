@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "@/contexts/I18nContext";
-import { LinkPage } from "./types";
+import { LinkPage } from "../types";
 
 interface DesktopFooterProps {
   currentPage: LinkPage;

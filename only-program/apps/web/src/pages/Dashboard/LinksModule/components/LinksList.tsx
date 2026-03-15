@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { useTranslation } from "@/contexts/I18nContext";
-import { LinkPage, Folder } from "./types";
-import DraggableLinkCard from "./DraggableLinkCard";
-import DroppableFolder from "./DroppableFolder";
+import { LinkPage, Folder } from "../types";
+import LinkCard from "./LinkCard";
+import DroppableFolder from "../DroppableFolder";
 
-interface ButtonsListProps {
+interface LinksListProps {
   pages: LinkPage[];
   folders: Folder[];
   folderFilter: string | null;
@@ -20,7 +20,7 @@ interface ButtonsListProps {
   setInactiveAlertPageId: (id: string) => void;
 }
 
-const ButtonsList: React.FC<ButtonsListProps> = ({
+const LinksList: React.FC<LinksListProps> = ({
   pages,
   folders,
   folderFilter,
@@ -205,7 +205,7 @@ const ButtonsList: React.FC<ButtonsListProps> = ({
                     const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
 
                     return (
-                      <DraggableLinkCard
+                      <LinkCard
                         key={page.id}
                         page={page}
                         folders={folders}
@@ -235,7 +235,7 @@ const ButtonsList: React.FC<ButtonsListProps> = ({
                     const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
 
                     return (
-                      <DraggableLinkCard
+                      <LinkCard
                         key={page.id}
                         page={page}
                         folders={folders}
@@ -320,4 +320,4 @@ const ButtonsList: React.FC<ButtonsListProps> = ({
   );
 };
 
-export default ButtonsList;
+export default LinksList;

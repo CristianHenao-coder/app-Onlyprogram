@@ -19,6 +19,7 @@ import domainsRoutes from "./routes/domains.routes";
 import linkProfilesRoutes from "./routes/linkProfiles.routes";
 import contactRoutes from "./routes/contact.routes";
 import { startBillingCron } from "./cron/billing.cron";
+import { generalLimiter, strictLimiter, linkCreationLimiter } from "./middlewares/rateLimiter";
 
 const app = express();
 
@@ -70,15 +71,17 @@ app.get("/health", (req: Request, res: Response) => {
 });
 
 // Rutas de la API
-app.use("/api/auth", authRoutes);
-app.use("/api/links", linksRoutes);
-app.use("/api/payments", paymentsRoutes);
+app.use("/api", generalLimiter); // Aplicar límite general a todas las rutas /api
+
+app.use("/api/auth", strictLimiter, authRoutes);
+app.use("/api/links", linkCreationLimiter, linksRoutes);
+app.use("/api/payments", strictLimiter, paymentsRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/config", configRoutes);
 app.use("/api/wompi", wompiRoutes);
-app.use("/api/link-profiles", linkProfilesRoutes);
-app.use("/api/contact", contactRoutes); // Formulario de contacto público
+app.use("/api/link-profiles", strictLimiter, linkProfilesRoutes);
+app.use("/api/contact", strictLimiter, contactRoutes); // Formulario de contacto público
 
 // Ruta 404
 app.use((req: Request, res: Response) => {
