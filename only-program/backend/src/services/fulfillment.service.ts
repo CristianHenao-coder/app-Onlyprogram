@@ -147,8 +147,8 @@ export class FulfillmentService {
       const { data: userData } = await supabase.auth.admin.getUserById(userId);
       const userEmail = userData?.user?.email;
 
-      if (userEmail && amount > 0) {
-        console.log(`📧 Enviando confirmación de pago a ${userEmail}`);
+      if (userEmail) {
+        console.log(`📧 Enviando confirmación de activación a ${userEmail} (monto: ${amount})`);
         await sendPaymentConfirmationEmail(
           userEmail,
           amount,
@@ -156,7 +156,7 @@ export class FulfillmentService {
           paymentId,
         );
       } else {
-        console.warn(`⚠️ No se pudo enviar email: email=${userEmail}, amount=${amount}`);
+        console.warn(`⚠️ No se pudo enviar email: email=${userEmail}`);
       }
 
       return { success: true, activatedCount };

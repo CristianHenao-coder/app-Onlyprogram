@@ -576,6 +576,62 @@ router.get("/nowpayments/status/:paymentId", async (req: AuthRequest, res) => {
 });
 
 // ─────────────────────────────────────────────────────────────
+// FREE CHECKOUT (100% DISCOUNT)
+// ─────────────────────────────────────────────────────────────
+router.post("/checkout-zero", async (req: AuthRequest, res) => {
+  try {
+    const { linksData, customDomain } = req.body;
+    if (!req.user) return res.status(401).json({ error: "Unauthorized" });
+
+    console.log(`🎁 Processing zero-amount checkout for user ${req.user.id}`);
+
+    const orderId = uuidv4();
+
+    // 1. Create a completed payment record for $0
+    const { error: payError } = await supabase.from("payments").insert({
+      id: orderId,
+      user_id: req.user.id,
+      amount: 0,
+      currency: "USD",
+      provider: "onlyprogram", // Internal provider for free/discounted orders
+      status: "completed",
+      tx_reference: `FREE_${orderId}`,
+      created_at: new Date().toISOString(),
+      confirmed_at: new Date().toISOString(),
+      metadata: { linksData, customDomain, isFreeCheckout: true },
+    });
+
+    if (payError) {
+      console.error("Error creating zero payment record:", payError);
+      return res.status(500).json({ error: "Failed to create payment record" });
+    }
+
+    // 2. FULFILLMENT: Activate links immediately
+    const { FulfillmentService } = await import("../services/fulfillment.service");
+    const result = await FulfillmentService.activateLinkProduct(
+      req.user.id,
+      orderId,
+      0,
+      "USD"
+    );
+
+    if (!result.success) {
+      console.error("Fulfillment error for zero checkout:", result.error);
+      return res.status(500).json({ error: "Fulfillment failed" });
+    }
+
+    res.json({
+      success: true,
+      message: "Checkout completed successfully",
+      orderId,
+    });
+  } catch (error: any) {
+    console.error("Error in checkout-zero:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
 // HISTORIAL DE PAGOS
 // ─────────────────────────────────────────────────────────────
 router.get("/", async (req: AuthRequest, res) => {

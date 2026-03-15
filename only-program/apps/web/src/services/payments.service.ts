@@ -166,6 +166,24 @@ export const paymentsService = {
     return handleResponse(response);
   },
 
+  /** Realiza el proceso de activación para órdenes con 100% de descuento ($0) */
+  async checkoutZero(
+    linksData?: any[],
+    customDomain?: string,
+  ): Promise<{
+    success: boolean;
+    message: string;
+    orderId: string;
+  }> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_URL}/payments/checkout-zero`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ linksData, customDomain }),
+    });
+    return handleResponse(response);
+  },
+
   /** Activa el plan gratuito de 3 días (uso único por cuenta) */
   async activateFreeTrial(
     linksData?: any[],

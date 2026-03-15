@@ -9,6 +9,7 @@ import DesktopFooter from "./DesktopFooter";
 import ProfileSettings from "./ProfileSettings";
 import DesignSettings from "./DesignSettings";
 import ButtonEditorFields from "./ButtonEditorFields";
+import { DirectModeSettings } from "./DirectModeSettings";
 interface LinkEditorProps {
   currentPage: LinkPage;
   selectedPageId: string;
@@ -69,7 +70,7 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
   sidebarCollapsed,
   setSidebarCollapsed,
   view: _view,
-  setView,
+  setView: _setView,
   folderFilter,
   showButtonCreator,
   setShowButtonCreator,
@@ -357,16 +358,6 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
           <div className="flex-1 overflow-y-auto custom-scrollbar p-3 relative z-0">
             {!sidebarCollapsed && (
               <div className="px-4 pb-4 space-y-3 animate-fade-in">
-                {/* FOLDERS SECTION */}
-                <div className="border border-white/5 rounded-xl bg-white/[0.02] overflow-hidden transition-all">
-                  <div className="w-full flex items-center justify-between p-3 text-xs font-bold text-silver/60 text-left transition-colors">
-                    <div className="flex items-center gap-2">
-                      <span className="material-symbols-outlined text-base">folder</span>
-                      <span>Mis Carpetas</span>
-                    </div>
-                  </div>
-                </div>
-
                 {/* EDIT PROFILE BUTTON */}
                 <button
                   onClick={() => {
@@ -526,19 +517,57 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
               {/* GENERAL PAGE SETTINGS */}
               {!selectedButton && !showButtonCreator && (
                 <div className="animate-fade-in space-y-12">
-                  <ProfileSettings
-                    currentPage={currentPage}
-                    handleUpdatePage={handleUpdatePage}
-                    fileInputRef={fileInputRef}
-                    handleImageUpload={handleImageUpload}
-                    isSaving={isSaving}
-                    handleSyncButtons={handleSyncButtons}
-                  />
+                  {currentPage.landingMode === "direct" ? (
+                    <DirectModeSettings
+                      currentPage={currentPage}
+                      onUpdatePage={handleUpdatePage}
+                      folders={Array.from(new Set(pages.map(p => p.folder).filter(Boolean) as string[]))}
+                    />
+                  ) : (
+                    <>
+                      <ProfileSettings
+                        currentPage={currentPage}
+                        handleUpdatePage={handleUpdatePage}
+                        fileInputRef={fileInputRef}
+                        handleImageUpload={handleImageUpload}
+                        isSaving={isSaving}
+                        handleSyncButtons={handleSyncButtons}
+                      />
 
-                  <DesignSettings
-                    currentPage={currentPage}
-                    handleUpdatePage={handleUpdatePage}
-                  />
+                      {/* Dual Mode: direct URL input */}
+                      {currentPage.landingMode === "dual" && (
+                        <div className="p-8 bg-purple-600/5 border border-purple-500/20 rounded-[2.5rem] shadow-[0_0_30px_rgba(168,85,247,0.05)] relative overflow-hidden group">
+                           <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 blur-3xl rounded-full -mr-10 -mt-10" />
+                           <div className="flex items-center gap-3 text-white mb-6 relative z-10">
+                              <div className="w-10 h-10 rounded-2xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-600/20">
+                                <span className="material-symbols-outlined text-sm">rocket_launch</span>
+                              </div>
+                              <div>
+                                <h3 className="text-sm font-black uppercase tracking-tight">Enlace Directo Secundario</h3>
+                                <p className="text-[9px] text-purple-400 font-bold uppercase tracking-widest">Para tráfico de Instagram / Facebook</p>
+                              </div>
+                           </div>
+                           <div className="space-y-4 relative z-10">
+                              <input
+                                type="url"
+                                placeholder="https://onlyfans.com/tu_perfil"
+                                value={currentPage.directUrl || ""}
+                                onChange={(e) => handleUpdatePage("directUrl", e.target.value)}
+                                className="w-full bg-black/40 border border-white/5 rounded-2xl px-6 py-4 text-sm font-bold text-white focus:outline-none focus:border-purple-500 transition-all placeholder:text-white/5"
+                              />
+                              <p className="text-[10px] text-silver/30 px-1 leading-relaxed">
+                                Esta URL se usará automáticamente cuando el sistema detecte que el usuario viene de <b>Instagram o Facebook</b>.
+                              </p>
+                           </div>
+                        </div>
+                      )}
+
+                      <DesignSettings
+                        currentPage={currentPage}
+                        handleUpdatePage={handleUpdatePage}
+                      />
+                    </>
+                  )}
 
                   <SecuritySection
                     currentPage={currentPage}

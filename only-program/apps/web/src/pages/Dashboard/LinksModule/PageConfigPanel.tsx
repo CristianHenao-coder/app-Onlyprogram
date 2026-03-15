@@ -165,81 +165,110 @@ export function PageConfigPanel({ currentPage, folders, onUpdatePage }: PageConf
 
             {/* Direct Mode */}
             {isDirect ? (
-              <div className="p-6 bg-red-500/5 border border-red-500/20 rounded-2xl animate-fade-in text-center">
-                {/* Model name */}
-                <div className="mb-8 p-4 bg-white/5 border border-white/10 rounded-xl text-left max-w-lg mx-auto">
-                  <label className="text-[10px] font-bold text-silver/40 uppercase pl-1 block mb-2">
-                    {t("dashboard.links.modelNameLabel")}
-                  </label>
-                  <div className="relative">
-                    <span className="material-symbols-outlined absolute left-3 top-2.5 text-silver/20 text-lg">person</span>
-                    <input
-                      type="text"
-                      value={currentPage.modelName || ""}
-                      onChange={(e) => onUpdatePage("modelName", e.target.value)}
-                      placeholder={t("dashboard.links.modelNamePlaceholder")}
-                      className="w-full bg-black/40 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm font-bold text-white focus:outline-none focus:border-primary placeholder:text-silver/20 transition-all"
-                    />
-                  </div>
-                </div>
-                <span className="material-symbols-outlined text-4xl text-red-500 mb-4 block animate-bounce-subtle">rocket_launch</span>
-                <h3 className="text-lg font-bold text-white mb-2">Modo Escudo Directo Activado</h3>
-                <p className="text-sm text-silver/60 mb-6 max-w-md mx-auto">
-                  En este modo, al hacer clic desde Instagram o Facebook, el escudo se activará y el usuario será{" "}
-                  <b>redirigido automáticamente</b> al enlace que ingreses abajo.
-                </p>
-                <div className="space-y-2 max-w-lg mx-auto text-left">
-                  <label className="text-[10px] font-bold text-red-400 uppercase pl-1">
-                    URL de Destino Final (OnlyFans / Telegram, etc.)
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://onlyfans.com/tu_perfil"
-                    value={currentPage.directUrl || ""}
-                    onChange={(e) => onUpdatePage("directUrl", e.target.value)}
-                    className="w-full bg-[#050505] border border-red-500/30 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-red-500 shadow-[0_0_15px_rgba(239,68,68,0.1)] transition-all placeholder:text-silver/20"
-                  />
-                </div>
-                {/* Smart Targeting for Direct Mode */}
-                <div className="mt-8 pt-8 border-t border-red-500/10 max-w-lg mx-auto text-left">
-                  <h4 className="text-[10px] font-black text-white uppercase tracking-widest flex items-center gap-2 mb-4">
-                    <span className="material-symbols-outlined text-sm text-red-400">query_stats</span>
-                    Smart Targeting (Opcional)
-                  </h4>
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] font-bold text-silver/40 uppercase pl-1 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[10px] text-yellow-500">diamond</span>
-                        Link para Teléfono Moderno (Gama Alta)
-                      </label>
+              <div className="space-y-6 animate-fade-in">
+                {/* 1. Main Destination URL (TOP FOCUS) */}
+                <div className="p-8 bg-red-500/10 border border-red-500/40 rounded-[2rem] shadow-[0_0_30px_rgba(239,68,68,0.1)] relative overflow-hidden group">
+                   <div className="absolute top-0 right-0 w-32 h-32 bg-red-500/5 blur-3xl rounded-full -mr-10 -mt-10" />
+                   
+                   <div className="flex items-center gap-3 mb-6 relative z-10">
+                      <div className="w-10 h-10 rounded-2xl bg-red-500 flex items-center justify-center shadow-lg shadow-red-500/30">
+                        <span className="material-symbols-outlined text-white text-xl">rocket_launch</span>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-black text-white uppercase tracking-tight">URL de Destino Final</h3>
+                        <p className="text-[10px] text-red-400/80 font-bold uppercase tracking-widest">OnlyFans / Telegram / Otros</p>
+                      </div>
+                   </div>
+
+                   <div className="space-y-3 relative z-10">
                       <input
                         type="url"
-                        placeholder="https://onlyfans.com/link_para_gama_alta"
-                        value={currentPage.security_config?.device_redirections?.ios || ""}
-                        onChange={(e) => {
-                          const c = currentPage.security_config || {};
-                          onUpdatePage("security_config", { ...c, device_redirections: { ...(c.device_redirections || {}), ios: e.target.value } });
-                        }}
-                        className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-silver focus:outline-none focus:border-yellow-500/50 transition-all placeholder:text-silver/10"
+                        placeholder="https://onlyfans.com/tu_perfil"
+                        value={currentPage.directUrl || ""}
+                        onChange={(e) => onUpdatePage("directUrl", e.target.value)}
+                        className="w-full bg-black/40 border-2 border-red-500/30 rounded-2xl px-6 py-4 text-base font-bold text-white focus:outline-none focus:border-red-500 shadow-inner transition-all placeholder:text-white/10"
                       />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[9px] font-bold text-silver/40 uppercase pl-1 flex items-center gap-1">
-                        <span className="material-symbols-outlined text-[10px]">smartphone</span>
-                        Link para Teléfono Básico
+                      <p className="text-[11px] text-silver/40 leading-relaxed px-1">
+                        Esta es la dirección a la que irán tus seguidores de <b>Instagram y Facebook</b> de forma instantánea.
+                      </p>
+                   </div>
+                </div>
+
+                {/* 2. Secondary Settings */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                   {/* Model Name */}
+                   <div className="p-6 bg-white/5 border border-white/10 rounded-3xl">
+                      <label className="text-[10px] font-black text-silver/40 uppercase tracking-widest mb-3 block flex items-center gap-2">
+                        <span className="material-symbols-outlined text-sm">person</span>
+                        Nombre de la Modelo
                       </label>
                       <input
-                        type="url"
-                        placeholder="https://onlyfans.com/link_para_gama_basica"
-                        value={currentPage.security_config?.device_redirections?.desktop || ""}
-                        onChange={(e) => {
-                          const c = currentPage.security_config || {};
-                          onUpdatePage("security_config", { ...c, device_redirections: { ...(c.device_redirections || {}), android: e.target.value, desktop: e.target.value } });
-                        }}
-                        className="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-silver focus:outline-none focus:border-white/20 transition-all placeholder:text-silver/10"
+                        type="text"
+                        value={currentPage.modelName || ""}
+                        onChange={(e) => onUpdatePage("modelName", e.target.value)}
+                        placeholder="Mia Khalifa (Opcional)"
+                        className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-primary/50 transition-all placeholder:text-white/5"
                       />
-                    </div>
-                  </div>
+                      <p className="text-[9px] text-silver/30 mt-2 font-medium">Uso interno (no se mostrará públicamente).</p>
+                   </div>
+
+                   {/* Folder */}
+                   <div className="p-6 bg-white/5 border border-white/10 rounded-3xl">
+                      <label className="text-[10px] font-black text-silver/40 uppercase tracking-widest mb-3 block flex items-center gap-2">
+                        <span className="material-symbols-outlined text-sm">folder</span>
+                        Carpeta / Proyecto
+                      </label>
+                      <input
+                        type="text"
+                        value={currentPage.folder || ""}
+                        onChange={(e) => onUpdatePage("folder", e.target.value)}
+                        placeholder="Ej: Mis Proyectos"
+                        className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-3 text-sm font-bold text-white focus:outline-none focus:border-primary/50 transition-all placeholder:text-white/5"
+                        list="folder-suggestions"
+                      />
+                   </div>
+                </div>
+
+                {/* 3. Advanced Targeting */}
+                <div className="p-6 border-t border-white/5">
+                   <h4 className="text-[10px] font-black font-mono text-white/20 uppercase tracking-[0.3em] flex items-center gap-3 mb-6">
+                     Smart Targeting
+                     <div className="h-px bg-white/5 flex-1" />
+                   </h4>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-silver/40 uppercase tracking-[0.15em] flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[14px] text-yellow-500">diamond</span>
+                          iPhone / Moderno
+                        </label>
+                        <input
+                          type="url"
+                          placeholder="Link específico para móviles modernos"
+                          value={currentPage.security_config?.device_redirections?.ios || ""}
+                          onChange={(e) => {
+                            const c = currentPage.security_config || {};
+                            onUpdatePage("security_config", { ...c, device_redirections: { ...(c.device_redirections || {}), ios: e.target.value } });
+                          }}
+                          className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-silver/60 focus:outline-none focus:border-white/20"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-black text-silver/40 uppercase tracking-[0.15em] flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[14px]">smartphone</span>
+                          Android / Básico
+                        </label>
+                        <input
+                          type="url"
+                          placeholder="Link específico para móviles básicos"
+                          value={currentPage.security_config?.device_redirections?.desktop || ""}
+                          onChange={(e) => {
+                            const c = currentPage.security_config || {};
+                            onUpdatePage("security_config", { ...c, device_redirections: { ...(c.device_redirections || {}), android: e.target.value, desktop: e.target.value } });
+                          }}
+                          className="w-full bg-black/20 border border-white/5 rounded-xl px-4 py-2.5 text-xs text-silver/60 focus:outline-none focus:border-white/20"
+                        />
+                      </div>
+                   </div>
                 </div>
               </div>
             ) : (

@@ -143,15 +143,36 @@ export default function Payments() {
     setCouponError("");
   };
 
-  const handlePaymentSuccess = async (_data?: any) => {
+  const handlePaymentSuccess = async (_orderId?: string) => {
     const toastId = toast.loading("Finalizando tu configuración...");
     try {
       localStorage.removeItem("my_links_data");
-      toast.success("¡Links activados correctamente!", { id: toastId });
+      toast.success("¡Pedido procesado!", { id: toastId });
       setCurrentStep("success");
     } catch (error) {
       console.error("Error in fulfillment:", error);
       toast.error("Error al finalizar. Contacta a soporte.", { id: toastId });
+    }
+  };
+
+  const [isProcessingFree, setIsProcessingFree] = useState(false);
+
+  const handleFreeCheckout = async () => {
+    setIsProcessingFree(true);
+    const tid = toast.loading("Procesando tu orden gratuita...");
+    try {
+      const res = await paymentsService.checkoutZero(linksData, pendingPurchase?.customDomain);
+      if (res.success) {
+        localStorage.removeItem("my_links_data");
+        toast.success("¡Configuración iniciada!", { id: tid });
+        setCurrentStep("success");
+      } else {
+        throw new Error(res.message || "Error al procesar");
+      }
+    } catch (error: any) {
+      toast.error(error.message || "Error al procesar el pedido gratuito", { id: tid });
+    } finally {
+      setIsProcessingFree(false);
     }
   };
 
@@ -337,8 +358,8 @@ export default function Payments() {
                         : 'bg-white/5 border-white/10 text-silver/50 hover:bg-white/10'
                     }`}
                   >
-                    <span className="font-bold text-sm">Vitalicio</span>
-                    <span className="text-[10px] uppercase opacity-60">Pago único</span>
+                    <span className="font-bold text-sm">Pago Único</span>
+                    <span className="text-[10px] uppercase opacity-60">Acceso por 30 días</span>
                   </button>
                   <button
                     onClick={() => setIsSubscription(true)}
@@ -373,13 +394,29 @@ export default function Payments() {
               </div>
 
               {/* Proceed button */}
-              <button
-                onClick={() => setCurrentStep("payment")}
-                className="w-full py-4 rounded-xl bg-primary text-white font-black text-sm uppercase tracking-wider hover:bg-primary/90 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
-              >
-                <span className="material-symbols-outlined text-base">payment</span>
-                Ir a Pagar — {fmt(finalTotal)}
-              </button>
+              {finalTotal === 0 ? (
+                <button
+                  onClick={handleFreeCheckout}
+                  disabled={isProcessingFree || linksData.length === 0}
+                  className="w-full py-4 rounded-xl bg-emerald-500 text-white font-black text-sm uppercase tracking-wider hover:bg-emerald-600 shadow-lg shadow-emerald-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  {isProcessingFree ? (
+                    <span className="animate-spin material-symbols-outlined text-base">progress_activity</span>
+                  ) : (
+                    <span className="material-symbols-outlined text-base">check_circle</span>
+                  )}
+                  Confirmar Pedido Gratis
+                </button>
+              ) : (
+                <button
+                  onClick={() => setCurrentStep("payment")}
+                  disabled={linksData.length === 0}
+                  className="w-full py-4 rounded-xl bg-primary text-white font-black text-sm uppercase tracking-wider hover:bg-primary/90 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-base">payment</span>
+                  Ir a Pagar — {fmt(finalTotal)}
+                </button>
+              )}
 
               <p className="text-[10px] text-silver/20 text-center">🔒 Pago seguro procesado por Wompi</p>
             </div>
@@ -411,7 +448,7 @@ export default function Payments() {
               <div>
                 <p className="font-bold text-white text-sm">
                   {isFromLinks
-                    ? `${linksData.length} Link${linksData.length !== 1 ? "s" : ""} — ${isSubscription ? "Suscripción" : "Acceso Vitalicio"}`
+                    ? `${linksData.length} Link${linksData.length !== 1 ? "s" : ""} — ${isSubscription ? "Suscripción" : "Pago Único"}`
                     : "Compra"}
                 </p>
                 {appliedCoupon && (
@@ -442,27 +479,12 @@ export default function Payments() {
         </div>
       )}
 
-      {/* ── STEP 3: ÉXITO ── */}
+      {/* ── STEP 3: ÉXITO + REALTIME MODAL ── */}
       {currentStep === "success" && (
-        <div className="max-w-2xl mx-auto py-20 text-center space-y-8 animate-fade-in">
-          <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-8">
-            <span className="material-symbols-outlined text-5xl text-emerald-400">check_circle</span>
-          </div>
-          <div className="space-y-4">
-            <h1 className="text-4xl font-black text-white uppercase tracking-tight">¡Pago Exitoso!</h1>
-            <p className="text-silver/60 text-lg leading-relaxed">
-              Tus links han sido activados. Ya puedes compartirlos con el mundo.
-            </p>
-          </div>
-          <div className="pt-8 flex flex-col items-center gap-4">
-            <button
-              onClick={() => navigate("/dashboard/links")}
-              className="px-10 py-4 bg-white text-black font-black rounded-2xl hover:bg-silver transition-all shadow-xl hover:scale-105 active:scale-95"
-            >
-              Ir a mis Links
-            </button>
-          </div>
-        </div>
+        <SuccessFlow 
+          linksData={linksData} 
+          onClose={() => navigate("/dashboard/links")} 
+        />
       )}
 
       {/* Decorative Footer (only on payment step) */}
@@ -487,6 +509,144 @@ export default function Payments() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function SuccessFlow({ linksData, onClose }: { linksData: any[], onClose: () => void }) {
+  const [activeLinks, setActiveLinks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAndSubscribe = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Initial fetch
+      const { data } = await supabase
+        .from("smart_links")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+      
+      if (data) setActiveLinks(data);
+      setLoading(false);
+
+      // Realtime subscription
+      const channel = supabase
+        .channel(`links-status-${user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "smart_links",
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            setActiveLinks(prev => prev.map(l => l.id === payload.new.id ? payload.new : l));
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    };
+
+    fetchAndSubscribe();
+  }, []);
+
+  // Filter links from the current purchase (or just show the most recent ones)
+  const approvedLinks = activeLinks.filter(l => l.status === "active" || l.status === "approved");
+
+  return (
+    <div className="max-w-3xl mx-auto py-12 px-4 animate-fade-in">
+      <div className="bg-[#080808]/60 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl">
+        <div className="p-8 md:p-12 text-center space-y-8">
+          
+          <div className="relative inline-block">
+            <div className="w-24 h-24 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto relative z-10">
+              <span className="material-symbols-outlined text-5xl text-emerald-400">task_alt</span>
+            </div>
+            <div className="absolute inset-0 bg-emerald-500/20 blur-3xl rounded-full scale-150 animate-pulse"></div>
+          </div>
+
+          <div className="space-y-3">
+            <h1 className="text-3xl md:text-5xl font-black text-white uppercase tracking-tight">
+              {approvedLinks.length > 0 ? "¡Felicidades!" : "Procesando..."}
+            </h1>
+            <p className="text-silver/60 text-lg max-w-lg mx-auto leading-relaxed">
+              {approvedLinks.length > 0 
+                ? "Tus links han sido activados con éxito. Ya puedes verlos en línea."
+                : "Estamos asignando tu dominio y configurando tu espacio. Pronto verás tus links activos."}
+            </p>
+          </div>
+
+          {/* Status Cards */}
+          <div className="grid gap-4 mt-8">
+            {activeLinks.slice(0, Math.max(linksData.length, 1)).map((link, idx) => (
+              <div 
+                key={link.id || idx} 
+                className={`flex items-center justify-between p-5 rounded-3xl border transition-all duration-500 ${
+                  link.status === "pending" 
+                    ? "bg-white/5 border-white/5 opacity-60" 
+                    : "bg-emerald-500/10 border-emerald-500/30 scale-[1.02] shadow-lg shadow-emerald-500/5"
+                }`}
+              >
+                <div className="flex items-center gap-4 text-left">
+                  <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center overflow-hidden border border-white/10">
+                    {link.photo ? (
+                      <img src={link.photo} className="w-full h-full object-cover" alt="" />
+                    ) : (
+                      <span className="material-symbols-outlined text-white/20">link</span>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-black text-white text-base leading-tight truncate max-w-[150px] md:max-w-xs">{link.title || link.slug}</h3>
+                    <div className="text-[10px] uppercase tracking-widest font-black flex items-center gap-1.5 mt-1">
+                      {link.status === "pending" ? (
+                        <>
+                          <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse"></span>
+                          <span className="text-orange-400/80">Asignando dominio...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                          <span className="text-emerald-400">¡Dominio Activo!</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {link.status !== "pending" && (
+                  <a 
+                    href={link.custom_domain ? `https://${link.custom_domain}` : `https://onlyprogramlink.com/${link.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-6 py-2.5 bg-white text-black font-black text-xs rounded-xl hover:bg-emerald-400 hover:text-white transition-all transform active:scale-95 shrink-0"
+                  >
+                    VER LINK
+                  </a>
+                )}
+              </div>
+            ))}
+            {loading && activeLinks.length === 0 && (
+              <div className="py-4 text-silver/20 italic text-sm">Cargando información...</div>
+            )}
+          </div>
+
+          <div className="pt-8">
+            <button
+              onClick={onClose}
+              className="text-silver/40 hover:text-white transition-colors text-xs font-black uppercase tracking-[0.2em]"
+            >
+              Cerrar y volver al panel
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
