@@ -420,18 +420,19 @@ export default function PaymentSelector({
 
         {/* ── PAYPAL ── */}
         {paymentMethod === 'paypal' && (
-          <div className="flex flex-col items-center space-y-6 animate-fade-in w-full">
-            <div className="flex items-center justify-between w-full mb-2">
-              <h4 className="text-lg font-black text-white px-1">Pagar con PayPal</h4>
-              <span className="text-[10px] font-black bg-[#0070ba]/20 text-[#0070ba] border border-[#0070ba]/20 px-3 py-1 rounded-full uppercase">Instantáneo</span>
+          <div className="flex flex-col items-center space-y-8 animate-fade-in w-full pb-4">
+            <div className="flex items-center justify-between w-full">
+              <h4 className="text-xl font-black text-white">Pagar con PayPal</h4>
+              <span className="text-[10px] font-black bg-[#0070ba]/20 text-[#0070ba] border border-[#0070ba]/20 px-3 py-1 rounded-full uppercase tracking-tighter">Instantáneo</span>
             </div>
-            <div className="w-full bg-black/20 p-8 rounded-2xl border border-white/5 flex flex-col items-center gap-6">
-              <div className="text-center space-y-2 mb-2">
+
+            <div className="flex flex-col items-center gap-8 w-full">
+              <div className="text-center">
                 <div className="h-16 w-16 mx-auto bg-[#0070ba]/10 rounded-full flex items-center justify-center mb-4">
                   <span className="material-symbols-outlined text-[#0070ba] text-4xl">account_balance_wallet</span>
                 </div>
-                <p className="text-silver/60 text-sm font-medium max-w-xs mx-auto">
-                  Serás redirigido a PayPal para completar tu {isSubscription ? "suscripción" : "pago"} de forma segura.
+                <p className="text-silver/50 text-sm max-w-xs mx-auto leading-relaxed">
+                  Completa tu {isSubscription ? "suscripción" : "pago"} de forma segura en PayPal.
                 </p>
               </div>
               
@@ -441,43 +442,41 @@ export default function PaymentSelector({
                  </div>
               )}
 
-              <div className="w-full max-w-sm">
-                <button
-                  onClick={async () => {
-                    const toastId = toast.loading('Conectando con PayPal...');
-                    try {
-                      let orderOrSub: any;
-                      if (isSubscription && paypalPlanId) {
-                         orderOrSub = await paymentsService.createPayPalSubscription(paypalPlanId, linksData, customDomain);
-                      } else {
-                         orderOrSub = await paymentsService.createPayPalOrder(amount || 0, undefined, linksData, customDomain);
-                      }
-                      
-                      toast.dismiss(toastId);
-                      const approvalLink = orderOrSub.links?.find((l: any) => l.rel === 'approve')?.href;
-                      if (approvalLink) {
-                        window.location.href = approvalLink;
-                      } else {
-                        throw new Error('No se pudo obtener el enlace de pago de PayPal.');
-                      }
-                    } catch (error: any) {
-                      const msg = error?.response?.data?.error || error?.message || 'Error al conectar con PayPal';
-                      const isConfig = msg.toLowerCase().includes('credencial') || msg.toLowerCase().includes('not configured');
-                      toast.error(
-                        isConfig
-                          ? 'PayPal no está configurado. Usa otra forma de pago por ahora.'
-                          : msg,
-                        { id: toastId, duration: 5000 }
-                      );
+              <button
+                onClick={async () => {
+                  const toastId = toast.loading('Conectando con PayPal...');
+                  try {
+                    let orderOrSub: any;
+                    if (isSubscription && paypalPlanId) {
+                       orderOrSub = await paymentsService.createPayPalSubscription(paypalPlanId, linksData, customDomain);
+                    } else {
+                       orderOrSub = await paymentsService.createPayPalOrder(amount || 0, undefined, linksData, customDomain);
                     }
-                  }}
-                  disabled={!amount || amount <= 0 || (isSubscription && !paypalPlanId)}
-                  className="w-full bg-[#0070ba] hover:bg-[#003087] disabled:opacity-40 disabled:cursor-not-allowed text-white font-black py-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-3 uppercase tracking-wider text-sm"
-                >
-                  <span className="material-symbols-outlined">output</span>
-                  {isSubscription ? "Suscribirse con PayPal" : "Pagar con PayPal"}
-                </button>
-              </div>
+                    
+                    toast.dismiss(toastId);
+                    const approvalLink = orderOrSub.links?.find((l: any) => l.rel === 'approve')?.href;
+                    if (approvalLink) {
+                      window.location.href = approvalLink;
+                    } else {
+                      throw new Error('No se pudo obtener el enlace de pago de PayPal.');
+                    }
+                  } catch (error: any) {
+                    const msg = error?.response?.data?.error || error?.message || 'Error al conectar con PayPal';
+                    const isConfig = msg.toLowerCase().includes('credencial') || msg.toLowerCase().includes('not configured');
+                    toast.error(
+                      isConfig
+                        ? 'PayPal no está configurado. Usa otra forma de pago por ahora.'
+                        : msg,
+                      { id: toastId, duration: 5000 }
+                    );
+                  }
+                }}
+                disabled={!amount || amount <= 0 || (isSubscription && !paypalPlanId)}
+                className="w-full max-w-sm bg-[#0070ba] hover:bg-[#003087] disabled:opacity-40 disabled:cursor-not-allowed text-white font-black py-4 rounded-xl transition-all shadow-lg flex items-center justify-center gap-3 uppercase tracking-wider text-sm hover:scale-[1.02] active:scale-95"
+              >
+                <span className="material-symbols-outlined">output</span>
+                {isSubscription ? "Pagar Suscripción" : "Pagar con PayPal"}
+              </button>
             </div>
           </div>
         )}
