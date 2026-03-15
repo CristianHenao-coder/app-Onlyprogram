@@ -142,7 +142,6 @@ const NotConfiguredGate = () => {
   );
 };
 
-import onlyfansLogo from "@/assets/of.png";
 
 // 3. SOCIAL BUTTON (Botón Genérico)
 interface SocialButtonProps {

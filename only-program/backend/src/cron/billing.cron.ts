@@ -19,7 +19,7 @@ export async function processSubscriptionBilling() {
     // 1. Fetch active subscriptions reaching billing date
     const { data: dueSubscriptions, error: fetchError } = await supabase
       .from("subscriptions")
-      .select("*, profiles!inner(email, full_name)")
+      .select("*, profiles!inner(full_name)")
       .eq("status", "active")
       .lte("next_billing_date", now.toISOString());
 
@@ -37,12 +37,18 @@ export async function processSubscriptionBilling() {
 
     for (const sub of dueSubscriptions) {
       try {
-        console.log(`💰 Charging subscription ${sub.id} for user ${sub.user_id}`);
+        const { data: userData } = await supabase.auth.admin.getUserById(sub.user_id);
+        const userEmail = userData?.user?.email;
+
+        if (!userEmail) {
+           console.error(`❌ Could not find email for user ${sub.user_id}, skipping subscription ${sub.id}`);
+           continue;
+        }
 
         const reference = WompiService.generateReference();
         const transaction = await WompiService.chargePaymentSource({
           amountUSD: Number(sub.amount),
-          email: sub.profiles.email,
+          email: userEmail,
           paymentSourceId: parseInt(sub.wompi_token), // wompi_token stores the source_id
           reference
         });
@@ -84,7 +90,7 @@ export async function processSubscriptionBilling() {
 
           // D. Email Notification
           await sendPaymentConfirmationEmail(
-            sub.profiles.email,
+            userEmail,
             Number(sub.amount),
             sub.currency,
             transaction.id
