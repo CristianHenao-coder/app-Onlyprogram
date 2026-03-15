@@ -149,10 +149,10 @@ export default function DashboardLayout() {
       </aside>
 
       {/* MAIN AREA (reserve sidebar width on desktop only) */}
-      <div className={["min-h-[100dvh] transition-[padding] duration-300", "md:pl-[280px]", collapsed ? "md:pl-[76px]" : ""].join(" ")}>
+      <div className={["min-h-[100dvh] flex flex-col transition-[padding] duration-300", "md:pl-[280px]", collapsed ? "md:pl-[76px]" : ""].join(" ")}>
         
         {/* MOBILE TOPBAR */}
-        <header className="md:hidden flex items-center justify-between px-4 h-16 border-b border-border bg-[#0B0B0B]/80 backdrop-blur-xl fixed top-0 w-full z-40">
+        <header className="md:hidden flex items-center justify-between px-4 h-16 border-b border-border bg-[#0B0B0B]/80 backdrop-blur-xl fixed top-0 w-full z-40 shrink-0">
           <div className="flex items-center gap-3">
             <Logo className="h-9 w-9" imgClassName="p-0" />
             <span className="text-white font-black text-sm tracking-tighter uppercase">Only Program</span>
@@ -167,7 +167,7 @@ export default function DashboardLayout() {
         </header>
 
         {/* CONTENT */}
-        <main className="px-0 sm:px-6 py-6 pt-20 md:pt-6 relative">
+        <main className="px-0 sm:px-6 py-6 pt-20 md:pt-6 relative flex-1 flex flex-col">
           <Outlet />
         </main>
       </div>

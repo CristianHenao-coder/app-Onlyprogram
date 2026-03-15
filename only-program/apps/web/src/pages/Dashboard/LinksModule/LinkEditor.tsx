@@ -9,7 +9,6 @@ import DesktopFooter from "./DesktopFooter";
 import ProfileSettings from "./ProfileSettings";
 import DesignSettings from "./DesignSettings";
 import ButtonEditorFields from "./ButtonEditorFields";
-
 interface LinkEditorProps {
   currentPage: LinkPage;
   selectedPageId: string;
@@ -22,9 +21,10 @@ interface LinkEditorProps {
   scrollLeft: () => void;
   scrollRight: () => void;
   handleCreateNew: () => void;
-  setView: (view: "list" | "editor") => void;
   sidebarCollapsed: boolean;
-  setSidebarCollapsed: (collapsed: boolean) => void;
+  setSidebarCollapsed: (v: boolean) => void;
+  view: "list" | "editor";
+  setView: (v: "list" | "editor") => void;
   folderFilter: string | null;
   showButtonCreator: boolean;
   setShowButtonCreator: (show: boolean) => void;
@@ -51,6 +51,7 @@ interface LinkEditorProps {
   isSaving?: boolean;
   handleSyncButtons?: () => Promise<void>;
   handleDeletePage: (id: string, name: string) => Promise<void>;
+  onBack?: () => void;
 }
 
 const LinkEditor: React.FC<LinkEditorProps> = ({
@@ -65,9 +66,10 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
   scrollLeft,
   scrollRight,
   handleCreateNew,
-  setView,
   sidebarCollapsed,
   setSidebarCollapsed,
+  view: _view,
+  setView,
   folderFilter,
   showButtonCreator,
   setShowButtonCreator,
@@ -79,7 +81,7 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
   handleCreateButton,
   handleUpdateButton,
   handleUpdatePage,
-  handleNextStep: _handleNextStep,
+  handleNextStep,
   ROTATOR_SURCHARGE,
   SOCIAL_PRESETS,
   DEFAULTS,
@@ -94,6 +96,7 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
   isSaving,
   handleSyncButtons,
   handleDeletePage,
+  onBack,
 }) => {
   const { t } = useTranslation();
 
@@ -105,6 +108,18 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
     <div className="flex-1 flex flex-col bg-[#050505] relative overflow-hidden order-2 lg:order-first transition-all">
       {/* TOP BAR: Page Switcher */}
       <div className="h-20 border-b border-white/5 bg-[#080808] flex items-center relative z-20 shrink-0">
+        {onBack && (
+          <div className="pl-4 lg:pl-6 pr-2 border-r border-white/5 h-full flex items-center">
+             <button
+                onClick={onBack}
+                className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-silver/40 hover:text-white hover:bg-white/10 transition-all flex items-center justify-center active:scale-90"
+                title={t("dashboard.links.linksListBack") || "Volver"}
+              >
+                <span className="material-symbols-outlined">arrow_back</span>
+             </button>
+          </div>
+        )}
+        
         {showLeftArrow && (
           <button
             onClick={scrollLeft}
@@ -122,20 +137,6 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
           className="flex-1 flex items-center gap-2 overflow-x-auto hide-scrollbar scroll-smooth px-4 h-full"
           ref={scrollContainerRef}
         >
-          <button
-            onClick={() => setView("list")}
-            className="flex flex-col items-center justify-center w-12 h-12 rounded-full border border-white/10 hover:border-primary/50 hover:bg-white/5 transition-all text-silver/40 hover:text-primary shrink-0 group"
-            title={t("dashboard.links.linksListBack") || "Mis Links"}
-          >
-            <span className="material-symbols-outlined text-xl group-active:scale-90 transition-transform">
-              arrow_back
-            </span>
-            <span className="text-[7px] font-bold uppercase tracking-tighter">
-              Volver
-            </span>
-          </button>
-
-          <div className="h-8 w-px bg-white/10 shrink-0 mx-2"></div>
           {allActivePages.map((page) => {
             const isDirect = page.landingMode === "direct";
             const isDual = page.landingMode === "dual";
@@ -327,75 +328,87 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        {/* LEFT PANEL: BUTTONS LIST */}
-        <div className={`border-r border-white/5 flex flex-col bg-[#070707] shrink-0 transition-all duration-300 ${sidebarCollapsed ? "w-14" : "w-full sm:w-64 lg:w-80"}`}>
+        {/* LEFT PANEL: BUTTONS LIST & ADDER */}
+        <div
+          className={`h-full overflow-hidden border-r border-white/5 flex flex-col bg-[#070707] shrink-0 transition-all duration-300 ${sidebarCollapsed ? "w-16 md:w-20" : "w-full sm:w-64 lg:w-80"}`}
+        >
+          {/* SIDEBAR HEADER & FOLDERS */}
           <div className="border-b border-white/5 relative z-10 bg-[#070707] flex flex-col">
-            <div className={`py-2 md:py-3 flex items-center ${sidebarCollapsed ? "px-0 justify-center" : "px-4 justify-between"}`}>
+            <div className="p-3 md:p-4 flex items-center justify-between">
               <button
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all shrink-0 touch-manipulation shadow-lg ${
-                  sidebarCollapsed 
-                    ? "bg-primary text-white shadow-primary/20 scale-110" 
-                    : "bg-white/5 border border-white/10 text-primary hover:bg-primary/10 hover:border-primary/30"
-                }`}
-                title={sidebarCollapsed ? t("dashboard.links.expandMenu") : t("dashboard.links.collapseMenu")}
+                className="p-2 hover:bg-white/5 rounded-lg transition-all shrink-0 touch-manipulation"
+                title={
+                  sidebarCollapsed
+                    ? t("dashboard.links.expandMenu", {
+                      defaultValue: "Expandir men",
+                    })
+                    : t("dashboard.links.collapseMenu", {
+                      defaultValue: "Colapsar men",
+                    })
+                }
               >
-                <span className="material-symbols-outlined text-2xl font-bold">
-                  {sidebarCollapsed ? "menu_open" : "menu"}
+                <span className="material-symbols-outlined text-white text-xl">
+                  menu
                 </span>
               </button>
-
-              {sidebarCollapsed && folderFilter && (
-                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary border border-primary/30" title={t("dashboard.links.filteredBy", { folder: folderFilter })}>
-                  <span className="material-symbols-outlined text-sm">folder</span>
-                </div>
-              )}
             </div>
-
+          </div>
+          <div className="flex-1 overflow-y-auto custom-scrollbar p-3 relative z-0">
             {!sidebarCollapsed && (
               <div className="px-4 pb-4 space-y-3 animate-fade-in">
-                {(currentPage.landingMode as string) !== "direct" && (
-                  <>
-                    <button
-                      onClick={() => { setSelectedButtonId(null); setShowButtonCreator(false); }}
-                      className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all flex items-center justify-center gap-2 touch-manipulation"
-                    >
-                      <span className="material-symbols-outlined text-xl">settings</span>
-                      <span>{t("dashboard.links.editProfile")}</span>
-                    </button>
-                    <button
-                      onClick={() => setShowButtonCreator(true)}
-                      className="w-full py-3 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 touch-manipulation"
-                    >
-                      <span className="material-symbols-outlined text-xl">add_circle</span>
-                      <span>{t("dashboard.links.addButton")}</span>
-                    </button>
-                  </>
-                )}
+                {/* FOLDERS SECTION */}
+                <div className="border border-white/5 rounded-xl bg-white/[0.02] overflow-hidden transition-all">
+                  <div className="w-full flex items-center justify-between p-3 text-xs font-bold text-silver/60 text-left transition-colors">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-base">folder</span>
+                      <span>Mis Carpetas</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* EDIT PROFILE BUTTON */}
+                <button
+                  onClick={() => {
+                    setSelectedButtonId(null);
+                    setShowButtonCreator(false);
+                  }}
+                  className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-white font-bold text-sm hover:bg-white/10 transition-all flex items-center justify-center gap-2 touch-manipulation"
+                >
+                  <span className="material-symbols-outlined text-xl">settings</span>
+                  <span>Editar Perfil</span>
+                </button>
+
+                {/* ADD BUTTON */}
+                <button
+                  onClick={() => setShowButtonCreator(true)}
+                  className="w-full py-3 rounded-xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 touch-manipulation"
+                >
+                  <span className="material-symbols-outlined text-xl">add_circle</span>
+                  <span>{t("dashboard.links.addButton")}</span>
+                </button>
               </div>
             )}
 
-            {sidebarCollapsed && (currentPage.landingMode as string) !== "direct" && (
-              <div className="px-0 pb-3 flex flex-col items-center gap-3">
+            {sidebarCollapsed && (
+              <div className="px-2 pb-3 flex flex-col items-center gap-3">
                 <button
                   onClick={() => { setSelectedButtonId(null); setShowButtonCreator(false); }}
-                  className="w-9 h-9 rounded-lg bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all flex items-center justify-center"
-                  title={t("dashboard.links.editProfile")}
+                  className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all flex items-center justify-center"
+                  title="Editar Perfil"
                 >
-                  <span className="material-symbols-outlined text-[18px]">settings</span>
+                  <span className="material-symbols-outlined text-xl">settings</span>
                 </button>
                 <button
                   onClick={() => setShowButtonCreator(true)}
-                  className="w-9 h-9 rounded-lg bg-primary text-white shadow-lg shadow-primary/20 hover:scale-110 active:scale-95 transition-all flex items-center justify-center"
+                  className="w-10 h-10 rounded-xl bg-primary text-white shadow-lg shadow-primary/20 hover:scale-110 active:scale-95 transition-all flex items-center justify-center"
                   title={t("dashboard.links.addButton")}
                 >
-                  <span className="material-symbols-outlined text-[18px]">add</span>
+                  <span className="material-symbols-outlined text-xl">add</span>
                 </button>
               </div>
             )}
-          </div>
 
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-3 relative z-0">
             {(currentPage.landingMode as string) === "direct" ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-4 animate-fade-in">
                 <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center">
@@ -417,23 +430,27 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
                         <SortableButton
                           btn={btn}
                           isSelected={selectedButtonId === btn.id}
-                          onClick={() => { setSelectedButtonId(btn.id); setShowButtonCreator(false); }}
+                          onClick={() => {
+                            setSelectedButtonId(btn.id);
+                            setShowButtonCreator(false);
+                          }}
+                          onDelete={() => handleDeleteButton(btn.id)}
                           collapsed={sidebarCollapsed}
                           rotatorSurcharge={ROTATOR_SURCHARGE}
                           socialPresets={SOCIAL_PRESETS}
                         />
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleDeleteButton(btn.id); }}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-silver/20 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all z-10"
-                        >
-                          <span className="material-symbols-outlined text-sm">delete</span>
-                        </button>
                       </div>
                     ))}
                     {currentPage.buttons.length === 0 && !showButtonCreator && (
-                      <div className={`text-center py-10 border-2 border-dashed border-white/5 rounded-xl flex flex-col items-center justify-center ${sidebarCollapsed ? "px-1" : "px-4"}`}>
-                        <span className={`material-symbols-outlined text-silver/20 mb-2 ${sidebarCollapsed ? "text-xl" : "text-3xl"}`}>touch_app</span>
-                        {!sidebarCollapsed && <p className="text-xs text-silver/40">{t("dashboard.links.emptyLinkMsg")}</p>}
+                      <div className={`text-center ${sidebarCollapsed ? "py-4 px-2" : "py-10 px-4"} border-2 border-dashed border-white/5 rounded-xl`}>
+                        <span className="material-symbols-outlined text-3xl text-silver/20 mb-2">touch_app</span>
+                        {!sidebarCollapsed && (
+                          <p className="text-xs text-silver/40">
+                            {t("dashboard.links.emptyLinkMsg", {
+                              defaultValue: "Tu link está vacío. ¡Añade tu primer botón!",
+                            })}
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -441,10 +458,11 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
               </DndContext>
             )}
           </div>
+
           <DesktopFooter
             currentPage={currentPage}
             handleDeletePage={handleDeletePage}
-            sidebarCollapsed={sidebarCollapsed}
+            collapsed={sidebarCollapsed}
           />
         </div>
 
@@ -454,21 +472,18 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
             <div className="max-w-full mx-auto space-y-16">
               {/* STATUS INDICATORS */}
               {(pages.some(p => p.modelName === currentPage.modelName && p.modelName && p.id !== currentPage.id) || currentPage.landingMode === 'dual') && (
-                <div className="mb-12 p-8 rounded-[3rem] bg-purple-600/5 border-none relative overflow-hidden group animate-in slide-in-from-top-4 duration-700">
-                  <div className="flex items-start gap-6 relative z-10">
-                    <div className="w-12 h-12 rounded-2xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-600/40 shrink-0">
-                      <span className="material-symbols-outlined text-white text-2xl animate-bounce">auto_awesome</span>
+                <div className="mb-8 p-6 rounded-3xl bg-purple-600/5 border border-purple-500/10 relative overflow-hidden group">
+                  <div className="flex items-center gap-4 relative z-10">
+                    <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-600/30 shrink-0">
+                      <span className="material-symbols-outlined text-white text-xl">auto_awesome</span>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-black text-white mb-2 flex items-center gap-2">
-                        Conectividad Dual Activada
-                        <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30 uppercase tracking-widest font-black">PRO</span>
-                      </h3>
-                      <p className="text-sm text-silver/60 leading-relaxed">
-                        Estás usando nuestro <span className="text-white font-bold">sistema híbrido inteligente</span>: 
-                        Tu landing page está optimizada para <span className="text-blue-400 font-bold">TikTok</span>, mientras que el sistema <span className="text-red-400 font-bold">Directo de Instagram/FB</span> ya está integrado. 
-                        <br /><br />
-                        <span className="text-[11px] font-bold text-purple-400">Puedes usar tu link final en cualquier red social y el sistema detectará automáticamente la mejor experiencia para el usuario.</span>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-sm font-black text-white tracking-tight">Dual Activado</h3>
+                        <span className="text-[8px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded border border-purple-500/30 uppercase tracking-widest font-black">PRO</span>
+                      </div>
+                      <p className="text-[11px] text-silver/40 leading-snug">
+                        Sistema híbrido: <span className="text-blue-400 font-bold">TikTok</span> optimizado + <span className="text-red-400 font-bold">Meta</span> auto-integrado. El enlace detecta el dispositivo automáticamente.
                       </p>
                     </div>
                   </div>
@@ -529,6 +544,21 @@ const LinkEditor: React.FC<LinkEditorProps> = ({
                     currentPage={currentPage}
                     handleUpdatePage={handleUpdatePage}
                   />
+                </div>
+              )}
+
+              {/* CENTERED NEXT STEP BUTTON (Mobile Only) */}
+              {currentPage.status === "draft" && (
+                <div className="pt-12 pb-20 flex justify-center border-t border-white/5 mt-16 lg:hidden">
+                  <button
+                    onClick={handleNextStep}
+                    className="w-full max-w-sm py-4 px-8 rounded-2xl bg-[#1DA1F2] text-white font-black text-sm shadow-[0_20px_40px_rgba(29,161,242,0.3)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 group"
+                  >
+                    <span className="uppercase tracking-widest">{t("dashboard.links.nextStep") || "Siguiente paso"}</span>
+                    <span className="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">
+                      arrow_forward
+                    </span>
+                  </button>
                 </div>
               )}
             </div>

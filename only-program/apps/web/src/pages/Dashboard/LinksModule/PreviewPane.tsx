@@ -1,3 +1,4 @@
+import React from "react";
 import { LinkPage, getBackgroundStyle, FONT_MAP } from "./types";
 import { useTranslation } from "@/contexts/I18nContext";
 import instagramLogo from "@/assets/animations/instagram.png";
@@ -201,9 +202,9 @@ const PreviewPane: React.FC<PreviewPaneProps> = ({
         )}
       </div>
 
-      {/* Siguiente Button (DESKTOP) */}
-      {currentPage?.status !== "active" && (
-        <div className="w-full max-w-[320px] animate-in slide-in-from-bottom-4 duration-700">
+      {/* Siguiente Button (DESKTOP - Below Phone) */}
+      {!isMobileModal && currentPage?.status === "draft" && (
+        <div className="w-full max-w-[320px] animate-in slide-in-from-bottom-4 duration-700 hidden lg:block">
           <button
             onClick={handleNextStep}
             className="w-full py-4 px-6 rounded-2xl bg-primary text-white font-black text-sm shadow-[0_20px_40px_rgba(29,161,242,0.3)] hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 group"

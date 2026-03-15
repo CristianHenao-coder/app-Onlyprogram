@@ -26,7 +26,7 @@ import FolderModal from "./FolderModal";
 import ButtonsList from "./ButtonsList";
 import LinkEditor from "./LinkEditor";
 import PreviewPane from "./PreviewPane";
-import MobileNextButton from "./MobileNextButton";
+// import MobileNextButton removed
 import {
   LinkPage,
   Folder,
@@ -174,7 +174,6 @@ const LinksPage: React.FC = () => {
 
   // --- STATE ---
   const [pages, setPages] = useState<LinkPage[]>([]);
-  const [loadingLinks, setLoadingLinks] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [selectedPageId, setSelectedPageId] = useState<string>("");
   const [selectedButtonId, setSelectedButtonId] = useState<string | null>(null);
@@ -224,7 +223,7 @@ const LinksPage: React.FC = () => {
 
   const loadLinks = useCallback(async () => {
     if (!user) return;
-    setLoadingLinks(true);
+    // setLoadingLinks(true);
     try {
       // 1. Load from DB
       const { data: dbLinks, error } = await supabase
@@ -272,7 +271,7 @@ const LinksPage: React.FC = () => {
       console.error("Error loading links:", err);
       toast.error("Error al cargar tus links");
     } finally {
-      setLoadingLinks(false);
+      // setLoadingLinks(false);
       setInitialLoad(false);
     }
   }, [user, t]);
@@ -329,6 +328,18 @@ const LinksPage: React.FC = () => {
       supabase.removeChannel(channel);
     };
   }, [user, loadLinks]);
+
+  // --- AUTO-SAVE LOGIC FOR LOCAL DRAFTS ---
+  useEffect(() => {
+    if (initialLoad) return;
+    
+    try {
+      const drafts = pages.filter(p => !p.dbStatus && p.status === "draft");
+      localStorage.setItem("my_links_data", JSON.stringify(drafts));
+    } catch (e) {
+      console.error("Error backing up drafts to localStorage:", e);
+    }
+  }, [pages, initialLoad]);
 
   // --- AUTO-SAVE LOGIC FOR ACTIVE LINKS ---
   useEffect(() => {
@@ -559,11 +570,12 @@ const LinksPage: React.FC = () => {
 
   const handleMoveToFolder = async (linkId: string, folderName: string | null) => {
     try {
+      const actualFolder = folderName === "none" ? null : folderName;
       const targetPage = pages.find(p => p.id === linkId);
       if (!targetPage) return;
 
       // Update Local State
-      setPages(prev => prev.map(p => p.id === linkId ? { ...p, folder: folderName || undefined } : p));
+      setPages(prev => prev.map(p => p.id === linkId ? { ...p, folder: actualFolder || undefined } : p));
 
       if (linkId.startsWith("temp-") || !targetPage.dbStatus) {
         // Draft Link -> Update LocalStorage
@@ -785,29 +797,19 @@ const LinksPage: React.FC = () => {
 
         <header className="h-16 px-6 flex items-center justify-between border-b border-white/5 bg-[#050505] z-30 shrink-0">
             <div className="flex items-center gap-4">
-            {loadingLinks ? (
-                <div className="flex items-center gap-2 text-primary animate-pulse">
-                <span className="material-symbols-outlined text-sm animate-spin">sync</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest">Sincronizando...</span>
-                </div>
-            ) : isSaving && (
-                <div className="flex items-center gap-2 text-primary/60">
-                <span className="material-symbols-outlined text-sm animate-spin">progress_activity</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest">Guardando...</span>
-                </div>
-            )}
+              {/* Empty placeholder to keep layout balance or for future use */}
             </div>
-            <div className="flex items-center gap-6">
-            <LanguageSwitcher />
-            {view === "editor" && (
+            <div className="flex items-center gap-4">
+              <LanguageSwitcher />
+              {view === "editor" && (
                 <button
-                onClick={() => setShowMobilePreview(true)}
-                className="lg:hidden flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20"
+                  onClick={() => setShowMobilePreview(true)}
+                  className="lg:hidden flex items-center gap-2 px-3 py-1.5 bg-primary text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-primary/20"
                 >
-                <span className="material-symbols-outlined text-sm">visibility</span>
-                <span>Vista Previa</span>
+                  <span className="material-symbols-outlined text-[14px]">visibility</span>
+                  <span>Vista Previa</span>
                 </button>
-            )}
+              )}
             </div>
         </header>
 
@@ -842,6 +844,7 @@ const LinksPage: React.FC = () => {
             DEFAULTS={DEFAULTS}
             loadLinks={loadLinks}
             onMoveToFolder={handleMoveToFolder}
+            setInactiveAlertPageId={_setInactiveAlertPageId}
             />
         ) : (
             <div className="flex-1 flex flex-col overflow-hidden">
@@ -858,9 +861,10 @@ const LinksPage: React.FC = () => {
                   scrollLeft={() => {}}
                   scrollRight={() => {}}
                   handleCreateNew={handleCreateNew}
-                  setView={setView}
                   sidebarCollapsed={sidebarCollapsed}
                   setSidebarCollapsed={setSidebarCollapsed}
+                  view={view}
+                  setView={setView}
                   folderFilter={folderFilter}
                   showButtonCreator={showButtonCreator}
                   setShowButtonCreator={setShowButtonCreator}
@@ -887,6 +891,7 @@ const LinksPage: React.FC = () => {
                   Icons={Icons}
                   isSaving={isSaving}
                   handleSyncButtons={handleSyncButtons}
+                  onBack={() => setView("list")}
               />
               <PreviewPane 
                   currentPage={currentPage}
@@ -897,10 +902,6 @@ const LinksPage: React.FC = () => {
               />
               </div>
               {/* Mobile Next Button - visible only on mobile (lg:hidden) */}
-              <MobileNextButton
-                  currentPage={currentPage}
-                  handleNextStep={handleNextStep}
-              />
             </div>
         )}
         </div>
@@ -909,91 +910,74 @@ const LinksPage: React.FC = () => {
       {showLinkTypeSelector && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/90 backdrop-blur-xl animate-fade-in"
+            className="absolute inset-0 bg-black/80 backdrop-blur-md animate-fade-in"
             onClick={() => setShowLinkTypeSelector(false)}
           />
-          <div className="relative w-full max-w-2xl bg-zinc-900 border border-white/10 rounded-[3rem] p-8 md:p-12 shadow-2xl animate-scale-up overflow-hidden">
-            {/* Background Decorations */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-[100px] -mr-32 -mt-32" />
-            <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-[100px] -ml-32 -mb-32" />
+          
+          <div className="relative w-full max-w-xl bg-[#0F0F0F] border border-white/10 rounded-3xl p-6 md:p-8 shadow-2xl animate-scale-up overflow-hidden">
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowLinkTypeSelector(false)}
+              className="absolute top-6 right-6 z-20 w-9 h-9 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-silver/60 hover:text-white transition-all active:scale-90"
+            >
+              <span className="material-symbols-outlined text-xl">close</span>
+            </button>
 
-            <div className="relative z-10 text-center mb-10">
-              <h3 className="text-3xl font-black text-white mb-2 tracking-tight">
-                {t("dashboard.links.createLinkModalTitle", { defaultValue: "¿Qué tipo de Link necesitas?" })}
+            {/* Header */}
+            <div className="text-center mb-8 px-12">
+              <h3 className="text-2xl font-black text-white mb-1 leading-tight">
+                {t("dashboard.links.createLinkModalTitle", { defaultValue: "Nuevo Link" })}
               </h3>
-              <p className="text-silver/40 text-sm font-medium">
-                {t("dashboard.links.createLinkModalSubtitle", { defaultValue: "Selecciona el formato que mejor se adapte a tu estrategia." })}
+              <p className="text-[10px] text-silver/40 font-bold uppercase tracking-widest">
+                {t("dashboard.links.createLinkModalSubtitle", { defaultValue: "Selecciona el tipo de flujo" })}
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               {/* Opción 1: Enlace Directo */}
               <button
                 onClick={() => confirmCreation("direct")}
-                className="group relative flex flex-col p-6 rounded-3xl bg-secondary/30 border border-white/5 hover:border-red-500/50 hover:bg-black transition-all text-left overflow-hidden h-full shadow-lg"
+                className="group relative flex flex-col p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-red-500/40 hover:bg-red-500/5 transition-all text-left"
               >
-                <div className="absolute top-4 right-4 px-2 py-1 rounded bg-red-500/10 border border-red-500/20">
-                  <span className="text-[10px] font-black text-red-400 uppercase tracking-tighter">
-                    {t("dashboard.links.directLinkPlatform", { defaultValue: "INSTAGRAM / FB" })}
-                  </span>
+                <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-2xl text-red-500">rocket_launch</span>
                 </div>
-
-                <div className="w-14 h-14 rounded-2xl bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-3xl text-red-500">
-                    rocket_launch
-                  </span>
+                <div className="flex items-center justify-between mb-1">
+                  <h4 className="text-sm font-black text-white uppercase tracking-tight">Escudo Directo</h4>
+                  <span className="text-[8px] font-black py-0.5 px-1.5 rounded border border-red-500/30 text-red-400 bg-red-500/5">META</span>
                 </div>
-                <h4 className="text-xl font-bold text-white mb-2">
-                  {t("dashboard.links.directLinkTitle", { defaultValue: "Enlace Directo" })}
-                </h4>
-                <p className="text-silver/40 text-xs leading-relaxed mb-4">
-                  {t("dashboard.links.directLinkDesc", { defaultValue: "Redirige automáticamente a los usuarios a tu destino sin mostrar botones intermedios. Ideal para campañas rápidas en Meta (Instagram/Facebook)." })}
+                <p className="text-silver/40 text-[10px] leading-relaxed">
+                  Redireccionamiento inmediato antidetect. Especializado para Instagram y Facebook.
                 </p>
               </button>
 
               {/* Opción 2: Landing Page */}
               <button
                 onClick={() => confirmCreation("landing")}
-                className="group relative flex flex-col p-6 rounded-3xl bg-secondary/30 border border-white/5 hover:border-blue-500/50 hover:bg-black transition-all text-left overflow-hidden h-full shadow-lg"
+                className="group relative flex flex-col p-5 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-blue-500/40 hover:bg-blue-500/5 transition-all text-left"
               >
-                <div className="absolute top-4 right-4 px-2 py-1 rounded bg-blue-500/10 border border-blue-500/20">
-                  <span className="text-[10px] font-black text-blue-400 uppercase tracking-tighter">
-                    {t("dashboard.links.landingPagePlatform", { defaultValue: "TIKTOK / BIO" })}
-                  </span>
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <span className="material-symbols-outlined text-2xl text-blue-500">web</span>
                 </div>
-
-                <div className="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                  <span className="material-symbols-outlined text-3xl text-blue-500">
-                    web
-                  </span>
+                <div className="flex items-center justify-between mb-1">
+                  <h4 className="text-sm font-black text-white uppercase tracking-tight">Landing Page</h4>
+                  <span className="text-[8px] font-black py-0.5 px-1.5 rounded border border-blue-500/30 text-blue-400 bg-blue-500/5">TIKTOK</span>
                 </div>
-                <h4 className="text-xl font-bold text-white mb-2">
-                  {t("dashboard.links.landingPageTitle", { defaultValue: "Landing Page" })}
-                </h4>
-                <p className="text-silver/40 text-xs leading-relaxed mb-4">
-                  {t("dashboard.links.landingPageDesc", { defaultValue: "Un perfil interactivo con múltiples botones, imágenes personalizadas y diseños avanzados. La mejor opción para TikTok y Link en Bio." })}
+                <p className="text-silver/40 text-[10px] leading-relaxed">
+                  Perfil interactivo con múltiples botones y diseños. Optimizado para TikTok.
                 </p>
               </button>
             </div>
 
+            {/* Pack Dual */}
             <button
               onClick={() => confirmCreation("both")}
-              className="w-full flex items-center justify-center gap-3 py-5 rounded-[2rem] bg-gradient-to-r from-purple-600 to-indigo-600 hover:scale-[1.01] active:scale-[0.99] transition-all group shadow-[0_0_40px_rgba(147,51,234,0.3)] border-2 border-purple-400/50 relative overflow-hidden"
+              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:brightness-110 active:scale-[0.99] transition-all group border border-white/10 shadow-lg shadow-purple-500/10"
             >
-              <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <span className="material-symbols-outlined text-2xl text-white group-hover:rotate-12 transition-transform relative z-10">
-                auto_awesome
+              <span className="material-symbols-outlined text-xl text-white group-hover:rotate-12 transition-transform">auto_awesome</span>
+              <span className="font-black text-[11px] uppercase tracking-widest text-white">
+                Crear Pack Dual (Meta + TikTok)
               </span>
-              <span className="font-black text-sm uppercase tracking-widest text-white relative z-10">
-                {t("dashboard.links.createBothTitle", { defaultValue: "CREAR PACK DUAL (AMBOS LADOS)" })}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setShowLinkTypeSelector(false)}
-              className="mt-10 mx-auto block text-[10px] font-bold text-silver/30 uppercase tracking-widest hover:text-white transition-colors"
-            >
-              {t("common.cancel", { defaultValue: "CANCELAR" })}
             </button>
           </div>
         </div>

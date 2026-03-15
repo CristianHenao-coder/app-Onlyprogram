@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useTranslation } from "@/contexts/I18nContext";
-import { LinkPage, Folder, getBackgroundStyle } from "./types";
+import { LinkPage, Folder } from "./types";
 import DraggableLinkCard from "./DraggableLinkCard";
 import DroppableFolder from "./DroppableFolder";
 
@@ -17,6 +17,7 @@ interface ButtonsListProps {
   DEFAULTS: { PROFILE_IMAGE: string };
   loadLinks?: () => Promise<void>;
   onMoveToFolder?: (linkId: string, folderName: string | null) => void;
+  setInactiveAlertPageId: (id: string) => void;
 }
 
 const ButtonsList: React.FC<ButtonsListProps> = ({
@@ -32,6 +33,7 @@ const ButtonsList: React.FC<ButtonsListProps> = ({
   DEFAULTS,
   loadLinks,
   onMoveToFolder,
+  setInactiveAlertPageId,
 }) => {
   const { t } = useTranslation();
   const [showAddLinkModal, setShowAddLinkModal] = useState(false);
@@ -92,16 +94,18 @@ const ButtonsList: React.FC<ButtonsListProps> = ({
 
           <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-4">
             {/* "All Links" pseudo-folder */}
-            <button
-              onClick={() => setFolderFilter(null)}
-              className={`relative group p-4 rounded-2xl border transition-all flex flex-col gap-3 text-left ${!folderFilter ? 'bg-primary/10 border-primary/30 shadow-[0_0_20px_rgba(29,161,242,0.1)]' : 'bg-white/[0.02] border-white/5 hover:border-white/20'}`}
-            >
-              <span className={`material-symbols-outlined text-2xl ${!folderFilter ? 'text-primary' : 'text-silver/40'}`}>grid_view</span>
-              <div>
-                <p className="text-xs font-black text-white uppercase tracking-wider">Todos</p>
-                <p className="text-[9px] text-silver/40">{pages.length} links</p>
-              </div>
-            </button>
+            <DroppableFolder id="none" isActive={!folderFilter}>
+              <button
+                onClick={() => setFolderFilter(null)}
+                className={`w-full p-4 rounded-2xl border transition-all flex flex-col gap-3 text-left h-full ${!folderFilter ? 'bg-primary/10 border-primary/30 shadow-[0_0_20px_rgba(29,161,242,0.1)]' : 'bg-white/[0.02] border-white/5 hover:border-white/20'}`}
+              >
+                <span className={`material-symbols-outlined text-2xl ${!folderFilter ? 'text-primary' : 'text-silver/40'}`}>grid_view</span>
+                <div>
+                  <p className="text-xs font-black text-white uppercase tracking-wider">Todos</p>
+                  <p className="text-[9px] text-silver/40">{pages.length} links</p>
+                </div>
+              </button>
+            </DroppableFolder>
 
             {folders.map(f => {
               const count = pages.filter(p => p.folder === f.name).length;
@@ -198,114 +202,19 @@ const ButtonsList: React.FC<ButtonsListProps> = ({
                 {pages
                   .filter((p) => p.dbStatus && (!folderFilter || p.folder === folderFilter))
                   .map((page) => {
-                    const isDirect = page.landingMode === "direct";
-                    const isDual = page.landingMode === "dual";
                     const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
-                    let borderClass = "border-white/[0.06] hover:border-primary/40 hover:shadow-primary/10";
-                    let bgTrash = "bg-primary/20 hover:bg-primary/40 border-primary/40 text-primary";
-                    let accentColor = "text-primary";
-                    let accentBg = "bg-primary/10";
-                    let accentBorder = "border-primary/20 hover:border-primary/40";
-
-                    if (hasPair || isDual) {
-                      borderClass = "border-purple-500/30 hover:border-purple-500/60 shadow-[0_0_15px_rgba(168,85,247,0.1)]";
-                      bgTrash = "bg-purple-500/20 hover:bg-purple-500/40 border-purple-500/40 text-purple-400";
-                      accentColor = "text-purple-400";
-                      accentBg = "bg-purple-500/10";
-                      accentBorder = "border-purple-500/20";
-                    } else if (isDirect) {
-                      borderClass = "border-red-500/30 hover:border-red-500/60 shadow-[0_0_15px_rgba(239,68,68,0.1)]";
-                      bgTrash = "bg-red-500/20 hover:bg-red-500/40 border-red-500/40 text-red-400";
-                      accentColor = "text-red-400";
-                    }
 
                     return (
-                      <DraggableLinkCard key={page.id} id={page.id} data={{ type: 'link', link: page }}>
-                        <div
-                          onClick={() => openEditor(page.id)}
-                          className={`relative group rounded-[2rem] border bg-[#0A0A0A] overflow-hidden hover:shadow-2xl hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 cursor-pointer ${borderClass}`}
-                        >
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleDeletePage(page.id, page.profileName || page.name); }}
-                            className={`absolute top-3 left-3 z-20 w-8 h-8 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg border ${bgTrash}`}
-                          >
-                            <span className="material-symbols-outlined text-[16px]">delete</span>
-                          </button>
-                          
-                          <div
-                            className="h-32 w-full relative"
-                            style={getBackgroundStyle(page)}
-                          >
-                            <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
-                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
-                              <div className="w-16 h-16 rounded-full border-4 border-[#0A0A0A] overflow-hidden bg-gray-800 shadow-xl">
-                                {page.profileImage && page.profileImage !== DEFAULTS.PROFILE_IMAGE ? (
-                                  <img src={page.profileImage} className="w-full h-full object-cover" alt="" />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-white/5">
-                                    <span className="material-symbols-outlined text-3xl text-white/40">person</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="pt-10 pb-6 px-6 text-center">
-                            <p className="font-black text-base text-white truncate px-2">
-                              {page.profileName || page.name}
-                            </p>
-                            <p className="text-[10px] text-silver/30 mt-1 font-bold uppercase tracking-widest truncate">
-                              {page.domainStatus === "active" && page.customDomain ? (
-                                <span className="text-primary/80 lowercase">{page.customDomain}</span>
-                              ) : (
-                                "onlyprogram.com"
-                              )}/{page.slug || page.id.slice(0, 8)}
-                            </p>
-
-                            <div className="mt-4 flex items-center justify-center gap-2">
-                              {page.status === "active" ? (
-                                <a 
-                                  href={`https://${page.domainStatus === "active" && page.customDomain ? page.customDomain.toLowerCase() : "onlyprogram.com"}/${page.slug || page.id.slice(0, 8)}`} 
-                                  target="_blank" 
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-full bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 text-green-400 text-[10px] font-black uppercase tracking-widest transition-colors shadow-[0_0_10px_rgba(34,197,94,0.1)] group/link"
-                                >
-                                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse group-hover/link:animate-none" />
-                                  <span className="truncate max-w-[150px] lowercase text-[#1DA1F2]">
-                                    {page.domainStatus === "active" && page.customDomain ? page.customDomain : "onlyprogram.com"}
-                                  </span>
-                                  <span className="material-symbols-outlined text-[14px]">arrow_outward</span>
-                                </a>
-                              ) : (
-                                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
-                                  <span className="text-[9px] font-black uppercase tracking-widest text-orange-400">Revisión</span>
-                                </div>
-                              )}
-                            </div>
-
-                            {page.folder && (
-                              <div className="mt-3 flex justify-center">
-                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[9px] font-black uppercase tracking-widest ${accentBg} ${accentBorder} ${accentColor}`}>
-                                  <span className="material-symbols-outlined text-[12px]">folder</span>
-                                  {page.folder}
-                                </span>
-                              </div>
-                            )}
-
-                            <div className="mt-6">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); openEditor(page.id); }}
-                                className={`w-full py-3 rounded-2xl border transition-all flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] ${accentBg} ${accentBorder} ${accentColor} hover:brightness-125`}
-                              >
-                                <span className="material-symbols-outlined text-sm">settings</span>
-                                {t("dashboard.links.config")}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </DraggableLinkCard>
+                      <DraggableLinkCard
+                        key={page.id}
+                        page={page}
+                        folders={folders}
+                        t={t}
+                        openEditor={openEditor}
+                        handleDeleteDraftPage={handleDeletePage}
+                        setInactiveAlertPageId={setInactiveAlertPageId}
+                        hasPair={hasPair}
+                      />
                     );
                   })}
               </div>
@@ -323,81 +232,19 @@ const ButtonsList: React.FC<ButtonsListProps> = ({
                 {pages
                   .filter((p) => !p.dbStatus && p.status === "draft" && (!folderFilter || p.folder === folderFilter))
                   .map((page) => {
-                    const isDirect = page.landingMode === "direct";
-                    const isDual = page.landingMode === "dual";
                     const hasPair = pages.some(p => p.modelName === page.modelName && p.modelName && p.id !== page.id);
-                    let borderClass = "border-white/[0.08] hover:border-yellow-500/40 hover:shadow-yellow-500/10";
-                    let bgTrash = "bg-primary/20 hover:bg-primary/40 border-primary/40 text-primary";
-
-                    if (hasPair || isDual) {
-                      borderClass = "border-purple-500/30 border-dashed hover:border-purple-500/60";
-                    } else if (isDirect) {
-                      borderClass = "border-red-500/30 border-dashed hover:border-red-500/60";
-                    }
 
                     return (
-                      <DraggableLinkCard key={page.id} id={page.id} data={{ type: 'link', link: page }}>
-                        <div
-                          onClick={() => openEditor(page.id)}
-                          className={`relative group rounded-[2rem] border bg-[#0A0A0A] overflow-hidden hover:shadow-xl hover:scale-[1.02] hover:-translate-y-1 transition-all duration-300 cursor-pointer ${borderClass}`}
-                        >
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleDeletePage(page.id, page.profileName || page.name); }}
-                            className={`absolute top-3 left-3 z-20 w-8 h-8 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-95 shadow-lg border ${bgTrash}`}
-                          >
-                            <span className="material-symbols-outlined text-[16px]">delete</span>
-                          </button>
-                          
-                          <div
-                            className="h-32 w-full relative"
-                            style={getBackgroundStyle(page)}
-                          >
-                            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
-                            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
-                              <div className="w-16 h-16 rounded-full border-4 border-[#0A0A0A] overflow-hidden bg-gray-800">
-                                {page.profileImage && page.profileImage !== DEFAULTS.PROFILE_IMAGE ? (
-                                  <img src={page.profileImage} className="w-full h-full object-cover" alt="" />
-                                ) : (
-                                  <div className="w-full h-full flex items-center justify-center bg-white/5">
-                                    <span className="material-symbols-outlined text-3xl text-white/20">edit_note</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="pt-10 pb-6 px-6 text-center">
-                            <p className="font-black text-base text-white/70 truncate">
-                              {page.name || t("dashboard.links.untitledLink")}
-                            </p>
-                            
-                            <div className="mt-3 flex items-center justify-center">
-                              <div className="px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-yellow-500">Borrador Local</span>
-                              </div>
-                            </div>
-
-                            {page.folder && (
-                              <div className="mt-3 flex justify-center">
-                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[9px] font-bold text-silver/40 uppercase tracking-widest">
-                                  <span className="material-symbols-outlined text-[12px]">folder</span>
-                                  {page.folder}
-                                </span>
-                              </div>
-                            )}
-
-                            <div className="mt-6">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); openEditor(page.id); }}
-                                className="w-full py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-[10px] font-black text-white hover:text-primary transition-all flex items-center justify-center gap-2 uppercase tracking-[0.2em]"
-                              >
-                                <span className="material-symbols-outlined text-sm">edit</span>
-                                {t("dashboard.links.continueEditing")}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </DraggableLinkCard>
+                      <DraggableLinkCard
+                        key={page.id}
+                        page={page}
+                        folders={folders}
+                        t={t}
+                        openEditor={openEditor}
+                        handleDeleteDraftPage={handleDeletePage}
+                        setInactiveAlertPageId={setInactiveAlertPageId}
+                        hasPair={hasPair}
+                      />
                     );
                   })}
               </div>

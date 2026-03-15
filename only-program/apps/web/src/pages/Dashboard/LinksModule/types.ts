@@ -88,20 +88,20 @@ export const FONT_MAP: Record<FontType, string> = {
 };
 
 export const getBackgroundStyle = (page: LinkPage) => {
-  if (!page || !page.theme) return { background: "#050505" };
+  if (!page || !page.theme) return { backgroundColor: "#050505" };
   const { backgroundType, backgroundStart, backgroundEnd } = page.theme;
   
   if (backgroundType === "solid") {
-    return { background: backgroundStart || "#050505" };
+    return { backgroundColor: backgroundStart || "#050505" };
   } else if (backgroundType === "blur") {
     return {
-      background: `url(${page.profileImage})`,
+      backgroundImage: `url(${page.profileImage})`,
       backgroundSize: "cover",
       backgroundPosition: "center",
     };
   }
   return {
-    background: `linear-gradient(to bottom right, ${backgroundStart || '#000'}, ${backgroundEnd || '#000'})`,
+    backgroundImage: `linear-gradient(to bottom right, ${backgroundStart || '#000'}, ${backgroundEnd || '#000'})`,
   };
 };
 

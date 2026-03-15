@@ -4,5 +4,5 @@
 // which resolves to the monolithic Links.tsx — once the refactor is complete
 // we will swap that import to this slim orchestrator.
 
-export { default } from "../Links";
+export { default } from "./LinksPage";
 export type { PageData } from "./types";

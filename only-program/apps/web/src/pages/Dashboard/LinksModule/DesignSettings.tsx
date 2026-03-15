@@ -28,13 +28,13 @@ const DesignSettings: React.FC<DesignSettingsProps> = ({
         <span className="material-symbols-outlined text-primary">palette</span>
         {t("dashboard.links.designTemplate")}
       </h3>
-      <div className="p-8 rounded-[2.5rem] bg-[#0A0A0A] border border-white/5 space-y-8">
-        <div className="flex gap-4">
+      <div className="p-4 xs:p-6 sm:p-8 rounded-[2.5rem] bg-[#0A0A0A] border border-white/5 space-y-8">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4">
           <button
             disabled={isPortrait}
             onClick={() => handleUpdatePage("theme.backgroundType", "solid")}
             title={isPortrait ? "No disponible con Imagen Completa" : ""}
-            className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`px-2 sm:px-6 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all ${
               isPortrait
                 ? "opacity-30 cursor-not-allowed bg-white/5 text-silver/40"
                 : currentPage.theme.backgroundType === "solid"
@@ -48,7 +48,7 @@ const DesignSettings: React.FC<DesignSettingsProps> = ({
             disabled={isPortrait}
             onClick={() => handleUpdatePage("theme.backgroundType", "gradient")}
             title={isPortrait ? "No disponible con Imagen Completa" : ""}
-            className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`px-2 sm:px-6 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all ${
               isPortrait
                 ? "opacity-30 cursor-not-allowed bg-white/5 text-silver/40"
                 : currentPage.theme.backgroundType === "gradient"
@@ -60,10 +60,10 @@ const DesignSettings: React.FC<DesignSettingsProps> = ({
           </button>
           <button
             onClick={() => handleUpdatePage("theme.backgroundType", "blur")}
-            className={`px-6 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`px-2 sm:px-6 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all ${
               currentPage.theme.backgroundType === "blur"
                 ? "bg-primary text-white"
-                : "bg-white/5 text-silver/40"
+                : "bg-white/5 text-silver/40 hover:bg-white/10"
             }`}
           >
             Blur

@@ -14,8 +14,8 @@ const SecuritySection: React.FC<SecuritySectionProps> = ({
   const { } = useTranslation();
 
   return (
-    <section className="bg-white/5 border-y border-primary/20 overflow-hidden shadow-[0_0_20px_rgba(37,99,235,0.05)] mt-8">
-      <div className="p-4 border-b border-primary/10 bg-primary/5 px-4">
+    <section className="bg-white/5 border-y border-primary/20 overflow-hidden shadow-[0_0_20px_rgba(37,99,235,0.05)] mt-12">
+      <div className="p-3 px-4 border-b border-primary/10 bg-primary/5">
         <h3 className="text-sm font-bold flex items-center gap-2 text-primary">
           <span className="material-symbols-outlined text-primary">
             shield

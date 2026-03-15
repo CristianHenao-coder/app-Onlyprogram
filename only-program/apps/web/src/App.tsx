@@ -36,7 +36,7 @@ const SafePage = lazy(() => import('@/pages/SafePage'));
 
 // Dashboard Pages
 const HomeDashboard = lazy(() => import('@/pages/Dashboard/Home'));
-const Links = lazy(() => import('@/pages/Dashboard/Links'));
+const Links = lazy(() => import('@/pages/Dashboard/LinksModule'));
 const Analytics = lazy(() => import('@/pages/Dashboard/Analytics'));
 const Telegram = lazy(() => import('@/pages/Dashboard/Telegram'));
 const Domains = lazy(() => import('@/pages/Dashboard/Domains'));
